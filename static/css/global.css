@@ -1,0 +1,409 @@
+/* Dynamic contrast for text: flips to #1a202c on light, #fff on dark */
+.dynamic-contrast {
+  color: var(--theme-title, #1a202c) !important;
+  transition: color 0.2s;
+}
+.theme-light .dynamic-contrast {
+  color: #1a202c !important;
+}
+.theme-dark .dynamic-contrast {
+  color: #fff !important;
+}
+
+/* Dark border for glassmorphism cards */
+.dark-border {
+  border: 2.5px solid #1a202c !important;
+  box-shadow: 0 2px 12px rgba(30,32,44,0.13) inset, 0 1.5px 8px rgba(var(--theme-accent-rgb,0,82,204),0.10);
+}
+/* Automatic text flipping for high contrast */
+.dashboard-title, .status-text {
+  color: var(--theme-title, #1a202c);
+  font-weight: 700;
+  transition: color 0.2s;
+}
+.theme-light .dashboard-title, .theme-light .status-text {
+  color: #1a202c;
+}
+.theme-dark .dashboard-title, .theme-dark .status-text {
+  color: #fff;
+}
+
+/* Solid, full-width welcome banner */
+.welcome-banner.solid-banner {
+  width: 100%;
+  background: var(--theme-accent, #4785ff);
+  color: var(--theme-action-text, #fff);
+  border-radius: 1.2rem;
+  border: none;
+  box-shadow: 0 2px 12px rgba(var(--theme-accent-rgb,0,82,204),0.13);
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 0.7rem 2rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+/* Frosted glass sub-cards with dark border for depth */
+.frosted {
+  background: rgba(30,32,44,0.10);
+  border: 2px solid var(--theme-accent, #4785ff);
+  box-shadow: 0 2px 12px rgba(30,32,44,0.10) inset, 0 1.5px 8px rgba(var(--theme-accent-rgb,0,82,204),0.10);
+  border-radius: 1.1rem;
+  backdrop-filter: blur(10px);
+}
+
+/* Quick action and button accent polish */
+.quick-action, button, .btn, .pill-btn {
+  background: var(--theme-accent, #ef476f);
+  color: var(--theme-action-text, #fff);
+  border: 2px solid var(--theme-accent, #ef476f);
+  border-radius: 2rem;
+  box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb,239,71,111),0.13);
+  font-weight: 700;
+  font-size: 1.08rem;
+  padding: 0.7rem 2.2rem;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+  display: inline-block;
+}
+.quick-action:hover, button:hover, .btn:hover, .pill-btn:hover {
+  background: var(--theme-action-hover, #ef476f);
+  color: var(--theme-action-text, #fff);
+  border-color: var(--theme-accent, #ef476f);
+}
+
+/* Contrast Guard: flips text to #1a202c if accent is light */
+.contrast-guard {
+  color: #1a202c !important;
+}
+
+/* Glassmorphism for cards */
+.glass-card {
+  background: #1e293b;
+  color: #fff;
+  backdrop-filter: blur(18px);
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  border: 2.5px solid var(--theme-accent, #ef476f);
+  transition: box-shadow 0.2s, border 0.2s;
+}
+
+/* Immersive top navigation bar */
+.top-nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 56px;
+  background: rgba(10,25,47,0.98);
+  color: #fff;
+  z-index: 1000;
+  transform: translateY(-100%);
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.13);
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+}
+.top-nav-bar:hover {
+  transform: translateY(0);
+}
+
+/* Stress gauge arc polish for visibility (override in JS if needed) */
+#stressGaugeArc {
+  stroke: var(--theme-accent, #4785ff) !important;
+  filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 2px var(--theme-accent, #4785ff));
+}
+/* Glassmorphism for main cards */
+.glass-card {
+  background: var(--theme-surface, rgba(255,255,255,0.18));
+  backdrop-filter: blur(18px);
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  border: 2.5px solid var(--theme-accent, #4785ff);
+  transition: box-shadow 0.2s, border 0.2s;
+}
+
+/* Sub-card glassmorphism and accent border */
+.sub-card {
+  background: var(--theme-surface, rgba(255,255,255,0.22));
+  border: 1.5px solid var(--theme-accent, #4785ff);
+  box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb,0,82,204),0.10) inset;
+  border-radius: 1.1rem;
+  transition: box-shadow 0.2s, border 0.2s;
+}
+
+/* Quick action and button accent polish */
+.quick-action, button, .btn {
+  background: var(--theme-accent, #4785ff);
+  color: var(--theme-action-text, #fff);
+  border: 2px solid var(--theme-accent, #4785ff);
+  border-radius: 0.9rem;
+  box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb,0,82,204),0.13);
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.quick-action:hover, button:hover, .btn:hover {
+  background: var(--theme-action-hover, #2563eb);
+  color: var(--theme-action-text, #fff);
+  border-color: var(--theme-accent, #4785ff);
+}
+
+/* Welcome banner accent and glass effect */
+.welcome-banner {
+  background: rgba(255,255,255,0.45);
+  color: var(--theme-accent, #4785ff);
+  border: 2px solid var(--theme-accent, #4785ff);
+  box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb,0,82,204),0.10);
+  border-radius: 1.2rem;
+}
+/* Global styles and AURA theme variables */
+:root {
+  /* AURA Emotional Sync base variables */
+  --aura-bg: #e3f2fd;
+  --aura-accent: #4785ff;
+  --aura-accent-rgb: 0, 82, 204;
+  --aura-text: #0f172a;
+  --aura-gradient: linear-gradient(135deg, #e3f2fd, #c7dbff);
+
+  /* Unified theme variables for all accent usage */
+  --theme-accent: var(--aura-accent);
+  --theme-accent-rgb: var(--aura-accent-rgb);
+  --theme-gradient: var(--aura-gradient);
+  --theme-surface: var(--surface-2, #f7f7fb);
+  --theme-action-text: #fff;
+  --theme-action-hover: #0f172a;
+  --theme-status: #10b981;
+
+  /* Legacy tokens mapped to new system for compatibility */
+  --bg-grad-start: #e3f2fd;
+  --bg-grad-end: #c7dbff;
+  --accent: var(--aura-accent);
+  --accent-2: #60a5fa;
+  --surface: #ffffff;
+  --surface-2: #f7f7fb;
+  --text: var(--aura-text);
+  --muted: #64748b;
+  --border: #e5e7eb;
+  --shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* Mood-specific chromotherapy themes (avoids irritable reds) */
+.theme-calm {
+  --aura-bg: #e8f4ff;
+  --aura-accent: #0052cc;
+  --aura-accent-rgb: 0, 82, 204;
+  --aura-text: #001a4d;
+  --aura-gradient: linear-gradient(135deg, #e8f4ff, #c5e0ff);
+  --theme-accent: #0052cc;
+  --theme-accent-rgb: 0, 82, 204;
+  --theme-gradient: linear-gradient(135deg, #e8f4ff, #c5e0ff);
+  --theme-status: #10b981;
+}
+
+.theme-anxious {
+  --aura-bg: #e6f7f0;
+  --aura-accent: #00695c;
+  --aura-accent-rgb: 0, 105, 92;
+  --aura-text: #001a15;
+  --aura-gradient: linear-gradient(135deg, #e6f7f0, #b3e5db);
+  --theme-accent: #00695c;
+  --theme-accent-rgb: 0, 105, 92;
+  --theme-gradient: linear-gradient(135deg, #e6f7f0, #b3e5db);
+  --theme-status: #0ea5e9;
+}
+
+.theme-sad {
+  --aura-bg: #f0e8f7;
+  --aura-accent: #512da8;
+  --aura-accent-rgb: 81, 45, 168;
+  --aura-text: #2d0066;
+  --aura-gradient: linear-gradient(135deg, #f0e8f7, #dcc9f7);
+  --theme-accent: #512da8;
+  --theme-accent-rgb: 81, 45, 168;
+  --theme-gradient: linear-gradient(135deg, #f0e8f7, #dcc9f7);
+  --theme-status: #7c3aed;
+}
+
+  --aura-bg: #f5f3ff;
+  --aura-accent: #a78bfa;
+  --aura-accent-rgb: 167, 139, 250;
+  --aura-text: #3e2463;
+  --aura-gradient: linear-gradient(135deg, #a78bfa 0%, #f5d0fe 100%);
+  --theme-accent: #a78bfa;
+  --theme-accent-rgb: 167, 139, 250;
+  --theme-gradient: linear-gradient(135deg, #a78bfa 0%, #f5d0fe 100%);
+  --theme-status: #10b981;
+}
+  --aura-bg: #f5f3ff;
+  --aura-accent: #a78bfa;
+  --aura-accent-rgb: 167, 139, 250;
+  --aura-text: #3e2463;
+  --aura-gradient: linear-gradient(135deg, #a78bfa 0%, #f5d0fe 100%);
+}
+
+  --aura-bg: #fce4ec;
+  --aura-accent: #c2185b;
+  --aura-accent-rgb: 194, 24, 91;
+  --aura-text: #4d0021;
+  --aura-gradient: linear-gradient(135deg, #fce4ec, #f8bbd0);
+  --theme-accent: #c2185b;
+  --theme-accent-rgb: 194, 24, 91;
+  --theme-gradient: linear-gradient(135deg, #fce4ec, #f8bbd0);
+  --theme-status: #7c3aed;
+}
+  --aura-bg: #fce4ec;
+  --aura-accent: #c2185b;
+  --aura-accent-rgb: 194, 24, 91;
+  --aura-text: #4d0021;
+  --aura-gradient: linear-gradient(135deg, #fce4ec, #f8bbd0);
+}
+
+.theme-angry {
+  --aura-bg: #fce4ec;
+  --aura-accent: #c2185b;
+  --aura-accent-rgb: 194, 24, 91;
+  --aura-text: #4d0021;
+  --aura-gradient: linear-gradient(135deg, #fce4ec, #f8bbd0);
+}
+
+.theme-mental {
+  --aura-bg: var(--aura-bg);
+}
+
+/* Specificity boost: use 'body.theme-name' to override dark-mode defaults */
+body.theme-calm {
+  --aura-bg: #d1e7ff !important;
+  --aura-accent: #0052cc !important;
+  background-color: #d1e7ff !important;
+  background: linear-gradient(135deg, #d1e7ff, #a3d5ff) !important;
+  animation: breathingBackground 8s ease-in-out infinite;
+}
+
+@keyframes breathingBackground {
+  0%, 100% {
+    background-size: 100% 100%;
+    filter: brightness(1);
+  }
+  50% {
+    background-size: 110% 110%;
+    filter: brightness(1.05);
+  }
+}
+
+body.theme-sad {
+  --aura-bg: #dfc8e8 !important;
+  --aura-accent: #512da8 !important;
+  background-color: #dfc8e8 !important;
+  background: linear-gradient(135deg, #dfc8e8, #c7a0e0) !important;
+}
+
+body.theme-angry, body.theme-stressed {
+  --aura-bg: #ffc0d9 !important;
+  --aura-accent: #c2185b !important;
+  background-color: #ffc0d9 !important;
+  background: linear-gradient(135deg, #ffc0d9, #ff8fa3) !important;
+}
+
+body.theme-anxious {
+  --aura-bg: #c8e6c9 !important;
+  --aura-accent: #00695c !important;
+  background-color: #c8e6c9 !important;
+  background: linear-gradient(135deg, #c8e6c9, #a5d6a7) !important;
+}
+
+body.theme-happy {
+  --aura-bg: #f5f3ff !important;
+  --aura-accent: #a78bfa !important;
+  background-color: #f5f3ff !important;
+  background: linear-gradient(135deg, #a78bfa 0%, #f5d0fe 100%) !important;
+}
+
+/* Page-specific hides to prevent chat UI from bleeding into games/activities */
+body.games-page .elite-chatbot,
+body.games-page .chatbot-toggle,
+body.activities-page .elite-chatbot,
+body.activities-page .chatbot-toggle {
+  display: none !important;
+}
+
+/* Force chat interface visibility on mental page */
+.mental-page .main-chat,
+.mental-page #chatDisplay,
+.mental-page .input-container {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Force Activities toolbar visibility */
+.activities-page #breakRoomToolbar {
+  display: flex !important;
+  z-index: 1000 !important;
+}
+  color: var(--aura-text);
+  background: var(--aura-gradient) !important;
+  min-height: 100vh;
+  transition: background 0.6s ease, color 0.6s ease;
+}
+
+/* Breathing animation during theme transition */
+body.theme-transitioning {
+  animation: breathe 0.6s cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); filter: blur(0px); }
+  50% { transform: scale(1.005); filter: blur(0.5px); }
+}
+
+/* Pulsing animations for stressed/anxious states */
+body.theme-stressed {
+  animation: stressedPulse 4s ease-in-out infinite;
+}
+
+@keyframes stressedPulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.1); }
+}
+
+body.theme-anxious {
+  animation: anxiousSway 6s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes anxiousSway {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Removed mood card micro-interactions */
+
+.app { display: grid; grid-template-columns: 300px 1fr; height: 100vh; width: 100vw; }
+
+h3 { margin: 0 0 10px; font-size: 14px; color: var(--muted); }
+
+button { cursor: pointer; }
+
+/* Smooth scroll behavior */
+html { scroll-behavior: smooth; }
+/* Toast Notification Animations */
+@keyframes slideUp {
+  from {
+    transform: translateX(-50%) translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-50%) translateY(100px);
+    opacity: 0;
+  }
+}

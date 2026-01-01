@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.env
+*.sqlite3
+instance/
+
+# VS Code
+.vscode/
+
+# Flask/Logs
+*.log
+
+# Uploads
+static/uploads/*

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AURA Chat Interface</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}" />
+</head>
+<body class="aura-bg">
+  <div id="app" class="app">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">AURA</div>
+        <button id="new-chat-btn" class="new-chat-btn">+ New Chat</button>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Chat History</h3>
+        <ul id="history-list" class="history-list"></ul>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Recent Files</h3>
+        <ul id="recent-files" class="recent-files"></ul>
+      </div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main id="main" class="main">
+      <div id="messages" class="messages" aria-live="polite"></div>
+
+      <!-- Floating Input Bar -->
+      <form id="chat-form" class="chat-input" autocomplete="off">
+        <label class="file-btn" title="Choose File">
+          <input id="file-input" type="file" accept=".pdf,image/png,image/jpeg" hidden />
+          <span class="icon">📎</span>
+        </label>
+        <input id="chat-input" type="text" placeholder="Ask a question or describe the file..." />
+        <button id="send-btn" type="submit" class="send-btn">Send</button>
+      </form>
+    </main>
+  </div>
+
+  <!-- Load as ES module to allow imports across js files -->
+  <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

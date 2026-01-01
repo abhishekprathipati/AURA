@@ -1,0 +1,1132 @@
+{% extends "base.html" %}
+
+{% block title %}Mind Games - AURA{% endblock %}
+{% block body_class %}games-page{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #6366f1;
+        --secondary: #a855f7;
+        --bg-dark: #0f172a;
+        --card-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    body.games-page {
+        background: linear-gradient(135deg, var(--bg-dark) 0%, #1a235e 100%);
+        color: #f8fafc;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        min-height: 100vh;
+    }
+
+    /* Modern Sticky Nav */
+    .dashboard-nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        backdrop-filter: blur(12px);
+        background: rgba(15, 23, 42, 0.85);
+        border-bottom: 1px solid var(--glass-border);
+        padding: 1.2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .dashboard-nav a {
+        color: #e2e8f0;
+        text-decoration: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        backdrop-filter: blur(8px);
+    }
+
+    .dashboard-nav a:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(99, 102, 241, 0.2);
+    }
+
+    .dashboard-nav a.active {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border-color: var(--primary);
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+    }
+
+    .games-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .games-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInDown 0.6s ease-out;
+    }
+
+    .games-header h1 {
+        color: #f8fafc;
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .games-header p {
+        color: #cbd5e1;
+        font-size: 1.1rem;
+    }
+
+    .games-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        margin-bottom: 3rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Card Improvements with Glassmorphism */
+    .game-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(8px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 2.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .game-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        pointer-events: none;
+    }
+
+    .game-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+        border-radius: 20px;
+    }
+
+    .game-card:hover::before {
+        transform: translateX(100%);
+    }
+
+    .game-card:hover::after {
+        opacity: 0.05;
+    }
+
+    .game-card:hover {
+        transform: translateY(-12px) scale(1.02);
+        border-color: var(--primary);
+        box-shadow: 0 24px 48px rgba(99, 102, 241, 0.25),
+                    0 0 60px rgba(168, 85, 247, 0.15);
+    }
+
+    .game-card h2 {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .game-card .game-emoji {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        display: inline-block;
+        transition: transform 0.3s ease;
+    }
+
+    .game-card:hover .game-emoji {
+        transform: scale(1.15) rotate(5deg);
+    }
+
+    .game-card p {
+        margin: 0.5rem 0;
+        font-size: 0.95rem;
+        opacity: 0.85;
+        position: relative;
+        z-index: 2;
+    }
+
+    .game-card button {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        border: none;
+        padding: 0.9rem 2rem;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-size: 1rem;
+        letter-spacing: 0.5px;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+    }
+
+    .game-card button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(99, 102, 241, 0.4);
+    }
+
+    .game-card button:active {
+        transform: translateY(-1px);
+    }
+
+    /* Game Content Styles */
+    .game-content {
+        background: var(--card-bg);
+        backdrop-filter: blur(8px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.4);
+        display: none;
+        min-height: 80vh;
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    .game-content.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-8px); }
+        75% { transform: translateX(8px); }
+    }
+
+    .error-shake {
+        animation: shake 0.3s ease-in-out;
+    }
+
+    /* Hide game cards when a game is active */
+    .games-container.game-active .games-grid {
+        display: none;
+    }
+
+    .games-container.game-active .games-header {
+        display: none;
+    }
+
+    .game-content h2 {
+        color: #f8fafc;
+        margin-bottom: 1.5rem;
+        font-size: 2rem;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .close-game {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid #ef4444;
+        color: #fca5a5;
+        padding: 0.7rem 1.5rem;
+        border-radius: 10px;
+        cursor: pointer;
+        float: right;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .close-game:hover {
+        background: rgba(239, 68, 68, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(239, 68, 68, 0.2);
+    }
+
+    /* Game Sections */
+    .number-game,
+    .math-game,
+    .puzzle-game {
+        text-align: center;
+    }
+
+    .number-display,
+    .problem-display {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        padding: 2.5rem;
+        border-radius: 15px;
+        margin: 2rem 0;
+        font-size: 2.5rem;
+        font-weight: bold;
+        letter-spacing: 2px;
+        box-shadow: 0 12px 40px rgba(99, 102, 241, 0.25);
+    }
+
+    .game-info {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1.5rem 0;
+        text-align: left;
+        backdrop-filter: blur(8px);
+    }
+
+    .game-info h3 {
+        margin-top: 0;
+        color: var(--primary);
+        font-size: 1.2rem;
+    }
+
+    .game-info ul {
+        margin: 0.5rem 0;
+        padding-left: 2rem;
+        color: #cbd5e1;
+    }
+
+    .game-info li {
+        margin: 0.5rem 0;
+    }
+
+    .input-group {
+        margin: 2rem 0;
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .input-group input {
+        padding: 0.9rem;
+        font-size: 1rem;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        color: #f8fafc;
+        width: 220px;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(8px);
+    }
+
+    .input-group input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        background: rgba(99, 102, 241, 0.1);
+    }
+
+    .input-group input::placeholder {
+        color: #94a3b8;
+    }
+
+    .input-group button {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        border: none;
+        padding: 0.9rem 2rem;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+    }
+
+    .input-group button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(99, 102, 241, 0.4);
+    }
+
+    .input-group button:active {
+        transform: translateY(-1px);
+    }
+
+    .result-message {
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin: 1.5rem 0;
+        border-left: 4px solid #22c55e;
+        display: none;
+        background: rgba(34, 197, 94, 0.15);
+        color: #bbf7d0;
+        backdrop-filter: blur(8px);
+        font-weight: 500;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .result-message.error {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+        border-left-color: #ef4444;
+    }
+
+    .result-message.active {
+        display: block;
+    }
+
+    /* Difficulty Selector */
+    .difficulty-selector {
+        margin: 1.5rem 0;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .difficulty-selector label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        border: 1px solid var(--glass-border);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: #cbd5e1;
+        font-weight: 600;
+    }
+
+    .difficulty-selector label:hover {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.1);
+    }
+
+    .difficulty-selector input[type="radio"] {
+        cursor: pointer;
+        accent-color: var(--primary);
+    }
+
+    /* Puzzle Grid */
+    .puzzle-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.2rem;
+        margin: 2.5rem 0;
+        max-width: 420px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .puzzle-tile {
+        aspect-ratio: 1;
+        background: linear-gradient(135deg, var(--card-bg), rgba(255, 255, 255, 0.08));
+        border: 2px solid var(--glass-border);
+        border-radius: 15px;
+        font-size: 1.8rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #cbd5e1;
+        backdrop-filter: blur(8px);
+    }
+
+    .puzzle-tile:hover {
+        transform: scale(1.08) translateY(-5px);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(99, 102, 241, 0.2);
+    }
+
+    .puzzle-tile.selected {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border-color: var(--secondary);
+        color: white;
+    }
+
+    .puzzle-tile.correct {
+        background: linear-gradient(135deg, #10b981, #34d399);
+        border-color: #10b981;
+        color: white;
+    }
+
+    .puzzle-tile.wrong {
+        background: linear-gradient(135deg, #ef4444, #f87171);
+        border-color: #ef4444;
+        color: white;
+    }
+
+    /* Game Stats */
+    .game-stats {
+        display: flex;
+        justify-content: space-around;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        padding: 2rem;
+        border-radius: 15px;
+        margin: 2rem 0;
+        backdrop-filter: blur(8px);
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .stat {
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .stat-label {
+        color: #94a3b8;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .stat-value {
+        font-size: 2.2rem;
+        font-weight: bold;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Rounds Container */
+    .rounds-container {
+        max-height: 350px;
+        overflow-y: auto;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--glass-border);
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1.5rem 0;
+        backdrop-filter: blur(8px);
+    }
+
+    .rounds-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .rounds-container::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+    }
+
+    .rounds-container::-webkit-scrollbar-thumb {
+        background: rgba(99, 102, 241, 0.4);
+        border-radius: 10px;
+    }
+
+    .rounds-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(99, 102, 241, 0.6);
+    }
+
+    .round-item {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 1rem;
+        margin: 0.75rem 0;
+        border-radius: 10px;
+        border-left: 4px solid var(--primary);
+        color: #cbd5e1;
+        transition: all 0.3s ease;
+    }
+
+    .round-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateX(5px);
+    }
+
+    .round-item.human {
+        border-left-color: #10b981;
+    }
+
+    .round-item.computer {
+        border-left-color: #ef4444;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .games-header h1 {
+            font-size: 2rem;
+        }
+
+        .game-card {
+            padding: 1.5rem;
+        }
+
+        .puzzle-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+        }
+
+        .games-grid {
+            max-width: 100%;
+        }
+
+        .input-group input {
+            width: 100%;
+        }
+
+        .game-stats {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+
+<div class="games-container">
+    <div class="games-header">
+        <h1>🎮 Mind Games</h1>
+        <p>Sharpen your mind with fun and engaging games</p>
+    </div>
+
+    <!-- Games Grid -->
+    <div class="games-grid">
+        <!-- 4-Digit Number Game -->
+        <div class="game-card">
+            <div class="game-emoji">🔢</div>
+            <h2>Guessing Numbers</h2>
+            <p>Guess the 4-digit number before the computer does!</p>
+            <p style="font-size: 0.85rem; opacity: 0.8;">One chance each - no repeating digits</p>
+            <button onclick="openGame('numberGame')">Play Game</button>
+        </div>
+
+        <!-- Math Game -->
+        <div class="game-card">
+            <div class="game-emoji">➕</div>
+            <h2>Math Challenge</h2>
+            <p>Solve arithmetic problems quickly!</p>
+            <p style="font-size: 0.85rem; opacity: 0.8;">Multiple difficulty levels</p>
+            <button onclick="openGame('mathGame')">Play Game</button>
+        </div>
+
+        <!-- Puzzle Game -->
+        <div class="game-card">
+            <div class="game-emoji">🧩</div>
+            <h2>Pattern Puzzle</h2>
+            <p>Find the missing number in the sequence!</p>
+            <p style="font-size: 0.85rem; opacity: 0.8;">Test your logical thinking</p>
+            <button onclick="openGame('puzzleGame')">Play Game</button>
+        </div>
+    </div>
+
+    <!-- 4-Digit Number Game Content -->
+    <div id="numberGame" class="game-content">
+        <button class="close-game" onclick="closeGame('numberGame')">Close</button>
+        <div style="clear: both;"></div>
+
+        <h2>🔢 4-Digit Number Guessing Game</h2>
+        
+        <div class="game-info">
+            <h3>Rules:</h3>
+            <ul>
+                <li>✅ A 4-digit number is randomly generated</li>
+                <li>✅ No digit repeats (all digits are unique)</li>
+                <li>✅ The number doesn't start with 0</li>
+                <li>✅ You get ONE chance to guess</li>
+                <li>✅ The computer also gets ONE chance</li>
+                <li>✅ Whoever guesses correctly wins!</li>
+            </ul>
+        </div>
+
+        <div class="number-game">
+            <div id="numberGameStatus" style="font-size: 1.1rem; margin: 1rem 0; font-weight: 600;">
+                Generate a number to start
+            </div>
+
+            <div class="number-display" id="numberDisplay" style="display: none;">
+                🎲
+            </div>
+
+            <div class="input-group">
+                <button onclick="generateNumber()" style="background: #4CAF50;">🎲 Generate Number</button>
+            </div>
+
+            <div id="numberRounds" class="rounds-container" style="display: none;"></div>
+
+            <div id="numberHumanGuess" style="display: none; margin-top: 1.5rem;">
+                <h3>Your Turn to Guess</h3>
+                <p style="color: #666; margin-bottom: 1rem;">Enter a 4-digit number (no 0 at start, no repeats)</p>
+                <div class="input-group">
+                    <input type="text" id="humanGuessInput" placeholder="e.g., 1234" maxlength="4">
+                    <button onclick="submitHumanGuess()">Submit Guess</button>
+                </div>
+            </div>
+
+            <div id="numberComputerGuess" style="display: none; margin-top: 1.5rem;">
+                <h3>Computer's Turn</h3>
+                <div class="input-group">
+                    <button onclick="computerGuess()">Let Computer Guess</button>
+                </div>
+            </div>
+
+            <div id="numberResult" class="result-message"></div>
+        </div>
+    </div>
+
+    <!-- Math Game Content -->
+    <div id="mathGame" class="game-content">
+        <button class="close-game" onclick="closeGame('mathGame')">Close</button>
+        <div style="clear: both;"></div>
+
+        <h2>➕ Math Challenge</h2>
+
+        <div class="difficulty-selector">
+            <label>
+                <input type="radio" name="difficulty" value="easy" checked> Easy
+            </label>
+            <label>
+                <input type="radio" name="difficulty" value="medium"> Medium
+            </label>
+            <label>
+                <input type="radio" name="difficulty" value="hard"> Hard
+            </label>
+        </div>
+
+        <div class="math-game">
+            <div class="problem-display" id="mathProblem">
+                Start a game to see a problem
+            </div>
+
+            <div class="input-group">
+                <input type="number" id="mathAnswer" placeholder="Your answer">
+                <button onclick="submitMathAnswer()">Submit</button>
+            </div>
+
+            <div class="input-group">
+                <button onclick="generateMathProblem()" style="background: #4CAF50;">🎲 New Problem</button>
+            </div>
+
+            <div id="mathResult" class="result-message"></div>
+
+            <div class="game-stats">
+                <div class="stat">
+                    <div class="stat-label">Correct</div>
+                    <div class="stat-value" id="mathCorrect">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Wrong</div>
+                    <div class="stat-value" id="mathWrong">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Accuracy</div>
+                    <div class="stat-value" id="mathAccuracy">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Puzzle Game Content -->
+    <div id="puzzleGame" class="game-content">
+        <button class="close-game" onclick="closeGame('puzzleGame')">Close</button>
+        <div style="clear: both;"></div>
+
+        <h2>🧩 Pattern Puzzle</h2>
+
+        <div class="game-info">
+            <h3>Find the Missing Number</h3>
+            <p>Look at the sequence and identify which number is missing or comes next.</p>
+        </div>
+
+        <div class="puzzle-game">
+            <div id="puzzleSequence" style="font-size: 1.5rem; margin: 2rem 0; padding: 1rem; background: #f5f5f5; border-radius: 10px;">
+                Generating puzzle...
+            </div>
+
+            <div class="puzzle-grid" id="puzzleGrid"></div>
+
+            <div id="puzzleResult" class="result-message"></div>
+
+            <div class="game-stats">
+                <div class="stat">
+                    <div class="stat-label">Correct</div>
+                    <div class="stat-value" id="puzzleCorrect">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Attempts</div>
+                    <div class="stat-value" id="puzzleAttempts">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Streak</div>
+                    <div class="stat-value" id="puzzleStreak">0</div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <button onclick="generatePuzzle()" style="background: #4CAF50;">🎲 New Puzzle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Game state
+    let gameState = {
+        number: {
+            target: null,
+            humanGuess: null,
+            computerGuess: null,
+            roundHistory: []
+        },
+        math: {
+            correct: 0,
+            wrong: 0,
+            currentAnswer: null,
+            currentProblem: null
+        },
+        puzzle: {
+            correct: 0,
+            attempts: 0,
+            streak: 0,
+            sequence: null,
+            answer: null
+        }
+    };
+
+    // Open/Close games
+    function openGame(gameId) {
+        document.querySelectorAll('.game-content').forEach(el => el.classList.remove('active'));
+        document.getElementById(gameId).classList.add('active');
+        document.querySelector('.games-container').classList.add('game-active');
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function closeGame(gameId) {
+        document.getElementById(gameId).classList.remove('active');
+        document.querySelector('.games-container').classList.remove('game-active');
+    }
+
+    // ===== 4-DIGIT NUMBER GAME =====
+    function generateRandomNumber() {
+        // Generate a 4-digit number with unique digits, no leading 0
+        let digits = [];
+        
+        // First digit: 1-9 (no 0)
+        let first = Math.floor(Math.random() * 9) + 1;
+        digits.push(first);
+        
+        // Remaining 3 digits: unique from others
+        let available = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter(d => !digits.includes(d));
+        
+        for (let i = 0; i < 3; i++) {
+            let randomIndex = Math.floor(Math.random() * available.length);
+            digits.push(available[randomIndex]);
+            available.splice(randomIndex, 1);
+        }
+        
+        return digits.join('');
+    }
+
+    function generateNumber() {
+        gameState.number.target = generateRandomNumber();
+        gameState.number.humanGuess = null;
+        gameState.number.computerGuess = null;
+        gameState.number.roundHistory = [];
+
+        document.getElementById('numberGameStatus').textContent = '✅ Number generated! Choose your mode:';
+        document.getElementById('numberDisplay').style.display = 'none';
+        document.getElementById('numberRounds').style.display = 'block';
+        document.getElementById('numberRounds').innerHTML = '';
+        document.getElementById('numberHumanGuess').style.display = 'block';
+        document.getElementById('numberComputerGuess').style.display = 'none';
+        document.getElementById('numberResult').classList.remove('active');
+        document.getElementById('humanGuessInput').value = '';
+    }
+
+    function validateGuess(guess) {
+        // Check if 4 digits
+        if (guess.length !== 4 || !/^\d+$/.test(guess)) {
+            return { valid: false, error: 'Please enter exactly 4 digits' };
+        }
+        
+        // Check if starts with 0
+        if (guess[0] === '0') {
+            return { valid: false, error: 'Number cannot start with 0' };
+        }
+        
+        // Check for duplicates
+        if (new Set(guess).size !== 4) {
+            return { valid: false, error: 'All digits must be unique (no repeats)' };
+        }
+        
+        return { valid: true };
+    }
+
+    function submitHumanGuess() {
+        const guess = document.getElementById('humanGuessInput').value;
+        const validation = validateGuess(guess);
+
+        if (!validation.valid) {
+            showResult('numberResult', validation.error, true);
+            return;
+        }
+
+        gameState.number.humanGuess = guess;
+        document.getElementById('numberHumanGuess').style.display = 'none';
+        
+        let roundHTML = `<div class="round-item human">
+            <strong>Your guess:</strong> ${guess}
+        </div>`;
+        
+        if (guess === gameState.number.target) {
+            roundHTML += '<div style="background: #c8e6c9; padding: 1rem; border-radius: 5px; margin-top: 0.5rem; font-weight: bold; color: #2e7d32;">🎉 Correct! You won!</div>';
+            document.getElementById('numberRounds').innerHTML = roundHTML;
+            document.getElementById('numberComputerGuess').style.display = 'none';
+            showResult('numberResult', '🎉 You guessed correctly! You Win!', false);
+        } else {
+            document.getElementById('numberRounds').innerHTML = roundHTML;
+            document.getElementById('numberComputerGuess').style.display = 'block';
+            showResult('numberResult', '❌ Wrong guess. Let the computer try...', true);
+        }
+    }
+
+    function computerGuess() {
+        const guess = generateRandomNumber();
+        gameState.number.computerGuess = guess;
+        document.getElementById('numberComputerGuess').style.display = 'none';
+
+        let roundHTML = document.getElementById('numberRounds').innerHTML;
+        roundHTML += `<div class="round-item computer">
+            <strong>Computer's guess:</strong> ${guess}
+        </div>`;
+        
+        if (guess === gameState.number.target) {
+            roundHTML += '<div style="background: #ffcdd2; padding: 1rem; border-radius: 5px; margin-top: 0.5rem; font-weight: bold; color: #c62828;">🤖 Computer guessed correctly!</div>';
+            document.getElementById('numberRounds').innerHTML = roundHTML;
+            showResult('numberResult', '🤖 Computer won! Better luck next time!', true);
+        } else {
+            document.getElementById('numberRounds').innerHTML = roundHTML;
+            let resultHTML = '<div style="background: #fff9c4; padding: 1rem; border-radius: 5px; margin-top: 0.5rem; font-weight: bold;">⚖️ Both guesses were wrong!<br>The number was: <strong>' + gameState.number.target + '</strong></div>';
+            document.getElementById('numberRounds').innerHTML = roundHTML + resultHTML;
+            showResult('numberResult', '⚖️ Neither guessed correctly! The number was ' + gameState.number.target, false);
+        }
+    }
+
+    // ===== MATH GAME =====
+    function generateMathProblem() {
+        const difficulty = document.querySelector('input[name="difficulty"]:checked').value;
+        let a, b, op;
+
+        if (difficulty === 'easy') {
+            a = Math.floor(Math.random() * 10) + 1;
+            b = Math.floor(Math.random() * 10) + 1;
+            op = ['+', '-'][Math.floor(Math.random() * 2)];
+        } else if (difficulty === 'medium') {
+            a = Math.floor(Math.random() * 20) + 1;
+            b = Math.floor(Math.random() * 20) + 1;
+            op = ['+', '-', '×'][Math.floor(Math.random() * 3)];
+        } else {
+            a = Math.floor(Math.random() * 50) + 1;
+            b = Math.floor(Math.random() * 50) + 1;
+            op = ['+', '-', '×', '÷'][Math.floor(Math.random() * 4)];
+        }
+
+        let answer;
+        if (op === '+') answer = a + b;
+        else if (op === '-') answer = a - b;
+        else if (op === '×') answer = a * b;
+        else answer = Math.floor(a / b);
+
+        gameState.math.currentProblem = `${a} ${op} ${b}`;
+        gameState.math.currentAnswer = answer;
+
+        document.getElementById('mathProblem').textContent = gameState.math.currentProblem;
+        document.getElementById('mathAnswer').value = '';
+        document.getElementById('mathResult').classList.remove('active');
+    }
+
+    function submitMathAnswer() {
+        const answer = parseInt(document.getElementById('mathAnswer').value);
+
+        if (isNaN(answer)) {
+            showResult('mathResult', 'Please enter a number', true);
+            return;
+        }
+
+        if (answer === gameState.math.currentAnswer) {
+            gameState.math.correct++;
+            showResult('mathResult', '✅ Correct!', false);
+        } else {
+            gameState.math.wrong++;
+            showResult('mathResult', `❌ Wrong! The answer is ${gameState.math.currentAnswer}`, true);
+        }
+
+        updateMathStats();
+        document.getElementById('mathAnswer').value = '';
+    }
+
+    function updateMathStats() {
+        document.getElementById('mathCorrect').textContent = gameState.math.correct;
+        document.getElementById('mathWrong').textContent = gameState.math.wrong;
+        
+        const total = gameState.math.correct + gameState.math.wrong;
+        const accuracy = total > 0 ? Math.round((gameState.math.correct / total) * 100) : 0;
+        document.getElementById('mathAccuracy').textContent = accuracy + '%';
+    }
+
+    // ===== PUZZLE GAME =====
+    const puzzleTypes = [
+        { sequence: [2, 4, 6, 8, 10], missing: 10, description: 'Even numbers' },
+        { sequence: [1, 3, 5, 7, 9], missing: 9, description: 'Odd numbers' },
+        { sequence: [1, 1, 2, 3, 5], missing: 5, description: 'Fibonacci' },
+        { sequence: [2, 4, 8, 16, 32], missing: 32, description: 'Powers of 2' },
+        { sequence: [1, 4, 9, 16, 25], missing: 25, description: 'Perfect squares' },
+        { sequence: [5, 10, 15, 20, 25], missing: 25, description: 'Multiples of 5' },
+        { sequence: [100, 90, 80, 70, 60], missing: 60, description: 'Decreasing by 10' },
+        { sequence: [1, 2, 4, 7, 11], missing: 11, description: 'Increasing differences' }
+    ];
+
+    function generatePuzzle() {
+        const puzzle = puzzleTypes[Math.floor(Math.random() * puzzleTypes.length)];
+        gameState.puzzle.sequence = puzzle.sequence;
+        gameState.puzzle.answer = puzzle.missing;
+
+        const displaySequence = puzzle.sequence.map((n, i) => 
+            i === puzzle.sequence.length - 1 ? '?' : n
+        ).join(', ');
+
+        document.getElementById('puzzleSequence').textContent = displaySequence + ' | Pattern: ' + puzzle.description;
+
+        const gridHTML = puzzle.sequence.map((n, i) => {
+            const options = [puzzle.missing, 
+                Math.floor(Math.random() * 100),
+                Math.floor(Math.random() * 100)];
+            
+            // Shuffle options
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            if (i === puzzle.sequence.length - 1) {
+                return options.map(opt => 
+                    `<div class="puzzle-tile" onclick="selectPuzzleAnswer(${opt})">${opt}</div>`
+                ).join('');
+            }
+            return `<div class="puzzle-tile">${n}</div>`;
+        }).join('');
+
+        document.getElementById('puzzleGrid').innerHTML = gridHTML;
+        document.getElementById('puzzleResult').classList.remove('active');
+    }
+
+    function selectPuzzleAnswer(answer) {
+        gameState.puzzle.attempts++;
+
+        if (answer === gameState.puzzle.answer) {
+            gameState.puzzle.correct++;
+            gameState.puzzle.streak++;
+            showResult('puzzleResult', '✅ Correct! Great pattern recognition!', false);
+        } else {
+            gameState.puzzle.streak = 0;
+            showResult('puzzleResult', `❌ Wrong! The answer is ${gameState.puzzle.answer}`, true);
+        }
+
+        updatePuzzleStats();
+    }
+
+    function updatePuzzleStats() {
+        document.getElementById('puzzleCorrect').textContent = gameState.puzzle.correct;
+        document.getElementById('puzzleAttempts').textContent = gameState.puzzle.attempts;
+        document.getElementById('puzzleStreak').textContent = gameState.puzzle.streak;
+    }
+
+    // Utility function to show results
+    function showResult(elementId, message, isError) {
+        const element = document.getElementById(elementId);
+        const container = element.closest('.game-content') || element.parentElement;
+        
+        element.textContent = message;
+        element.classList.add('active');
+        
+        if (isError) {
+            element.style.background = "rgba(239, 68, 68, 0.15)";
+            element.style.color = "#fca5a5";
+            element.style.borderLeft = "4px solid #ef4444";
+            
+            // Add shake effect to the game container
+            container.classList.add('error-shake');
+            setTimeout(() => container.classList.remove('error-shake'), 300);
+        } else {
+            element.style.background = "rgba(34, 197, 94, 0.15)";
+            element.style.color = "#bbf7d0";
+            element.style.borderLeft = "4px solid #22c55e";
+            element.classList.remove('error');
+        }
+    }
+</script>
+
+{% endblock %}

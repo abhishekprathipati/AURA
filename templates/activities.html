@@ -1,0 +1,508 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    /* --- 1. THE LOBBY (Horizontal Layout) --- */
+    .activity-lobby {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        justify-content: center;
+        align-items: stretch;
+        min-height: 80vh; /* Centers vertically on screen */
+    }
+
+    .activity-card {
+        flex: 1;
+        min-width: 300px;
+        max-width: 350px;
+        background: rgba(255, 255, 255, 0.05); /* Glass effect */
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2.5rem;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .activity-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #6366f1; /* Primary color highlight */
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .activity-icon {
+        font-size: 4.5rem;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+
+    .activity-card:hover .activity-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .activity-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: #fff;
+    }
+
+    .activity-desc {
+        color: #94a3b8;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    /* --- 2. FULL SCREEN OVERLAY --- */
+    .fullscreen-overlay {
+        display: none; /* Hidden by default */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #0f172a; /* Dark background matches theme */
+        z-index: 99999; /* On top of navigation and everything else */
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .fullscreen-overlay.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 25px;
+        right: 30px;
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+        border: 1px solid #ef4444;
+        padding: 10px 24px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s;
+        backdrop-filter: blur(4px);
+    }
+
+    .close-btn:hover {
+        background: #ef4444;
+        color: white;
+        transform: scale(1.05);
+    }
+
+    /* --- Tool Specific Styles --- */
+    .canvas-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+
+    /* Breathing Animation */
+    .breathing-circle {
+        width: 250px; height: 250px;
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 1.8rem; font-weight: bold;
+        box-shadow: 0 0 50px rgba(99, 102, 241, 0.3);
+        transition: all 4s ease-in-out;
+        position: relative;
+    }
+    
+    .breathing-circle::after {
+        content: '';
+        position: absolute;
+        width: 100%; height: 100%;
+        border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.3);
+        transform: scale(1.2);
+        opacity: 0;
+        transition: all 4s ease-in-out;
+    }
+
+    .breathing-circle.inhale { transform: scale(1.5); }
+    .breathing-circle.inhale::after { transform: scale(1.1); opacity: 1; }
+    
+    .breathing-circle.exhale { transform: scale(1); }
+    .breathing-circle.exhale::after { transform: scale(1.4); opacity: 0; }
+
+    /* Button Styles */
+    .action-btn {
+        padding: 12px 24px;
+        border-radius: 10px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+        color: white;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .action-btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+    .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .btn-success { background: linear-gradient(135deg, #10b981, #059669); }
+
+</style>
+
+
+<div class="activity-lobby">
+    <div class="activity-card" onclick="openActivity('breakRoom')">
+        <div class="activity-icon">🎨</div>
+        <div class="activity-title">Virtual Break Room</div>
+        <div class="activity-desc">Scribble freely, draw out your frustration, and clear your mind.</div>
+    </div>
+    <div class="activity-card" onclick="openActivity('screamMeter')">
+        <div class="activity-icon">🎤</div>
+        <div class="activity-title">Scream Meter</div>
+        <div class="activity-desc">A safe space to vent. We visualize your vocal intensity instantly.</div>
+    </div>
+    <div class="activity-card" onclick="openActivity('boxBreathing')">
+        <div class="activity-icon">🧘</div>
+        <div class="activity-title">Box Breathing</div>
+        <div class="activity-desc">Regain control with the 4-4-4-4 rhythmic breathing technique.</div>
+    </div>
+</div>
+
+<style>
+body {
+    background: linear-gradient(135deg, #a7bfff 0%, #f3f8ff 100%);
+}
+.activity-lobby {
+    margin-top: 2.5rem;
+}
+.activity-card {
+    background: rgba(255,255,255,0.18);
+    border: 1.5px solid rgba(99,102,241,0.13);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10);
+    color: #1e293b;
+    font-family: 'Inter', sans-serif;
+    min-width: 320px;
+    max-width: 350px;
+    padding: 2.5rem 1.5rem 2rem 1.5rem;
+    border-radius: 2rem;
+    margin: 1.2rem 0.8rem;
+    transition: all 0.25s cubic-bezier(.4,0,.2,1);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+.activity-card:hover {
+    background: rgba(255,255,255,0.28);
+    border-color: #6366f1;
+    box-shadow: 0 16px 32px 0 rgba(99,102,241,0.10);
+    transform: translateY(-8px) scale(1.03);
+}
+.activity-icon {
+    font-size: 4.2rem;
+    margin-bottom: 1.2rem;
+    filter: drop-shadow(0 2px 8px #6366f133);
+}
+.activity-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    color: #6366f1;
+    letter-spacing: 1px;
+}
+.activity-desc {
+    color: #334155;
+    font-size: 1.05rem;
+    opacity: 0.85;
+    margin-bottom: 0.2rem;
+    font-weight: 500;
+}
+@media (max-width: 900px) {
+    .activity-lobby {
+        flex-direction: column;
+        align-items: center;
+    }
+    .activity-card {
+        min-width: 90vw;
+        max-width: 98vw;
+    }
+}
+</style>
+
+<div id="breakRoom" class="fullscreen-overlay">
+    <button class="close-btn" onclick="closeActivity('breakRoom')">Esc / Close</button>
+    <!-- Pinned Drawing Toolbar: Always visible, topmost -->
+    <div id="breakroom-toolbar" class="floating-toolbar pinned-toolbar" style="position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 12000; width: max-content; display: flex; gap: 1.5rem; align-items: center; background: rgba(30,41,59,0.92); border-radius: 18px; box-shadow: 0 4px 24px rgba(0,0,0,0.18); padding: 0.7rem 2.2rem; backdrop-filter: blur(16px); border: 2.5px solid var(--theme-accent, #4785ff);">
+        <div style="display: flex; align-items: center; gap: 0.7rem;">
+            <span style="font-size: 1.3rem;">🖌️</span>
+            <input type="range" id="penThickness" min="1" max="24" value="5" style="width: 80px;" oninput="document.getElementById('penThicknessValue').textContent=this.value">
+            <span id="penThicknessValue" style="min-width: 2ch; text-align: right; font-size: 1rem;">5</span>px
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.7rem;">
+            <span style="font-size: 1.3rem;">🎨</span>
+            <input type="color" id="penColor" value="#6366f1" style="border:none; background:none; height: 30px; cursor: pointer;">
+        </div>
+        <button onclick="exportCanvasPNG()" title="Download as PNG" style="background: #fff; color: #1e293b; border-radius: 8px; border: none; padding: 0.4rem 1.1rem; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">💾 Export PNG</button>
+        <button onclick="toggleFullscreenCanvas()" title="Fullscreen" style="background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">⛶</button>
+        <button onclick="setPhysicsMode('scribble')" title="Scribble Mode" style="background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">✏️</button>
+        <button onclick="setPhysicsMode('break')" title="Break Objects" style="background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">💥</button>
+        <button onclick="undoCanvas()" title="Undo" style="background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">↩️</button>
+        <button onclick="redoCanvas()" title="Redo" style="background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">↪️</button>
+        <button onclick="clearCanvas()" title="Clear Canvas" style="background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">🗑️</button>
+    </div>
+    <div class="canvas-container" style="height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.12);">
+        <script>
+        // Ensure toolbar is always pinned and chat input is always visible
+        window.addEventListener('DOMContentLoaded', function() {
+            // Pin toolbar to top
+            const toolbar = document.getElementById('breakroom-toolbar');
+            if (toolbar) {
+                toolbar.style.position = 'fixed';
+                toolbar.style.top = '0';
+                toolbar.style.left = '50%';
+                toolbar.style.transform = 'translateX(-50%)';
+                toolbar.style.zIndex = '12000';
+            }
+            // Lock chat input bar if present
+            const chatBar = document.querySelector('.study-input-area');
+            if (chatBar) {
+                chatBar.style.position = 'fixed';
+                chatBar.style.left = '0';
+                chatBar.style.right = '0';
+                chatBar.style.bottom = '0';
+                chatBar.style.zIndex = '1000';
+            }
+        });
+        </script>
+        <canvas id="scribbleBoard" width="1600" height="900" style="cursor: crosshair; touch-action: none; border-radius: 18px; background: rgba(255,255,255,0.04); box-shadow: 0 8px 32px rgba(0,0,0,0.18);"></canvas>
+    </div>
+    <p style="color: #64748b; margin-top: 15px; text-align: center;">Draw, scribble, break, and export your art. All tools are always visible.</p>
+</div>
+
+<div id="screamMeter" class="fullscreen-overlay">
+    <button class="close-btn" onclick="closeActivity('screamMeter')">Esc / Close</button>
+    <h2 style="color:white; margin-bottom:3rem; font-size: 2.5rem;">🎤 Scream Meter</h2>
+    
+    <div style="background: rgba(255,255,255,0.95); padding: 4rem; border-radius: 30px; text-align: center; width: 100%; max-width: 500px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        <div id="screamBarContainer" style="width: 80px; height: 350px; background: #e2e8f0; margin: 0 auto; border-radius: 40px; position: relative; overflow: hidden; box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);">
+            <div id="screamBar" style="width: 100%; height: 0%; background: linear-gradient(to top, #4ade80, #facc15, #ef4444); position: absolute; bottom: 0; transition: height 0.05s ease-out;"></div>
+        </div>
+        <h1 id="screamLevel" style="font-size: 3.5rem; margin-top: 1.5rem; font-weight: 800; color: #1e293b;">0%</h1>
+        <button id="screamBtn" onclick="toggleScreamListener()" class="action-btn btn-primary" style="margin-top: 1.5rem; width: 100%; justify-content: center; padding: 1rem;">
+            Start Microphone
+        </button>
+    </div>
+</div>
+
+<div id="boxBreathing" class="fullscreen-overlay">
+    <button class="close-btn" onclick="closeActivity('boxBreathing')">Esc / Close</button>
+    <h2 style="color:white; margin-bottom:3rem; font-size: 2rem;">🧘 Box Breathing Technique</h2>
+    
+    <div class="breathing-circle" id="breathingCircle">
+        <span id="breathingText">Ready</span>
+    </div>
+    
+    <div style="margin-top: 3rem; display: flex; gap: 20px;">
+        <button onclick="startBreathing()" class="action-btn btn-success" style="font-size: 1.2rem; padding: 15px 30px;">Start Session</button>
+        <button onclick="stopBreathing()" class="action-btn btn-danger" style="font-size: 1.2rem; padding: 15px 30px;">Stop</button>
+    </div>
+</div>
+
+
+<script>
+    // --- Navigation Logic ---
+    function openActivity(id) {
+        document.getElementById(id).classList.add('active');
+        document.body.style.overflow = 'hidden'; // Stop background scrolling
+        
+        // If opening scribble board, resize canvas
+        if(id === 'breakRoom') {
+            const canvas = document.getElementById('scribbleBoard');
+            const container = canvas.parentElement;
+            canvas.width = container.offsetWidth;
+            canvas.height = 600; // Fixed height
+        }
+    }
+
+    function closeActivity(id) {
+        document.getElementById(id).classList.remove('active');
+        document.body.style.overflow = 'auto';
+        
+        // Safety stops
+        if(id === 'screamMeter') stopScreamListener();
+        if(id === 'boxBreathing') stopBreathing();
+    }
+
+    // Escape key support
+    document.addEventListener('keydown', function(event) {
+        if (event.key === "Escape") {
+            document.querySelectorAll('.fullscreen-overlay').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.body.style.overflow = 'auto';
+            stopScreamListener();
+            stopBreathing();
+        }
+    });
+
+    // --- 1. Scribble Logic ---
+    const canvas = document.getElementById('scribbleBoard');
+    const ctx = canvas.getContext('2d');
+    const colorPicker = document.getElementById('penColor');
+    let painting = false;
+
+    function startPosition(e) { painting = true; draw(e); }
+    function finishedPosition() { painting = false; ctx.beginPath(); }
+    
+    function draw(e) {
+        if (!painting) return;
+        const rect = canvas.getBoundingClientRect();
+        
+        // Handle touch vs mouse
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = colorPicker.value;
+        
+        ctx.lineTo(clientX - rect.left, clientY - rect.top);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(clientX - rect.left, clientY - rect.top);
+    }
+
+    // Mouse Events
+    canvas.addEventListener('mousedown', startPosition);
+    canvas.addEventListener('mouseup', finishedPosition);
+    canvas.addEventListener('mousemove', draw);
+    
+    // Touch Events (Mobile)
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startPosition(e); });
+    canvas.addEventListener('touchend', finishedPosition);
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+
+    function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+    // --- 2. Scream Logic ---
+    let audioContext, analyser, microphone, javascriptNode;
+    let isListening = false;
+
+    function toggleScreamListener() {
+        if (isListening) stopScreamListener();
+        else startScreamListener();
+    }
+
+    async function startScreamListener() {
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            microphone = audioContext.createMediaStreamSource(stream);
+            javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+
+            analyser.smoothingTimeConstant = 0.8;
+            analyser.fftSize = 1024;
+
+            microphone.connect(analyser);
+            analyser.connect(javascriptNode);
+            javascriptNode.connect(audioContext.destination);
+
+            javascriptNode.onaudioprocess = function() {
+                const array = new Uint8Array(analyser.frequencyBinCount);
+                analyser.getByteFrequencyData(array);
+                let values = 0;
+                for (let i = 0; i < array.length; i++) { values += array[i]; }
+                
+                const average = values / array.length;
+                const percentage = Math.min(100, Math.round(average * 2.5)); // 2.5x Multiplier for sensitivity
+                
+                document.getElementById('screamBar').style.height = percentage + '%';
+                document.getElementById('screamLevel').innerText = percentage + '%';
+            };
+            
+            isListening = true;
+            document.getElementById('screamBtn').innerText = "Stop Microphone";
+            document.getElementById('screamBtn').classList.replace('btn-primary', 'btn-danger');
+        } catch (err) {
+            alert("Please allow microphone access to use this feature.");
+        }
+    }
+
+    function stopScreamListener() {
+        if(audioContext) audioContext.close();
+        isListening = false;
+        document.getElementById('screamBar').style.height = '0%';
+        document.getElementById('screamLevel').innerText = '0%';
+        const btn = document.getElementById('screamBtn');
+        if(btn) {
+            btn.innerText = "Start Microphone";
+            btn.classList.replace('btn-danger', 'btn-primary');
+        }
+    }
+
+    // --- 3. Breathing Logic ---
+    let breathingInterval;
+    
+    function startBreathing() {
+        const circle = document.getElementById('breathingCircle');
+        const text = document.getElementById('breathingText');
+        if(breathingInterval) clearInterval(breathingInterval);
+
+        function cycle() {
+            // 1. Inhale (4s)
+            text.innerText = "Inhale...";
+            circle.className = "breathing-circle inhale";
+            
+            setTimeout(() => {
+                // 2. Hold (4s)
+                text.innerText = "Hold...";
+                
+                setTimeout(() => {
+                    // 3. Exhale (4s)
+                    text.innerText = "Exhale...";
+                    circle.className = "breathing-circle exhale";
+                    
+                    setTimeout(() => {
+                        // 4. Hold (4s)
+                        text.innerText = "Hold...";
+                    }, 4000);
+                }, 4000);
+            }, 4000);
+        }
+
+        cycle(); // Run first cycle immediately
+        breathingInterval = setInterval(cycle, 16000); // 16s total cycle
+    }
+
+    function stopBreathing() {
+        clearInterval(breathingInterval);
+        document.getElementById('breathingText').innerText = "Ready";
+        document.getElementById('breathingCircle').className = "breathing-circle";
+    }
+
+</script>
+
+{% endblock %}

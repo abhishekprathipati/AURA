@@ -1,0 +1,428 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    :root {
+        --primary: #6366f1;
+        --secondary: #a855f7;
+        --bg-dark: #0f172a;
+        --card-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    .dashboard-nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        backdrop-filter: blur(12px);
+        background: rgba(15, 23, 42, 0.85);
+        border-bottom: 1px solid var(--glass-border);
+        padding: 1.2rem;
+        margin: -2rem -2rem 2rem -2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .dashboard-nav a {
+        color: #e2e8f0;
+        text-decoration: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        backdrop-filter: blur(8px);
+    }
+
+    .dashboard-nav a:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(99, 102, 241, 0.2);
+    }
+
+    .dashboard-nav a.active {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border-color: var(--primary);
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+        color: white;
+    }
+
+    .relax-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .relax-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .relax-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .relax-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .relax-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: var(--shadow);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .relax-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .relax-card h2 {
+        margin-top: 0;
+        color: var(--aura-accent);
+        font-size: 1.5rem;
+    }
+
+    .breathing-circle {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--aura-accent), var(--aura-accent-secondary, #764ba2));
+        margin: 2rem auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: white;
+        box-shadow: 0 0 40px rgba(102, 126, 234, 0.5);
+    }
+
+    .breathing-circle.inhale {
+        animation: breatheIn 4s ease-in-out;
+    }
+
+    .breathing-circle.hold {
+        animation: hold 4s ease-in-out;
+    }
+
+    .breathing-circle.exhale {
+        animation: breatheOut 6s ease-in-out;
+    }
+
+    @keyframes breatheIn {
+        0% { transform: scale(1); }
+        100% { transform: scale(1.3); }
+    }
+
+    @keyframes hold {
+        0%, 100% { transform: scale(1.3); }
+    }
+
+    @keyframes breatheOut {
+        0% { transform: scale(1.3); }
+        100% { transform: scale(1); }
+    }
+
+    .breath-controls {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .breath-btn {
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        background: linear-gradient(135deg, var(--aura-accent), var(--aura-accent-secondary, #764ba2));
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        margin: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .breath-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .breath-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .timer-display {
+        font-size: 3rem;
+        font-weight: bold;
+        text-align: center;
+        margin: 2rem 0;
+        color: var(--aura-accent);
+    }
+
+    .meditation-options {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .meditation-btn {
+        padding: 0.8rem 1.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .meditation-btn:hover, .meditation-btn.active {
+        background: var(--aura-accent);
+        border-color: var(--aura-accent);
+    }
+
+    .affirmations-container {
+        text-align: center;
+        padding: 2rem;
+        min-height: 150px;
+    }
+
+    .affirmation-text {
+        font-size: 1.5rem;
+        font-style: italic;
+        color: var(--aura-accent);
+        margin: 2rem 0;
+        opacity: 0;
+        animation: fadeIn 1s ease-in forwards;
+    }
+
+    @keyframes fadeIn {
+        to { opacity: 1; }
+    }
+</style>
+
+
+
+<div class="relax-container">
+    <div class="relax-header">
+        <h1>🧘 Relaxation Zone</h1>
+        <p class="pill">Find your calm with guided breathing, meditation, and positive affirmations</p>
+    </div>
+
+    <div class="relax-grid">
+        <!-- Box Breathing Exercise -->
+        <div class="relax-card">
+            <h2>🌬️ Box Breathing</h2>
+            <p>A simple breathing technique to reduce stress and improve focus.</p>
+            <div class="breathing-circle" id="breathCircle">Ready</div>
+            <div class="breath-controls">
+                <button class="breath-btn" id="startBreathBtn">Start</button>
+                <button class="breath-btn" id="stopBreathBtn" disabled>Stop</button>
+            </div>
+            <p id="breathInstruction" style="text-align: center; margin-top: 1rem; font-size: 1.2rem;"></p>
+        </div>
+
+        <!-- Meditation Timer -->
+        <div class="relax-card">
+            <h2>⏱️ Meditation Timer</h2>
+            <p>Set a timer for your meditation practice.</p>
+            <div class="meditation-options">
+                <button class="meditation-btn" data-minutes="1">1 min</button>
+                <button class="meditation-btn" data-minutes="3">3 min</button>
+                <button class="meditation-btn" data-minutes="5">5 min</button>
+                <button class="meditation-btn" data-minutes="10">10 min</button>
+            </div>
+            <div class="timer-display" id="timerDisplay">00:00</div>
+            <div class="breath-controls">
+                <button class="breath-btn" id="startMeditationBtn">Start</button>
+                <button class="breath-btn" id="pauseMeditationBtn" disabled>Pause</button>
+                <button class="breath-btn" id="resetMeditationBtn">Reset</button>
+            </div>
+        </div>
+
+        <!-- Positive Affirmations -->
+        <div class="relax-card">
+            <h2>✨ Daily Affirmations</h2>
+            <p>Boost your mood with positive thoughts.</p>
+            <div class="affirmations-container">
+                <div class="affirmation-text" id="affirmationText">Click below for an affirmation</div>
+            </div>
+            <div class="breath-controls">
+                <button class="breath-btn" id="newAffirmationBtn">New Affirmation</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Box Breathing
+let breathingInterval = null;
+let breathingStep = 0;
+const breathCircle = document.getElementById('breathCircle');
+const breathInstruction = document.getElementById('breathInstruction');
+const startBreathBtn = document.getElementById('startBreathBtn');
+const stopBreathBtn = document.getElementById('stopBreathBtn');
+
+const breathingSteps = [
+    { text: 'Breathe In', duration: 4000, class: 'inhale' },
+    { text: 'Hold', duration: 4000, class: 'hold' },
+    { text: 'Breathe Out', duration: 6000, class: 'exhale' },
+    { text: 'Hold', duration: 2000, class: 'hold' }
+];
+
+function startBreathing() {
+    breathingStep = 0;
+    startBreathBtn.disabled = true;
+    stopBreathBtn.disabled = false;
+    runBreathingStep();
+}
+
+function stopBreathing() {
+    clearTimeout(breathingInterval);
+    breathCircle.className = 'breathing-circle';
+    breathCircle.textContent = 'Ready';
+    breathInstruction.textContent = '';
+    startBreathBtn.disabled = false;
+    stopBreathBtn.disabled = true;
+}
+
+function runBreathingStep() {
+    const step = breathingSteps[breathingStep];
+    breathCircle.className = 'breathing-circle ' + step.class;
+    breathCircle.textContent = step.text;
+    breathInstruction.textContent = step.text + '...';
+    
+    breathingInterval = setTimeout(() => {
+        breathingStep = (breathingStep + 1) % breathingSteps.length;
+        runBreathingStep();
+    }, step.duration);
+}
+
+startBreathBtn.addEventListener('click', startBreathing);
+stopBreathBtn.addEventListener('click', stopBreathing);
+
+// Meditation Timer
+let meditationSeconds = 0;
+let meditationTimer = null;
+let meditationPaused = false;
+const timerDisplay = document.getElementById('timerDisplay');
+const startMeditationBtn = document.getElementById('startMeditationBtn');
+const pauseMeditationBtn = document.getElementById('pauseMeditationBtn');
+const resetMeditationBtn = document.getElementById('resetMeditationBtn');
+
+document.querySelectorAll('.meditation-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.meditation-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        meditationSeconds = parseInt(btn.dataset.minutes) * 60;
+        updateTimerDisplay();
+        resetMeditation();
+    });
+});
+
+function updateTimerDisplay() {
+    const mins = Math.floor(meditationSeconds / 60);
+    const secs = meditationSeconds % 60;
+    timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+function startMeditation() {
+    if (meditationSeconds <= 0) {
+        alert('Please select a duration first!');
+        return;
+    }
+    meditationPaused = false;
+    startMeditationBtn.disabled = true;
+    pauseMeditationBtn.disabled = false;
+    runMeditationTimer();
+}
+
+function pauseMeditation() {
+    meditationPaused = true;
+    clearInterval(meditationTimer);
+    startMeditationBtn.disabled = false;
+    pauseMeditationBtn.disabled = true;
+}
+
+function resetMeditation() {
+    clearInterval(meditationTimer);
+    meditationPaused = false;
+    startMeditationBtn.disabled = false;
+    pauseMeditationBtn.disabled = true;
+    document.querySelectorAll('.meditation-btn').forEach(btn => {
+        if (btn.classList.contains('active')) {
+            meditationSeconds = parseInt(btn.dataset.minutes) * 60;
+        }
+    });
+    updateTimerDisplay();
+}
+
+function runMeditationTimer() {
+    meditationTimer = setInterval(() => {
+        if (meditationSeconds > 0) {
+            meditationSeconds--;
+            updateTimerDisplay();
+        } else {
+            clearInterval(meditationTimer);
+            alert('🧘 Meditation complete! Great job!');
+            resetMeditation();
+        }
+    }, 1000);
+}
+
+startMeditationBtn.addEventListener('click', startMeditation);
+pauseMeditationBtn.addEventListener('click', pauseMeditation);
+resetMeditationBtn.addEventListener('click', resetMeditation);
+
+// Affirmations
+const affirmations = [
+    "I am capable of achieving my goals.",
+    "I choose to focus on what I can control.",
+    "I am worthy of love and respect.",
+    "I embrace challenges as opportunities to grow.",
+    "I am enough, just as I am.",
+    "I trust in my ability to overcome obstacles.",
+    "I am grateful for all that I have.",
+    "I release what no longer serves me.",
+    "I am creating the life I want to live.",
+    "I deserve peace and happiness.",
+    "I am strong, resilient, and brave.",
+    "I choose to be positive and optimistic.",
+    "I am in charge of how I feel.",
+    "I am making progress every day.",
+    "I believe in myself and my abilities."
+];
+
+const affirmationText = document.getElementById('affirmationText');
+const newAffirmationBtn = document.getElementById('newAffirmationBtn');
+
+function showAffirmation() {
+    const randomIndex = Math.floor(Math.random() * affirmations.length);
+    affirmationText.style.animation = 'none';
+    setTimeout(() => {
+        affirmationText.textContent = affirmations[randomIndex];
+        affirmationText.style.animation = 'fadeIn 1s ease-in forwards';
+    }, 10);
+}
+
+newAffirmationBtn.addEventListener('click', showAffirmation);
+
+// Show initial affirmation
+showAffirmation();
+</script>
+{% endblock %}

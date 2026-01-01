@@ -1,0 +1,40 @@
+/* Overlay for chatbot/modal to prevent dashboard overlap */
+.chatbot-overlay, .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 2000;
+    display: none;
+}
+
+.chatbot-modal, .modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2100;
+    background: #1e293b;
+    border-radius: 18px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+    padding: 2rem;
+    min-width: 340px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: none;
+}
+
+.chatbot-modal.active, .modal.active,
+.chatbot-overlay.active, .modal-overlay.active {
+    display: block;
+}
+
+@media (max-width: 600px) {
+    .chatbot-modal, .modal {
+        min-width: 90vw;
+        padding: 1rem;
+    }
+}

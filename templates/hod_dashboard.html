@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+  .hod-wrap{max-width:1200px;margin:0 auto}
+  .hod-chart{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem;box-shadow:var(--shadow)}
+</style>
+
+<div class="hod-wrap">
+  <div class="card" style="margin-bottom:1rem">
+    <h2>Department Wellness Overview</h2>
+    <p class="pill">30-day average stress trend across all students.</p>
+  </div>
+  
+  <div class="hod-chart">
+    <canvas id="wellnessChart" style="max-height:350px"></canvas>
+  </div>
+</div>
+
+<script>
+async function loadWellness(){
+  try{
+    const r = await fetch('/api/hod/wellness');
+    const j = await r.json();
+    if(!j.dates) return;
+    const ctx = document.getElementById('wellnessChart').getContext('2d');
+    new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:j.dates,
+        datasets:[{
+          label:'Avg Stress',
+          data:j.scores,
+          borderColor:'#6366f1',
+          backgroundColor:'rgba(99,102,241,0.1)',
+          tension:0.3,
+          fill:true
+        }]
+      },
+      options:{
+        plugins:{legend:{display:true}},
+        scales:{y:{min:0,max:100,title:{display:true,text:'Stress Score'}}},
+        responsive:true,
+        maintainAspectRatio:true
+      }
+    });
+  }catch(e){console.error(e);}
+}
+window.addEventListener('DOMContentLoaded',loadWellness);
+</script>
+{% endblock %}

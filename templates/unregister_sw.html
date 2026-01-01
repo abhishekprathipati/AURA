@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Unregister Service Worker{% endblock %}
+{% block body_class %}minimal-page{% endblock %}
+
+{% block content %}
+<div style="max-width:720px;margin:4rem auto;padding:2rem;text-align:center;">
+    <h2>Unregistering service worker & clearing caches</h2>
+    <p id="status">Starting...</p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(async function(){
+    const s = (txt) => { console.log(txt); document.getElementById('status').textContent = txt; };
+    try {
+        s('Unregistering service workers...');
+        if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(r => r.unregister()));
+            s('Service workers unregistered');
+        } else s('No service worker support');
+
+        s('Clearing caches...');
+        if (window.caches && caches.keys) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+            s('Caches cleared');
+        } else s('No cache API available');
+
+        s('Clearing localStorage/sessionStorage...');
+        sessionStorage.clear();
+        // keep localStorage items if needed, but clear ones we suspect
+        localStorage.removeItem('wellness_streak');
+        localStorage.removeItem('achievements');
+        s('Storage cleaned');
+
+        setTimeout(() => {
+            s('Redirecting to dashboard...');
+            window.location.href = '/student/dashboard';
+        }, 900);
+    } catch (err) {
+        s('Error: ' + err.message);
+        console.error(err);
+    }
+})();
+</script>
+{% endblock %}

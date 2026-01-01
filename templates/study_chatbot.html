@@ -1,0 +1,490 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+	:root {
+		--theme-accent: #7c3aed;
+		--theme-bg: #f3f6fb;
+		--theme-text-light: #fff;
+		--theme-text-dark: #1a202c;
+		--theme-text: var(--theme-text-dark);
+	}
+	body[data-theme="light"] {
+		--theme-bg: #f3f6fb;
+		--theme-text: var(--theme-text-dark);
+	}
+	body[data-theme="dark"] {
+		--theme-bg: #181a20;
+		--theme-text: var(--theme-text-light);
+	}
+	.study-workspace {
+		display: grid;
+		grid-template-columns: 1fr 300px;
+		gap: 20px;
+		height: calc(100vh - 120px);
+		padding: 20px;
+		max-width: 1400px;
+		margin: 0 auto;
+	}
+	.main-content-pane {
+		display: flex;
+		flex-direction: column;
+		background: rgba(255,255,255,0.18);
+		backdrop-filter: blur(18px);
+		border-radius: 16px;
+		border: 1px solid var(--theme-accent);
+		overflow: hidden;
+		box-shadow: var(--shadow);
+		height: 100%;
+		min-height: 500px;
+	}
+	.chat-header {
+		padding: 20px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.dashboard-card, .status-card, .mood-card, .insights-card {
+		background: rgba(255,255,255,0.38); /* Frosted glass, more visible */
+		backdrop-filter: blur(18px) saturate(1.2);
+		border-radius: 16px;
+		border: 1px solid #1a202c; /* High-contrast border for visibility */
+		box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+		padding: 1.2rem 1.5rem;
+		margin-bottom: 1.2rem;
+		transition: border-color 0.2s, background 0.2s;
+	}
+
+	.chat-header h2 {
+		margin: 0;
+		color: var(--theme-text);
+		font-size: 1.5rem;
+		transition: color 0.2s;
+	}
+	.dashboard-title, .dashboard-description, .card-title, .card-description {
+		color: #1a202c; /* Charcoal Navy for light theme, always visible */
+		transition: color 0.2s;
+		font-weight: 700;
+		letter-spacing: 0.01em;
+	}
+
+	/* Messages/Analysis Pane */
+	.study-messages-pane {
+		flex: 1 1 auto;
+		min-height: 200px;
+		overflow-y: auto;
+		padding: 20px;
+		display: flex;
+		flex-direction: column;
+		gap: 15px;
+		background: rgba(0, 0, 0, 0.25);
+		position: relative;
+	}
+
+	.study-messages-pane.empty::before {
+		content: "👋 Welcome! Start your study conversation.";
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #7c3aed;
+		font-size: 1.2rem;
+		font-weight: 600;
+		height: 100%;
+		position: absolute;
+		left: 0; right: 0; top: 0; bottom: 0;
+		z-index: 1;
+		pointer-events: none;
+	}
+
+	.study-messages-pane::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	.study-messages-pane::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.study-messages-pane::-webkit-scrollbar-thumb {
+		background: var(--accent);
+		border-radius: 4px;
+	}
+
+	.typing-indicator {
+		display: flex !important;
+		align-items: center;
+		gap: 4px;
+	}
+
+	.typing .typing-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.6);
+		animation: typing 1.4s infinite;
+	}
+
+	.typing .typing-dot:nth-child(2) {
+		animation-delay: 0.2s;
+	}
+
+	.typing .typing-dot:nth-child(3) {
+		animation-delay: 0.4s;
+	}
+
+	@keyframes typing {
+		0%, 60%, 100% { opacity: 0.3; }
+		30% { opacity: 1; }
+	}
+
+	/* Message bubbles */
+	.message {
+		margin: 10px 0;
+		padding: 12px 15px;
+		border-radius: 12px;
+		word-wrap: break-word;
+		line-height: 1.4;
+		display: inline-block;
+		animation: slideIn 0.3s ease;
+	}
+
+	.message p {
+		margin: 0;
+		padding: 0;
+	}
+
+	@keyframes slideIn {
+		from { opacity: 0; transform: translateY(10px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+
+	.user-message {
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		color: white;
+		margin-left: auto;
+		max-width: 80%;
+		border-bottom-right-radius: 4px;
+		align-self: flex-end;
+	}
+
+	.ai-message {
+		background: rgba(255,255,255,0.22);
+		border: 1px solid var(--theme-accent);
+		color: var(--theme-text);
+		margin-right: auto;
+		max-width: 90%;
+		border-bottom-left-radius: 4px;
+		align-self: flex-start;
+		box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+	}
+
+	.ai-message.analysis-card {
+		background: rgba(255,255,255,0.38); /* More visible glassmorphism */
+		border-radius: 12px;
+		padding: 15px;
+		color: #1a202c;
+		border: 1px solid #1a202c;
+		box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+	}
+
+	.analysis-card .card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 10px;
+	}
+
+	.analysis-card h4 {
+		margin: 0;
+		color: var(--theme-text);
+		font-size: 1.1rem;
+		transition: color 0.2s;
+	}
+
+	.summarize-btn {
+		background: var(--theme-accent);
+		color: var(--theme-text-light);
+		border: none;
+		padding: 6px 12px;
+		border-radius: 8px;
+		cursor: pointer;
+		font-size: 0.85rem;
+		transition: background 0.2s, border-color 0.2s;
+	}
+
+	.summarize-btn:hover { filter: brightness(1.1); }
+
+	/* Input footer */
+	.study-input-area {
+		display: flex;
+		gap: 10px;
+		padding: 15px 20px;
+		border-top: 1px solid rgba(255, 255, 255, 0.1);
+		background: rgba(0, 0, 0, 0.2);
+		align-items: center;
+		position: relative;
+	}
+
+	.custom-file-upload {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 10px 12px;
+		background: var(--theme-accent);
+		color: var(--theme-text-light);
+		border-radius: 8px;
+		cursor: pointer;
+		font-size: 0.9rem;
+		white-space: nowrap;
+		transition: filter 0.2s, background 0.2s;
+	}
+
+	.custom-file-upload:hover { filter: brightness(1.1); }
+
+	.custom-file-upload input[type="file"] { display: none; }
+
+	#file-label { margin-left: 2px; }
+
+	#study-chat-input {
+		flex: 1;
+		padding: 10px 15px;
+		border-radius: 8px;
+		border: 1px solid var(--theme-accent);
+		background: rgba(255,255,255,0.18);
+		color: #1a202c;
+		font-size: 1rem;
+	}
+
+	#study-chat-input::placeholder { color: #7c3aed; opacity: 0.7; }
+/* High-contrast stress gauge styles */
+.stress-gauge-arc {
+	stroke: #6366f1 !important; /* Indigo */
+	stroke-width: 10;
+	filter: drop-shadow(0 0 4px #fff8) drop-shadow(0 0 2px #6366f1);
+}
+.stress-gauge-value {
+	fill: #fff;
+	font-weight: bold;
+	font-size: 2.1rem;
+	text-shadow: 0 1px 8px #6366f1, 0 0px 2px #fff;
+	letter-spacing: 0.04em;
+}
+
+	.analyze-btn {
+		background: var(--theme-accent);
+		color: var(--theme-text-light);
+		border: none;
+		padding: 10px 16px;
+		border-radius: 8px;
+		cursor: pointer;
+		font-size: 1rem;
+		white-space: nowrap;
+		transition: filter 0.2s, background 0.2s;
+	}
+
+	.analyze-btn:hover { filter: brightness(1.1); }
+
+	/* Sidebar */
+	.study-sidebar {
+		background: linear-gradient(145deg, rgba(20, 20, 40, 0.8), rgba(0, 0, 0, 0.8));
+		backdrop-filter: blur(15px);
+		border-radius: 16px;
+		padding: 20px;
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		color: #fff;
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		box-shadow: var(--shadow);
+	}
+
+	.sidebar-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 10px;
+	}
+
+	.sidebar-header .logo {
+		font-size: 1.6rem;
+		font-weight: 800;
+		color: var(--accent);
+	}
+
+	.menu-toggle {
+		background: none;
+		border: none;
+		color: #fff;
+		font-size: 1.4rem;
+		cursor: pointer;
+	}
+
+	.study-sidebar h3 {
+		margin: 0 0 8px 0;
+		color: #fff;
+		font-size: 1.1rem;
+	}
+
+	.tips-list, .recent-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.tips-list li { color: rgba(255, 255, 255, 0.75); font-size: 0.95rem; }
+
+	.recent-list .recent-file-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 8px 0;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		color: rgba(255, 255, 255, 0.85);
+		font-size: 0.95rem;
+	}
+
+	.recent-file-item .dots { font-weight: 700; cursor: pointer; }
+
+	@media (max-width: 1100px) {
+		.study-workspace {
+			grid-template-columns: 1fr;
+			height: auto;
+		}
+		.main-content-pane { min-height: 70vh; }
+	}
+</style>
+
+<div class="study-workspace">
+	<!-- Elite Theme Color Selector -->
+	<div style="position:fixed;top:18px;right:38px;z-index:1200;display:flex;gap:10px;align-items:center;">
+		<span style="font-weight:600;color:#1a202c;">Accent:</span>
+		<div id="elite-theme-blocks" style="display:flex;gap:7px;">
+			<div class="color-block" data-accent="#7c3aed" title="Indigo" style="width:28px;height:28px;border-radius:7px;background:#7c3aed;cursor:pointer;border:2px solid #1a202c;"></div>
+			<div class="color-block" data-accent="#ef476f" title="Rose Pink" style="width:28px;height:28px;border-radius:7px;background:#ef476f;cursor:pointer;border:2px solid #1a202c;"></div>
+			<div class="color-block" data-accent="#06d6a0" title="Mint" style="width:28px;height:28px;border-radius:7px;background:#06d6a0;cursor:pointer;border:2px solid #1a202c;"></div>
+			<div class="color-block" data-accent="#ffd166" title="Gold" style="width:28px;height:28px;border-radius:7px;background:#ffd166;cursor:pointer;border:2px solid #1a202c;"></div>
+			<div class="color-block" data-accent="#118ab2" title="Blue" style="width:28px;height:28px;border-radius:7px;background:#118ab2;cursor:pointer;border:2px solid #1a202c;"></div>
+		</div>
+	</div>
+	<div class="main-content-pane">
+		<div class="chat-header">
+			<h2>Study Assistant</h2>
+		</div>
+
+		<div id="study-messages" class="study-messages-pane empty" data-study-messages>
+			<!-- Messages will appear here -->
+		</div>
+
+		<div class="study-input-area fixed-action-bar" style="position:relative; background:rgba(30,41,59,0.92); box-shadow:0 -2px 24px rgba(0,0,0,0.18); padding: 0.7rem 0; display:flex; justify-content:center;">
+			<form class="study-input-form" data-study-form novalidate style="display:flex; align-items:center; gap:0.7rem; width:100%; max-width:900px;">
+				<label class="custom-file-upload" aria-label="Attach file" style="margin-bottom:0;">
+					<input type="file" id="file-input" data-study-file accept=".pdf,image/png,image/jpeg,application/pdf">
+					<span id="file-label">📎</span>
+				</label>
+				<input type="text" id="study-chat-input" placeholder="Share what's on your mind..." data-study-input style="flex:1; min-width:0; border-radius:8px; border:none; padding:0.7rem 1rem; font-size:1.1rem; background:rgba(255,255,255,0.08); color:#fff;">
+				<button type="submit" class="analyze-btn" id="study-analyze-btn" data-study-analyze style="background:var(--theme-accent,#7c3aed); color:var(--theme-text-light); border:none; border-radius:8px; padding:0.7rem 1.3rem; font-weight:700; font-size:1rem; cursor:pointer;">Send</button>
+				<button type="button" id="voice-btn" aria-label="Voice Input" style="background:none; border:none; margin-left:0.5rem; font-size:1.7rem; color:#a78bfa; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+					<span style="font-size:1.7rem;">🎙️</span>
+				</button>
+			</form>
+		</div>
+	</div>
+
+	<div class="study-sidebar">
+		<div class="sidebar-header">
+			<span class="logo">AURA</span>
+			<button class="menu-toggle" aria-label="menu">☰</button>
+		</div>
+
+		<h3>Study Tips</h3>
+		<ul class="tips-list">
+			<li>Summarize key points from PDFs.</li>
+			<li>Get explanations for diagrams/images.</li>
+			<li>Request step-by-step solutions.</li>
+		</ul>
+
+		<h3>Recent Files</h3>
+		<div id="recent-files-list" class="recent-list">
+			<div class="recent-file-item">
+				<span>📄 Recent Notes.pdf</span>
+				<span class="dots">...</span>
+			</div>
+			<div class="recent-file-item">
+				<span>🖼️ Mock Exam.png</span>
+				<span class="dots">...</span>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="{{ url_for('static', filename='js/study_chatbot.js', v=17) }}"></script>
+<script>
+// Elite Theme Accent System
+document.addEventListener('DOMContentLoaded', function() {
+	const blocks = document.querySelectorAll('.color-block');
+	blocks.forEach(block => {
+		block.addEventListener('click', function() {
+			const accent = this.getAttribute('data-accent');
+			document.documentElement.style.setProperty('--theme-accent', accent);
+			// Update all accent-using elements
+			document.querySelectorAll('.analyze-btn,.custom-file-upload,.summarize-btn').forEach(el => {
+				el.style.background = accent;
+				el.style.borderColor = accent;
+			});
+			// Update border for cards
+			document.querySelectorAll('.dashboard-card,.status-card,.mood-card,.insights-card,.ai-message.analysis-card').forEach(card => {
+				card.style.borderColor = accent;
+			});
+			// Update stress gauge needle if present
+			const gaugeNeedle = document.querySelector('.stress-gauge-needle');
+			if (gaugeNeedle) gaugeNeedle.setAttribute('stroke', accent);
+			// Optionally update other accent uses
+		});
+	});
+});
+</script>
+<style>
+/* Structured AI content for study assistant */
+.bot-bubble-content {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.bot-bubble-content h3 { 
+	font-size: 1.05rem; 
+	color: var(--theme-accent);
+	margin: 6px 0 4px 0; 
+	border-bottom: 1px solid var(--theme-accent);
+	padding-bottom: 2px;
+}
+.bot-bubble-content ul {
+	background: rgba(255,255,255,0.06);
+	border-radius: 8px; 
+	padding: 12px 16px 12px 28px; 
+	list-style-type: square;
+}
+.bubble-actions { display:flex; gap:8px; margin-top:8px; }
+</style>
+<script>
+// Remove empty class when messages are added
+function removeEmptyClassIfNeeded() {
+	const cont = document.querySelector('[data-study-messages]');
+	if (!cont) return;
+	if (cont.children.length > 0) {
+		cont.classList.remove('empty');
+	} else {
+		cont.classList.add('empty');
+	}
+}
+// Patch addStudyMessage to call removeEmptyClassIfNeeded
+const origAddStudyMessage = window.addStudyMessage;
+window.addStudyMessage = function(role, text) {
+	if (typeof origAddStudyMessage === 'function') origAddStudyMessage(role, text);
+	removeEmptyClassIfNeeded();
+};
+document.addEventListener('DOMContentLoaded', removeEmptyClassIfNeeded);
+</script>
+{% endblock %}

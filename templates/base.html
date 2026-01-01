@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AURA{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css', v=3) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=3) }}">
+    <style>
+        /* CRITICAL FIX: Ensure main content area is always visible */
+        html, body {
+            width: 100%;
+            height: auto;
+            min-height: 100vh;
+        }
+        main {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            min-height: 100vh;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+        /* Ensure header doesn't collapse everything */
+        header {
+            width: 100%;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{{ session.get('current_theme', 'theme-normal') }} {% block body_class %}{% endblock %}" style="display: flex; flex-direction: column; min-height: 100vh;">
+    <div id="topEdgeHotspot" aria-hidden="true"></div>
+
+    {% if show_nav is not defined or show_nav %}
+    <header>
+        <!-- NAV_RENDERED: show_nav={{ show_nav|default('UNSET') }} -->
+        <nav class="dashboard-nav" role="navigation">
+            <div class="logo">AURA</div>
+
+            <a href="/student/dashboard" class="{% if request.path.startswith('/student/dashboard') %}active{% endif %}">📊 Dashboard</a>
+            <a href="/student/relax" class="{% if request.path.startswith('/student/relax') %}active{% endif %}">🧘 Relax</a>
+            <a href="/student/activities" class="{% if request.path.startswith('/student/activities') %}active{% endif %}">🎯 Activities</a>
+            <a href="/student/games" class="{% if request.path.startswith('/student/games') %}active{% endif %}">🎮 Mind Games</a>
+            <a href="/student/chat/mental" class="{% if request.path.startswith('/student/chat/mental') %}active{% endif %}">💬 Mental Chat</a>
+            <a href="/student/chat/study" class="{% if request.path.startswith('/student/chat/study') %}active{% endif %}">📚 Study Chat</a>
+
+            <div class="spacer"></div>
+
+            {% if session.get('user_email') %}
+                <div class="user">
+                    <span class="mood-indicator" id="headerMoodIndicator"></span>
+                    {{ session.get('user_name') }} ({{ session.get('user_role') }})
+                </div>
+                <button class="btn btn-ghost" type="button" id="zenModeToggle">Zen Mode</button>
+                <a class="btn btn-ghost" href="/logout">Logout</a>
+            {% else %}
+                <a class="btn btn-ghost" href="/login">Login</a>
+            {% endif %}
+        </nav>
+    </header>
+    {% endif %}
+
+    {% if show_nav is defined and not show_nav %}
+    <!-- FAILSAFE: Hide any dashboard-like navs when the server explicitly disables navigation -->
+    <style> 
+        .dashboard-nav, div[class*="dashboard-nav"], .dashboard-nav * { display: none !important; visibility: hidden !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
+    </style>
+    <script>
+    // Remove any existing dashboard nav nodes immediately for the dashboard route
+    (function(){
+        try {
+            const removeAll = () => {
+                document.querySelectorAll('.dashboard-nav, div[class*="dashboard-nav"]').forEach(el => el.remove());
+            };
+            // run now if DOM is already parsed
+            if (document.readyState === 'interactive' || document.readyState === 'complete') removeAll();
+            else document.addEventListener('DOMContentLoaded', removeAll);
+            // also guard against later injections
+            const obs = new MutationObserver((mutations)=>{
+                for(const m of mutations){
+                    for(const n of m.addedNodes){
+                        if(n && n.querySelectorAll){
+                            n.querySelectorAll('.dashboard-nav, div[class*="dashboard-nav"]').forEach(el => el.remove());
+                        }
+                        if(n && n.matches && n.matches('.dashboard-nav, div[class*="dashboard-nav"]')){
+                            n.remove();
+                        }
+                    }
+                }
+            });
+            obs.observe(document.documentElement, { childList: true, subtree: true });
+        } catch(e) { console.error('Failsafe removal script error', e); }
+    })();
+    </script>
+    {% endif %}
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/zen.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/voice_commands.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+    <script>
+    // Register service worker for offline support
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then(reg => console.log('[Service Worker] Registered', reg.scope))
+                .catch(err => console.log('[Service Worker] Registration failed:', err));
+        });
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<div class="card" style="margin-bottom:1rem;">
+  <div class="pill">Student Detail</div>
+  <h2 id="studentName">Loading...</h2>
+  <div style="color:var(--muted);">Email: <span id="studentEmail">{{ student_email }}</span></div>
+</div>
+
+<div class="grid grid-2" style="margin-bottom:1rem;">
+  <div class="card" style="min-height:300px;">
+    <h2>Stress History (30 days)</h2>
+    <div style="height:260px; margin-top:0.5rem;">
+      <canvas id="studentStressChart"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Proctor Notes</h2>
+    <form id="notesForm" style="display:flex; gap:0.5rem; align-items:center;">
+      <input type="text" id="noteInput" placeholder="Add guidance note..." style="flex:1; padding:0.75rem; border-radius:8px; border:1px solid var(--border);" />
+      <label style="display:flex; align-items:center; gap:0.35rem; color:var(--muted);">
+        <input type="checkbox" id="urgentInput" /> Urgent
+      </label>
+      <button class="btn" type="submit">Save</button>
+    </form>
+    <div id="notesTimeline" class="timeline" style="margin-top:0.75rem;"></div>
+  </div>
+// Timeline styles
+const timelineStyle = document.createElement('style');
+timelineStyle.textContent = `
+.timeline { position: relative; padding-left: 1.5rem; }
+.timeline::before { content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 2px; background: var(--border); }
+.timeline-item { position: relative; margin-bottom: 0.9rem; }
+.timeline-dot { position: absolute; left: -0.05rem; top: 0.35rem; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.note-bubble { padding: 0.75rem 1rem; border-radius: 12px; background: var(--panel); border: 1px solid var(--border); }
+.note-header { font-size: 0.9rem; color: var(--muted); margin-bottom: 0.35rem; display:flex; justify-content:space-between; }
+.note-urgent { border-color: #ef4444; background: #fff5f5; }
+.note-urgent .note-header { color: #b91c1c; }
+`;
+document.head.appendChild(timelineStyle);
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Recent Chats</h2>
+    <ul id="chatList" style="list-style:none; padding:0; margin:0;"></ul>
+  </div>
+  <div class="card">
+    <h2>Grievances</h2>
+    <ul id="grievanceList" style="list-style:none; padding:0; margin:0;"></ul>
+  </div>
+</div>
+
+<script>
+const studentEmail = document.getElementById('studentEmail').textContent;
+
+async function fetchJSON(url, options={}){
+  const r = await fetch(url, options);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+
+function renderStressChart(history){
+  const canvas = document.getElementById('studentStressChart');
+  if(!canvas || typeof Chart === 'undefined') return;
+  const labels = history.map(h => h.date);
+  const data = history.map(h => h.score);
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Average Daily Stress',
+        data,
+        borderColor: 'var(--accent)',
+        backgroundColor: 'rgba(124,58,237,0.25)',
+        tension: 0.3,
+        fill: true,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { min: 0, max: 100 } },
+      responsive: true,
+      maintainAspectRatio: false,
+    }
+  });
+}
+
+function renderChats(chats){
+  const list = document.getElementById('chatList');
+  list.innerHTML = '';
+  chats.forEach(c => {
+    const li = document.createElement('li');
+    li.style.marginBottom = '0.75rem';
+    li.innerHTML = `<div class="pill">${new Date(c.created_at).toLocaleString()}</div>
+      <div><strong>Student:</strong> ${c.message || ''}</div>
+      <div style="margin-top:0.35rem;"><strong>AI:</strong> ${c.response || ''}</div>
+      <div style="color:var(--muted); margin-top:0.25rem;">Sentiment: ${c.sentiment || 'neutral'}</div>`;
+    list.appendChild(li);
+  });
+}
+
+function renderGrievances(gs){
+  const list = document.getElementById('grievanceList');
+  list.innerHTML = '';
+  gs.forEach(g => {
+    const li = document.createElement('li');
+    li.style.marginBottom = '0.75rem';
+    li.innerHTML = `<div class="pill">${g.status}</div>
+      <div><strong>${g.subject || ''}</strong></div>
+      <div style="color:var(--muted);">${g.description || ''}</div>
+      <div style="color:var(--muted);">Created: ${new Date(g.created_at).toLocaleString()}</div>`;
+    list.appendChild(li);
+  });
+}
+
+function renderNotes(notes){
+  const tl = document.getElementById('notesTimeline');
+  tl.innerHTML = '';
+  notes.forEach(n => {
+    const item = document.createElement('div');
+    item.className = 'timeline-item';
+    const dot = document.createElement('div'); dot.className = 'timeline-dot';
+    const bubble = document.createElement('div'); bubble.className = 'note-bubble' + (n.urgent ? ' note-urgent' : '');
+    const header = document.createElement('div'); header.className = 'note-header';
+    const left = document.createElement('div'); left.textContent = `${new Date(n.created_at).toLocaleString()} — ${n.proctor_name}`;
+    const right = document.createElement('div'); right.textContent = n.urgent ? 'URGENT' : '';
+    const body = document.createElement('div'); body.textContent = n.note;
+    header.appendChild(left); header.appendChild(right);
+    bubble.appendChild(header); bubble.appendChild(body);
+    item.appendChild(dot); item.appendChild(bubble);
+    tl.appendChild(item);
+  });
+}
+
+async function loadDetails(){
+  try{
+    const data = await fetchJSON(`/proctor/api/proctor/student/${encodeURIComponent(studentEmail)}`);
+    document.getElementById('studentName').textContent = data.profile?.name || 'Unknown';
+    renderStressChart(data.stress_history || []);
+    renderChats(data.chats || []);
+    renderGrievances(data.grievances || []);
+    renderNotes(data.notes || []);
+  }catch(e){ console.warn('Detail load failed', e); }
+}
+
+// Notes submission
+const form = document.getElementById('notesForm');
+form.addEventListener('submit', async (ev)=>{
+  ev.preventDefault();
+  const note = document.getElementById('noteInput').value.trim();
+  if(!note) return;
+  try{
+    const urgent = document.getElementById('urgentInput').checked;
+    await fetchJSON(`/proctor/api/proctor/student/${encodeURIComponent(studentEmail)}/notes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note, urgent })
+    });
+    document.getElementById('noteInput').value='';
+    document.getElementById('urgentInput').checked=false;
+    await loadDetails();
+  }catch(e){ console.warn('Note save failed', e); }
+});
+
+window.addEventListener('DOMContentLoaded', loadDetails);
+</script>
+{% endblock %}

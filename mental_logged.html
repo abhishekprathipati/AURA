@@ -1,0 +1,181 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Wellness - AURA</title>
+    <link rel="stylesheet" href="/static/css/global.css?v=3">
+    <link rel="stylesheet" href="/static/css/style.css?v=3">
+    
+<link rel="stylesheet" href="/static/css/elite-layout.css?v=1">
+<link rel="stylesheet" href="/static/css/chatbot-modal.css?v=1">
+<style>
+/* Safety net: keep chat UI visible even if other pages hid elements */
+.mental-page .main-chat {
+    display: flex !important;
+    flex-direction: column !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 80vh;
+}
+.mental-page #chatDisplay {
+    display: flex !important;
+    flex-direction: column;
+    min-height: 50vh;
+    overflow-y: auto !important;
+    background: rgba(255,255,255,0.08) !important;
+    border: 2px solid rgba(255,255,255,0.2) !important;
+    border-radius: 12px;
+    padding: 1.5rem !important;
+}
+.mental-page .input-container {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+    background: rgba(0,0,0,0.8);
+    border-top: 2px solid #6366f1;
+}
+.mental-page .input-wrapper {
+    display: flex !important;
+    background: rgba(255,255,255,0.15) !important;
+    border: 2px solid #818cf8 !important;
+}
+.mental-page #chatInput {
+    color: #fff !important;
+    background: rgba(255,255,255,0.1) !important;
+    border: 1px solid rgba(255,255,255,0.3) !important;
+}
+</style>
+
+</head>
+<body class="theme-normal mental-page">
+    <div id="topEdgeHotspot" aria-hidden="true"></div>
+
+    
+    <header>
+        <!-- NAV_RENDERED: show_nav=True -->
+        <nav class="dashboard-nav" role="navigation">
+            <div class="logo">AURA</div>
+
+            <a href="/student/dashboard" class="">📊 Dashboard</a>
+            <a href="/student/relax" class="">🧘 Relax</a>
+            <a href="/student/activities" class="">🎯 Activities</a>
+            <a href="/student/games" class="">🎮 Mind Games</a>
+            <a href="/student/chat/mental" class="active">💬 Mental Chat</a>
+            <a href="/student/chat/study" class="">📚 Study Chat</a>
+
+            <div class="spacer"></div>
+
+            
+                <div class="user">
+                    <span class="mood-indicator" id="headerMoodIndicator"></span>
+                    Demo Student (student)
+                </div>
+                <button class="btn btn-ghost" type="button" id="zenModeToggle">Zen Mode</button>
+                <a class="btn btn-ghost" href="/logout">Logout</a>
+            
+        </nav>
+    </header>
+    
+
+    
+
+    <main>
+        
+            
+                
+                    <div class="flash success">Welcome back, Demo Student!</div>
+                
+            
+        
+        
+
+
+<div class="chatbot-overlay"></div>
+<div class="chatbot-modal">
+    <div class="aura-dashboard">
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">AURA</div>
+            <button class="new-chat-btn" id="newChatBtn">+ New Chat</button>
+            <!-- Navigation Menu -->
+            <div class="history-container" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 1rem; padding-top: 1rem;">
+                <div class="history-label" style="opacity: 0.7;">Navigation</div>
+                <div class="history-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <a href="/student/dashboard" class="history-item" style="padding: 0.75rem; border-radius: 8px; text-decoration: none; color: white; display: flex; align-items: center; gap: 0.75rem; transition: all 0.3s;">📊 Dashboard</a>
+                    <a href="/student/relax" class="history-item" style="padding: 0.75rem; border-radius: 8px; text-decoration: none; color: white; display: flex; align-items: center; gap: 0.75rem; transition: all 0.3s;">🧘 Relax</a>
+                    <a href="/student/activities" class="history-item" style="padding: 0.75rem; border-radius: 8px; text-decoration: none; color: white; display: flex; align-items: center; gap: 0.75rem; transition: all 0.3s;">🎯 Activities</a>
+                    <a href="/student/games" class="history-item" style="padding: 0.75rem; border-radius: 8px; text-decoration: none; color: white; display: flex; align-items: center; gap: 0.75rem; transition: all 0.3s;">🎮 Mind Games</a>
+                    <a href="/student/chat/study" class="history-item" style="padding: 0.75rem; border-radius: 8px; text-decoration: none; color: white; display: flex; align-items: center; gap: 0.75rem; transition: all 0.3s;">📚 Study Chat</a>
+                </div>
+            </div>
+            <div class="history-container" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 1rem; padding-top: 1rem;">
+                <div class="history-label">Chat History</div>
+                <div id="historyList" class="history-list">
+                    <div class="history-item">No chats yet</div>
+                </div>
+            </div>
+        </aside>
+        <!-- Main Chat Area -->
+        <div class="main-chat" style="min-height: 70vh; display:flex !important; flex-direction:column; background: rgba(255,255,255,0.03); border-radius: 16px; padding: 1rem; visibility: visible !important; opacity: 1 !important;">
+            <nav class="chat-navbar" style="padding: 0.75rem; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+                <h1 id="chatTitle" style="margin:0; font-size:1.5rem; color:#fff;">Mental Wellness Support</h1>
+                <div class="chat-navbar-right">
+                    <span id="stressIndicator" style="color: #10b981; font-weight: 600; font-size: 0.95rem;">●  Neutral</span>
+                </div>
+            </nav>
+            <div id="chatDisplay" style="flex:1; min-height:50vh; overflow-y:auto; padding:1.5rem; background: rgba(255,255,255,0.05); border-radius: 12px; box-shadow: inset 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 0.75rem; border: 1px solid rgba(255,255,255,0.08);">
+                <div style="color: rgba(255,255,255,0.85); font-size: 1rem; text-align: center; padding: 2rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.15);">
+                    💬 Welcome to Mental Wellness Support<br>
+                    <span style="font-size: 0.9rem; opacity: 0.8;">Type your message below to start chatting</span>
+                </div>
+            </div>
+            <div class="input-container" style="padding:1rem; border-top:1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); border-radius: 12px;">
+                <form id="chatForm" class="input-wrapper" style="display:flex !important; gap:0.65rem; align-items:center; visibility: visible !important;">
+                    <button type="button" class="file-btn" id="fileBtn" title="Upload file" style="min-width:46px; height:46px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; cursor: pointer; font-size: 1.25rem; display:flex; align-items:center; justify-content:center; color:#fff;">📎</button>
+                    <input 
+                        type="text" 
+                        id="chatInput" 
+                        placeholder="Share what's on your mind..." 
+                        autocomplete="off"
+                        required
+                        style="flex:1; height:46px; padding:0 1rem; border-radius:10px; border:1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.1); color:#fff; font-size: 0.95rem;"
+                    />
+                    <button type="submit" class="send-btn" style="height:46px; padding:0 1.5rem; background: #6366f1; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.95rem;">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="/static/js/chatbot.js?v=1"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="/static/js/elite-chatbot.js?v=1"></script>
+
+    </main>
+
+    <script src="/static/js/theme.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/zen.js"></script>
+    <script src="/static/js/mood_handler.js"></script>
+    <script src="/static/js/voice_commands.js"></script>
+    
+    <script>
+    // Register service worker for offline support
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then(reg => console.log('[Service Worker] Registered', reg.scope))
+                .catch(err => console.log('[Service Worker] Registration failed:', err));
+        });
+    }
+    </script>
+</body>
+</html>
