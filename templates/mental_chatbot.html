@@ -1,296 +1,200 @@
 ﻿{% extends 'base.html' %}
+{% set show_nav = false %}
 
 {% block title %}Mental Wellness - AURA{% endblock %}
 
 {% block body_class %}mental-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/elite-layout.css', v=1) }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot-modal.css', v=1) }}">
+<script>
+// Set dark theme immediately before any CSS loads
+(function() {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.documentElement.classList.add('mental-page-root');
+})();
+</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mental-chatbot.css', v=12) }}">
 <style>
-/* CRITICAL: Force chatbot modal to display on mental page */
-.mental-page .chatbot-modal {
-    display: block !important;
-    position: static !important;
-    transform: none !important;
-    top: auto !important;
-    left: auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    max-height: none !important;
+/* CRITICAL: Override ALL base styles for mental chat page */
+html.mental-page-root,
+body.mental-page {
+    height: 100vh !important;
+    width: 100vw !important;
+    margin: 0 !important;
     padding: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    overflow: visible !important;
+    overflow: hidden !important;
+    background: #0f0f11 !important;
+    color: #e8e8ed !important;
 }
 
-.mental-page .chatbot-overlay {
+body.mental-page main {
+    padding: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    height: 100vh !important;
+    background: #0f0f11 !important;
+}
+
+body.mental-page header,
+body.mental-page .dashboard-nav,
+body.mental-page nav.dashboard-nav {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    opacity: 0 !important;
 }
 
-.mental-page .aura-dashboard {
-    display: flex !important;
-    width: 100%;
-    height: 100%;
-    background: transparent;
+/* Force dark theme variables */
+body.mental-page {
+    --bg-primary: #0f0f11 !important;
+    --bg-surface: #1a1a1f !important;
+    --bg-elevated: #232329 !important;
+    --bg-input: #2a2a32 !important;
+    --text-main: #e8e8ed !important;
+    --text-muted: #9898a6 !important;
+    --border-color: #3a3a45 !important;
+    --accent: #8b7cf7 !important;
 }
 
-.mental-page .sidebar {
-    flex: 0 0 280px;
-    border-right: 1px solid rgba(255,255,255,0.2);
-    overflow-y: auto;
-    max-height: calc(100vh - 80px);
-    background: rgba(15, 23, 42, 0.6);
-    padding: 1.5rem 0;
+/* Override global button styles */
+body.mental-page .new-chat-btn {
+    background: #8b7cf7 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
 }
 
-.mental-page .sidebar-header {
-    padding: 0 1.5rem 1rem;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #fff;
-    border-bottom: 2px solid rgba(99, 102, 241, 0.3);
-    margin-bottom: 1rem;
+body.mental-page .gemini-container {
+    background: #0f0f11 !important;
 }
 
-.mental-page .new-chat-btn {
-    margin: 0 1.5rem 1.5rem;
-    width: calc(100% - 3rem);
-    padding: 0.75rem 1rem;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
+body.mental-page .gemini-sidebar {
+    background: #1a1a1f !important;
+    border-color: #3a3a45 !important;
 }
 
-.mental-page .new-chat-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+body.mental-page .chat-main {
+    background: #0f0f11 !important;
 }
 
-.mental-page .history-label {
-    padding: 0 1.5rem;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.9);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.75rem;
-    opacity: 1;
+body.mental-page .input-pill {
+    background: #2a2a32 !important;
+    border-color: #3a3a45 !important;
 }
 
-.mental-page .history-container {
-    padding: 1rem 0;
-    border-top: 1px solid rgba(255,255,255,0.1);
+body.mental-page .input-pill input,
+body.mental-page .input-pill textarea,
+body.mental-page #messageInput {
+    background: transparent !important;
+    color: #e8e8ed !important;
+    border: none !important;
 }
 
-.mental-page .history-item {
-    padding: 0.6rem 1.5rem;
-    color: rgba(255, 255, 255, 0.75);
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.mental-page .history-item:hover {
-    background: rgba(99, 102, 241, 0.15);
-    color: rgba(255, 255, 255, 0.95);
-    padding-left: 1.8rem;
-}
-
-.mental-page .main-chat {
-    flex: 1;
-    display: flex !important;
-    flex-direction: column !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    min-height: calc(100vh - 80px);
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
-}
-
-.mental-page .chat-navbar {
-    padding: 1.5rem;
-    border-bottom: 2px solid rgba(99, 102, 241, 0.2);
-    background: rgba(15, 23, 42, 0.4);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.mental-page #chatTitle {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, #fff, #c4b5fd);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.mental-page #stressIndicator {
-    color: #10b981;
-    font-weight: 600;
-    font-size: 0.95rem;
-}
-
-.mental-page #chatDisplay {
-    display: flex !important;
-    flex-direction: column;
-    flex: 1;
-    min-height: 50vh;
-    overflow-y: auto !important;
-    padding: 2rem;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 0;
-    margin: 0;
-    border: none;
-}
-
-.mental-page .input-container {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    flex-shrink: 0;
-    background: rgba(15, 23, 42, 0.6);
-    border-top: 2px solid rgba(99, 102, 241, 0.3);
-    padding: 1.5rem;
-}
-
-.mental-page .input-wrapper {
-    display: flex !important;
-    gap: 0.75rem;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    border-radius: 12px;
-    padding: 0.5rem;
-}
-
-.mental-page .input-wrapper:focus-within {
-    border-color: rgba(99, 102, 241, 0.6);
-    box-shadow: 0 0 12px rgba(99, 102, 241, 0.1);
-}
-
-.mental-page #chatInput {
-    flex: 1;
-    height: 46px;
-    padding: 0 1rem;
-    border: none;
-    background: transparent;
-    color: #fff;
-    font-size: 0.95rem;
-    outline: none;
-}
-
-.mental-page #chatInput::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-}
-
-.mental-page .file-btn,
-.mental-page .send-btn {
-    min-width: 46px;
-    height: 46px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mental-page .file-btn {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    font-size: 1.2rem;
-}
-
-.mental-page .file-btn:hover {
-    background: rgba(99, 102, 241, 0.3);
-}
-
-.mental-page .send-btn {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white;
-    padding: 0 1.5rem;
-}
-
-.mental-page .send-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-
-.mental-page .send-btn:active {
-    transform: translateY(0);
+body.mental-page .input-pill input::placeholder,
+body.mental-page #messageInput::placeholder {
+    color: #6b6b7a !important;
 }
 </style>
 {% endblock %}
 
 {% block content %}
-
-{% block chatbot_modal %}
-<div class="chatbot-overlay"></div>
-<div class="chatbot-modal">
-    <div class="aura-dashboard">
-        <!-- Left Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">AURA Mental Chat</div>
-            <button class="new-chat-btn" id="newChatBtn">+ New Chat</button>
-            <!-- Chat History -->
-            <div class="history-container" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 1rem; padding-top: 1rem;">
-                <div class="history-label" style="opacity: 0.9; font-weight: 600; margin-bottom: 0.75rem;">Recent Chats</div>
-                <div id="historyList" class="history-list">
-                    <div class="history-item" style="padding: 0.5rem; font-size: 0.9rem; opacity: 0.7;">No chats yet</div>
-                </div>
+<div class="gemini-container">
+    <!-- Sidebar -->
+    <aside class="gemini-sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-icon">🧠</div>
+                <span>AURA</span>
             </div>
-        </aside>
-        <!-- Main Chat Area -->
-        <div class="main-chat" style="min-height: 70vh; display:flex !important; flex-direction:column; background: rgba(255,255,255,0.03); border-radius: 16px; padding: 1rem; visibility: visible !important; opacity: 1 !important;">
-            <nav class="chat-navbar" style="padding: 0.75rem; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
-                <h1 id="chatTitle" style="margin:0; font-size:1.5rem; color:#fff;">Mental Wellness Support</h1>
-                <div class="chat-navbar-right">
-                    <span id="stressIndicator" style="color: #10b981; font-weight: 600; font-size: 0.95rem;">●  Neutral</span>
-                </div>
-            </nav>
-            <div id="chatDisplay" style="flex:1; min-height:50vh; overflow-y:auto; padding:1.5rem; background: rgba(255,255,255,0.05); border-radius: 12px; box-shadow: inset 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 0.75rem; border: 1px solid rgba(255,255,255,0.08);">
-                <div style="color: rgba(255,255,255,0.85); font-size: 1rem; text-align: center; padding: 2rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.15);">
-                    💬 Welcome to Mental Wellness Support<br>
-                    <span style="font-size: 0.9rem; opacity: 0.8;">Type your message below to start chatting</span>
-                </div>
-            </div>
-            <div class="input-container" style="padding:1rem; border-top:1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); border-radius: 12px;">
-                <form id="chatForm" class="input-wrapper" style="display:flex !important; gap:0.65rem; align-items:center; visibility: visible !important;">
-                    <button type="button" class="file-btn" id="fileBtn" title="Upload file" style="min-width:46px; height:46px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; cursor: pointer; font-size: 1.25rem; display:flex; align-items:center; justify-content:center; color:#fff;">📎</button>
-                    <input 
-                        type="text" 
-                        id="chatInput" 
-                        placeholder="Share what's on your mind..." 
-                        autocomplete="off"
-                        required
-                        style="flex:1; height:46px; padding:0 1rem; border-radius:10px; border:1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.1); color:#fff; font-size: 0.95rem;"
-                    />
-                    <button type="submit" class="send-btn" style="height:46px; padding:0 1.5rem; background: #6366f1; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.95rem;">Send</button>
-                </form>
+            <button class="new-chat-btn" id="newChatBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                <span>New chat</span>
+            </button>
+        </div>
+        <div class="history-section">
+            <p class="section-label">Recent</p>
+            <div id="history-list" class="history-list">
+                <div class="history-empty">No conversations yet</div>
             </div>
         </div>
-    </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="{{ url_for('static', filename='js/chatbot.js', v=1) }}"></script>
-{% endblock %}
+    </aside>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chat Viewport -->
+    <main class="chat-viewport">
+        <header class="chat-top-nav">
+            <div class="model-selector">
+                <span class="model-selector-icon">💬</span>
+                AURA Mental Support
+            </div>
+            <div class="nav-actions" style="display: flex; gap: 10px; align-items: center;">
+                <button id="theme-toggle" class="gemini-btn-icon" aria-label="Toggle theme" title="Switch theme">
+                    <span class="theme-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </span>
+                </button>
+                <div class="user-profile">
+                    {{ session.get('user_name', 'Student') }}
+                </div>
+                <button class="zen-btn" id="zenModeToggle" title="Toggle Zen Mode">Zen Mode</button>
+                <a href="/logout" class="logout-btn" style="padding: 8px 14px; border-radius: 20px; background: var(--accent); color: white; text-decoration: none; font-size: 14px; transition: all 0.2s;">Logout</a>
+            </div>
+        </header>
+
+        <!-- Messages -->
+        <div id="chat-messages" class="messages-container">
+            <!-- Welcome State -->
+            <div class="welcome-state" id="welcomeState">
+                <h1>Hello, how can I help?</h1>
+                <p>I'm here to listen and support you. Share what's on your mind, and we'll work through it together.</p>
+                <div class="quick-chips">
+                    <button class="quick-chip" data-prompt="I'm feeling stressed about work">
+                        <span class="quick-chip-icon">😓</span> Feeling stressed
+                    </button>
+                    <button class="quick-chip" data-prompt="I need help with anxiety">
+                        <span class="quick-chip-icon">😰</span> Anxiety help
+                    </button>
+                    <button class="quick-chip" data-prompt="I want to practice mindfulness">
+                        <span class="quick-chip-icon">🧘</span> Mindfulness
+                    </button>
+                    <button class="quick-chip" data-prompt="I'm having trouble sleeping">
+                        <span class="quick-chip-icon">😴</span> Sleep issues
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area-wrapper">
+            <form id="chatForm" class="input-pill">
+                <input type="text" id="chat-input" placeholder="Type your message here..." autocomplete="off" required>
+                <div class="input-actions">
+                    <button type="submit" id="send-btn" class="send-icon-btn">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+            <p class="input-disclaimer">AURA can provide support but is not a substitute for professional help.</p>
+        </div>
+    </main>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="{{ url_for('static', filename='js/elite-chatbot.js', v=1) }}"></script>
+<script src="{{ url_for('static', filename='js/theme-engine.js', v=10) }}"></script>
+<script src="{{ url_for('static', filename='js/chat-engine.js', v=12) }}"></script>
+<script>
+// Initialize theme and chat engines
+if (typeof initTheme === 'function') {
+    initTheme();
+}
+if (typeof initChat === 'function') {
+    initChat();
+}
+</script>
 {% endblock %}

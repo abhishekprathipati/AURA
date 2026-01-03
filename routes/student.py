@@ -5,22 +5,6 @@ from models.mood import MoodModel
 from models.stress import StressModel
 from models.grievance import GrievanceModel
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, jsonify, session
-from utils.auth_helpers import login_required
-from utils.database import get_db
-# We will temporarily comment out these imports to stop the 500 Error
-# from models.grievance import GrievanceModel
-# from services.stress_service import calculate_daily_stress
-from models.mood import MoodModel
-from models.stress import StressModel
-from datetime import datetime, timedelta
-
-from flask import Blueprint, render_template, request, jsonify, session
-from utils.auth_helpers import login_required
-from utils.database import get_db
-from models.mood import MoodModel
-from models.stress import StressModel
-from datetime import datetime, timedelta
 
 # Create the Blueprint
 student_bp = Blueprint('student', __name__)
@@ -35,6 +19,12 @@ def dashboard():
     # Helper variable show_nav=False hides the top bar in base.html logic
     return render_template('student_dashboard.html', show_nav=False)
 
+@student_bp.route('/dashboard/pro')
+@login_required
+def dashboard_pro():
+    # Ultra Pro Command Center Dashboard
+    return render_template('student_dashboard_pro.html', show_nav=False)
+
 @student_bp.route('/chat/mental')
 @login_required
 def mental_chatbot():
@@ -44,6 +34,12 @@ def mental_chatbot():
 @login_required
 def study_chatbot():
     return render_template('study_chatbot.html', show_nav=True)
+
+@student_bp.route('/chat/study/pro')
+@login_required
+def study_assistant_pro():
+    # Professional three-column study assistant
+    return render_template('study_assistant_pro.html', show_nav=False)
 
 @student_bp.route('/relax')
 @login_required
@@ -84,6 +80,151 @@ def stress_today():
         return jsonify({'score': score})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@student_bp.route('/api/student/stress-level', methods=['GET'])
+@login_required
+def get_stress_level():
+    """Get current stress level with additional metrics for Pro Dashboard"""
+    try:
+        user_email = session.get('user_email')
+        db = get_db()
+        coll = db[StressModel.collection_name]
+        
+        # Get latest stress level
+        latest = coll.find_one(
+            {'user_email': user_email}, 
+            sort=[('created_at', -1)]
+        )
+        current_stress = latest.get('score', 50) if latest else 50
+        
+        # Get today's readings for peak and average
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_readings = list(coll.find({
+            'user_email': user_email,
+            'created_at': {'$gte': today_start}
+        }))
+        
+        peak = max([r['score'] for r in today_readings]) if today_readings else current_stress
+        average = int(sum([r['score'] for r in today_readings]) / len(today_readings)) if today_readings else current_stress
+        
+        # Calculate trend (compare last 2 readings)
+        recent = list(coll.find({'user_email': user_email}).sort('created_at', -1).limit(2))
+        trend = 'stable'
+        if len(recent) == 2:
+            diff = recent[0]['score'] - recent[1]['score']
+            if diff > 5:
+                trend = 'up'
+            elif diff < -5:
+                trend = 'down'
+        
+        return jsonify({
+            'stress_level': current_stress,
+            'peak': peak,
+            'average': average,
+            'trend': trend
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@student_bp.route('/api/student/dashboard-data', methods=['GET'])
+@login_required
+def get_dashboard_data():
+    """Get comprehensive dashboard data for Pro Dashboard"""
+    try:
+        user_email = session.get('user_email')
+        db = get_db()
+        
+        # Get latest mood
+        mood_coll = db[MoodModel.collection_name]
+        latest_mood = mood_coll.find_one(
+            {'user_email': user_email},
+            sort=[('created_at', -1)]
+        )
+        mood = latest_mood.get('mood', 'Calm') if latest_mood else 'Calm'
+        
+        # Calculate wellness streak
+        stress_coll = db[StressModel.collection_name]
+        streak = calculate_wellness_streak(user_email, stress_coll)
+        
+        # Get activities count
+        activities_count = stress_coll.count_documents({'user_email': user_email})
+        
+        # Generate AI insight based on recent data
+        ai_insight = generate_ai_insight(user_email, stress_coll, mood)
+        
+        return jsonify({
+            'mood': mood.capitalize(),
+            'ai_insight': ai_insight,
+            'streak': streak,
+            'activities_count': activities_count
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+def calculate_wellness_streak(user_email, stress_coll):
+    """Calculate consecutive days with wellness activity"""
+    try:
+        # Get distinct days with stress records
+        pipeline = [
+            {'$match': {'user_email': user_email}},
+            {'$group': {
+                '_id': {'$dateToString': {'format': '%Y-%m-%d', 'date': '$created_at'}}
+            }},
+            {'$sort': {'_id': -1}},
+            {'$limit': 30}
+        ]
+        
+        days = [r['_id'] for r in stress_coll.aggregate(pipeline)]
+        
+        if not days:
+            return 0
+        
+        # Count consecutive days from today
+        streak = 1
+        today = datetime.utcnow().date()
+        
+        for i in range(len(days) - 1):
+            current_date = datetime.strptime(days[i], '%Y-%m-%d').date()
+            next_date = datetime.strptime(days[i + 1], '%Y-%m-%d').date()
+            
+            if (current_date - next_date).days == 1:
+                streak += 1
+            else:
+                break
+        
+        return streak
+    except:
+        return 1
+
+
+def generate_ai_insight(user_email, stress_coll, mood):
+    """Generate simple AI insight based on recent patterns"""
+    try:
+        # Get last 7 days average
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        recent_readings = list(stress_coll.find({
+            'user_email': user_email,
+            'created_at': {'$gte': week_ago}
+        }))
+        
+        if not recent_readings:
+            return 'Getting Started'
+        
+        avg_stress = sum([r['score'] for r in recent_readings]) / len(recent_readings)
+        
+        if avg_stress < 30:
+            return 'Excellent'
+        elif avg_stress < 50:
+            return 'Positive'
+        elif avg_stress < 70:
+            return 'Moderate'
+        else:
+            return 'Needs Attention'
+    except:
+        return 'Positive'
 
 
 @student_bp.route('/api/grievance', methods=['POST'])

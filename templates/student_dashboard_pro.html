@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA - Ultra Pro Wellness Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-pro.css') }}">
+</head>
+<body>
+    <!-- Floating Navigation -->
+    <nav class="pro-navbar">
+        <div class="navbar-left">
+            <div class="brand-logo">
+                <div class="logo-icon">🧠</div>
+                <span class="logo-text">AURA</span>
+                <span class="pro-badge">PRO</span>
+            </div>
+        </div>
+        
+        <div class="navbar-center">
+            <button class="nav-tab active" data-view="dashboard">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                Dashboard
+            </button>
+            <button class="nav-tab" data-view="activities">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                Activities
+            </button>
+            <button class="nav-tab" data-view="insights">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+                Insights
+            </button>
+        </div>
+        
+        <div class="navbar-right">
+            <button class="zen-toggle" id="zenToggle" title="Toggle Zen Mode">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M8 15h8"></path>
+                    <path d="M9 9h.01"></path>
+                    <path d="M15 9h.01"></path>
+                </svg>
+            </button>
+            <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
+                <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+            <div class="user-profile">
+                <div class="user-avatar">{{ session.get('user_name', 'Student')[0].upper() }}</div>
+                <span class="user-name">{{ session.get('user_name', 'Demo Student') }}</span>
+            </div>
+            <a href="/logout" class="logout-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard Content -->
+    <main class="pro-dashboard">
+        <!-- Welcome Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <h1 class="header-title">Welcome back, <span class="highlight">{{ session.get('user_name', 'Student') }}</span></h1>
+                <p class="header-subtitle">Your wellness command center • <span id="currentDateTime"></span></p>
+            </div>
+            <div class="header-actions">
+                <button class="quick-action-pill" data-action="breathing">
+                    <span class="pill-icon">🧘</span>
+                    Quick Breathing
+                </button>
+                <button class="quick-action-pill" data-action="break">
+                    <span class="pill-icon">☕</span>
+                    Virtual Break
+                </button>
+            </div>
+        </header>
+
+        <!-- Central Metric Hub -->
+        <section class="metric-hub">
+            <div class="glass-mega-card stress-command-center">
+                <div class="command-header">
+                    <h2 class="command-title">Stress Level Monitor</h2>
+                    <div class="live-indicator">
+                        <span class="pulse-dot"></span>
+                        <span>Live</span>
+                    </div>
+                </div>
+                
+                <div class="stress-gauge-container">
+                    <svg class="stress-gauge-svg" viewBox="0 0 200 120">
+                        <defs>
+                            <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#10b981"/>
+                                <stop offset="50%" stop-color="#f59e0b"/>
+                                <stop offset="100%" stop-color="#ef4444"/>
+                            </linearGradient>
+                            <filter id="glow">
+                                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        
+                        <!-- Background Arc -->
+                        <path id="gaugeTrack" d="M 30 100 A 70 70 0 0 1 170 100" 
+                              stroke="rgba(255,255,255,0.1)" 
+                              stroke-width="16" 
+                              fill="none" 
+                              stroke-linecap="round"/>
+                        
+                        <!-- Active Arc -->
+                        <path id="gaugeFill" d="M 30 100 A 70 70 0 0 1 170 100" 
+                              stroke="url(#gaugeGradient)" 
+                              stroke-width="16" 
+                              fill="none" 
+                              stroke-linecap="round"
+                              stroke-dasharray="220"
+                              stroke-dashoffset="220"
+                              filter="url(#glow)"
+                              style="transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);"/>
+                        
+                        <!-- Center Value -->
+                        <text x="100" y="85" text-anchor="middle" class="gauge-value-text" id="gaugeValueText">0</text>
+                        <text x="100" y="105" text-anchor="middle" class="gauge-label-text">STRESS LEVEL</text>
+                    </svg>
+                    
+                    <div class="gauge-status" id="gaugeStatus">
+                        <div class="status-indicator"></div>
+                        <span class="status-text">Initializing...</span>
+                    </div>
+                </div>
+                
+                <div class="stress-metrics-row">
+                    <div class="mini-metric">
+                        <span class="mini-label">Today's Peak</span>
+                        <span class="mini-value" id="peakStress">0</span>
+                    </div>
+                    <div class="mini-metric">
+                        <span class="mini-label">Average</span>
+                        <span class="mini-value" id="avgStress">0</span>
+                    </div>
+                    <div class="mini-metric">
+                        <span class="mini-label">Trend</span>
+                        <span class="mini-value trend" id="trendIndicator">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 14l5-5 5 5H7z"/>
+                            </svg>
+                            Stable
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bento Grid - Activity Cards -->
+        <section class="bento-grid">
+            <!-- Mental Chat -->
+            <div class="bento-card bento-large" data-activity="mental-chat">
+                <div class="bento-header">
+                    <div class="bento-icon">💬</div>
+                    <h3 class="bento-title">Mental Support</h3>
+                </div>
+                <p class="bento-description">AI-powered mental health companion ready to listen</p>
+                <div class="bento-preview">
+                    <div class="chat-preview-bubble">How are you feeling today?</div>
+                </div>
+                <a href="/student/chat/mental" class="bento-action">
+                    Start Conversation
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- Virtual Break Room -->
+            <div class="bento-card" data-activity="break-room">
+                <div class="bento-header">
+                    <div class="bento-icon">🎨</div>
+                    <h3 class="bento-title">Break Room</h3>
+                </div>
+                <p class="bento-description">Creative relaxation activities</p>
+                <a href="/student/relax" class="bento-action">
+                    Enter
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- Scream Meter -->
+            <div class="bento-card" data-activity="scream">
+                <div class="bento-header">
+                    <div class="bento-icon">🎤</div>
+                    <h3 class="bento-title">Scream Meter</h3>
+                </div>
+                <p class="bento-description">Release stress vocally</p>
+                <button class="bento-action" onclick="alert('Scream Meter - Coming Soon!')">
+                    Try Now
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Box Breathing -->
+            <div class="bento-card" data-activity="breathing">
+                <div class="bento-header">
+                    <div class="bento-icon">🧘</div>
+                    <h3 class="bento-title">Box Breathing</h3>
+                </div>
+                <p class="bento-description">4-4-4-4 breathing technique</p>
+                <div class="breathing-preview">
+                    <div class="breathing-box"></div>
+                </div>
+                <a href="/student/relax#breathing" class="bento-action">
+                    Begin
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- Study Chatbot -->
+            <div class="bento-card" data-activity="study">
+                <div class="bento-header">
+                    <div class="bento-icon">📚</div>
+                    <h3 class="bento-title">Study Assistant</h3>
+                </div>
+                <p class="bento-description">Academic support AI</p>
+                <a href="/student/chat/study" class="bento-action">
+                    Get Help
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- Mind Games -->
+            <div class="bento-card" data-activity="games">
+                <div class="bento-header">
+                    <div class="bento-icon">🎮</div>
+                    <h3 class="bento-title">Mind Games</h3>
+                </div>
+                <p class="bento-description">Brain training exercises</p>
+                <a href="/student/games" class="bento-action">
+                    Play
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                    </svg>
+                </a>
+            </div>
+        </section>
+
+        <!-- Insights Panel -->
+        <section class="insights-panel">
+            <h2 class="section-heading">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>
+                Wellness Insights
+            </h2>
+            
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-icon mood-icon">🎭</div>
+                    <div class="insight-content">
+                        <span class="insight-label">Current Mood</span>
+                        <span class="insight-value" id="moodValue">Calm</span>
+                    </div>
+                    <div class="insight-trend positive">↗</div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon ai-icon">🤖</div>
+                    <div class="insight-content">
+                        <span class="insight-label">AI Insights</span>
+                        <span class="insight-value" id="aiInsightValue">Positive</span>
+                    </div>
+                    <button class="insight-details-btn">View</button>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon streak-icon">🔥</div>
+                    <div class="insight-content">
+                        <span class="insight-label">Wellness Streak</span>
+                        <span class="insight-value" id="streakValue">1 Day</span>
+                    </div>
+                    <div class="insight-badge">Active</div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-icon activity-icon">⭐</div>
+                    <div class="insight-content">
+                        <span class="insight-label">Activities Completed</span>
+                        <span class="insight-value" id="activitiesCount">12</span>
+                    </div>
+                    <div class="insight-trend positive">+3</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Grievance Quick Submit -->
+        <section class="grievance-quick">
+            <div class="glass-card-mini grievance-widget">
+                <div class="widget-header">
+                    <h3>📝 Need Help?</h3>
+                    <p>Submit a concern or grievance</p>
+                </div>
+                <button class="widget-action-btn" id="openGrievanceForm">
+                    Submit Grievance
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Grievance Modal -->
+    <div class="modal-overlay" id="grievanceModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Submit a Grievance</h2>
+                <button class="modal-close" id="closeGrievanceModal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <form id="grievanceForm" class="modal-form">
+                <div class="form-field">
+                    <label for="grievanceSubject">Subject</label>
+                    <input type="text" id="grievanceSubject" class="form-input" placeholder="Brief title of your concern" required>
+                </div>
+                <div class="form-field">
+                    <label for="grievanceDescription">Description</label>
+                    <textarea id="grievanceDescription" class="form-textarea" placeholder="Describe your concern in detail..." rows="5" required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelGrievance">Cancel</button>
+                    <button type="submit" class="btn-primary">
+                        <span class="btn-text">Submit</span>
+                        <span class="btn-loader" style="display: none;"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard-pro.js') }}"></script>
+</body>
+</html>
