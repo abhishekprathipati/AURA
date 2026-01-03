@@ -23,7 +23,7 @@ GEMINI_API_KEY=YOUR_NEW_KEY_HERE
 
 **Example:**
 ```env
-GEMINI_API_KEY=AIzaSyAbCdEfGhIjKlMnOpQrStUvWxYz1234567
+GEMINI_API_KEY=AIzaSy_YOUR_ACTUAL_KEY_HERE_Do_Not_Share
 ```
 
 ### Step 3: Restart Server
