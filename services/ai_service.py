@@ -404,7 +404,7 @@ def extract_sentiment(text: str) -> str:
 def analyze_study_material(prompt: str, file_path: str, mime_type: str = '', history: List[Dict[str, str]] = None, conversation_id: str = '') -> str:
     """Analyze study materials with Gemini (images, PDFs, or text) and return structured Markdown.
 
-    Includes recent conversation context and enforces sections: Thought, Main Response, Quick Actions, Next Step.
+    Uses AURA Advanced Study Assistant system prompt for professional-grade analysis.
     """
     if not client:
         return "AI study assistant not configured. Please set GEMINI_API_KEY or GROQ_API_KEY."
@@ -416,28 +416,39 @@ def analyze_study_material(prompt: str, file_path: str, mime_type: str = '', his
         history_block = _format_history(history or [])
         user_prompt = prompt or "Please analyze this material and explain it clearly."
 
+        # AURA Advanced Study Assistant System Prompt
+        system_prompt = """You are the AURA Advanced Study Assistant. Your goal is to maximize student productivity through deep analysis and interactive learning.
+
+**PDF/Image Analysis:** When a file is provided, extract key concepts, definitions, and formulas. Provide a structured summary with bullet points organized by topic.
+
+**Quiz Generation:** On request, generate 5 multiple-choice questions based on the current context or uploaded file to test comprehension. Format each with clear options (A, B, C, D) and indicate the correct answer.
+
+**Step-by-Step Solutions:** For complex diagrams or problems, break the solution into logical, numbered steps. Use clear formatting with subsections where appropriate.
+
+**Tone:** Be encouraging, professional, and concise. Use LaTeX notation for mathematical formulas: wrap inline formulas in $ $ and display formulas in $$ $$.
+
+**Response Format:**
+- Start with a brief overview/summary
+- Break down key concepts with clear headings
+- Use numbered lists for steps and multiple-choice questions
+- Bold important terms on first mention
+- End with actionable next steps or practice suggestions"""
+
         if STRUCTURED_RESPONSES:
             instruction = (
-                f"You are AURA — an empathetic, expert Study coach for students.\n"
-                f"Maintain continuity by linking to prior messages.\n\n"
+                f"{system_prompt}\n\n"
                 f"Conversation ID: {conversation_id or 'local'}\n"
-                f"Conversation so far (last turns):\n{history_block}\n\n"
-                "Respond ONLY in Markdown using this exact structure:\n\n"
-                "### Thought\n- Briefly acknowledge their situation and reference prior context.\n- One short paragraph (2–3 sentences).\n\n"
-                "### Main Response\n- 2–3 concise, practical suggestions with brief explanations.\n- Use bullet points. Bold the key action at the start of each bullet.\n\n"
-                "### Quick Actions\n- Provide 2–4 short action items as a bulleted list (imperative tone).\n\n"
-                "### Next Step\n- End with ONE clear question or suggested action to move forward.\n\n"
-                "Style: warm, supportive, professional. 150–200 words total. Use simple language.\n\n"
-                f"User request/context: {user_prompt}"
+                f"Recent conversation context:\n{history_block}\n\n"
+                f"Student request: {user_prompt}\n\n"
+                "Respond with clear, well-organized Markdown that maximizes learning value."
             )
         else:
             instruction = (
-                f"You are AURA — a helpful study coach. Keep continuity with recent conversation.\n\n"
+                f"{system_prompt}\n\n"
                 f"Conversation ID: {conversation_id or 'local'}\n"
-                f"Recent conversation:\n{history_block}\n\n"
-                f"User request/context: {user_prompt}\n\n"
-                "Reply as a single, concise Markdown paragraph (120–160 words) with 2–3 actionable tips inline.\n"
-                "End with one short follow-up question."
+                f"Recent context:\n{history_block}\n\n"
+                f"Request: {user_prompt}\n\n"
+                "Provide a concise, well-structured response in Markdown."
             )
 
         if mime.startswith('image/'):

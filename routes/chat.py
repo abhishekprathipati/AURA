@@ -180,6 +180,51 @@ def api_chat_clear():
         return jsonify({'error': f'Clear error: {str(e)[:100]}'}), 500
 
 
+@chat_bp.route('/upload_study_file', methods=['POST'])
+def upload_study_file():
+    """Handle file upload for study assistant with validation."""
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not logged in'}), 401
+
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        file = request.files['file']
+        if not file or file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        # Validate file type
+        allowed_extensions = {'pdf', 'txt', 'png', 'jpg', 'jpeg', 'doc', 'docx'}
+        filename = file.filename.lower()
+        if not any(filename.endswith('.' + ext) for ext in allowed_extensions):
+            return jsonify({'error': 'File type not allowed'}), 400
+
+        # Save to static/uploads
+        upload_dir = os.path.join('static', 'uploads')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Use unique filename to avoid conflicts
+        import time
+        unique_filename = f"{int(time.time())}_{file.filename}"
+        save_path = os.path.join(upload_dir, unique_filename)
+        
+        file.save(save_path)
+        log.info(f"✓ File uploaded: {unique_filename} by {user_email}")
+        
+        return jsonify({
+            'ok': True,
+            'filename': unique_filename,
+            'original_filename': file.filename,
+            'size': os.path.getsize(save_path)
+        }), 200
+
+    except Exception as e:
+        log.error(f"Upload error: {str(e)}")
+        return jsonify({'error': f'Upload failed: {str(e)[:180]}'}), 500
+
+
 @chat_bp.route('/api/study/analyze', methods=['POST'])
 def api_study_analyze():
     """Analyze study query with optional file upload."""

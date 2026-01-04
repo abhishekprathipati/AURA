@@ -49,38 +49,49 @@ function cacheStudyElements() {
   studyEls.welcomeState = document.getElementById('studyWelcomeState');
   studyEls.newChatBtn = document.getElementById('newStudyChatBtn');
   studyEls.attachBtn = document.getElementById('attachFileBtn');
-  studyEls.fileInput = document.getElementById('fileInput');
+  studyEls.fileInput = document.getElementById('fileUpload');
 }
 
 // ============================================
 // EVENT LISTENERS
 // ============================================
 function setupStudyEventListeners() {
-  if (studyEls.chatForm) {
-    studyEls.chatForm.addEventListener('submit', handleStudySendMessage);
+  // Send button handler
+  if (studyEls.sendBtn) {
+    studyEls.sendBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleStudySendMessage();
+    });
   }
-  
+
+  // Input Enter key handler - PREVENTS PAGE JUMP
   if (studyEls.userInput) {
     studyEls.userInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
+        e.preventDefault(); // STOPS THE UPWARD JUMP
         handleStudySendMessage();
       }
     });
   }
   
+  // New chat button
   if (studyEls.newChatBtn) {
     studyEls.newChatBtn.addEventListener('click', startNewStudyChat);
   }
   
-  if (studyEls.attachBtn) {
-    studyEls.attachBtn.addEventListener('click', () => {
-      if (studyEls.fileInput) studyEls.fileInput.click();
+  // File upload trigger
+  const fileUploadBtn = document.getElementById('attachFileBtn');
+  const fileUploadInput = document.getElementById('fileUpload');
+  
+  if (fileUploadBtn && fileUploadInput) {
+    fileUploadBtn.addEventListener('click', () => {
+      fileUploadInput.click();
     });
   }
   
-  if (studyEls.fileInput) {
-    studyEls.fileInput.addEventListener('change', handleFileUpload);
+  // File upload handler - ADVANCED UPLOAD LOGIC
+  if (fileUploadInput) {
+    fileUploadInput.addEventListener('change', handleFileUpload);
   }
   
   // Quick chip handlers
@@ -135,19 +146,60 @@ function setupStudyEventListeners() {
 }
 
 // ============================================
-// FILE UPLOAD HANDLING
+// FILE UPLOAD HANDLING - ADVANCED LOGIC
 // ============================================
-function handleFileUpload(e) {
+async function handleFileUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
-  
+
   uploadedFile = file;
-  console.log('File selected:', file.name);
-  
-  // Optional: Show file name in UI
-  if (studyEls.userInput) {
-    studyEls.userInput.placeholder = `📎 ${file.name} - Type your question...`;
+  console.log('📎 File selected:', file.name);
+
+  // Show visual feedback in chat
+  addStudyMessage('system', `Uploading: ${file.name}...`);
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await fetch('/upload_study_file', {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Upload failed with status ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Success feedback
+    addStudyMessage('bot', `✅ File "${file.name}" ready for analysis. Ask me anything about it!`);
+    console.log('✅ File upload successful');
+    
+    // Update UI to show file is ready
+    if (studyEls.userInput) {
+      studyEls.userInput.placeholder = `📎 ${file.name} - Ask your question...`;
+    }
+    
+    // Add file to active files list
+    addFileToActivelist(file.name);
+    
+  } catch (error) {
+    console.error('❌ Upload error:', error);
+    addStudyMessage('error', "Upload failed. Please try again with a different file.");
   }
+}
+
+// Helper: Add file to active files list
+function addFileToActivelist(fileName) {
+  const fileList = document.getElementById('fileList');
+  if (!fileList) return;
+  
+  const fileItem = document.createElement('div');
+  fileItem.className = 'file-item';
+  fileItem.innerHTML = `<span>📄 ${fileName}</span>`;
+  fileList.appendChild(fileItem);
 }
 
 // ============================================
@@ -479,6 +531,39 @@ function loadStudyChat(chatId) {
   
   renderStudyHistory();
 }
+
+// ============================================
+// STUDY HUB QUICK ACTIONS
+// ============================================
+function triggerSummarize() {
+  if (studyEls.userInput) {
+    studyEls.userInput.value = 'Please summarize the uploaded PDF document, highlighting key concepts and main points.';
+    studyEls.userInput.focus();
+    document.getElementById('fileUpload')?.click();
+  }
+}
+
+function triggerQuiz() {
+  if (studyEls.userInput) {
+    studyEls.userInput.value = 'Generate 5 multiple-choice questions based on this material to test my understanding.';
+    studyEls.userInput.focus();
+  }
+}
+
+function triggerFlashcards() {
+  if (studyEls.userInput) {
+    studyEls.userInput.value = 'Create flashcard-style study materials with key terms and definitions from this content.';
+    studyEls.userInput.focus();
+  }
+}
+
+// Export functions for global access
+window.triggerSummarize = triggerSummarize;
+window.triggerQuiz = triggerQuiz;
+window.triggerFlashcards = triggerFlashcards;
+window.initStudyChat = initStudyChat;
+window.handleStudySendMessage = handleStudySendMessage;
+window.startNewStudyChat = startNewStudyChat;
 
 // ============================================
 // TYPING INDICATOR ANIMATION

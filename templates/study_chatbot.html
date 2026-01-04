@@ -102,10 +102,10 @@ body.study-page #studyChatInput::placeholder {
 <div class="study-container">
     <!-- Left Sidebar - Chat History -->
     <aside class="study-sidebar study-sidebar-left">
-        <div class="sidebar-header">
+        <div class="sidebar-top">
             <div class="sidebar-logo">
                 <div class="sidebar-logo-icon">📚</div>
-                <span>AURA</span>
+                <span class="logo">AURA</span>
             </div>
             <div class="focus-mode-toggle">
                 <span class="focus-label">Focus Mode</span>
@@ -118,11 +118,11 @@ body.study-page #studyChatInput::placeholder {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 5v14M5 12h14"/>
                 </svg>
-                <span>New Chat</span>
+                <span>+ New Study Session</span>
             </button>
         </div>
         <div class="history-section">
-            <p class="section-label">Recent</p>
+            <p class="section-label">Recent Sessions</p>
             <div id="study-history-list" class="history-list">
                 <div class="history-item">
                     <span class="history-item-icon">✏️</span>
@@ -134,11 +134,11 @@ body.study-page #studyChatInput::placeholder {
                 </div>
                 <div class="history-item">
                     <span class="history-item-icon">📷</span>
-                    <span class="history-item-text">Essay Outline</span>
+                    <span class="history-item-text">Image Analysis</span>
                 </div>
                 <div class="history-item">
                     <span class="history-item-icon">👥</span>
-                    <span class="history-item-text">Mock Exam QAA</span>
+                    <span class="history-item-text">Mock Exam Practice</span>
                 </div>
             </div>
         </div>
@@ -190,25 +190,17 @@ body.study-page #studyChatInput::placeholder {
             </div>
         </div>
 
-        <!-- Input Area -->
-        <div class="input-area-wrapper">
-            <form id="studyChatForm" class="input-pill">
-                <button type="button" class="attach-btn" id="attachFileBtn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                    </svg>
-                </button>
-                <input type="file" id="fileInput" style="display: none;" accept=".pdf,.txt,.doc,.docx,.png,.jpg,.jpeg">
-                <input type="text" id="studyChatInput" placeholder="Ask a question, upload a file..." autocomplete="off" required>
-                <div class="input-actions">
-                    <button type="submit" id="study-send-btn" class="send-icon-btn">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                        </svg>
-                    </button>
-                </div>
-            </form>
-            <p class="input-disclaimer">AURA can help with studies, but always double-check your work.</p>
+        <!-- Input Area - Fixed Position -->
+        <div class="study-input-wrapper">
+            <div class="study-pill">
+                <input type="file" id="fileUpload" hidden accept=".pdf,.png,.jpg,.jpeg,.txt,.doc,.docx">
+                <button type="button" class="action-icon" id="attachFileBtn" onclick="document.getElementById('fileUpload').click()">📎</button>
+                
+                <input type="text" id="studyChatInput" placeholder="Ask a question or explain a file..." autocomplete="off" required>
+                
+                <button type="button" id="study-send-btn" class="action-icon">🚀</button>
+            </div>
+            <p class="disclaimer">AURA Study Assistant: Analyze files and generate quizzes instantly.</p>
         </div>
     </main>
 
@@ -226,57 +218,32 @@ body.study-page #studyChatInput::placeholder {
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                     </svg>
                     <span>Upload File</span>
-                </button>
-                <button class="hub-action-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
-                    </svg>
-                    <span>Create Quiz</span>
-                </button>
+                </buttontools">
+            <button class="tool-btn" onclick="triggerSummarize()">📄 Summarize PDF</button>
+            <button class="tool-btn" onclick="triggerQuiz()">📝 Generate Quiz</button>
+            <button class="tool-btn" onclick="triggerFlashcards()">🎴 Create Flashcards</button>
+        </div>
+
+        <div class="file-manager">
+            <p>Active Files</p>
+            <div id="fileList" class="active-files">
+                <div class="file-item">
+                    <span>📄 quantum_notes.pdf</span>
+                </div>
+                <div class="file-item">
+                    <span>🖼️ diagram.png</span>
+                </div>
             </div>
         </div>
 
         <div class="hub-section">
-            <p class="hub-section-title">Recent Files</p>
-            <div class="recent-files">
-                <div class="file-item">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                    <div class="file-info">
-                        <span class="file-name">quantum_notes.pdf</span>
-                    </div>
-                </div>
-                <div class="file-item">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
-                    </svg>
-                    <div class="file-info">
-                        <span class="file-name">history_timeline.png</span>
-                    </div>
-                </div>
-                <div class="file-item">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
-                    </svg>
-                    <div class="file-info">
-                        <span class="file-name">history_timeline.png</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </aside>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="{{ url_for('static', filename='js/theme-engine.js', v=10) }}"></script>
-<script src="{{ url_for('static', filename='js/study_chatbot.js', v=15) }}"></script>
-<script>
+            <p class="hub-section-title">Study Tips</p>
+            <ul class="tips-list">
+                <li>Upload PDFs or images for instant analysis</li>
+                <li>Ask follow-up questions about uploaded content</li>
+                <li>Generate quizzes to test your understanding</li>
+                <li>Use flashcards for active learning</li>
+            </ul
 // Initialize theme
 if (typeof initTheme === 'function') {
     initTheme();
