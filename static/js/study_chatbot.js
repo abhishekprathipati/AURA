@@ -1,252 +1,533 @@
-// Study Assistant using same proven pattern as Mental Chatbot
-const studyMessages = () => document.querySelector('[data-study-messages]');
-const studyInput = () => document.querySelector('[data-study-input]');
-const studyForm = () => document.querySelector('[data-study-form]');
-const studyFile = () => document.querySelector('[data-study-file]');
-const STUDY_CONV_ID_KEY = 'aura_study_conversation_id';
-let studyHistory = [];
+  // ============================================
+// AURA STUDY CHAT ENGINE - ULTRA PRO
+// ============================================
 
-console.log('[study] v15 script loaded - initializing');
+// Request lock to prevent multiple simultaneous API calls
+let isStudyBotActive = false;
+let requestAbortController = null;
 
-// Toast notifications for UX feedback
-function showToast(msg, duration = 3000) {
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-        position: fixed; bottom: 20px; right: 20px; 
-        background: rgba(0,0,0,0.8); color: #fff; 
-        padding: 12px 16px; border-radius: 6px; 
-        z-index: 9999; max-width: 300px; font-size: 14px;
-        animation: slideInUp 0.3s ease;
-    `;
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), duration);
+// Element cache
+const studyEls = {
+  chatMessages: null,
+  chatForm: null,
+  userInput: null,
+  sendBtn: null,
+  historyList: null,
+  welcomeState: null,
+  newChatBtn: null,
+  attachBtn: null,
+  fileInput: null,
+};
+
+// Chat state
+let currentStudyChatId = null;
+let studyChats = [];
+const LS_STUDY_CHATS = 'aura_study_chats';
+let uploadedFile = null;
+
+// ============================================
+// INITIALIZATION
+// ============================================
+function initStudyChat() {
+  cacheStudyElements();
+  loadStudyChats();
+  renderStudyHistory();
+  setupStudyEventListeners();
+  
+  // Ensure scroll container is properly initialized
+  if (studyEls.chatMessages) {
+    studyEls.chatMessages.scrollTop = studyEls.chatMessages.scrollHeight;
+  }
 }
 
-function getStudyConversationId() {
-    let id = localStorage.getItem(STUDY_CONV_ID_KEY);
-    if (!id) {
-        id = 'study_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-        localStorage.setItem(STUDY_CONV_ID_KEY, id);
-    }
-    return id;
+function cacheStudyElements() {
+  studyEls.chatMessages = document.getElementById('study-messages');
+  studyEls.chatForm = document.getElementById('studyChatForm');
+  studyEls.userInput = document.getElementById('studyChatInput');
+  studyEls.sendBtn = document.getElementById('study-send-btn');
+  studyEls.historyList = document.getElementById('study-history-list');
+  studyEls.welcomeState = document.getElementById('studyWelcomeState');
+  studyEls.newChatBtn = document.getElementById('newStudyChatBtn');
+  studyEls.attachBtn = document.getElementById('attachFileBtn');
+  studyEls.fileInput = document.getElementById('fileInput');
 }
 
-function addStudyMessage(role, text) {
-    const cont = studyMessages();
-    if (!cont) {
-        console.error('[study] messages container not found');
-        return;
-    }
-
-    const msg = document.createElement('div');
-    msg.classList.add('message');
-    msg.classList.add(role === 'user' ? 'user-message' : 'ai-message');
-    if (role !== 'user' && window.marked) {
-        const html = marked.parse(text || '');
-        msg.innerHTML = `<div class="bot-bubble-content">${html}</div>`;
-    } else {
-        msg.innerHTML = `<p>${escapeHtml(text)}</p>`;
-    }
-    msg.dataset.role = role;
-    msg.dataset.ts = new Date().toISOString();
-
-    cont.appendChild(msg);
-    cont.scrollTop = cont.scrollHeight;
-    console.log(`[study] added ${role} message`);
-
-    // push to in-memory history (last 50 max)
-    studyHistory.push({ role, text });
-    if (studyHistory.length > 50) studyHistory = studyHistory.slice(-50);
-}
-
-function escapeHtml(text) {
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-    return text.replace(/[&<>"']/g, (m) => map[m]);
-}
-
-function showStudyTyping() {
-    const cont = studyMessages();
-    if (!cont) return;
-    const bubble = document.createElement('div');
-    bubble.className = 'message ai-message typing-indicator';
-    bubble.innerHTML = `<div class="typing"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
-    bubble.id = 'study-typing-indicator';
-    cont.appendChild(bubble);
-    cont.scrollTop = cont.scrollHeight;
-    console.log('[study] showing typing indicator');
-}
-
-function removeStudyTyping() {
-    const typing = document.getElementById('study-typing-indicator');
-    if (typing) typing.remove();
-}
-
-function updateFileInputLabel(input) {
-    const fileLabel = document.getElementById('file-label');
-    if (!fileLabel) return;
-    if (input.files.length > 0) {
-        fileLabel.innerText = `📄 ${input.files[0].name}`;
-    } else {
-        fileLabel.innerText = '📎 Choose File';
-    }
-}
-
-async function submitStudyAnalysis(e) {
-    if (e && typeof e.preventDefault === 'function') e.preventDefault();
-    
-    console.log('[study] form submitted');
-    showToast('📤 Submitting...', 5000);
-
-    const fileInput = studyFile();
-    const textInput = studyInput();
-    
-    if (!fileInput || !textInput) {
-        console.error('[study] input elements not found');
-        showToast('❌ Form elements not found', 3000);
-        return;
-    }
-
-    const file = fileInput.files[0];
-    const question = textInput.value.trim();
-
-    if (!file && !question) {
-        addStudyMessage('ai', 'Please attach a PDF/image or ask a question.');
-        showToast('⚠️ Please provide a file or question', 3000);
-        return;
-    }
-
-    // Show user message
-    if (question) addStudyMessage('user', question);
-    if (file && !question) addStudyMessage('user', `📎 Analyzing: ${file.name}`);
-    if (file && question) addStudyMessage('user', `❓ ${question}\n📎 File: ${file.name}`);
-
-    // Show typing indicator
-    showStudyTyping();
-
-    // Text-only: use unified /api/chat endpoint
-    if (!file && question) {
-        try {
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({
-                    message: question,
-                    context: studyHistory.slice(-10).map(m => ({ role: m.role, content: m.text })),
-                    conversation_id: getStudyConversationId(),
-                    kind: 'study'
-                })
-            });
-            removeStudyTyping();
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            addStudyMessage('ai', data.ai_response || 'No response from AI.');
-            showToast('✅ Response received', 3000);
-            textInput.value = '';
-            textInput.focus();
-            return;
-        } catch (err) {
-            removeStudyTyping();
-            console.error('[study] text-only error', err);
-            addStudyMessage('ai', `⚠️ Error: ${err.message}`);
-            showToast(`⚠️ Network error: ${err.message}`, 5000);
-            return;
-        }
-    }
-
-    // File upload: use specialized /api/study/analyze endpoint
-    // Build FormData
-    const form = new FormData();
-    if (file) form.append('file', file);
-    if (question) form.append('prompt', question);
-    // Attach memory + metadata
-    form.append('conversation_history', JSON.stringify(studyHistory.slice(-10).map(m => ({ role: m.role, content: m.text }))));
-    form.append('conversation_id', getStudyConversationId());
-
-    console.log('[study] sending to backend', {
-        hasFile: !!file,
-        fileName: file?.name,
-        questionLength: question.length,
+// ============================================
+// EVENT LISTENERS
+// ============================================
+function setupStudyEventListeners() {
+  if (studyEls.chatForm) {
+    studyEls.chatForm.addEventListener('submit', handleStudySendMessage);
+  }
+  
+  if (studyEls.userInput) {
+    studyEls.userInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleStudySendMessage();
+      }
     });
-
-    try {
-        const res = await fetch('/api/study/analyze', {
-            method: 'POST',
-            credentials: 'include',
-            body: form,
-        });
-
-        removeStudyTyping();
-
-        const text = await res.text();
-        let data = {};
-        try { data = JSON.parse(text); } catch (e) { data = { raw: text }; }
-
-        console.log('[study] backend response', { status: res.status, data });
-
-        if (!res.ok) {
-            const msg = data.error || data.raw || `Request failed (status ${res.status}).`;
-            const dbg = data.debug ? ` | Debug: ${JSON.stringify(data.debug)}` : '';
-            addStudyMessage('ai', `❌ ${msg}${dbg}`);
-            showToast(`❌ Error: ${msg}`, 5000);
-            return;
-        }
-
-        // Success - show AI response (Markdown rendered if available)
-        addStudyMessage('ai', data.answer || data.error || data.raw || 'No response from AI.');
-        showToast('✅ Response received', 3000);
-
-        // Clear inputs
-        textInput.value = '';
-        fileInput.value = '';
-        document.getElementById('file-label').innerText = '📎 Choose File';
-        textInput.focus();
-    } catch (err) {
-        removeStudyTyping();
-        console.error('[study] fetch error', err);
-        addStudyMessage('ai', `⚠️ Error: ${err.message}`);
-        showToast(`⚠️ Network error: ${err.message}`, 5000);
-    }
+  }
+  
+  if (studyEls.newChatBtn) {
+    studyEls.newChatBtn.addEventListener('click', startNewStudyChat);
+  }
+  
+  if (studyEls.attachBtn) {
+    studyEls.attachBtn.addEventListener('click', () => {
+      if (studyEls.fileInput) studyEls.fileInput.click();
+    });
+  }
+  
+  if (studyEls.fileInput) {
+    studyEls.fileInput.addEventListener('change', handleFileUpload);
+  }
+  
+  // Quick chip handlers
+  const quickChips = document.querySelectorAll('.quick-chip');
+  quickChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const prompt = chip.getAttribute('data-prompt');
+      if (prompt && studyEls.userInput) {
+        studyEls.userInput.value = prompt;
+        studyEls.userInput.focus();
+      }
+    });
+  });
+  
+  // Example prompt handlers
+  const examplePrompts = document.querySelectorAll('.example-prompt');
+  examplePrompts.forEach(prompt => {
+    prompt.addEventListener('click', () => {
+      const promptText = prompt.getAttribute('data-prompt');
+      if (promptText && studyEls.userInput) {
+        studyEls.userInput.value = promptText;
+        studyEls.userInput.focus();
+      }
+    });
+  });
+  
+  // Quick action card handlers
+  const quickActionCards = document.querySelectorAll('.quick-action-card');
+  quickActionCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const action = card.getAttribute('data-action');
+      if (!action || !studyEls.userInput) return;
+      
+      let prompt = '';
+      switch(action) {
+        case 'summarize':
+          prompt = 'Please summarize the uploaded PDF document';
+          if (studyEls.fileInput) studyEls.fileInput.click();
+          break;
+        case 'flashcards':
+          prompt = 'Generate flashcards for studying the key concepts';
+          break;
+        case 'explain':
+          prompt = 'Explain this concept in simple terms: ';
+          break;
+      }
+      
+      studyEls.userInput.value = prompt;
+      studyEls.userInput.focus();
+    });
+  });
 }
 
+// ============================================
+// FILE UPLOAD HANDLING
+// ============================================
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  uploadedFile = file;
+  console.log('File selected:', file.name);
+  
+  // Optional: Show file name in UI
+  if (studyEls.userInput) {
+    studyEls.userInput.placeholder = `📎 ${file.name} - Type your question...`;
+  }
+}
 
-// Setup event listeners on DOM ready
-window.addEventListener('DOMContentLoaded', () => {
-    console.log('[study] DOM ready - wiring listeners');
-
-    // Wire form submission
-    const form = studyForm();
-    if (form) {
-        console.log('[study] ✅ found form, attaching submit listener');
-        form.addEventListener('submit', submitStudyAnalysis);
+// ============================================
+// SEND MESSAGE WITH REQUEST LOCK
+// ============================================
+async function handleStudySendMessage(e) {
+  if (e) e.preventDefault();
+  
+  // CRITICAL: Request lock - prevent overlapping requests
+  if (isStudyBotActive) {
+    console.warn('⚠️ Study bot is processing. Please wait.');
+    return;
+  }
+  
+  const userText = studyEls.userInput.value.trim();
+  if (!userText) {
+    studyEls.userInput.focus();
+    return;
+  }
+  
+  // Activate lock and update UI state
+  isStudyBotActive = true;
+  if (studyEls.sendBtn) {
+    studyEls.sendBtn.disabled = true;
+    studyEls.sendBtn.style.opacity = '0.5';
+  }
+  if (studyEls.userInput) {
+    studyEls.userInput.placeholder = '⏳ AURA is analyzing...';
+  }
+  
+  // Hide welcome state
+  if (studyEls.welcomeState) {
+    studyEls.welcomeState.style.display = 'none';
+  }
+  
+  // Add user message
+  addStudyMessage('user', userText);
+  studyEls.userInput.value = '';
+  
+  // Reset file upload placeholder
+  if (studyEls.userInput) {
+    studyEls.userInput.placeholder = 'Ask a question, upload a file...';
+  }
+  
+  // Show typing indicator
+  const typingId = addStudyTypingIndicator();
+  
+  try {
+    // Create AbortController for cancellation support
+    requestAbortController = new AbortController();
+    
+    const formData = new FormData();
+    formData.append('prompt', userText);
+    
+    if (uploadedFile) {
+      formData.append('file', uploadedFile);
+      console.log('📎 Uploading file:', uploadedFile.name);
+    }
+    
+    console.log('🚀 Sending request to /api/study/analyze');
+    console.log('📝 Prompt:', userText);
+    
+    const response = await fetch('/api/study/analyze', {
+      method: 'POST',
+      body: formData,
+      signal: requestAbortController.signal
+    });
+    
+    removeStudyTypingIndicator(typingId);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('❌ API Error:', errorData);
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('✅ API Response:', data);
+    
+    // API returns 'answer' field
+    if (data.answer) {
+      addStudyMessage('ai', data.answer);
+      // Save to chat history
+      saveStudyMessage(userText, data.answer);
+    } else if (data.error) {
+      throw new Error(data.error);
     } else {
-        console.error('[study] ❌ form not found');
+      throw new Error('No response from AI');
     }
-
-    // Defensive: ensure Analyze button triggers submission even if browser validation blocks
-    const analyzeBtn = document.querySelector('[data-study-analyze]') || document.getElementById('study-analyze-btn');
-    if (analyzeBtn && form) {
-        analyzeBtn.addEventListener('click', (e) => {
-            // Prevent any default native validation popup; we handle validation in JS
-            e.preventDefault();
-            submitStudyAnalysis(e);
-        });
-        console.log('[study] ✅ analyze button wired');
-    }
-
-    // Wire file input change
-    const fileInput = studyFile();
-    if (fileInput) {
-        console.log('[study] ✅ found file input, attaching change listener');
-        fileInput.addEventListener('change', (e) => updateFileInputLabel(e.target));
+    
+  } catch (error) {
+    removeStudyTypingIndicator(typingId);
+    
+    if (error.name === 'AbortError') {
+      console.log('Request was cancelled');
+      addStudyMessage('ai', '⚠️ Request was cancelled.');
     } else {
-        console.error('[study] ❌ file input not found');
+      console.error('Error sending message:', error);
+      const errorMsg = error.message || 'Sorry, I encountered an error. Please try again.';
+      addStudyMessage('ai', `❌ Error: ${errorMsg}`);
     }
+  } finally {
+    // Release lock and restore UI state
+    isStudyBotActive = false;
+    if (studyEls.sendBtn) {
+      studyEls.sendBtn.disabled = false;
+      studyEls.sendBtn.style.opacity = '1';
+    }
+    if (studyEls.userInput) {
+      studyEls.userInput.placeholder = 'Ask a question, upload a file...';
+    }
+    requestAbortController = null;
+    uploadedFile = null;
+    if (studyEls.fileInput) studyEls.fileInput.value = '';
+  }
+}
 
-    // Focus text input
-    const textInput = studyInput();
-    if (textInput) textInput.focus();
+// ============================================
+// TYPEWRITER EFFECT FOR AI RESPONSES
+// ============================================
+async function typeWriterEffect(text, role = 'ai') {
+  const messageDiv = document.createElement('div');
+  messageDiv.classList.add('message', `${role}-message`);
+  
+  // For markdown content
+  if (role === 'ai' && typeof marked !== 'undefined') {
+    const htmlContent = marked.parse(text);
+    messageDiv.innerHTML = htmlContent;
+  } else {
+    messageDiv.textContent = '';
+  }
+  
+  studyEls.chatMessages.appendChild(messageDiv);
+  
+  // Typewriter animation for plain text
+  if (role === 'ai' && typeof marked === 'undefined') {
+    for (let i = 0; i < text.length; i++) {
+      messageDiv.textContent += text.charAt(i);
+      smoothScrollToBottom(studyEls.chatMessages);
+      await new Promise(resolve => setTimeout(resolve, 15)); // 15ms per character
+    }
+  } else {
+    smoothScrollToBottom(studyEls.chatMessages);
+  }
+}
 
-    console.log('[study] ✅ all listeners wired - ready!');
-});
+// ============================================
+// MESSAGE RENDERING
+// ============================================
+function addStudyMessage(role, text) {
+  const messageDiv = document.createElement('div');
+  messageDiv.classList.add('message');
+  messageDiv.classList.add(role === 'user' ? 'user-message' : 'ai-message');
+  
+  if (role === 'ai' && typeof marked !== 'undefined') {
+    messageDiv.innerHTML = marked.parse(text);
+  } else {
+    messageDiv.textContent = text;
+  }
+  
+  studyEls.chatMessages.appendChild(messageDiv);
+  smoothScrollToBottom(studyEls.chatMessages);
+}
+
+function addStudyTypingIndicator() {
+  const typingId = 'typing-' + Date.now();
+  const typingDiv = document.createElement('div');
+  typingDiv.id = typingId;
+  typingDiv.classList.add('message', 'ai-message', 'typing-indicator');
+  typingDiv.innerHTML = `
+    <div class="typing">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+  `;
+  
+  studyEls.chatMessages.appendChild(typingDiv);
+  smoothScrollToBottom(studyEls.chatMessages);
+  
+  return typingId;
+}
+
+function removeStudyTypingIndicator(typingId) {
+  const typingDiv = document.getElementById(typingId);
+  if (typingDiv) typingDiv.remove();
+}
+
+function smoothScrollToBottom(container) {
+  if (!container) return;
+  
+  const target = container.scrollHeight - container.clientHeight;
+  const start = container.scrollTop;
+  const distance = target - start;
+  const duration = 300;
+  let startTime = null;
+  
+  function animation(currentTime) {
+    if (!startTime) startTime = currentTime;
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Easing function
+    const easeProgress = progress * (2 - progress);
+    
+    container.scrollTop = start + (distance * easeProgress);
+    
+    if (progress < 1) {
+      requestAnimationFrame(animation);
+    }
+  }
+  
+  requestAnimationFrame(animation);
+}
+
+// ============================================
+// CHAT HISTORY MANAGEMENT
+// ============================================
+function loadStudyChats() {
+  try {
+    const stored = localStorage.getItem(LS_STUDY_CHATS);
+    studyChats = stored ? JSON.parse(stored) : [];
+  } catch (err) {
+    console.error('Error loading chats:', err);
+    studyChats = [];
+  }
+}
+
+function saveStudyChats() {
+  try {
+    localStorage.setItem(LS_STUDY_CHATS, JSON.stringify(studyChats));
+  } catch (err) {
+    console.error('Error saving chats:', err);
+  }
+}
+
+function saveStudyMessage(userMsg, aiMsg) {
+  if (!currentStudyChatId) {
+    currentStudyChatId = Date.now().toString();
+    const chatTitle = userMsg.slice(0, 50) + (userMsg.length > 50 ? '...' : '');
+    studyChats.unshift({
+      id: currentStudyChatId,
+      title: chatTitle,
+      messages: []
+    });
+  }
+  
+  const chat = studyChats.find(c => c.id === currentStudyChatId);
+  if (chat) {
+    chat.messages.push({ role: 'user', text: userMsg });
+    chat.messages.push({ role: 'ai', text: aiMsg });
+    saveStudyChats();
+    renderStudyHistory();
+  }
+}
+
+function startNewStudyChat() {
+  currentStudyChatId = null;
+  
+  // Clear messages
+  if (studyEls.chatMessages) {
+    studyEls.chatMessages.innerHTML = '';
+  }
+  
+  // Show welcome state
+  if (studyEls.welcomeState) {
+    studyEls.welcomeState.style.display = 'flex';
+  }
+  
+  // Clear input
+  if (studyEls.userInput) {
+    studyEls.userInput.value = '';
+    studyEls.userInput.focus();
+  }
+  
+  // Clear file upload
+  uploadedFile = null;
+  if (studyEls.fileInput) studyEls.fileInput.value = '';
+  
+  renderStudyHistory();
+}
+
+function renderStudyHistory() {
+  if (!studyEls.historyList) return;
+  
+  if (studyChats.length === 0) {
+    studyEls.historyList.innerHTML = '<div class="history-empty">No conversations yet</div>';
+    return;
+  }
+  
+  studyEls.historyList.innerHTML = '';
+  
+  studyChats.forEach(chat => {
+    const item = document.createElement('div');
+    item.classList.add('history-item');
+    if (chat.id === currentStudyChatId) {
+      item.classList.add('active');
+    }
+    
+    item.innerHTML = `
+      <span class="history-item-icon">💬</span>
+      <span class="history-item-text">${chat.title}</span>
+    `;
+    
+    item.addEventListener('click', () => loadStudyChat(chat.id));
+    studyEls.historyList.appendChild(item);
+  });
+}
+
+function loadStudyChat(chatId) {
+  const chat = studyChats.find(c => c.id === chatId);
+  if (!chat) return;
+  
+  currentStudyChatId = chatId;
+  
+  // Hide welcome
+  if (studyEls.welcomeState) {
+    studyEls.welcomeState.style.display = 'none';
+  }
+  
+  // Clear and reload messages
+  if (studyEls.chatMessages) {
+    studyEls.chatMessages.innerHTML = '';
+  }
+  
+  chat.messages.forEach(msg => {
+    addStudyMessage(msg.role, msg.text);
+  });
+  
+  renderStudyHistory();
+}
+
+// ============================================
+// TYPING INDICATOR ANIMATION
+// ============================================
+const typingStyles = document.createElement('style');
+typingStyles.textContent = `
+.typing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: typing-bounce 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
+}
+`;
+document.head.appendChild(typingStyles);
+
+// ============================================
+// EXPORT FOR GLOBAL ACCESS
+// ============================================
+window.initStudyChat = initStudyChat;
+window.handleStudySendMessage = handleStudySendMessage;
+window.startNewStudyChat = startNewStudyChat;

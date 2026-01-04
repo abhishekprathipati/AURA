@@ -6,6 +6,7 @@
     <title>AURA - Study Assistant</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/study-assistant.css') }}">
+    <script src="{{ url_for('static', filename='js/theme-engine.js') }}"></script>
 </head>
 <body>
     <!-- Three-Column Architecture -->
@@ -17,7 +18,7 @@
                     <div class="logo-icon">📚</div>
                     <span class="logo-text">AURA</span>
                 </div>
-                <button class="new-chat-btn" id="newStudyChat">
+                <button class="new-chat-btn" id="newStudyChatBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -28,7 +29,7 @@
 
             <div class="history-section">
                 <p class="section-label">Recent</p>
-                <div id="studyHistoryList" class="history-list">
+                <div id="study-history-list" class="history-list">
                     <div class="history-item">
                         <span class="history-icon">📝</span>
                         <span class="history-text">Physics Homework</span>
@@ -90,7 +91,7 @@
             </header>
 
             <!-- Messages Container -->
-            <div id="studyMessages" class="messages-container">
+            <div id="study-messages" class="messages-container">
                 <!-- Welcome State -->
                 <div class="welcome-state" id="studyWelcomeState">
                     <h1>Welcome back! What are you learning today?</h1>
@@ -128,14 +129,14 @@
 
             <!-- Input Area (Floating Pill) -->
             <div class="input-area-wrapper">
-                <form id="studyForm" class="input-pill">
-                    <button type="button" class="attach-btn" id="attachBtn" title="Attach file">
+                <form id="studyChatForm" class="input-pill">
+                    <button type="button" class="attach-btn" id="attachFileBtn" title="Attach file">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                         </svg>
                         <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt,image/*" style="display:none;">
                     </button>
-                    <input type="text" id="studyInput" placeholder="Ask your question, upload a file..." autocomplete="off">
+                    <input type="text" id="studyChatInput" placeholder="Ask your question, upload a file..." autocomplete="off">
                     <button type="button" class="voice-btn" id="voiceBtn" title="Voice input">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
@@ -144,7 +145,7 @@
                             <line x1="8" y1="23" x2="16" y2="23"></line>
                         </svg>
                     </button>
-                    <button type="submit" id="sendBtn" class="send-btn">
+                    <button type="submit" id="study-send-btn" class="send-btn">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                         </svg>
@@ -248,6 +249,40 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="{{ url_for('static', filename='js/study-assistant.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/study_chatbot.js') }}"></script>
+    <script>
+        // Initialize theme system first
+        if (typeof initTheme === 'function') {
+            initTheme();
+        }
+        
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+            initStudyChat();
+            
+            // Connect upload button to file input
+            const uploadFileBtn = document.getElementById('uploadFileBtn');
+            const attachBtn = document.getElementById('attachBtn');
+            const fileInput = document.getElementById('fileInput');
+            
+            if (uploadFileBtn && fileInput) {
+                uploadFileBtn.addEventListener('click', () => {
+                    fileInput.click();
+                });
+            }
+            
+            // Quiz generation placeholder
+            const createQuizBtn = document.getElementById('createQuizBtn');
+            if (createQuizBtn) {
+                createQuizBtn.addEventListener('click', () => {
+                    const input = document.getElementById('studyInput');
+                    if (input) {
+                        input.value = 'Generate a practice quiz on the recent topics we discussed';
+                        input.focus();
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
