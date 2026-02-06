@@ -13,7 +13,7 @@
     document.documentElement.classList.add('study-page-root');
 })();
 </script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/study-assistant.css', v=15) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/study-assistant.css') }}?v=20260208">
 <style>
 /* CRITICAL: Override ALL base styles for study chat page */
 html.study-page-root,
@@ -95,12 +95,76 @@ body.study-page .input-pill input::placeholder,
 body.study-page #studyChatInput::placeholder {
     color: #6b6b7a !important;
 }
+
+/* CRITICAL: Force scrollable messages container */
+body.study-page #study-messages {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    max-height: calc(100vh - 220px) !important;
+    scroll-behavior: smooth !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+body.study-page .chat-shell {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* AI messages - full content display */
+body.study-page .ai-message {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+body.study-page .ai-message .message-content {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+body.study-page .ai-message .message-body {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+body.study-page .message {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* Scrollbar styling for messages */
+body.study-page #study-messages::-webkit-scrollbar {
+    width: 10px !important;
+}
+
+body.study-page #study-messages::-webkit-scrollbar-track {
+    background: #1a1a1f !important;
+    border-radius: 5px !important;
+}
+
+body.study-page #study-messages::-webkit-scrollbar-thumb {
+    background: #4a4a55 !important;
+    border-radius: 5px !important;
+}
+
+body.study-page #study-messages::-webkit-scrollbar-thumb:hover {
+    background: #6a6a75 !important;
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="study-container">
-    <!-- Left Sidebar - Chat History -->
+    <!-- Left Sidebar - Recent Sessions + Hub (moved from right) -->
     <aside class="study-sidebar study-sidebar-left">
         <div class="sidebar-top">
             <div class="sidebar-logo">
@@ -118,33 +182,49 @@ body.study-page #studyChatInput::placeholder {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 5v14M5 12h14"/>
                 </svg>
-                <span>+ New Study Session</span>
+                <span>New Study Session</span>
             </button>
         </div>
+
         <div class="history-section">
             <p class="section-label">Recent Sessions</p>
             <div id="study-history-list" class="history-list">
-                <div class="history-item">
-                    <span class="history-item-icon">✏️</span>
-                    <span class="history-item-text">Physics Homework</span>
-                </div>
-                <div class="history-item">
-                    <span class="history-item-icon">📝</span>
-                    <span class="history-item-text">Essay Outline</span>
-                </div>
-                <div class="history-item">
-                    <span class="history-item-icon">📷</span>
-                    <span class="history-item-text">Image Analysis</span>
-                </div>
-                <div class="history-item">
-                    <span class="history-item-icon">👥</span>
-                    <span class="history-item-text">Mock Exam Practice</span>
-                </div>
+                <div class="history-empty" style="padding: 12px; text-align: center; color: var(--text-dim); font-size: 0.85rem;">No sessions yet</div>
             </div>
+        </div>
+
+        <!-- Hub content moved from right sidebar -->
+        <div class="hub-section" style="margin-top: 16px;">
+            <p class="hub-section-title">Quick Actions</p>
+            <div class="hub-actions">
+                <button class="hub-action-btn" id="hubUploadBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                    </svg>
+                    <span>Upload File</span>
+                </button>
+                <button class="hub-action-btn" data-study-action="quiz">📝 Generate Quiz</button>
+                <button class="hub-action-btn" data-study-action="flashcards">🎴 Create Flashcards</button>
+            </div>
+        </div>
+
+        <div class="hub-section">
+            <p class="hub-section-title">Recent Files</p>
+            <div id="fileList" class="recent-files"></div>
+        </div>
+
+        <div class="hub-section">
+            <p class="hub-section-title">Study Tips</p>
+            <ul class="tips-list">
+                <li>Upload PDFs or images for instant analysis.</li>
+                <li>Ask follow-up questions about uploaded content.</li>
+                <li>Generate quizzes to test understanding.</li>
+                <li>Use flashcards for active recall.</li>
+            </ul>
         </div>
     </aside>
 
-    <!-- Center - Main Chat Area -->
+    <!-- Center Column - Chat + Command Center -->
     <main class="chat-viewport study-viewport">
         <header class="chat-top-nav">
             <div class="model-selector">
@@ -162,96 +242,97 @@ body.study-page #studyChatInput::placeholder {
                 <div class="user-profile">
                     {{ session.get('user_name', 'Student') }}
                 </div>
-                <a href="/student-dashboard" class="dashboard-btn">Dashboard</a>
-                <a href="/logout" class="logout-btn">Logout</a>
+                <a href="/student/dashboard" class="dashboard-btn">Dashboard</a>
+                <a href="{{ url_for('auth.logout') }}" class="logout-btn">Logout</a>
             </div>
         </header>
 
-        <!-- Messages Container -->
-        <div id="study-messages" class="messages-container">
-            <!-- Welcome State -->
-            <div class="welcome-state" id="studyWelcomeState">
-                <h1>Welcome back! What are you learning today?</h1>
-                <p>I can help with homework, explain concepts, generate flashcards, and more.</p>
-                <div class="quick-chips">
-                    <button class="quick-chip" data-prompt="Summarize this PDF">
-                        <span class="quick-chip-icon">📄</span> Summarize PDF
-                    </button>
-                    <button class="quick-chip" data-prompt="Generate flashcards">
-                        <span class="quick-chip-icon">🎴</span> Generate Flashcards
-                    </button>
-                    <button class="quick-chip" data-prompt="Explain concept">
-                        <span class="quick-chip-icon">💡</span> Explain Concept
-                    </button>
-                    <button class="quick-chip" data-prompt="Create quiz">
-                        <span class="quick-chip-icon">📝</span> Create Quiz
-                    </button>
+        <div class="chat-shell">
+            <div id="study-messages" class="messages-container chat-messages">
+                <!-- Command Center: Primary tools front-and-center -->
+                <section class="command-center">
+                    <div class="command-title">Command Center</div>
+                    <div class="command-chips">
+                        <button class="command-chip" id="chipSummarize" data-study-action="summarize">
+                            <span class="chip-icon">📄</span>
+                            Summarize PDF
+                        </button>
+                        <button class="command-chip" id="chipQuiz" data-study-action="quiz">
+                            <span class="chip-icon">📝</span>
+                            Generate Quiz
+                        </button>
+                        <button class="command-chip" id="chipFlashcards" data-study-action="flashcards">
+                            <span class="chip-icon">🎴</span>
+                            Flashcards
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Welcome State -->
+                <div class="welcome-state" id="studyWelcomeState">
+                    <h1 class="hero-title">What do you want to study?</h1>
+                    <p class="hero-subtitle">Upload a document, ask questions, or generate study materials.</p>
+                    <div class="quick-chips">
+                        <div class="quick-chip" data-prompt="Explain the key concepts in this document">
+                            <span class="quick-chip-icon">💡</span>
+                            <span>Explain Key Concepts</span>
+                        </div>
+                        <div class="quick-chip" data-prompt="Create a study guide for this topic">
+                            <span class="quick-chip-icon">📖</span>
+                            <span>Create Study Guide</span>
+                        </div>
+                        <div class="quick-chip" data-prompt="What are the most important points I should remember?">
+                            <span class="quick-chip-icon">⭐</span>
+                            <span>Important Points</span>
+                        </div>
+                        <div class="quick-chip" data-prompt="Help me understand this better with examples">
+                            <span class="quick-chip-icon">🔍</span>
+                            <span>Explain with Examples</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Input Area - Fixed Position -->
-        <div class="study-input-wrapper">
-            <div class="study-pill">
-                <input type="file" id="fileUpload" hidden accept=".pdf,.png,.jpg,.jpeg,.txt,.doc,.docx">
-                <button type="button" class="action-icon" id="attachFileBtn" onclick="document.getElementById('fileUpload').click()">📎</button>
-                
-                <input type="text" id="studyChatInput" placeholder="Ask a question or explain a file..." autocomplete="off" required>
-                
-                <button type="button" id="study-send-btn" class="action-icon">🚀</button>
+        <div class="chat-input-shell">
+            <div class="chat-input-wrapper">
+                <div class="input-area-wrapper study-input-shell">
+                    <form id="studyChatForm" class="input-pill">
+                        <input type="file" id="fileUpload" hidden accept=".pdf,.png,.jpg,.jpeg,.txt,.doc,.docx">
+                        <button type="button" class="attach-btn" id="attachFileBtn" aria-label="Attach a file" title="Upload PDF, images, or documents">📎</button>
+                        <textarea
+                            id="studyChatInput"
+                            class="chat-input"
+                            placeholder="Ask a question, explain a concept, or upload a file..."
+                            rows="1"
+                            autocomplete="off"
+                            spellcheck="false"
+                        ></textarea>
+                        <div class="input-actions">
+                            <button type="button" id="study-send-btn" class="send-icon-btn" aria-label="Send message" title="Send (Enter)">🚀</button>
+                        </div>
+                    </form>
+                    <p class="input-disclaimer">
+                        <span class="shortcut-hint">📎 Upload • Enter to send • Shift+Enter for new line</span>
+                    </p>
+                </div>
             </div>
-            <p class="disclaimer">AURA Study Assistant: Analyze files and generate quizzes instantly.</p>
         </div>
     </main>
 
-    <!-- Right Sidebar - Study Hub -->
-    <aside class="study-hub study-sidebar-right">
-        <div class="hub-header">
-            <h3>Study Hub</h3>
-        </div>
-        
-        <div class="hub-section">
-            <p class="hub-section-title">Quick Actions</p>
-            <div class="hub-actions">
-                <button class="hub-action-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                    </svg>
-                    <span>Upload File</span>
-                </buttontools">
-            <button class="tool-btn" onclick="triggerSummarize()">📄 Summarize PDF</button>
-            <button class="tool-btn" onclick="triggerQuiz()">📝 Generate Quiz</button>
-            <button class="tool-btn" onclick="triggerFlashcards()">🎴 Create Flashcards</button>
-        </div>
+</div>
 
-        <div class="file-manager">
-            <p>Active Files</p>
-            <div id="fileList" class="active-files">
-                <div class="file-item">
-                    <span>📄 quantum_notes.pdf</span>
-                </div>
-                <div class="file-item">
-                    <span>🖼️ diagram.png</span>
-                </div>
-            </div>
-        </div>
+{% endblock %}
 
-        <div class="hub-section">
-            <p class="hub-section-title">Study Tips</p>
-            <ul class="tips-list">
-                <li>Upload PDFs or images for instant analysis</li>
-                <li>Ask follow-up questions about uploaded content</li>
-                <li>Generate quizzes to test your understanding</li>
-                <li>Use flashcards for active learning</li>
-            </ul
-// Initialize theme
-if (typeof initTheme === 'function') {
-    initTheme();
-}
-
-// Initialize study chat
-if (typeof initStudyChat === 'function') {
-    initStudyChat();
-}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="{{ url_for('static', filename='js/study_chatbot.js') }}?v=8" defer></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof initTheme === 'function') {
+            initTheme();
+        }
+        // initStudyChat is auto-called in the JS file
+    });
 </script>
 {% endblock %}

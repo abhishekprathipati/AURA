@@ -1,238 +1,804 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<!-- TEMPLATE: student_dashboard.html | EDITED: 2026-01-30 | MOOD POPUP ADDED -->
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aura - Student Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Dashboard | AURA - Student Wellness</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student_dashboard.css') }}?v=20260130">
     <style>
-        /* Critical: Ensure dashboard displays */
-        html, body {
-            width: 100%;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        /* SVG Icon System */
+        .icon {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            fill: none;
+            display: inline-block;
+            vertical-align: middle;
         }
-        .dashboard-container {
-            position: relative;
-            z-index: 10;
-            display: block;
-            visibility: visible;
-            opacity: 1;
+        
+        .icon.icon-sm {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .icon.icon-lg {
+            width: 32px;
+            height: 32px;
+        }
+        
+        /* Additional styles for Connect Hub and enhancements */
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+        
+        .status-indicator.offline {
+            background: #ef4444;
+        }
+        
+        .hub-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .hub-feature {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: rgba(249, 250, 251, 0.8);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .hub-feature:hover {
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .feature-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .feature-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        /* Enhanced dashboard styles */
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+        }
+        
+        .system-identity h1 {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(229, 231, 235, 0.6);
+        }
+        
+        .card-primary {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+        }
+        
+        .metric-value {
+            font-size: 72px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .btn-module {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-module:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
-<body style="min-height: 100vh; position: relative;">
-    <!-- Animated Background -->
-    <div class="bg-animation">
-        <div class="floating-shape shape-1"></div>
-        <div class="floating-shape shape-2"></div>
-        <div class="floating-shape shape-3"></div>
-        <div class="floating-shape shape-4"></div>
-    </div>
-
-    <!-- Top Navigation Bar -->
-    <nav class="top-navbar">
-        <div class="navbar-brand">
-            <span class="brand-icon">✨</span>
-            <span class="brand-text">AURA</span>
-        </div>
-        <div class="navbar-menu">
-            <a href="/student/dashboard" class="nav-link active">Dashboard</a>
-            <a href="/student/dashboard/pro" class="nav-link" style="background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
-                ✨ Pro Mode
-            </a>
-            <a href="/student/profile" class="nav-link">Profile</a>
-            <a href="/student/settings" class="nav-link">Settings</a>
-        </div>
-    </nav>
-
-    <!-- Dashboard Container -->
-    <div class="dashboard-container" style="position: relative; z-index: 10;">
-        <!-- Welcome Section -->
-        <div class="welcome-section">
-            <h1 class="welcome-title">Welcome Back! 👋</h1>
-            <p class="welcome-subtitle">Let's check in on your wellness journey</p>
-        </div>
-
-        <!-- Wellness Snapshot -->
-        <div class="glass-card wellness-snapshot">
-            <div class="wellness-header">
-                <div>
-                    <h2 class="wellness-title">Your Wellness Snapshot</h2>
-                    <p class="wellness-subtitle">Real-time wellness monitoring</p>
+<body>
+    <!-- DASHBOARD LAYOUT -->
+    <div class="dashboard" role="main">
+        <!-- student_dashboard.html loaded -->
+        
+        <!-- ENHANCED HEADER -->
+        <header class="dashboard-header" role="banner">
+            <div class="header-content">
+                <!-- System Identity -->
+                <div class="system-identity">
+                    <h1 class="system-name">AURA</h1>
+                    <div class="system-context">
+                        <span class="welcome-text">Welcome back,</span>
+                        <span class="user-name" id="userName">Student</span>
+                    </div>
                 </div>
-                <a href="/student/activities" class="view-history-btn">
-                    <span>View History</span>
-                    <span class="btn-arrow">→</span>
-                </a>
-            </div>
-
-            <div class="stress-display">
-
-                <div class="gauge-card">
-                    <div class="stress-gauge">
-                        <svg viewBox="0 0 100 100" class="gauge-circle">
+                
+                <!-- User Controls -->
+                <div class="user-controls">
+                    <div class="user-status">
+                        <div class="status-badge">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" style="fill: #10b981; stroke: none;">
+                                <circle cx="12" cy="12" r="8"/>
+                            </svg>
+                            <span>Active Now</span>
+                        </div>
+                    </div>
+                    <!-- Random Color Theme Button -->
+                    <button class="btn-icon color-theme-btn" id="randomColorBtn" aria-label="Change accent color" title="Random Theme Color">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 2a10 10 0 0 0 0 20 10 10 0 0 0 0-20" stroke="url(#rainbowGrad)" stroke-width="3"/>
                             <defs>
-                                <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
-                                    <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:1" />
-                                    <stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
+                                <linearGradient id="rainbowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#ff6b6b"/>
+                                    <stop offset="25%" stop-color="#ffd93d"/>
+                                    <stop offset="50%" stop-color="#6bcb77"/>
+                                    <stop offset="75%" stop-color="#4d96ff"/>
+                                    <stop offset="100%" stop-color="#9b59b6"/>
                                 </linearGradient>
                             </defs>
-                            <circle class="gauge-bg" cx="50" cy="50" r="40" />
-                            <circle class="gauge-fill" id="gaugeFill" cx="50" cy="50" r="40" 
-                                    stroke-dasharray="251.2" stroke-dashoffset="125.6" />
                         </svg>
-                        <div class="gauge-text">
-                            <span class="gauge-value" id="stressValue">42</span>
-                            <span class="gauge-label">STRESS LEVEL</span>
+                    </button>
+                    <button class="btn-icon theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                        <svg id="themeIcon" viewBox="0 0 24 24" width="18" height="18">
+                            <!-- icon injected by JS -->
+                        </svg>
+                    </button>
+                    <a href="/auth/logout" class="btn-signout" title="Sign out">
+                        <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5m0 0l-5-5m5 5H9"/></svg>
+                        <span>Sign Out</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="dashboard-layout">
+            
+            <!-- LEFT COLUMN - Main content -->
+            <div class="dashboard-left">
+                
+                <!-- STRESS OVERVIEW - Enhanced card -->
+                <section class="card card-primary" aria-labelledby="stress-heading">
+                    <header class="card-header">
+                        <div class="card-header-main">
+                            <h2 id="stress-heading" class="card-title">
+                                <span class="card-title-icon icon-blue">
+                                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </span>
+                                Stress Level Analysis
+                            </h2>
+                            <div class="card-subtitle">Real-time monitoring & insights</div>
                         </div>
-                        <div class="gauge-ring"></div>
+                        <div class="card-timestamp" id="stressTimestamp">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="9M12 6v6l4 2.5"/></svg>
+                            <span>Updated just now</span>
+                        </div>
+                    </header>
+                    
+                    <div class="card-body">
+                        <!-- Primary Metric Display -->
+                        <div class="metric-display">
+                            <div class="metric-value-container">
+                                <div class="metric-value" id="stressValue" aria-live="polite">--</div>
+                                <div class="metric-unit">/100</div>
+                            </div>
+                            <div class="metric-info">
+                                <div class="metric-descriptor" id="stressDescriptor">No data available</div>
+                                <div class="metric-trend">
+                                    <span class="trend-indicator" id="trendIndicator" aria-hidden="true">=</span>
+                                    <span class="trend-label" id="trendLabel">Loading trend</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Stress Level Indicator -->
+                        <div class="stress-indicator">
+                            <div class="indicator-bar">
+                                <div class="indicator-fill" id="stressIndicatorFill"></div>
+                            </div>
+                            <div class="indicator-labels">
+                                <span>Low</span>
+                                <span>Moderate</span>
+                                <span>High</span>
+                                <span>Critical</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Chatbot Access Cards -->
+                        <div class="metric-actions chat-cards">
+                            <a href="{{ url_for('student.mental_chatbot') }}" class="chat-card chat-card-mental">
+                                <div class="chat-icon-wrapper">
+                                    <svg class="chat-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM18 14H6V12H18V14ZM18 11H6V9H18V11ZM18 8H6V6H18V8Z" fill="white"/>
+                                    </svg>
+                                </div>
+                                <div class="chat-title">Mental Chat</div>
+                                <div class="chat-description">Talk about feelings</div>
+                            </a>
+                            <a href="{{ url_for('student.study_chatbot') }}" class="chat-card chat-card-study">
+                                <div class="chat-icon-wrapper">
+                                    <svg class="chat-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18ZM12 3L1 9L12 15L21 10.09V17H23V9L12 3Z" fill="white"/>
+                                    </svg>
+                                </div>
+                                <div class="chat-title">Study Chat</div>
+                                <div class="chat-description">Academic support</div>
+                            </a>
+                        </div>
                     </div>
-                    <!-- Stress History Sparkline -->
-                    <div id="stress-history-container">
-                        <svg id="stress-history-sparkline" width="140" height="32"></svg>
-                        <div class="sparkline-label">Stress History</div>
-                    </div>
-                </div>
+                </section>
 
-                <div class="stress-info">
-                    <div class="status-badge" id="statusBadge">
-                        <span class="status-icon">✨</span>
-                        <span id="wellnessStatus">Balanced & Calm</span>
+                <!-- 7-DAY STRESS HISTORY -->
+                <section class="card card-elevated" aria-labelledby="chart-heading">
+                    <div class="chart-header">
+                        <h3 class="chart-title">7-Day Stress History</h3>
+                        <div class="chart-legend">
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #3b82f6;"></span>
+                                <span class="legend-label">Stress Level</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #10b981;"></span>
+                                <span class="legend-label">Recovery</span>
+                            </div>
+                        </div>
                     </div>
-                    <p id="wellnessMessage">You are doing great today! Keep maintaining this balance with small breaks and mindful activities.</p>
-                    <div class="wellness-actions">
-                        <button class="action-btn" data-quick-action="breathing">
-                            <span>🧘</span> Quick Breathing
-                        </button>
-                        <button class="action-btn" data-quick-action="break">
-                            <span>☕</span> Take Break
-                        </button>
+                    <div id="stressChartEmpty" class="chart-empty" hidden>
+                        <p class="chart-empty-title">Loading stress history…</p>
+                        <p class="chart-empty-desc">Your stress history will appear here after your first check-in.</p>
                     </div>
-                </div>
+                    <div id="stressChart" class="chart-container" role="img" aria-label="Stress level history chart"></div>
+                </section>
+
+                <!-- ACTIVITY SUMMARY - Enhanced -->
+                <section class="card card-elevated" aria-labelledby="activity-heading">
+                    <header class="card-header">
+                        <h3 id="activity-heading" class="card-title">
+                            <span class="card-title-icon icon-orange">
+                                <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 12h2v5H7v-5zm4-3h2v8h-2V9zm4-3h2v11h-2V6z"/></svg>
+                            </span>
+                            Activity Summary
+                        </h3>
+                        <div class="card-period">
+                            <select class="period-select" id="activityPeriod">
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="quarter">This Quarter</option>
+                            </select>
+                        </div>
+                    </header>
+                    
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-item stat-item-highlight">
+                                <div class="stat-icon">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>
+                                </div>
+                                <div class="stat-value" id="checkinsToday">0</div>
+                                <div class="stat-label">Today</div>
+                                <div class="stat-change" id="todayChange">+0%</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </div>
+                                <div class="stat-value" id="checkinsWeek">0</div>
+                                <div class="stat-label">This Week</div>
+                                <div class="stat-change" id="weekChange">+0%</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                                </div>
+                                <div class="stat-value" id="weeklyAverage">--</div>
+                                <div class="stat-label">Weekly Avg</div>
+                                <div class="stat-change" id="avgChange">+0%</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon" id="trendIconContainer">
+                                    <svg class="icon icon-sm" id="trendIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                                </div>
+                                <div class="stat-value" id="weeklyTrend">0%</div>
+                                <div class="stat-label">Trend</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Activity Timeline -->
+                        <div class="activity-timeline">
+                            <h4 class="timeline-title">Recent Activity</h4>
+                            <div class="timeline-items" id="activityTimeline">
+                                <!-- Will be populated by JavaScript -->
+                                <div class="timeline-empty">No recent activity</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- DETAILED HISTORY - Enhanced -->
+                <section class="card" aria-labelledby="history-heading">
+                    <header class="card-header">
+                        <h3 id="history-heading" class="card-title">
+                            <span class="card-title-icon icon-orange">
+                                <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                            </span>
+                            Detailed History
+                        </h3>
+                        <div class="history-controls">
+                            <button class="btn-control active" data-period="7d">7D</button>
+                            <button class="btn-control" data-period="30d">30D</button>
+                            <button class="btn-control" data-period="90d">90D</button>
+                        </div>
+                    </header>
+                    
+                    <div class="card-body">
+                        <div id="detailedChart" class="chart-container" style="height: 240px;" role="img" aria-label="Detailed stress history chart"></div>
+                    </div>
+                </section>
             </div>
+            
+            <!-- RIGHT COLUMN - Sidebar -->
+            <div class="dashboard-right">
+                
+                <!-- QUICK ACTIONS -->
+                <div class="quick-actions-right">
+                    <div class="qa-header">
+                        <div class="qa-title">
+                            <div class="qa-icon">⚡</div>
+                            <h3>Quick Actions</h3>
+                        </div>
+                        <span class="qa-count">4</span>
+                    </div>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">🎭</div>
-                    <div class="stat-content">
-                        <div class="stat-label">Current Mood</div>
-                        <div class="stat-value" id="currentMood">Calm</div>
+                    <div class="qa-grid-2x2">
+                        <!-- Games -->
+                        <a href="{{ url_for('student.games') }}" class="qa-card">
+                            <div class="qa-card-icon purple">
+                                🎮
+                            </div>
+                            <h4>Games</h4>
+                            <p>Stress relief</p>
+                        </a>
+
+                        <!-- Wellness Insights -->
+                        <a href="{{ url_for('student.activities') }}" class="qa-card">
+                            <div class="qa-card-icon purple">
+                                📈
+                            </div>
+                            <h4>Insights</h4>
+                            <p>Analytics</p>
+                        </a>
+
+                        <!-- Relaxation -->
+                        <a href="{{ url_for('student.relax') }}" class="qa-card">
+                            <div class="qa-card-icon green">
+                                ✔
+                            </div>
+                            <h4>Relaxation</h4>
+                            <p>Meditation</p>
+                        </a>
+
+                        <!-- Activities -->
+                        <a href="{{ url_for('student.activities') }}" class="qa-card">
+                            <div class="qa-card-icon orange">
+                                📊
+                            </div>
+                            <h4>Activities</h4>
+                            <p>Track tasks</p>
+                        </a>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon">🤖</div>
-                    <div class="stat-content">
-                        <div class="stat-label">AI Insights</div>
-                        <div class="stat-value" id="aiInsights">Positive</div>
+
+                <!-- CONNECT HUB -->
+                <section class="card card-hub" aria-labelledby="hub-heading">
+                    <header class="card-header">
+                        <h3 id="hub-heading" class="card-title">
+                            <span class="card-title-icon icon-green">
+                                <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                            </span>
+                            Connect Hub
+                        </h3>
+                        <div class="connection-status">
+                            <span class="status-indicator"></span>
+                            <span class="status-text" id="connectionStatus">Connected</span>
+                        </div>
+                    </header>
+                    
+                    <div class="card-body">
+                        <div class="hub-description">
+                            <p>Connect with peers, join group activities, and share experiences in a supportive community.</p>
+                        </div>
+                        
+                        <div class="hub-features">
+                            <a href="#" class="hub-feature">
+                                <div class="feature-icon">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
+                                </div>
+                                <span class="feature-label">Peer Network</span>
+                            </a>
+                            <a href="#" class="hub-feature">
+                                <div class="feature-icon">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
+                                </div>
+                                <span class="feature-label">Group Sessions</span>
+                            </a>
+                            <a href="#" class="hub-feature">
+                                <div class="feature-icon">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </div>
+                                <span class="feature-label">Events</span>
+                            </a>
+                            <a href="#" class="hub-feature">
+                                <div class="feature-icon">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20m0-2V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10"/></svg>
+                                </div>
+                                <span class="feature-label">Resources</span>
+                            </a>
+                        </div>
+                        
+                        <div class="hub-stats">
+                            <div class="hub-stat">
+                                <div class="hub-stat-value" id="activeUsers">24</div>
+                                <div class="hub-stat-label">Active Now</div>
+                            </div>
+                            <div class="hub-stat">
+                                <div class="hub-stat-value" id="totalGroups">12</div>
+                                <div class="hub-stat-label">Groups</div>
+                            </div>
+                            <div class="hub-stat">
+                                <div class="hub-stat-value" id="upcomingEvents">5</div>
+                                <div class="hub-stat-label">Events</div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-hub-join" id="joinHubBtn">
+                            <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5m0 0l-5-5m5 5H9"/></svg>
+                            Join Community
+                        </button>
                     </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">🔥</div>
-                    <div class="stat-content">
-                        <div class="stat-label">Streak</div>
-                        <div class="stat-value" id="streakDays">0 days</div>
+                </section>
+
+                <!-- SUPPORT -->
+                <section class="card card-support" aria-labelledby="support-heading">
+                    <header class="card-header">
+                        <h3 id="support-heading" class="card-title">
+                            <span class="card-title-icon icon-red">
+                                <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg>
+                            </span>
+                            Support Center
+                        </h3>
+                        <div class="support-badge">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5"/><path d="M12 12l4 2.5"/></svg>
+                            <span>24/7 Available</span>
+                        </div>
+                    </header>
+                    
+                    <div class="card-body">
+                        <div class="support-description">
+                            <p>Our wellness team is here to help. Reach out anytime for confidential support.</p>
+                        </div>
+                        
+                        <div class="support-options">
+                            <a href="#" class="support-option urgent">
+                                <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                <div class="option-content">
+                                    <div class="option-title">Urgent Help</div>
+                                    <div class="option-desc">Immediate assistance</div>
+                                </div>
+                            </a>
+                            <a href="#" class="support-option">
+                                <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><polyline points="9 11 3 3 22 4"/><polyline points="22 4 21 12 9 9 11 3z"/></svg>
+                                <div class="option-content">
+                                    <div class="option-title">Schedule Session</div>
+                                    <div class="option-desc">Book 1-on-1</div>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <button class="btn-support" id="requestSupportBtn">
+                            <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 6l10 7 10-7"/></svg>
+                            Request Support
+                        </button>
+                        
+                        <div class="support-hotline">
+                            <div class="hotline-label">Wellness Hotline</div>
+                            <div class="hotline-number">1-800-273-8255</div>
+                            <div class="hotline-note">Available 24/7</div>
+                        </div>
                     </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">⭐</div>
-                    <div class="stat-content">
-                        <div class="stat-label">Activities</div>
-                        <div class="stat-value" id="totalActivities">12</div>
-                    </div>
-                </div>
+                </section>
             </div>
         </div>
+    </div>
 
-        <!-- Features Section -->
-        <div class="glass-card features-section">
-            <h2 class="section-title">
-                <span class="title-icon">🚀</span>
-                Quick Access Features
-            </h2>
-            <div class="features-grid">
-                <a href="/student/chat/mental" class="feature-btn">
-                    <div class="feature-icon-wrapper">
-                        <span class="feature-icon">💬</span>
-                    </div>
-                    <div class="feature-content">
-                        <h3>Mental Chatbot</h3>
-                        <p>Talk about your feelings</p>
-                    </div>
-                </a>
-                <a href="/student/chat/study" class="feature-btn">
-                    <div class="feature-icon-wrapper">
-                        <span class="feature-icon">📚</span>
-                    </div>
-                    <div class="feature-content">
-                        <h3>Study Chatbot</h3>
-                        <p>Get study assistance</p>
-                    </div>
-                </a>
-                <a href="/student/relax" class="feature-btn">
-                    <div class="feature-icon-wrapper">
-                        <span class="feature-icon">🧘</span>
-                    </div>
-                    <div class="feature-content">
-                        <h3>Relax</h3>
-                        <p>Meditation & breathing</p>
-                    </div>
-                </a>
-                <a href="/student/games" class="feature-btn">
-                    <div class="feature-icon-wrapper">
-                        <span class="feature-icon">🎮</span>
-                    </div>
-                    <div class="feature-content">
-                        <h3>Mind Games</h3>
-                        <p>Fun brain exercises</p>
-                    </div>
-                </a>
-                <a href="/student/activities" class="feature-btn">
-                    <div class="feature-icon-wrapper">
-                        <span class="feature-icon">🎯</span>
-                    </div>
-                    <div class="feature-content">
-                        <h3>Activities</h3>
-                        <p>Track your progress</p>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <!-- Grievance Form -->
-        <div class="glass-card grievance-section">
-            <h2 class="section-title">
-                <span class="title-icon">📝</span>
-                Submit a Grievance
-            </h2>
-            <p class="section-subtitle">We're here to help. Share your concerns with us.</p>
-            <form id="grievanceForm">
-                <div class="form-group">
-                    <label for="grievanceSubject">Subject</label>
-                    <input type="text" id="grievanceSubject" class="form-control" placeholder="Brief title of your concern" required>
-                </div>
-                <div class="form-group">
-                    <label for="grievanceDescription">Description</label>
-                    <textarea id="grievanceDescription" class="form-control" placeholder="Describe your concern in detail..." required></textarea>
-                </div>
-                <button type="submit" class="btn-primary">
-                    <span class="btn-text">Submit Grievance</span>
-                    <span class="btn-loader" style="display: none;">
-                        <div class="loading"></div>
-                    </span>
+    <!-- ENHANCED SUPPORT MODAL -->
+    <div class="modal" id="supportModal" role="dialog" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-overlay"></div>
+        
+        <div class="modal-content modal-lg">
+            <header class="modal-header">
+                <h2 id="modalTitle" class="modal-title">
+                    <svg class="icon modal-title-icon" viewBox="0 0 24 24" stroke-width="2"><path d="M18.364 5.636l-3.536 3.536m9.172-9.172l-21 21M9 19H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4l6-6h4v4l6 6v4a2 2 0 0 1-2 2h-4"/></svg>
+                    Request Support
+                </h2>
+                <button class="modal-close" id="closeModalBtn" aria-label="Close modal">
+                    <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18M6" y1="6" x2="18" y2="18"/></svg>
                 </button>
+            </header>
+            
+            <form id="supportForm" class="modal-body">
+                <div class="form-grid">
+                    <div class="form-section">
+                        <label for="categorySelect" class="form-label">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01"/></svg>
+                            Category
+                        </label>
+                        <select id="categorySelect" class="form-select" required>
+                            <option value="">Select category</option>
+                            <option value="academic">Academic Support</option>
+                            <option value="wellness">Wellness Assistance</option>
+                            <option value="technical">Technical Issue</option>
+                            <option value="hub">Connect Hub</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-section">
+                        <label for="prioritySelect" class="form-label">
+                            <i class="fas fa-flag"></i>
+                            Priority
+                        </label>
+                        <select id="prioritySelect" class="form-select">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <label for="subjectInput" class="form-label">
+                        <i class="fas fa-heading"></i>
+                        Subject
+                    </label>
+                    <input type="text" id="subjectInput" class="form-input" 
+                           placeholder="Brief description of your concern" required>
+                </div>
+                
+                <div class="form-section">
+                    <label for="descriptionTextarea" class="form-label">
+                        <i class="fas fa-align-left"></i>
+                        Detailed Description
+                    </label>
+                    <textarea id="descriptionTextarea" class="form-textarea" 
+                              rows="5" placeholder="Please provide detailed explanation of your concern" required></textarea>
+                    <div class="char-count">
+                        <span id="charCount">0</span>/500 characters
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <label class="form-label">
+                        <i class="fas fa-paperclip"></i>
+                        Attachments (Optional)
+                    </label>
+                    <div class="file-upload">
+                        <input type="file" id="attachmentInput" class="file-input" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                        <label for="attachmentInput" class="file-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Choose files or drag here</span>
+                            <span class="file-types">JPG, PNG, PDF, DOC up to 10MB</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Submit Request
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="dashboard-footer">
-        <p>Made with 💜 by Team Aura | Your wellness matters</p>
-    </footer>
+    <!-- NOTIFICATION TOAST -->
+    <div class="toast" id="notificationToast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-content">
+            <i class="toast-icon fas fa-check-circle"></i>
+            <div class="toast-message" id="toastMessage"></div>
+        </div>
+        <button class="toast-close" aria-label="Close notification">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
 
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <!-- MOOD CHECK-IN MODAL -->
+    <div class="mood-modal" id="moodModal" style="display: none;">
+        <div class="mood-modal-overlay"></div>
+        <div class="mood-modal-content">
+            <div class="mood-modal-header">
+                <h2>🌅 How are you feeling today?</h2>
+                <p>Take a moment to check in with yourself</p>
+            </div>
+            <div class="mood-grid">
+                <div class="mood-card" onclick="updateMood('happy')" data-mood="happy">
+                    <span class="mood-emoji">😊</span>
+                    <h3>Happy</h3>
+                    <p>Feeling great today!</p>
+                </div>
+                <div class="mood-card" onclick="updateMood('calm')" data-mood="calm">
+                    <span class="mood-emoji">😌</span>
+                    <h3>Calm</h3>
+                    <p>Peaceful and relaxed</p>
+                </div>
+                <div class="mood-card" onclick="updateMood('stressed')" data-mood="stressed">
+                    <span class="mood-emoji">😰</span>
+                    <h3>Stressed</h3>
+                    <p>Feeling overwhelmed</p>
+                </div>
+                <div class="mood-card" onclick="updateMood('anxious')" data-mood="anxious">
+                    <span class="mood-emoji">😟</span>
+                    <h3>Anxious</h3>
+                    <p>Worried about things</p>
+                </div>
+                <div class="mood-card" onclick="updateMood('sad')" data-mood="sad">
+                    <span class="mood-emoji">😢</span>
+                    <h3>Sad</h3>
+                    <p>Feeling down</p>
+                </div>
+                <div class="mood-card" onclick="updateMood('angry')" data-mood="angry">
+                    <span class="mood-emoji">😤</span>
+                    <h3>Frustrated</h3>
+                    <p>Things aren't going well</p>
+                </div>
+            </div>
+            <button class="mood-skip-btn" onclick="document.getElementById('moodModal').style.display='none'; document.body.classList.remove('mood-modal-open');">
+                Skip for now
+            </button>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.2.1/build/global/luxon.min.js"></script>
+    <script src="{{ url_for('static', filename='js/mood_handler.js') }}?v=20260130"></script>
+    <script src="{{ url_for('static', filename='js/student_dashboard.js') }}?v=20260130"></script>
+    <script>
+    // Random Color Theme Feature
+    (function() {
+        const colorThemes = [
+            { name: 'Ocean', primary: '#0ea5e9', accent: '#06b6d4', gradient: 'linear-gradient(135deg, #0ea5e9, #06b6d4)' },
+            { name: 'Forest', primary: '#22c55e', accent: '#10b981', gradient: 'linear-gradient(135deg, #22c55e, #10b981)' },
+            { name: 'Sunset', primary: '#f97316', accent: '#f59e0b', gradient: 'linear-gradient(135deg, #f97316, #f59e0b)' },
+            { name: 'Berry', primary: '#ec4899', accent: '#d946ef', gradient: 'linear-gradient(135deg, #ec4899, #d946ef)' },
+            { name: 'Lavender', primary: '#8b5cf6', accent: '#a78bfa', gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)' },
+            { name: 'Rose', primary: '#f43f5e', accent: '#fb7185', gradient: 'linear-gradient(135deg, #f43f5e, #fb7185)' },
+            { name: 'Teal', primary: '#14b8a6', accent: '#2dd4bf', gradient: 'linear-gradient(135deg, #14b8a6, #2dd4bf)' },
+            { name: 'Amber', primary: '#f59e0b', accent: '#fbbf24', gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)' },
+            { name: 'Indigo', primary: '#6366f1', accent: '#818cf8', gradient: 'linear-gradient(135deg, #6366f1, #818cf8)' },
+            { name: 'Coral', primary: '#ff6b6b', accent: '#ffa8a8', gradient: 'linear-gradient(135deg, #ff6b6b, #ffa8a8)' },
+            { name: 'Sky', primary: '#38bdf8', accent: '#7dd3fc', gradient: 'linear-gradient(135deg, #38bdf8, #7dd3fc)' },
+            { name: 'Emerald', primary: '#34d399', accent: '#6ee7b7', gradient: 'linear-gradient(135deg, #34d399, #6ee7b7)' }
+        ];
+        
+        let currentColorIndex = -1;
+        
+        function applyColorTheme(theme) {
+            const root = document.documentElement;
+            root.style.setProperty('--primary', theme.primary);
+            root.style.setProperty('--primary-strong', theme.primary);
+            root.style.setProperty('--accent', theme.accent);
+            root.style.setProperty('--accent-strong', theme.accent);
+            
+            // Update header gradient
+            const header = document.querySelector('.dashboard-header');
+            if (header) {
+                header.style.background = `linear-gradient(135deg, #0b1224, ${theme.primary}40 30%, ${theme.accent}60 100%)`;
+            }
+            
+            // Add pulse animation to button
+            const btn = document.getElementById('randomColorBtn');
+            if (btn) {
+                btn.classList.add('color-pulse');
+                setTimeout(() => btn.classList.remove('color-pulse'), 500);
+            }
+            
+            // Show toast notification
+            showColorToast(theme.name);
+        }
+        
+        function showColorToast(themeName) {
+            let toast = document.getElementById('colorToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'colorToast';
+                toast.className = 'color-toast';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = `🎨 ${themeName} theme applied!`;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+        
+        function setRandomColorTheme() {
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * colorThemes.length);
+            } while (newIndex === currentColorIndex && colorThemes.length > 1);
+            
+            currentColorIndex = newIndex;
+            applyColorTheme(colorThemes[newIndex]);
+            localStorage.setItem('aura-color-theme-index', newIndex);
+        }
+        
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedIndex = localStorage.getItem('aura-color-theme-index');
+            if (savedIndex !== null) {
+                currentColorIndex = parseInt(savedIndex);
+                applyColorTheme(colorThemes[currentColorIndex]);
+            }
+            
+            const randomColorBtn = document.getElementById('randomColorBtn');
+            if (randomColorBtn) {
+                randomColorBtn.addEventListener('click', setRandomColorTheme);
+            }
+        });
+    })();
+    </script>
 </body>
 </html>

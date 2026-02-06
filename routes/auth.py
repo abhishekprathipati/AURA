@@ -58,6 +58,7 @@ def login():
     return render_template('login.html')
 
 @auth_bp.route('/logout')
+@auth_bp.route('/auth/logout')  # safety alias for legacy links
 def logout():
     session.clear()
     flash('You have been logged out.', 'info')

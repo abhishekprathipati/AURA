@@ -4,6 +4,7 @@ __pycache__/
 .env
 *.sqlite3
 instance/
+.venv/
 
 # VS Code
 .vscode/

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Dashboard | AURA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}?v=3">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .top-nav {
+            background: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .top-nav h1 {
+            font-size: 28px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .top-nav .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .top-nav .user-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .btn-logout {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn-logout:hover {
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .student-info {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .student-info h2 {
+            font-size: 20px;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+        
+        .student-info .detail {
+            color: #6b7280;
+            font-size: 15px;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .card-header h3 {
+            font-size: 20px;
+            color: #1f2937;
+        }
+        
+        .performance-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .complaint-icon { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .suggestion-icon { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .announcement-icon { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .announcement-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .announcement-item {
+            padding: 16px;
+            border-left: 4px solid #667eea;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .announcement-item h4 {
+            color: #1f2937;
+            margin-bottom: 6px;
+            font-size: 16px;
+        }
+        
+        .announcement-item p {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .announcement-item .meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-achievement { background: #d1fae5; color: #059669; }
+        .badge-placement { background: #dbeafe; color: #2563eb; }
+        .badge-general { background: #e0e7ff; color: #6366f1; }
+        
+        .complaint-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .complaint-item {
+            padding: 14px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #f5576c;
+        }
+        
+        .complaint-item h5 {
+            font-size: 14px;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .complaint-item p {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+        
+        .complaint-item .status {
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-pending { color: #f59e0b; }
+        .status-resolved { color: #10b981; }
+        .status-in-progress { color: #3b82f6; }
+        
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #059669;
+            border: 1px solid #6ee7b7;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .top-nav { padding: 16px 20px; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .container { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <h1>🎓 AURA Parent Portal</h1>
+        <div class="user-info">
+            <span class="user-name">{{ parent.name }}</span>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="student-info">
+            <h2>👨‍🎓 Student Information</h2>
+            <div class="detail">
+                <strong>Roll Number:</strong> {{ student.roll_number }} | 
+                <strong>Name:</strong> {{ student.name }} | 
+                <strong>Email:</strong> {{ student.email }}
+            </div>
+        </div>
+        
+        <div class="dashboard-grid">
+            <!-- Academic Performance Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon performance-icon">📊</div>
+                    <h3>Academic Performance</h3>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('stress')">Stress Levels</button>
+                    <button class="tab" onclick="switchTab('mood')">Mood Tracking</button>
+                </div>
+                <div class="tab-content active" id="stress-content">
+                    <div id="stressChart"></div>
+                </div>
+                <div class="tab-content" id="mood-content">
+                    <div id="moodChart"></div>
+                </div>
+            </div>
+            
+            <!-- Raise Complaint Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon complaint-icon">📝</div>
+                    <h3>Raise a Complaint</h3>
+                </div>
+                <div id="complaintAlert"></div>
+                <form id="complaintForm">
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" required>
+                            <option value="">Select category</option>
+                            <option value="academic">Academic</option>
+                            <option value="infrastructure">Infrastructure</option>
+                            <option value="faculty">Faculty</option>
+                            <option value="hostel">Hostel</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <input type="text" id="subject" placeholder="Brief subject" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" placeholder="Describe your concern..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="priority">Priority</label>
+                        <select id="priority" required>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">Submit Complaint</button>
+                </form>
+                <div class="complaint-list" id="complaintList"></div>
+            </div>
+        </div>
+        
+        <div class="dashboard-grid">
+            <!-- Suggestions Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon suggestion-icon">💡</div>
+                    <h3>Suggestions</h3>
+                </div>
+                <div id="suggestionAlert"></div>
+                <form id="suggestionForm">
+                    <div class="form-group">
+                        <label for="suggestionTitle">Title</label>
+                        <input type="text" id="suggestionTitle" placeholder="Suggestion title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestionCategory">Category</label>
+                        <select id="suggestionCategory" required>
+                            <option value="">Select category</option>
+                            <option value="academic">Academic Improvement</option>
+                            <option value="facilities">Facilities</option>
+                            <option value="extracurricular">Extracurricular</option>
+                            <option value="wellness">Student Wellness</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestionDesc">Description</label>
+                        <textarea id="suggestionDesc" placeholder="Share your suggestion..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">Submit Suggestion</button>
+                </form>
+            </div>
+            
+            <!-- Announcements Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon announcement-icon">📢</div>
+                    <h3>Announcements</h3>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchAnnouncement('all')">All</button>
+                    <button class="tab" onclick="switchAnnouncement('achievements')">Achievements</button>
+                    <button class="tab" onclick="switchAnnouncement('placements')">Placements</button>
+                </div>
+                <div class="announcement-list" id="announcementList"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/parent_dashboard.js') }}?v=1"></script>
+</body>
+</html>

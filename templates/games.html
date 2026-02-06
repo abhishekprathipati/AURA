@@ -640,6 +640,105 @@
         .game-stats {
             flex-direction: column;
         }
+
+        .module-selector {
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-3, 0.75rem);
+        }
+
+        .module-tile {
+            min-height: 100px;
+            padding: var(--space-4, 1rem);
+        }
+
+        .module-icon {
+            font-size: 1.25rem;
+        }
+
+        .module-label {
+            font-size: 0.8rem;
+        }
+    }
+
+    /* MODULE SELECTOR: Professional navigation tiles */
+    .module-selector {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    .module-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 200ms ease-in-out;
+        min-height: 120px;
+        backdrop-filter: blur(8px);
+    }
+
+    .module-tile:hover {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.15);
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .module-tile:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2), 0 0 0 5px var(--primary);
+    }
+
+    .module-tile:active {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.15);
+    }
+
+    .module-tile .module-icon {
+        font-size: 1.5rem;
+        color: #cbd5e1;
+        transition: color 200ms ease-in-out;
+    }
+
+    .module-tile:hover .module-icon {
+        color: var(--primary);
+    }
+
+    .module-tile .module-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #e2e8f0;
+        text-align: center;
+        transition: color 200ms ease-in-out;
+    }
+
+    .module-tile:hover .module-label {
+        color: var(--primary);
+    }
+
+    .module-tile.active {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.2);
+    }
+
+    .module-tile.active .module-icon {
+        color: var(--primary);
+    }
+
+    .module-tile.active .module-label {
+        color: var(--primary);
+        font-weight: 600;
     }
 </style>
 {% endblock %}
@@ -652,6 +751,40 @@
         <h1>🎮 Mind Games</h1>
         <p>Sharpen your mind with fun and engaging games</p>
     </div>
+
+    <!-- MODULE SELECTOR: Professional navigation tiles -->
+    <section class="module-selector">
+        <a href="/student/chat/mental" class="module-tile">
+            <div class="module-icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <div class="module-label">Mental Chat</div>
+        </a>
+        <a href="/student/chat/study" class="module-tile">
+            <div class="module-icon">
+                <i class="fas fa-book"></i>
+            </div>
+            <div class="module-label">Study Chat</div>
+        </a>
+        <a href="/student/relax" class="module-tile">
+            <div class="module-icon">
+                <i class="fas fa-leaf"></i>
+            </div>
+            <div class="module-label">Relax</div>
+        </a>
+        <a href="/student/activities" class="module-tile">
+            <div class="module-icon">
+                <i class="fas fa-list-check"></i>
+            </div>
+            <div class="module-label">Activities</div>
+        </a>
+        <a href="/student/games" class="module-tile">
+            <div class="module-icon">
+                <i class="fas fa-gamepad"></i>
+            </div>
+            <div class="module-label">Games</div>
+        </a>
+    </section>
 
     <!-- Games Grid -->
     <div class="games-grid">
@@ -1127,6 +1260,21 @@
             element.classList.remove('error');
         }
     }
+
+    // Setup module tile active state
+    function setupModuleTiles() {
+        const currentPath = window.location.pathname;
+        const moduleTiles = document.querySelectorAll(".module-tile");
+        
+        moduleTiles.forEach(tile => {
+            const href = tile.getAttribute("href");
+            if (href && currentPath.includes(href)) {
+                tile.classList.add("active");
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", setupModuleTiles);
 </script>
 
 {% endblock %}

@@ -872,3 +872,368 @@ textarea.form-control {
         justify-content: center;
     }
 }
+
+/* ===== MOOD CHECK-IN MODAL STYLING (Glassmorphism Ultra Pro) ===== */
+.mood-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    transition: opacity 0.5s ease;
+    opacity: 0;
+}
+
+.mood-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+.mood-card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 40px;
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    color: white;
+    max-width: 500px;
+    animation: slideInFromTop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mood-card h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+}
+
+.mood-card p {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 15px;
+}
+
+.mood-options {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+    justify-content: center;
+}
+
+.mood-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    padding: 20px;
+    border-radius: 18px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 100px;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.mood-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.mood-btn.stressed:hover {
+    background: rgba(231, 76, 60, 0.6);
+}
+
+.mood-btn .emoji {
+    font-size: 2.5rem;
+    display: block;
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mood-btn:hover {
+    background: rgba(58, 58, 58, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.mood-btn:active {
+    transform: translateY(-4px);
+}
+
+.stressed-mood:hover {
+    background: rgba(231, 76, 60, 0.85);
+    border-color: rgba(231, 76, 60, 0.5);
+    color: #fff;
+}
+
+.happy-mood:hover {
+    background: rgba(46, 204, 113, 0.85);
+    border-color: rgba(46, 204, 113, 0.5);
+}
+
+.normal-mood:hover {
+    background: rgba(52, 152, 219, 0.85);
+    border-color: rgba(52, 152, 219, 0.5);
+}
+
+.mood-emoji {
+    font-size: 2.8rem;
+    margin-bottom: 12px;
+    display: block;
+    animation: emojiFloat 0.6s ease-in-out;
+}
+
+.mood-btn:hover .mood-emoji {
+    animation: emojiPulse 0.4s ease-in-out;
+}
+
+@keyframes emojiFloat {
+    0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes emojiPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+.mood-label {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+/* Responsive design for mood modal */
+@media (max-width: 768px) {
+    .mood-card-container {
+        padding: 2rem;
+        margin: 0 20px;
+    }
+
+    .mood-title {
+        font-size: 1.5rem;
+    }
+
+    .mood-options {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .mood-btn {
+        width: 100%;
+        min-width: unset;
+        padding: 20px 15px;
+    }
+
+    .mood-emoji {
+        font-size: 2.2rem;
+        margin-bottom: 8px;
+    }
+}
+
+/* ==========================================
+   ADVANCED THEME - Modern Solid Design
+   =========================================== */
+
+:root.advanced-theme {
+    --advanced-bg-primary: #0f1419;
+    --advanced-bg-secondary: #1a1f2e;
+    --advanced-bg-tertiary: #252d3d;
+    --advanced-border: #3a4352;
+    --advanced-accent: #00d9ff;
+    --advanced-accent-secondary: #7c3aed;
+    --advanced-text-primary: #ffffff;
+    --advanced-text-secondary: #b8c5d6;
+    --advanced-shadow: 0 4px 16px rgba(0, 217, 255, 0.15);
+}
+
+body.advanced-theme {
+    background: var(--advanced-bg-primary);
+}
+
+body.advanced-theme .glass-card {
+    background: var(--advanced-bg-secondary);
+    backdrop-filter: none;
+    border: 1px solid var(--advanced-border);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    padding: 28px;
+}
+
+body.advanced-theme .glass-card:hover {
+    background: var(--advanced-bg-tertiary);
+    border-color: var(--advanced-accent);
+    box-shadow: 0 8px 32px rgba(0, 217, 255, 0.2);
+    transform: translateY(-3px);
+}
+
+/* Advanced Theme - Gauge Card */
+body.advanced-theme .gauge-card {
+    background: linear-gradient(135deg, var(--advanced-bg-secondary) 0%, var(--advanced-bg-tertiary) 100%);
+    border: 1px solid var(--advanced-border);
+    border-radius: 16px;
+    box-shadow: var(--advanced-shadow);
+}
+
+body.advanced-theme .gauge-circle {
+    filter: drop-shadow(0 0 12px rgba(0, 217, 255, 0.2));
+}
+
+/* Advanced Theme - Buttons */
+body.advanced-theme .view-history-btn {
+    background: linear-gradient(135deg, var(--advanced-accent) 0%, var(--advanced-accent-secondary) 100%);
+    color: var(--advanced-bg-primary);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+body.advanced-theme .view-history-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 217, 255, 0.3);
+}
+
+/* Advanced Theme - Features Section */
+body.advanced-theme .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+body.advanced-theme .feature-item {
+    background: var(--advanced-bg-tertiary);
+    border: 1px solid var(--advanced-border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+body.advanced-theme .feature-item:hover {
+    background: var(--advanced-bg-secondary);
+    border-color: var(--advanced-accent);
+    box-shadow: 0 4px 16px rgba(0, 217, 255, 0.15);
+    transform: translateY(-4px);
+}
+
+body.advanced-theme .feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+    display: block;
+}
+
+body.advanced-theme .feature-name {
+    font-size: 1rem;
+    color: var(--advanced-text-primary);
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Advanced Theme - Wellness Title */
+body.advanced-theme .wellness-title {
+    color: var(--advanced-text-primary);
+    font-weight: 700;
+    font-size: 1.8rem;
+}
+
+body.advanced-theme .wellness-subtitle {
+    color: var(--advanced-text-secondary);
+    font-size: 0.95rem;
+}
+
+/* Advanced Theme - Text Colors */
+body.advanced-theme h2, body.advanced-theme h3, body.advanced-theme h4 {
+    color: var(--advanced-text-primary);
+}
+
+body.advanced-theme p {
+    color: var(--advanced-text-secondary);
+}
+
+/* Advanced Theme - Accent Elements */
+body.advanced-theme .btn-arrow {
+    color: inherit;
+    margin-left: 6px;
+}
+
+/* Advanced Theme - Gauge Label */
+body.advanced-theme .gauge-label {
+    color: var(--advanced-text-secondary);
+    font-weight: 600;
+    letter-spacing: 1.2px;
+}
+
+body.advanced-theme .gauge-value {
+    color: var(--advanced-accent);
+    font-size: 3.2rem;
+    font-weight: 900;
+}
+
+/* Advanced Theme - Stress Display */
+body.advanced-theme .stress-display {
+    background: linear-gradient(135deg, rgba(0, 217, 255, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+    border: 1px solid var(--advanced-border);
+    border-radius: 16px;
+    padding: 20px;
+}
+
+/* Advanced Theme - Navigation */
+body.advanced-theme .top-navbar {
+    background: var(--advanced-bg-secondary);
+    border-bottom: 1px solid var(--advanced-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+body.advanced-theme .nav-link {
+    color: var(--advanced-text-secondary);
+    transition: all 0.3s ease;
+}
+
+body.advanced-theme .nav-link:hover, body.advanced-theme .nav-link.active {
+    color: var(--advanced-accent);
+}
+
+/* Advanced Theme - Brand */
+body.advanced-theme .brand-text {
+    color: var(--advanced-accent);
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: 2px;
+}

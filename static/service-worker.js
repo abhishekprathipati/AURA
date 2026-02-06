@@ -1,10 +1,10 @@
 // AURA Service Worker - Offline Support for Relaxation Features
-const CACHE_NAME = 'aura-offline-v1';
+const CACHE_NAME = 'aura-offline-v2';
 const OFFLINE_URLS = [
     '/student/relax',
     '/static/css/global.css',
     '/static/css/style.css',
-    '/static/js/theme.js',
+    '/static/js/theme-engine.js',
     '/static/js/main.js',
     '/static/js/mood_handler.js'
 ];

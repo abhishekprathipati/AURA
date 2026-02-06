@@ -223,6 +223,7 @@
   --theme-status: #7c3aed;
 }
 
+.theme-happy {
   --aura-bg: #f5f3ff;
   --aura-accent: #a78bfa;
   --aura-accent-rgb: 167, 139, 250;
@@ -233,13 +234,8 @@
   --theme-gradient: linear-gradient(135deg, #a78bfa 0%, #f5d0fe 100%);
   --theme-status: #10b981;
 }
-  --aura-bg: #f5f3ff;
-  --aura-accent: #a78bfa;
-  --aura-accent-rgb: 167, 139, 250;
-  --aura-text: #3e2463;
-  --aura-gradient: linear-gradient(135deg, #a78bfa 0%, #f5d0fe 100%);
-}
 
+.theme-stressed {
   --aura-bg: #fce4ec;
   --aura-accent: #c2185b;
   --aura-accent-rgb: 194, 24, 91;
@@ -249,12 +245,6 @@
   --theme-accent-rgb: 194, 24, 91;
   --theme-gradient: linear-gradient(135deg, #fce4ec, #f8bbd0);
   --theme-status: #7c3aed;
-}
-  --aura-bg: #fce4ec;
-  --aura-accent: #c2185b;
-  --aura-accent-rgb: 194, 24, 91;
-  --aura-text: #4d0021;
-  --aura-gradient: linear-gradient(135deg, #fce4ec, #f8bbd0);
 }
 
 .theme-angry {
@@ -339,6 +329,9 @@ body.activities-page .chatbot-toggle {
   display: flex !important;
   z-index: 1000 !important;
 }
+
+/* Base body theme styles */
+body {
   color: var(--aura-text);
   background: var(--aura-gradient) !important;
   min-height: 100vh;

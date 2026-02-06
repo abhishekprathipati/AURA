@@ -1,10 +1,19 @@
-# AURA - AI-Powered University Wellness & Academic Support Platform
+# 🎓 AURA - AI-Based Student Mental Wellness & Academic Companion
 
-> For a one-page evaluator summary, see [HANDOUT.md](HANDOUT.md).
+> **Status:** ✅ Production Ready (95%+) | **Version:** 1.0 | **Date:** January 19, 2026
 
 ## 🎯 Project Overview
 
-**AURA** (AI-based University Response & Analytics) is a comprehensive mental health and academic support system designed for Aditya College of Engineering and Technology. The platform leverages cutting-edge AI technology to provide personalized support to students while giving faculty real-time insights into student wellbeing.
+**AURA** is a comprehensive institutional AI-driven student mental wellness and academic support platform designed for Aditya College of Engineering and Technology. 
+
+It is a **closed-loop behavioral telemetry and intervention system** that:
+- Monitors student emotional state continuously
+- Computes stress scores using mood + sentiment analysis  
+- Routes students to AI support and human interventions
+- Alerts proctors and HODs to at-risk students
+- Tracks longitudinal mental health data
+- Integrates AI academic assistance with wellness tracking
+- Provides emotion-aware UI personalization
 
 ### 🌟 Key Features
 
@@ -16,6 +25,25 @@
 6. **HOD Dashboard** - Department-wide wellness analytics
 7. **Grievance System** - Student issue reporting and resolution workflow
 8. **Angry Mood Activities** - Interactive Scream Meter and Box Breathing exercises
+
+
+---
+
+## 🛠️ System Requirements
+
+### Hardware
+- CPU: Intel i5 (4 cores) or better
+- RAM: 4 GB minimum; 8 GB recommended for smoother local development
+- Storage: 20 GB free on SSD for Python environment, MongoDB data, and project assets
+- GPU: Optional; not required for current Gemini API usage
+
+### Software
+- OS: Windows 10/11 (x64) for local development; Linux (Ubuntu 20.04+) supported for deployment
+- Python: 3.12+ with pip and venv
+- Database: MongoDB 4.4+ (local instance or managed Atlas); MySQL is not used in this project
+- Node/NPM: Optional; only needed if rebuilding or minifying front-end assets
+- Tooling: Git, VS Code (or any preferred editor), and a modern browser (Chrome/Edge)
+- Environment: `.env` file for secrets; dependencies declared in `requirements.txt`
 
 ---
 
@@ -474,11 +502,14 @@ AURA/
     │   └── style.css          # Themed styling
     ├── js/
     │   ├── main.js
-    │   ├── chatbot.js
+    │   ├── chat-engine.js
     │   ├── study_chatbot.js
     │   ├── mood_handler.js
     │   ├── stress_gauge.js
-    │   └── dashboard.js
+    │   ├── dashboard_advanced.js
+    │   ├── proctor.js
+    │   ├── study-assistant.js
+    │   └── theme-engine.js
     └── images/
 ```
 

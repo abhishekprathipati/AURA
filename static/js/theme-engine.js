@@ -4,6 +4,7 @@
 
 const THEME_KEY = 'aura-ui-theme';
 const SYSTEM_THEME_KEY = 'aura-system-theme';
+const DESIGN_THEME_KEY = 'aura-design-theme'; // For glass vs advanced
 
 // SVG Icon Paths
 const SUN_SVG_PATH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true">
@@ -18,10 +19,13 @@ const MOON_SVG_PATH = `<svg viewBox="0 0 24 24" fill="currentColor" width="20" h
 // Initialize theme system
 function initTheme() {
   const saved = localStorage.getItem(THEME_KEY);
+  const designTheme = localStorage.getItem(DESIGN_THEME_KEY) || 'advanced'; // Default to advanced
+  
   // Default to dark theme if no preference saved
   const theme = saved || 'dark';
   
   applyTheme(theme);
+  applyDesignTheme(designTheme);
   setupThemeToggle();
   setupAutoTheme();
 }
@@ -32,6 +36,34 @@ function getSystemTheme() {
     return 'dark';
   }
   return 'light';
+}
+
+// Apply design theme (glass vs advanced)
+function applyDesignTheme(theme) {
+  if (theme !== 'glass' && theme !== 'advanced') {
+    theme = 'advanced';
+  }
+  
+  const html = document.documentElement;
+  const body = document.body;
+  
+  // Remove existing design theme classes
+  html.classList.remove('glass-theme', 'advanced-theme');
+  body.classList.remove('glass-theme', 'advanced-theme');
+  
+  // Add new design theme class
+  if (theme === 'advanced') {
+    html.classList.add('advanced-theme');
+    body.classList.add('advanced-theme');
+  } else {
+    html.classList.add('glass-theme');
+    body.classList.add('glass-theme');
+  }
+  
+  localStorage.setItem(DESIGN_THEME_KEY, theme);
+  
+  // Emit custom event
+  window.dispatchEvent(new CustomEvent('designthemechange', { detail: { theme } }));
 }
 
 // Apply theme to document
@@ -97,11 +129,18 @@ function setupAutoTheme() {
 window.AURA_Theme = {
   init: initTheme,
   apply: applyTheme,
+  applyDesignTheme: applyDesignTheme,
   get current() {
     return document.documentElement.getAttribute('data-theme') || 'light';
   },
+  get designTheme() {
+    return localStorage.getItem(DESIGN_THEME_KEY) || 'advanced';
+  },
   set(theme) {
     applyTheme(theme);
+  },
+  setDesignTheme(theme) {
+    applyDesignTheme(theme);
   },
 };
 

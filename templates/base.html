@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AURA{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css', v=3) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=3) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}?v=20260124">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20260124">
     <style>
         /* CRITICAL FIX: Ensure main content area is always visible */
         html, body {
@@ -42,11 +42,6 @@
             <div class="logo">AURA</div>
 
             <a href="/student/dashboard" class="{% if request.path.startswith('/student/dashboard') %}active{% endif %}">📊 Dashboard</a>
-            <a href="/student/relax" class="{% if request.path.startswith('/student/relax') %}active{% endif %}">🧘 Relax</a>
-            <a href="/student/activities" class="{% if request.path.startswith('/student/activities') %}active{% endif %}">🎯 Activities</a>
-            <a href="/student/games" class="{% if request.path.startswith('/student/games') %}active{% endif %}">🎮 Mind Games</a>
-            <a href="/student/chat/mental" class="{% if request.path.startswith('/student/chat/mental') %}active{% endif %}">💬 Mental Chat</a>
-            <a href="/student/chat/study" class="{% if request.path.startswith('/student/chat/study') %}active{% endif %}">📚 Study Chat</a>
 
             <div class="spacer"></div>
 
@@ -56,7 +51,7 @@
                     {{ session.get('user_name') }} ({{ session.get('user_role') }})
                 </div>
                 <button class="btn btn-ghost" type="button" id="zenModeToggle">Zen Mode</button>
-                <a class="btn btn-ghost" href="/logout">Logout</a>
+                <a class="btn btn-ghost" href="{{ url_for('auth.logout') }}">Logout</a>
             {% else %}
                 <a class="btn btn-ghost" href="/login">Login</a>
             {% endif %}
@@ -109,10 +104,8 @@
         {% block content %}{% endblock %}
     </main>
 
-    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme-engine.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/zen.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/voice_commands.js') }}"></script>
     {% block extra_js %}{% endblock %}
     <script>
     // Register service worker for offline support

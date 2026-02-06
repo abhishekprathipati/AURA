@@ -1,76 +1,1636 @@
-{% extends 'base.html' %}
-{% block content %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proctor Dashboard | AURA - Faculty Monitoring</title>
+    
+    <!-- External Resources -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.css">
+    
+    <style>
+        /* ===== ENHANCED PROFESSIONAL DASHBOARD ===== */
+        :root {
+            /* Modern Gradient Palette */
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #e0e7ff;
+            --secondary: #475569;
+            --accent: #8b5cf6;
+            --accent-light: #c4b5fd;
+            
+            /* Status Colors - More Vibrant */
+            --critical: #ef4444;
+            --critical-bg: #fef2f2;
+            --high-risk: #f97316;
+            --high-risk-bg: #fff7ed;
+            --medium-risk: #eab308;
+            --medium-risk-bg: #fefce8;
+            --low-risk: #10b981;
+            --low-risk-bg: #ecfdf5;
+            --stable: #3b82f6;
+            
+            /* Neutrals */
+            --white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            /* Theme */
+            --bg-primary: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --bg-secondary: var(--gray-50);
+            --bg-elevated: var(--white);
+            --text-primary: var(--gray-900);
+            --text-secondary: var(--gray-600);
+            --border-light: var(--gray-200);
+            
+            /* Glass Effect */
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+            
+            /* Spacing */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-10: 2.5rem;
+            --space-12: 3rem;
+            
+            /* Typography */
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-size-xs: 0.75rem;
+            --font-size-sm: 0.875rem;
+            --font-size-base: 1rem;
+            --font-size-lg: 1.125rem;
+            --font-size-xl: 1.25rem;
+            --font-size-2xl: 1.5rem;
+            --font-size-3xl: 1.875rem;
+            --font-size-4xl: 2.25rem;
+            
+            /* Border Radius */
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --radius-full: 9999px;
+        }
 
-<style>
-  .watchlist{max-width:1400px;margin:0 auto}
-  .watchlist h2{margin:0 0 1rem}
-  .student-table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
-  .student-table th,.student-table td{padding:1rem;text-align:left;border-bottom:1px solid var(--border)}
-  .student-table th{background:var(--panel);font-weight:600}
-  .student-table tr:hover{background:var(--panel)}
-  .stress-badge{display:inline-block;padding:.4rem .7rem;border-radius:8px;font-weight:600;font-size:.9rem}
-  .stress-low{background:#10b981;color:#fff}
-  .stress-mid{background:#f59e0b;color:#fff}
-  .stress-high{background:#ef4444;color:#fff}
-  .sparkline-cell{width:150px}
-  .sparkline-cell canvas{width:100%;height:40px}
-  .action-btn{padding:.5rem .8rem;border-radius:8px;border:1px solid var(--border);background:var(--accent);color:var(--btn-text);cursor:pointer;font-size:.9rem}
-</style>
+        [data-theme="dark"] {
+            --bg-primary: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --bg-secondary: #1e293b;
+            --bg-elevated: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border-light: #334155;
+            --glass-bg: rgba(30, 41, 59, 0.8);
+            --glass-border: rgba(51, 65, 85, 0.5);
+        }
 
-<div class="watchlist">
-  <div class="card" style="margin-bottom:1rem">
-    <h2>Student Watchlist</h2>
-    <p class="pill">Monitor students' wellness and stress trends over the last 7 days.</p>
-  </div>
-  
-  <table class="student-table" id="studentTable">
-    <thead>
-      <tr>
-        <th>Student</th>
-        <th>Latest Mood</th>
-        <th>Avg Stress</th>
-        <th class="sparkline-cell">7-Day Trend</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="studentBody">
-      <tr><td colspan="5" style="text-align:center;color:var(--muted)">Loading...</td></tr>
-    </tbody>
-  </table>
-</div>
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<script>
-const moodEmoji = {happy:'😊',calm:'😌',normal:'😐',sad:'😢',anxious:'😟',stressed:'😰',angry:'😡'};
-async function loadStudents(){
-  try{
-    const r = await fetch('/api/proctor/students');
-    const j = await r.json();
-    if(!j.students) return;
-    const tbody = document.getElementById('studentBody');
-    tbody.innerHTML='';
-    j.students.forEach((s,i)=>{
-      const tr=document.createElement('tr');
-      const stress= s.avg_stress;
-      const badge= stress<=40?'stress-low':stress<=75?'stress-mid':'stress-high';
-      tr.innerHTML=`
-        <td>${s.name}</td>
-        <td style="font-size:1.3rem">${moodEmoji[s.mood]||'😐'}</td>
-        <td><span class="stress-badge ${badge}">${stress}</span></td>
-        <td class="sparkline-cell"><canvas id="spark${i}"></canvas></td>
-        <td><a class="action-btn" href="/proctor/student/${encodeURIComponent(s.email)}">View</a></td>
-      `;
-      tbody.appendChild(tr);
-      const ctx=document.getElementById('spark'+i).getContext('2d');
-      new Chart(ctx,{
-        type:'line',
-        data:{labels:s.trend.map((_,idx)=>''),datasets:[{data:s.trend,borderColor:'#6366f1',borderWidth:2,tension:0.3,pointRadius:0}]},
-        options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false,min:0,max:100}},maintainAspectRatio:false}
-      });
-    });
-  }catch(e){console.error(e);}
-}
-window.addEventListener('DOMContentLoaded',loadStudents);
-</script>
-{% endblock %}
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER - PREMIUM GLASS DESIGN ===== */
+        .proctor-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            padding: var(--space-5) 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .header-content {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .system-identity {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .logo-container {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-container i {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .system-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .system-name {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.025em;
+        }
+
+        .system-subtitle {
+            font-size: var(--font-size-sm);
+            color: rgba(255,255,255,0.85);
+            font-weight: 400;
+        }
+
+        .role-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .dept-badge {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .dept-badge i {
+            font-size: 0.875rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--font-size-sm);
+            color: rgba(255,255,255,0.9);
+            background: rgba(16, 185, 129, 0.3);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-full);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-1px);
+        }
+
+        .alert-badge {
+            position: relative;
+        }
+
+        .alert-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--critical);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            min-width: 20px;
+            height: 20px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.4);
+        }
+
+        /* ===== QUICK STATS BAR ===== */
+        .stats-bar {
+            max-width: 1500px;
+            margin: calc(-1 * var(--space-6)) auto var(--space-6);
+            padding: 0 var(--space-6);
+            position: relative;
+            z-index: 50;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+        }
+
+        .stat-card {
+            background: var(--bg-elevated);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .stat-card .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: var(--space-3);
+        }
+
+        .stat-card.critical .stat-icon { background: var(--critical-bg); color: var(--critical); }
+        .stat-card.warning .stat-icon { background: var(--high-risk-bg); color: var(--high-risk); }
+        .stat-card.info .stat-icon { background: var(--primary-light); color: var(--primary); }
+        .stat-card.success .stat-icon { background: var(--low-risk-bg); color: var(--low-risk); }
+
+        .stat-value {
+            font-size: var(--font-size-3xl);
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: var(--space-1);
+        }
+
+        .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            font-size: var(--font-size-xs);
+            margin-top: var(--space-2);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            width: fit-content;
+        }
+
+        .stat-trend.up { background: var(--critical-bg); color: var(--critical); }
+        .stat-trend.down { background: var(--low-risk-bg); color: var(--low-risk); }
+
+        /* ===== MAIN LAYOUT ===== */
+        .dashboard-container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: var(--space-6);
+            padding-top: calc(var(--space-12) + var(--space-8));
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: var(--space-6);
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-6);
+        }
+
+        /* ===== SECTION CARDS ===== */
+        .dashboard-section {
+            background: var(--bg-elevated);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-section:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .section-header {
+            padding: var(--space-5) var(--space-6);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+        }
+
+        [data-theme="dark"] .section-header {
+            background: linear-gradient(135deg, var(--gray-800) 0%, var(--gray-700) 100%);
+        }
+
+        .section-header h2 {
+            font-size: var(--font-size-lg);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            color: var(--text-primary);
+        }
+
+        .section-header h2 i {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .section-header .badge {
+            background: var(--primary);
+            color: white;
+            font-size: var(--font-size-xs);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+            font-weight: 600;
+        }
+
+        .section-body {
+            padding: var(--space-5) var(--space-6);
+        }
+
+        /* ===== ALERTS TABLE - PREMIUM ===== */
+        .alerts-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .alerts-table thead {
+            background: var(--gray-50);
+        }
+
+        [data-theme="dark"] .alerts-table thead {
+            background: var(--gray-800);
+        }
+
+        .alerts-table th {
+            padding: var(--space-3) var(--space-4);
+            text-align: left;
+            font-size: var(--font-size-xs);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .alerts-table td {
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: middle;
+        }
+
+        .alerts-table tr {
+            transition: all 0.2s ease;
+        }
+
+        .alerts-table tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        [data-theme="dark"] .alerts-table tbody tr:hover {
+            background: var(--gray-800);
+        }
+
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .student-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: var(--font-size-lg);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .student-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .student-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: var(--font-size-sm);
+        }
+
+        .student-department {
+            font-size: var(--font-size-xs);
+            color: var(--text-secondary);
+        }
+
+        .stress-score {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: var(--font-size-base);
+        }
+
+        .score-critical { 
+            background: linear-gradient(135deg, var(--critical) 0%, #dc2626 100%); 
+            color: white; 
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        .score-high { 
+            background: linear-gradient(135deg, var(--high-risk) 0%, #ea580c 100%); 
+            color: white; 
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+        .score-medium { 
+            background: linear-gradient(135deg, var(--medium-risk) 0%, #ca8a04 100%); 
+            color: white; 
+            box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+        }
+        .score-low { 
+            background: linear-gradient(135deg, var(--low-risk) 0%, #059669 100%); 
+            color: white; 
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+        }
+
+        .risk-critical { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical); }
+        .risk-high { background: var(--high-risk-bg); color: var(--high-risk); border: 1px solid var(--high-risk); }
+        .risk-medium { background: var(--medium-risk-bg); color: var(--medium-risk); border: 1px solid var(--medium-risk); }
+        .risk-low { background: var(--low-risk-bg); color: var(--low-risk); border: 1px solid var(--low-risk); }
+
+        .last-update {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .last-update i {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* ===== WATCHLIST TABLE ===== */
+        .watchlist-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .watchlist-table thead {
+            background: var(--gray-50);
+        }
+
+        [data-theme="dark"] .watchlist-table thead {
+            background: var(--gray-800);
+        }
+
+        .watchlist-table th {
+            padding: var(--space-3) var(--space-4);
+            text-align: left;
+            font-size: var(--font-size-xs);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .watchlist-table td {
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .watchlist-table tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        [data-theme="dark"] .watchlist-table tbody tr:hover {
+            background: var(--gray-800);
+        }
+
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+        }
+
+        .trend-up { background: var(--critical-bg); color: var(--critical); }
+        .trend-stable { background: var(--gray-100); color: var(--gray-600); }
+        .trend-down { background: var(--low-risk-bg); color: var(--low-risk); }
+
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+        }
+
+        .status-needs-intervention { background: var(--critical-bg); color: var(--critical); }
+        .status-monitor { background: var(--high-risk-bg); color: var(--high-risk); }
+        .status-normal { background: var(--low-risk-bg); color: var(--low-risk); }
+
+        /* ===== CHART SECTION ===== */
+        .chart-container {
+            height: 300px;
+            margin-top: var(--space-4);
+            border-radius: var(--radius-md);
+            background: var(--gray-50);
+            padding: var(--space-4);
+        }
+
+        [data-theme="dark"] .chart-container {
+            background: var(--gray-800);
+        }
+
+        .chart-caption {
+            margin-top: var(--space-4);
+            padding: var(--space-3) var(--space-4);
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--accent-light) 100%);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            color: var(--primary-dark);
+            font-style: italic;
+            border-left: 4px solid var(--primary);
+        }
+
+        /* ===== GRIEVANCE SECTION ===== */
+        .grievance-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: var(--space-4);
+            align-items: center;
+            padding: var(--space-4);
+            border-radius: var(--radius-md);
+            background: var(--gray-50);
+            margin-bottom: var(--space-3);
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        [data-theme="dark"] .grievance-item {
+            background: var(--gray-800);
+        }
+
+        .grievance-item:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .grievance-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: var(--font-size-sm);
+            margin-bottom: var(--space-1);
+        }
+
+        .grievance-meta {
+            display: flex;
+            gap: var(--space-4);
+            font-size: var(--font-size-xs);
+            color: var(--text-secondary);
+        }
+
+        .grievance-status {
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending { background: var(--high-risk-bg); color: var(--high-risk); }
+        .status-in-progress { background: var(--primary-light); color: var(--primary); }
+        .status-resolved { background: var(--low-risk-bg); color: var(--low-risk); }
+
+        /* ===== SIDEBAR - PREMIUM DESIGN ===== */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-5);
+        }
+
+        .control-panel {
+            background: var(--bg-elevated);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+        }
+
+        .control-header {
+            padding: var(--space-4) var(--space-5);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            font-weight: 700;
+            font-size: var(--font-size-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .control-actions {
+            padding: var(--space-4);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .control-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        [data-theme="dark"] .control-btn {
+            background: var(--gray-800);
+        }
+
+        .control-btn:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .control-btn i {
+            width: 20px;
+            color: var(--primary);
+        }
+
+        /* Stats Grid in Sidebar */
+        .sidebar-stats {
+            padding: var(--space-4);
+        }
+
+        .sidebar-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-3);
+        }
+
+        .sidebar-stat {
+            background: var(--gray-50);
+            padding: var(--space-4);
+            border-radius: var(--radius-md);
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        [data-theme="dark"] .sidebar-stat {
+            background: var(--gray-800);
+        }
+
+        .sidebar-stat:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .sidebar-stat-value {
+            font-size: var(--font-size-2xl);
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .sidebar-stat-label {
+            font-size: var(--font-size-xs);
+            color: var(--text-secondary);
+            margin-top: var(--space-1);
+        }
+
+        /* Intervention Notes */
+        .intervention-notes {
+            padding: var(--space-4);
+        }
+
+        .notes-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: var(--space-3);
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-md);
+            font-family: var(--font-family);
+            font-size: var(--font-size-sm);
+            resize: vertical;
+            transition: all 0.2s ease;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        .notes-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+
+        .save-btn {
+            width: 100%;
+            margin-top: var(--space-3);
+            padding: var(--space-3);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-md);
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* ===== FOOTER ===== */
+        .dashboard-footer {
+            max-width: 1500px;
+            margin: var(--space-8) auto;
+            padding: var(--space-6);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: var(--font-size-sm);
+            border-top: 1px solid var(--border-light);
+        }
+
+        /* ===== TOAST NOTIFICATIONS ===== */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: var(--space-4) var(--space-6);
+            border-radius: var(--radius-md);
+            color: white;
+            font-weight: 500;
+            box-shadow: var(--shadow-xl);
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .toast.info { background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); }
+        .toast.success { background: linear-gradient(135deg, var(--low-risk) 0%, #059669 100%); }
+        .toast.error { background: linear-gradient(135deg, var(--critical) 0%, #dc2626 100%); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .sidebar {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-wrap: wrap;
+                gap: var(--space-4);
+            }
+            
+            .role-info {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== HEADER ===== -->
+    <header class="proctor-header">
+        <div class="header-content">
+            <div class="system-identity">
+                <div class="logo-container">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="system-info">
+                    <div class="system-name">AURA – Faculty Proctor</div>
+                    <div class="system-subtitle">Student Intervention & Care Management</div>
+                </div>
+            </div>
+            
+            <div class="role-info">
+                <span class="dept-badge">
+                    <i class="fas fa-microchip"></i>
+                    Department of {{ session.get('department', 'AIML') }}
+                </span>
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span>System Active</span>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <button class="header-btn alert-badge" onclick="showToast('Loading alerts...', 'info')">
+                    <i class="fas fa-bell"></i>
+                    <span class="alert-count" id="alertCount">6</span>
+                </button>
+                
+                <button class="header-btn" onclick="toggleTheme()">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                
+                <button class="header-btn" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i>
+                    <span id="lastSync">Refresh</span>
+                </button>
+                
+                <a href="{{ url_for('auth.logout') }}" class="header-btn logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== QUICK STATS BAR - PROCTOR FOCUSED ===== -->
+    <section class="stats-bar">
+        <div class="stats-grid">
+            <div class="stat-card critical">
+                <div class="stat-icon"><i class="fas fa-user-injured"></i></div>
+                <div class="stat-value" id="criticalStudents">6</div>
+                <div class="stat-label">Needs Immediate Action</div>
+                <div class="stat-trend up"><i class="fas fa-exclamation-triangle"></i> Urgent Today</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+                <div class="stat-value" id="pendingTasks">4</div>
+                <div class="stat-label">Pending Follow-ups</div>
+                <div class="stat-trend up"><i class="fas fa-clock"></i> Due this week</div>
+            </div>
+            <div class="stat-card info">
+                <div class="stat-icon"><i class="fas fa-user-friends"></i></div>
+                <div class="stat-value" id="myStudents">45</div>
+                <div class="stat-label">My Assigned Students</div>
+                <div class="stat-trend down"><i class="fas fa-info-circle"></i> Under my care</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-value" id="resolvedToday">3</div>
+                <div class="stat-label">Resolved Today</div>
+                <div class="stat-trend down"><i class="fas fa-thumbs-up"></i> Good progress</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== MAIN DASHBOARD ===== -->
+    <div class="dashboard-container">
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- 🚨 SECTION 1: HIGH-PRIORITY ALERTS -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-exclamation-triangle"></i> High-Priority Alerts</h2>
+                    <span class="badge">6 Active</span>
+                </div>
+                <div class="section-body">
+                    <table class="alerts-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Stress Score</th>
+                                <th>Risk Level</th>
+                                <th>Last Update</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alertsTableBody">
+                            <tr>
+                                <td>
+                                    <div class="student-info">
+                                        <div class="student-avatar">R</div>
+                                        <div class="student-details">
+                                            <div class="student-name">Rahul Sharma</div>
+                                            <div class="student-department">AIML - 3rd Year</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><div class="stress-score score-critical">88</div></td>
+                                <td><span class="risk-badge risk-critical">🔴 Critical</span></td>
+                                <td><div class="last-update"><i class="fas fa-clock"></i> 5 mins ago</div></td>
+                                <td>
+                                    <button class="action-btn" onclick="viewProfile('rahul')">
+                                        <i class="fas fa-user-md"></i> View Profile
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="student-info">
+                                        <div class="student-avatar">A</div>
+                                        <div class="student-details">
+                                            <div class="student-name">Anjali Patel</div>
+                                            <div class="student-department">AIML - 2nd Year</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><div class="stress-score score-high">82</div></td>
+                                <td><span class="risk-badge risk-high">🟠 High</span></td>
+                                <td><div class="last-update"><i class="fas fa-clock"></i> 12 mins ago</div></td>
+                                <td>
+                                    <button class="action-btn" onclick="viewProfile('anjali')">
+                                        <i class="fas fa-user-md"></i> View Profile
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="student-info">
+                                        <div class="student-avatar">P</div>
+                                        <div class="student-details">
+                                            <div class="student-name">Priya Kumar</div>
+                                            <div class="student-department">AIML - 4th Year</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><div class="stress-score score-medium">76</div></td>
+                                <td><span class="risk-badge risk-medium">🟡 Medium</span></td>
+                                <td><div class="last-update"><i class="fas fa-clock"></i> 25 mins ago</div></td>
+                                <td>
+                                    <button class="action-btn" onclick="viewProfile('priya')">
+                                        <i class="fas fa-eye"></i> Monitor
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 👥 SECTION 2: STUDENT WATCHLIST -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-binoculars"></i> Student Watchlist</h2>
+                    <span class="badge">12 Students</span>
+                </div>
+                <div class="section-body">
+                    <table class="watchlist-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Avg Stress (7 days)</th>
+                                <th>Trend</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="watchlistTableBody">
+                            <tr>
+                                <td>
+                                    <div class="student-info">
+                                        <div class="student-avatar">R</div>
+                                        <div class="student-name">Rahul Sharma</div>
+                                    </div>
+                                </td>
+                                <td><div class="stress-score score-critical">84</div></td>
+                                <td><span class="trend-indicator trend-up">↑ Increasing</span></td>
+                                <td><span class="status-tag status-needs-intervention">Needs Intervention</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="student-info">
+                                        <div class="student-avatar">S</div>
+                                        <div class="student-name">Suman Reddy</div>
+                                    </div>
+                                </td>
+                                <td><div class="stress-score score-high">71</div></td>
+                                <td><span class="trend-indicator trend-stable">→ Stable</span></td>
+                                <td><span class="status-tag status-monitor">Monitor</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="student-info">
+                                        <div class="student-avatar">K</div>
+                                        <div class="student-name">Karthik Nair</div>
+                                    </div>
+                                </td>
+                                <td><div class="stress-score score-medium">65</div></td>
+                                <td><span class="trend-indicator trend-down">↓ Improving</span></td>
+                                <td><span class="status-tag status-normal">Normal</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="student-info">
+                                        <div class="student-avatar">M</div>
+                                        <div class="student-name">Mohan Das</div>
+                                    </div>
+                                </td>
+                                <td><div class="stress-score score-low">52</div></td>
+                                <td><span class="trend-indicator trend-down">↓ Improving</span></td>
+                                <td><span class="status-tag status-normal">Normal</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 📈 SECTION 3: STRESS ANALYTICS -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-chart-line"></i> Stress Analytics</h2>
+                </div>
+                <div class="section-body">
+                    <h3 style="margin-bottom: var(--space-2); font-size: var(--font-size-base); color: var(--text-secondary);">
+                        7-Day Stress Trend – AIML Department
+                    </h3>
+                    <div id="stressChart" class="chart-container"></div>
+                    <div class="chart-caption">
+                        <i class="fas fa-info-circle"></i> This visualization helps proctors identify stress patterns and escalation risks. High-risk threshold is set at 75 points.
+                    </div>
+                </div>
+            </section>
+
+            <!-- 📋 SECTION 4: GRIEVANCE MANAGEMENT -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-tasks"></i> Grievance Management</h2>
+                    <span class="badge">3 Active</span>
+                </div>
+                <div class="section-body" id="grievanceList">
+                    <div class="grievance-item">
+                        <div class="grievance-info">
+                            <div class="grievance-title">Academic Pressure & Course Load</div>
+                            <div class="grievance-meta">
+                                <span><i class="fas fa-user"></i> Rahul Sharma (AIML)</span>
+                                <span><i class="fas fa-calendar"></i> 2 days ago</span>
+                            </div>
+                        </div>
+                        <div class="grievance-status status-pending">Pending</div>
+                        <button class="action-btn" style="font-size: var(--font-size-xs);">Resolve</button>
+                    </div>
+                    <div class="grievance-item">
+                        <div class="grievance-info">
+                            <div class="grievance-title">Lab Equipment Access Issue</div>
+                            <div class="grievance-meta">
+                                <span><i class="fas fa-user"></i> Neha Gupta (AIML)</span>
+                                <span><i class="fas fa-calendar"></i> 3 days ago</span>
+                            </div>
+                        </div>
+                        <div class="grievance-status status-in-progress">In Progress</div>
+                        <button class="action-btn" style="font-size: var(--font-size-xs);">Update</button>
+                    </div>
+                    <div class="grievance-item">
+                        <div class="grievance-info">
+                            <div class="grievance-title">Peer Relationship Concerns</div>
+                            <div class="grievance-meta">
+                                <span><i class="fas fa-user"></i> Arjun Mehta (AIML)</span>
+                                <span><i class="fas fa-calendar"></i> 5 days ago</span>
+                            </div>
+                        </div>
+                        <div class="grievance-status status-resolved">Resolved</div>
+                        <button class="action-btn" style="font-size: var(--font-size-xs);">View</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ===== SIDEBAR (CONTROL CENTER) ===== -->
+        <div class="sidebar">
+            <!-- Quick Actions -->
+            <section class="control-panel">
+                <div class="control-header">
+                    <i class="fas fa-bolt"></i> Quick Actions
+                </div>
+                <div class="control-actions">
+                    <a href="#" class="control-btn" onclick="showToast('Loading all alerts...', 'info')">
+                        <i class="fas fa-search"></i>
+                        <span>View All Alerts</span>
+                    </a>
+                    <a href="#" class="control-btn" onclick="showToast('Opening analytics...', 'info')">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Department Analytics</span>
+                    </a>
+                    <a href="#" class="control-btn" onclick="showToast('Opening counselor panel...', 'info')">
+                        <i class="fas fa-user-md"></i>
+                        <span>Assign Counselor</span>
+                    </a>
+                    <a href="#" class="control-btn" onclick="showToast('Generating report...', 'info')">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>Generate Report</span>
+                    </a>
+                    <a href="#" class="control-btn" onclick="showToast('Scheduling meeting...', 'info')">
+                        <i class="fas fa-calendar-plus"></i>
+                        <span>Schedule Meeting</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- My Students Overview -->
+            <section class="control-panel">
+                <div class="control-header">
+                    <i class="fas fa-users-cog"></i> My Students Overview
+                </div>
+                <div class="sidebar-stats">
+                    <div class="sidebar-stats-grid">
+                        <div class="sidebar-stat">
+                            <div class="sidebar-stat-value" id="totalStudentsSidebar">45</div>
+                            <div class="sidebar-stat-label">Assigned to Me</div>
+                        </div>
+                        <div class="sidebar-stat">
+                            <div class="sidebar-stat-value" style="color: var(--critical);">6</div>
+                            <div class="sidebar-stat-label">Need Action</div>
+                        </div>
+                        <div class="sidebar-stat">
+                            <div class="sidebar-stat-value">12</div>
+                            <div class="sidebar-stat-label">Monitoring</div>
+                        </div>
+                        <div class="sidebar-stat">
+                            <div class="sidebar-stat-value">27</div>
+                            <div class="sidebar-stat-label">Stable</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Intervention Notes -->
+            <section class="control-panel">
+                <div class="control-header">
+                    <i class="fas fa-clipboard"></i> Intervention Notes
+                </div>
+                <div class="intervention-notes">
+                    <textarea class="notes-textarea" id="interventionNotes" placeholder="Document your intervention actions here...">Referred Rahul Sharma to counselor Dr. Ananya Roy. Follow-up scheduled for Friday 3 PM. Parents notified via email.</textarea>
+                    <button class="save-btn" id="saveNotesBtn" onclick="saveNotes()">
+                        <i class="fas fa-save"></i>
+                        Save Intervention Note
+                    </button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="dashboard-footer">
+        <p>
+            <strong>AURA</strong> – AI-Powered Student Wellness Monitoring System
+        </p>
+        <p style="margin-top: var(--space-2); font-size: var(--font-size-xs); opacity: 0.7;">
+            Last updated: <span id="currentDate">Loading...</span> | Version 2.5.0 | Confidential – Faculty Use Only
+        </p>
+    </footer>
+
+    <!-- ===== SCRIPTS ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
+    
+    <script>
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            
+            const icon = document.getElementById('themeIcon');
+            icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            
+            showToast(`Switched to ${newTheme} mode`, 'success');
+        }
+
+        // Refresh data
+        async function refreshData() {
+            showToast('Refreshing data...', 'info');
+            await loadDashboardSummary();
+            await loadRiskQueue();
+            showToast('Data refreshed successfully!', 'success');
+        }
+
+        // View student profile (anonymous)
+        function viewProfile(anonymousId) {
+            window.location.href = `/proctor/student/${encodeURIComponent(anonymousId)}`;
+        }
+
+        // Save notes
+        function saveNotes() {
+            showToast('Intervention note saved successfully!', 'success');
+        }
+
+        // Logout
+        function logout() {
+            window.location.href = '/auth/logout';
+        }
+
+        // Load dashboard summary
+        async function loadDashboardSummary() {
+            try {
+                const response = await fetch('/proctor/api/dashboard/summary');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const data = result.data;
+                    
+                    // Update pending counts
+                    const pendingTotal = document.getElementById('pendingTotal');
+                    if (pendingTotal) pendingTotal.textContent = data.pending.total || 0;
+                    
+                    const pendingHigh = document.getElementById('pendingHigh');
+                    if (pendingHigh) pendingHigh.textContent = data.pending.high || 0;
+                    
+                    const pendingMedium = document.getElementById('pendingMedium');
+                    if (pendingMedium) pendingMedium.textContent = data.pending.medium || 0;
+                    
+                    const pendingLow = document.getElementById('pendingLow');
+                    if (pendingLow) pendingLow.textContent = data.pending.low || 0;
+                    
+                    // Update resolved counts
+                    const resolvedDismissed = document.getElementById('resolvedDismissed');
+                    if (resolvedDismissed) resolvedDismissed.textContent = data.resolved.dismissed || 0;
+                    
+                    const resolvedEscalated = document.getElementById('resolvedEscalated');
+                    if (resolvedEscalated) resolvedEscalated.textContent = data.resolved.escalated || 0;
+                    
+                    // Update today's stats
+                    const todayIncidents = document.getElementById('todayIncidents');
+                    if (todayIncidents) todayIncidents.textContent = data.today.incidents || 0;
+                    
+                    const todayActions = document.getElementById('todayActions');
+                    if (todayActions) todayActions.textContent = data.today.actions || 0;
+                }
+            } catch (error) {
+                console.error('Failed to load dashboard summary:', error);
+            }
+        }
+
+        // Load risk queue
+        async function loadRiskQueue(status = 'UNREVIEWED') {
+            try {
+                const response = await fetch(`/proctor/api/risk/queue?status=${status}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderRiskQueue(result.data);
+                }
+            } catch (error) {
+                console.error('Failed to load risk queue:', error);
+            }
+        }
+
+        // Render risk queue
+        function renderRiskQueue(incidents) {
+            const container = document.getElementById('riskQueueList');
+            if (!container) return;
+            
+            if (!incidents || incidents.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:var(--gray-500); padding:2rem;">No incidents to review</div>';
+                return;
+            }
+            
+            container.innerHTML = incidents.map(inc => `
+                <div class="incident-card" onclick="viewProfile('${inc.anonymous_student_id}')" 
+                     style="cursor:pointer; padding:1rem; border-radius:12px; border:1px solid var(--border-light); 
+                            margin-bottom:0.75rem; border-left:4px solid ${inc.risk_color || '#6b7280'}; 
+                            background:var(--bg-elevated); transition:all 0.2s;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <span style="display:inline-block; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;
+                                        background:${inc.risk_level === 'HIGH' ? '#fee2e2' : inc.risk_level === 'MEDIUM' ? '#fef3c7' : '#d1fae5'};
+                                        color:${inc.risk_level === 'HIGH' ? '#dc2626' : inc.risk_level === 'MEDIUM' ? '#d97706' : '#059669'};">
+                                ${inc.risk_level || 'UNKNOWN'}
+                            </span>
+                            <span style="margin-left:8px; font-size:12px; color:var(--gray-500);">${inc.time_since_trigger || ''}</span>
+                        </div>
+                        <span style="font-size:18px;">${inc.trend_icon || '→'}</span>
+                    </div>
+                    <div style="margin-top:8px; font-weight:600; color:var(--text-primary);">${inc.anonymous_student_id}</div>
+                    <div style="margin-top:4px; font-size:14px; color:var(--text-secondary);">${inc.trigger_source || 'Unknown trigger'}</div>
+                    <div style="margin-top:4px; font-size:13px; color:var(--gray-500);">${(inc.message_excerpt || '').substring(0, 80)}...</div>
+                    <div style="margin-top:8px; display:flex; gap:8px;">
+                        <button onclick="event.stopPropagation(); handleAction('dismiss', '${inc.incident_id}')" 
+                                style="padding:6px 12px; border:none; border-radius:6px; background:#e5e7eb; color:#374151; font-size:12px; cursor:pointer;">
+                            Dismiss
+                        </button>
+                        <button onclick="event.stopPropagation(); handleAction('escalate', '${inc.incident_id}')"
+                                style="padding:6px 12px; border:none; border-radius:6px; background:#fef3c7; color:#d97706; font-size:12px; cursor:pointer;">
+                            Escalate
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Handle action on incident
+        async function handleAction(action, incidentId) {
+            try {
+                const response = await fetch(`/proctor/api/action/${action}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ incident_id: incidentId, reason: 'REVIEWED' })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(`Incident ${action}ed successfully`, 'success');
+                    loadRiskQueue();
+                    loadDashboardSummary();
+                } else {
+                    showToast(result.error || 'Action failed', 'error');
+                }
+            } catch (error) {
+                console.error('Action failed:', error);
+                showToast('Action failed', 'error');
+            }
+        }
+
+        // Load resolution metrics
+        async function loadResolutionMetrics() {
+            try {
+                const response = await fetch('/proctor/api/metrics/resolution');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const data = result.data;
+                    
+                    const resolutionRate = document.getElementById('resolutionRate');
+                    if (resolutionRate) resolutionRate.textContent = `${data.resolution_rate || 0}%`;
+                    
+                    const avgResolution = document.getElementById('avgResolution');
+                    if (avgResolution) avgResolution.textContent = `${data.avg_resolution_minutes || 0}m`;
+                }
+            } catch (error) {
+                console.error('Failed to load resolution metrics:', error);
+            }
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update current date
+            const dateEl = document.getElementById('currentDate');
+            if (dateEl) {
+                dateEl.textContent = new Date().toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            // Load all data
+            loadDashboardSummary();
+            loadRiskQueue();
+            loadResolutionMetrics();
+
+            // Initialize stress chart
+            const stressChartOptions = {
+                series: [{
+                    name: 'Avg Stress',
+                    data: [52, 55, 58, 62, 59, 56, 54]
+                }, {
+                    name: 'Critical Threshold',
+                    data: [75, 75, 75, 75, 75, 75, 75]
+                }],
+                chart: {
+                    type: 'area',
+                    height: 280,
+                    toolbar: { show: false },
+                    animations: {
+                        enabled: true,
+                        easing: 'easeinout',
+                        speed: 800
+                    }
+                },
+                colors: ['#6366f1', '#ef4444'],
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.7,
+                        opacityTo: 0.2,
+                        stops: [0, 100]
+                    }
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: [3, 2],
+                    dashArray: [0, 5]
+                },
+                xaxis: {
+                    categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    labels: { style: { colors: '#64748b' } }
+                },
+                yaxis: {
+                    min: 0,
+                    max: 100,
+                    labels: { style: { colors: '#64748b' } }
+                },
+                grid: {
+                    borderColor: '#e2e8f0',
+                    strokeDashArray: 4
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'right'
+                },
+                tooltip: {
+                    theme: 'light',
+                    y: { formatter: val => val + ' points' }
+                }
+            };
+
+            const chartEl = document.querySelector("#stressChart");
+            if (chartEl) {
+                const stressChart = new ApexCharts(chartEl, stressChartOptions);
+                stressChart.render();
+            }
+
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                loadDashboardSummary();
+                loadRiskQueue();
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

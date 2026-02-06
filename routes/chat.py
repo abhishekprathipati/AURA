@@ -1,14 +1,77 @@
 import logging
-from flask import Blueprint, request, jsonify, session
+import json
+import mimetypes
+import os
+import time
 from datetime import datetime
+from flask import Blueprint, request, jsonify, session
+from flask import send_from_directory
 from utils.database import get_db
 from models.chat import ChatModel
 from services.ai_service import generate_mental_response, extract_sentiment, analyze_study_material
-from flask import send_from_directory
-import os
 
 chat_bp = Blueprint('chat', __name__)
 log = logging.getLogger(__name__)
+ALLOWED_EXTENSIONS = {'pdf', 'txt', 'png', 'jpg', 'jpeg', 'doc', 'docx'}
+
+
+def _save_and_track_file(file):
+    """Persist an uploaded study file and record it in the user's session."""
+    filename = (file.filename or '').strip()
+    if not filename:
+        raise ValueError('No file selected')
+
+    lower_name = filename.lower()
+    if not any(lower_name.endswith('.' + ext) for ext in ALLOWED_EXTENSIONS):
+        raise ValueError('File type not allowed')
+
+    upload_dir = os.path.join('static', 'uploads')
+    os.makedirs(upload_dir, exist_ok=True)
+
+    unique_filename = f"{int(time.time())}_{filename}"
+    save_path = os.path.join(upload_dir, unique_filename)
+    file.save(save_path)
+
+    mime = file.mimetype or mimetypes.guess_type(save_path)[0] or 'application/octet-stream'
+    files = session.get('study_files', {}) or {}
+    files[unique_filename] = {
+        'path': save_path,
+        'mime': mime,
+        'original_filename': filename,
+    }
+    session['study_files'] = files
+    session['study_last_file'] = unique_filename
+    session.modified = True
+
+    return {
+        'file_id': unique_filename,
+        'path': save_path,
+        'mime': mime,
+        'original_filename': filename,
+    }
+
+
+def _resolve_file_from_session(file_id: str = None):
+    files = session.get('study_files') or {}
+    active_id = file_id or session.get('study_last_file')
+    if not active_id:
+        return None
+
+    meta = files.get(active_id)
+    if not meta:
+        return None
+
+    path = meta.get('path')
+    if not path or not os.path.exists(path):
+        return None
+
+    mime = meta.get('mime') or mimetypes.guess_type(path)[0] or 'application/octet-stream'
+    return {
+        'file_id': active_id,
+        'path': path,
+        'mime': mime,
+        'original_filename': meta.get('original_filename', active_id),
+    }
 
 
 def _get_db():
@@ -195,34 +258,92 @@ def upload_study_file():
         if not file or file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
 
-        # Validate file type
-        allowed_extensions = {'pdf', 'txt', 'png', 'jpg', 'jpeg', 'doc', 'docx'}
-        filename = file.filename.lower()
-        if not any(filename.endswith('.' + ext) for ext in allowed_extensions):
-            return jsonify({'error': 'File type not allowed'}), 400
+        meta = _save_and_track_file(file)
+        log.info(f"✓ File uploaded: {meta['file_id']} by {user_email}")
 
-        # Save to static/uploads
-        upload_dir = os.path.join('static', 'uploads')
-        os.makedirs(upload_dir, exist_ok=True)
-        
-        # Use unique filename to avoid conflicts
-        import time
-        unique_filename = f"{int(time.time())}_{file.filename}"
-        save_path = os.path.join(upload_dir, unique_filename)
-        
-        file.save(save_path)
-        log.info(f"✓ File uploaded: {unique_filename} by {user_email}")
-        
         return jsonify({
             'ok': True,
-            'filename': unique_filename,
-            'original_filename': file.filename,
-            'size': os.path.getsize(save_path)
+            'file_id': meta['file_id'],
+            'filename': meta['file_id'],
+            'original_filename': meta['original_filename'],
+            'size': os.path.getsize(meta['path'])
         }), 200
 
     except Exception as e:
         log.error(f"Upload error: {str(e)}")
         return jsonify({'error': f'Upload failed: {str(e)[:180]}'}), 500
+
+
+@chat_bp.route('/study/upload', methods=['POST'])
+def study_upload():
+    """Preferred upload route for Study Assistant UI."""
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not logged in'}), 401
+
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        meta = _save_and_track_file(request.files['file'])
+        log.info(f"✓ Study upload via /study/upload: {meta['file_id']} by {user_email}")
+        return jsonify({
+            'ok': True,
+            'file_id': meta['file_id'],
+            'filename': meta['file_id'],
+            'original_filename': meta['original_filename'],
+        })
+    except Exception as e:
+        log.error(f"Study upload error: {str(e)}")
+        return jsonify({'error': str(e)[:180]}), 500
+
+
+@chat_bp.route('/study/summarize', methods=['POST'])
+def study_summarize():
+    """Summarize the most recent uploaded study file."""
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not logged in'}), 401
+
+        req_data = request.get_json(silent=True) or {}
+        meta = _resolve_file_from_session(req_data.get('file_id'))
+        if not meta:
+            return jsonify({'error': 'Upload a file first'}), 400
+
+        prompt = (
+            "Summarize the uploaded document for a student. "
+            "Highlight key sections, definitions, formulas (use $...$), and 3-5 actionable next steps."
+        )
+        summary = analyze_study_material(prompt, meta['path'], meta['mime'])
+        return jsonify({'summary': summary, 'file_id': meta['file_id'], 'file_name': meta['original_filename']})
+    except Exception as e:
+        log.error(f"Study summarize error: {str(e)}")
+        return jsonify({'error': str(e)[:180]}), 500
+
+
+@chat_bp.route('/study/quiz', methods=['POST'])
+def study_quiz():
+    """Generate a quiz from the most recent uploaded study file."""
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not logged in'}), 401
+
+        req_data = request.get_json(silent=True) or {}
+        meta = _resolve_file_from_session(req_data.get('file_id'))
+        if not meta:
+            return jsonify({'error': 'Upload a file first'}), 400
+
+        prompt = (
+            "Generate 5 multiple-choice questions based on this document. "
+            "Return Markdown with numbered questions, options A-D, and indicate the correct answer after each question."
+        )
+        quiz = analyze_study_material(prompt, meta['path'], meta['mime'])
+        return jsonify({'quiz': quiz, 'file_id': meta['file_id'], 'file_name': meta['original_filename']})
+    except Exception as e:
+        log.error(f"Study quiz error: {str(e)}")
+        return jsonify({'error': str(e)[:180]}), 500
 
 
 @chat_bp.route('/api/study/analyze', methods=['POST'])
@@ -236,10 +357,11 @@ def api_study_analyze():
         prompt = request.form.get('prompt', '').strip()
         conversation_history = request.form.get('conversation_history', '[]')
         conversation_id = request.form.get('conversation_id', '').strip()
+        file_id = request.form.get('file_id', '').strip()
+        file_meta = None
         # Try to parse client-provided history
         history = []
         try:
-            import json
             raw = json.loads(conversation_history or '[]')
             if isinstance(raw, list):
                 for turn in raw[-10:]:
@@ -253,6 +375,7 @@ def api_study_analyze():
         debug_info = {
             'files_present': list(request.files.keys()),
             'form_prompt': prompt,
+            'file_id': file_id,
         }
 
         # Check if user provided either a prompt or a file
@@ -260,26 +383,27 @@ def api_study_analyze():
         
         if not prompt and not has_file:
             return jsonify({'error': 'Please provide a prompt or upload a file', 'debug': debug_info}), 400
-        
+
+        # Resolve uploaded file either from direct upload or stored session file
+        if has_file:
+            file_meta = _save_and_track_file(request.files['file'])
+        elif file_id:
+            file_meta = _resolve_file_from_session(file_id)
+            if file_meta is None:
+                return jsonify({'error': 'Uploaded file not found. Please upload again.'}), 400
+
         # If file but no prompt, create a generic prompt to summarize
-        if has_file and not prompt:
+        if file_meta and not prompt:
             prompt = "Please analyze and summarize this document, highlighting key concepts and important points."
 
         answer = None
-        if has_file:
-            f = request.files['file']
-            # Save to static/uploads for short-term processing
-            upload_dir = os.path.join('static', 'uploads')
-            os.makedirs(upload_dir, exist_ok=True)
-            save_path = os.path.join(upload_dir, f.filename)
-            f.save(save_path)
-            mime = f.mimetype or ''
-            answer = analyze_study_material(prompt, save_path, mime, history=history, conversation_id=conversation_id)
+        if file_meta:
+            answer = analyze_study_material(prompt, file_meta['path'], file_meta['mime'], history=history, conversation_id=conversation_id)
         else:
             # Text-only query using Gemini
             answer = generate_mental_response(prompt, history, kind='study', conversation_id=conversation_id)
 
-        return jsonify({'answer': answer, 'debug': debug_info})
+        return jsonify({'answer': answer, 'debug': debug_info, 'file_id': file_meta['file_id'] if file_meta else None})
 
     except Exception as e:
         return jsonify({'error': f'Study analyze error: {str(e)[:180]}'}), 500

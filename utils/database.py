@@ -50,6 +50,15 @@ def _ensure_indexes(database) -> None:
             elif model is StressModel:
                 coll.create_index([('user_email', ASCENDING)])
                 coll.create_index([('created_at', ASCENDING)])
+    
+    # Connection Hub indexes
+    room_msgs = database['room_messages']
+    room_msgs.create_index([('room_id', ASCENDING)])
+    room_msgs.create_index([('created_at', ASCENDING)])
+    room_msgs.create_index([('user_id', ASCENDING)])
+    
+    ts_coll = database['message_timestamps']
+    ts_coll.create_index([('user_id', ASCENDING)], unique=True)
 
 def seed_demo_data(database) -> Dict[str, Any]:
     from utils.auth_helpers import hash_password
@@ -65,6 +74,9 @@ def seed_demo_data(database) -> Dict[str, Any]:
             'hashed_password': hash_password('password123'),
             'name': 'Demo Student',
             'role': 'student',
+            'roll_number': 'STU001',
+            'parent_phone': '9876543210',
+            'department': 'Computer Science',
             'created_at': datetime.utcnow(),
         },
         {
@@ -84,6 +96,16 @@ def seed_demo_data(database) -> Dict[str, Any]:
     ]
     for u in demo_users:
         users.update_one({'email': u['email']}, {'$setOnInsert': u}, upsert=True)
+
+    # Ensure existing demo student has academic fields (parent phone for OTP auth)
+    users.update_one(
+        {'email': 'student@aura.edu'},
+        {'$set': {
+            'roll_number': 'STU001',
+            'parent_phone': '9876543210',
+            'department': 'Computer Science'
+        }}
+    )
 
     # Demo chat
     chats.insert_one({
@@ -109,12 +131,34 @@ def seed_demo_data(database) -> Dict[str, Any]:
         'source': 'exams',
         'created_at': datetime.utcnow(),
     })
+    
+    # Connection Hub seed data
+    connection_rooms = database['room_messages']
+    demo_messages = [
+        {
+            'room_id': 'exam_stress',
+            'user_id': 'demo@aura.edu',
+            'display_name': 'Anonymous Student',
+            'message': 'Anyone else feeling the exam pressure? Lets talk about it.',
+            'created_at': datetime.utcnow(),
+        },
+        {
+            'room_id': 'exam_stress',
+            'user_id': 'demo2@aura.edu',
+            'display_name': 'Anonymous Student',
+            'message': 'Ive been studying for 6 hours straight. Feeling burned out!',
+            'created_at': datetime.utcnow(),
+        },
+    ]
+    for msg in demo_messages:
+        connection_rooms.insert_one(msg)
 
     return {
         'users': users.count_documents({}),
         'chats': chats.count_documents({}),
         'moods': moods.count_documents({}),
         'stress': stress.count_documents({}),
+        'connection_messages': connection_rooms.count_documents({}),
     }
 
 def create_demo_users(database) -> int:
@@ -126,6 +170,9 @@ def create_demo_users(database) -> int:
             'hashed_password': hash_password('password123'),
             'name': 'Demo Student',
             'role': 'student',
+            'roll_number': 'STU001',
+            'parent_phone': '9876543210',
+            'department': 'Computer Science',
             'created_at': datetime.utcnow(),
         },
         {
@@ -146,9 +193,18 @@ def create_demo_users(database) -> int:
     inserted = 0
     for u in demo_users:
         res = users.update_one({'email': u['email']}, {'$setOnInsert': u}, upsert=True)
-        # Count as inserted if upsert triggered
         if res.upserted_id is not None:
             inserted += 1
+
+    # Ensure existing demo student has academic fields (parent phone for OTP auth)
+    users.update_one(
+        {'email': 'student@aura.edu'},
+        {'$set': {
+            'roll_number': 'STU001',
+            'parent_phone': '9876543210',
+            'department': 'Computer Science'
+        }}
+    )
     return inserted
 
 def init_db(app=None):

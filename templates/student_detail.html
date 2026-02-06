@@ -4,57 +4,73 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <div class="card" style="margin-bottom:1rem;">
-  <div class="pill">Student Detail</div>
-  <h2 id="studentName">Loading...</h2>
-  <div style="color:var(--muted);">Email: <span id="studentEmail">{{ student_email }}</span></div>
+  <div class="pill">Anonymous Student Details</div>
+  <h2 id="studentName">{{ anonymous_id }}</h2>
+  <div style="color:var(--muted);">Anonymous ID: <span id="anonymousId">{{ anonymous_id }}</span></div>
+  <div style="color:var(--muted); margin-top:0.5rem;">Proctor: {{ proctor_id }}</div>
 </div>
 
 <div class="grid grid-2" style="margin-bottom:1rem;">
-  <div class="card" style="min-height:300px;">
-    <h2>Stress History (30 days)</h2>
-    <div style="height:260px; margin-top:0.5rem;">
-      <canvas id="studentStressChart"></canvas>
+  <div class="card">
+    <h2>Incident Summary</h2>
+    <div id="incidentStats" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem; margin-top:1rem;">
+      <div style="text-align:center;">
+        <div style="font-size:2rem; font-weight:bold; color:var(--accent);" id="totalIncidents">0</div>
+        <div style="color:var(--muted);">Total Incidents</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:2rem; font-weight:bold; color:#ef4444;" id="highRiskCount">0</div>
+        <div style="color:var(--muted);">High Risk</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:2rem; font-weight:bold; color:#f59e0b;" id="unreviewedCount">0</div>
+        <div style="color:var(--muted);">Unreviewed</div>
+      </div>
     </div>
   </div>
   <div class="card">
-    <h2>Proctor Notes</h2>
-    <form id="notesForm" style="display:flex; gap:0.5rem; align-items:center;">
-      <input type="text" id="noteInput" placeholder="Add guidance note..." style="flex:1; padding:0.75rem; border-radius:8px; border:1px solid var(--border);" />
-      <label style="display:flex; align-items:center; gap:0.35rem; color:var(--muted);">
-        <input type="checkbox" id="urgentInput" /> Urgent
-      </label>
-      <button class="btn" type="submit">Save</button>
+    <h2>Proctor Actions</h2>
+    <form id="actionForm" style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1rem;">
+      <select id="actionType" style="padding:0.75rem; border-radius:8px; border:1px solid var(--border);">
+        <option value="dismiss">Dismiss</option>
+        <option value="escalate">Escalate</option>
+        <option value="remove">Remove</option>
+      </select>
+      <input type="text" id="reasonInput" placeholder="Reason..." style="flex:1; padding:0.75rem; border-radius:8px; border:1px solid var(--border);" />
+      <button class="btn" type="submit">Apply to Selected</button>
     </form>
-    <div id="notesTimeline" class="timeline" style="margin-top:0.75rem;"></div>
+    <div id="actionsTimeline" class="timeline" style="margin-top:0.75rem;"></div>
   </div>
-// Timeline styles
-const timelineStyle = document.createElement('style');
-timelineStyle.textContent = `
+</div>
+
+<div class="card" style="margin-bottom:1rem;">
+  <h2>Incident History</h2>
+  <div id="incidentList" style="margin-top:1rem;"></div>
+</div>
+
+<style>
 .timeline { position: relative; padding-left: 1.5rem; }
 .timeline::before { content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 2px; background: var(--border); }
 .timeline-item { position: relative; margin-bottom: 0.9rem; }
 .timeline-dot { position: absolute; left: -0.05rem; top: 0.35rem; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 .note-bubble { padding: 0.75rem 1rem; border-radius: 12px; background: var(--panel); border: 1px solid var(--border); }
 .note-header { font-size: 0.9rem; color: var(--muted); margin-bottom: 0.35rem; display:flex; justify-content:space-between; }
-.note-urgent { border-color: #ef4444; background: #fff5f5; }
-.note-urgent .note-header { color: #b91c1c; }
-`;
-document.head.appendChild(timelineStyle);
-</div>
-
-<div class="grid grid-2">
-  <div class="card">
-    <h2>Recent Chats</h2>
-    <ul id="chatList" style="list-style:none; padding:0; margin:0;"></ul>
-  </div>
-  <div class="card">
-    <h2>Grievances</h2>
-    <ul id="grievanceList" style="list-style:none; padding:0; margin:0;"></ul>
-  </div>
-</div>
+.incident-card { padding: 1rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 0.75rem; background: var(--panel); }
+.incident-card.high { border-left: 4px solid #ef4444; }
+.incident-card.medium { border-left: 4px solid #f59e0b; }
+.incident-card.low { border-left: 4px solid #10b981; }
+.risk-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+.risk-badge.high { background: #fee2e2; color: #dc2626; }
+.risk-badge.medium { background: #fef3c7; color: #d97706; }
+.risk-badge.low { background: #d1fae5; color: #059669; }
+.status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem; }
+.status-badge.unreviewed { background: #dbeafe; color: #2563eb; }
+.status-badge.dismissed { background: #e5e7eb; color: #6b7280; }
+.status-badge.escalated { background: #fef3c7; color: #d97706; }
+</style>
 
 <script>
-const studentEmail = document.getElementById('studentEmail').textContent;
+const anonymousId = "{{ anonymous_id }}";
 
 async function fetchJSON(url, options={}){
   const r = await fetch(url, options);
@@ -62,92 +78,94 @@ async function fetchJSON(url, options={}){
   return r.json();
 }
 
-function renderStressChart(history){
-  const canvas = document.getElementById('studentStressChart');
-  if(!canvas || typeof Chart === 'undefined') return;
-  const labels = history.map(h => h.date);
-  const data = history.map(h => h.score);
-  new Chart(canvas, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Average Daily Stress',
-        data,
-        borderColor: 'var(--accent)',
-        backgroundColor: 'rgba(124,58,237,0.25)',
-        tension: 0.3,
-        fill: true,
-      }]
-    },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: { y: { min: 0, max: 100 } },
-      responsive: true,
-      maintainAspectRatio: false,
-    }
+function renderIncidents(incidents){
+  const container = document.getElementById('incidentList');
+  container.innerHTML = '';
+  
+  if(!incidents || incidents.length === 0) {
+    container.innerHTML = '<div style="color:var(--muted); text-align:center; padding:2rem;">No incidents found</div>';
+    return;
+  }
+  
+  incidents.forEach(inc => {
+    const riskClass = (inc.risk_level || 'medium').toLowerCase();
+    const statusClass = (inc.status || 'unreviewed').toLowerCase().replace('_', '');
+    
+    const card = document.createElement('div');
+    card.className = `incident-card ${riskClass}`;
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem;">
+        <div>
+          <span class="risk-badge ${riskClass}">${inc.risk_level || 'UNKNOWN'}</span>
+          <span class="status-badge ${statusClass}">${inc.status || 'UNREVIEWED'}</span>
+        </div>
+        <div style="color:var(--muted); font-size:0.85rem;">${inc.time_since_trigger || inc.timestamp || ''}</div>
+      </div>
+      <div style="font-weight:500; margin-bottom:0.5rem;">${inc.trigger_source || 'Unknown trigger'}</div>
+      <div style="color:var(--muted); font-size:0.9rem;">${inc.message_excerpt || 'No details available'}</div>
+      <div style="margin-top:0.5rem; font-size:0.85rem; color:var(--muted);">
+        Incident ID: ${inc.incident_id || 'N/A'}
+      </div>
+    `;
+    container.appendChild(card);
   });
 }
 
-function renderChats(chats){
-  const list = document.getElementById('chatList');
-  list.innerHTML = '';
-  chats.forEach(c => {
-    const li = document.createElement('li');
-    li.style.marginBottom = '0.75rem';
-    li.innerHTML = `<div class="pill">${new Date(c.created_at).toLocaleString()}</div>
-      <div><strong>Student:</strong> ${c.message || ''}</div>
-      <div style="margin-top:0.35rem;"><strong>AI:</strong> ${c.response || ''}</div>
-      <div style="color:var(--muted); margin-top:0.25rem;">Sentiment: ${c.sentiment || 'neutral'}</div>`;
-    list.appendChild(li);
-  });
-}
-
-function renderGrievances(gs){
-  const list = document.getElementById('grievanceList');
-  list.innerHTML = '';
-  gs.forEach(g => {
-    const li = document.createElement('li');
-    li.style.marginBottom = '0.75rem';
-    li.innerHTML = `<div class="pill">${g.status}</div>
-      <div><strong>${g.subject || ''}</strong></div>
-      <div style="color:var(--muted);">${g.description || ''}</div>
-      <div style="color:var(--muted);">Created: ${new Date(g.created_at).toLocaleString()}</div>`;
-    list.appendChild(li);
-  });
-}
-
-function renderNotes(notes){
-  const tl = document.getElementById('notesTimeline');
+function renderActions(actions){
+  const tl = document.getElementById('actionsTimeline');
   tl.innerHTML = '';
-  notes.forEach(n => {
+  
+  if(!actions || actions.length === 0) {
+    tl.innerHTML = '<div style="color:var(--muted);">No actions taken yet</div>';
+    return;
+  }
+  
+  actions.forEach(a => {
     const item = document.createElement('div');
     item.className = 'timeline-item';
-    const dot = document.createElement('div'); dot.className = 'timeline-dot';
-    const bubble = document.createElement('div'); bubble.className = 'note-bubble' + (n.urgent ? ' note-urgent' : '');
-    const header = document.createElement('div'); header.className = 'note-header';
-    const left = document.createElement('div'); left.textContent = `${new Date(n.created_at).toLocaleString()} — ${n.proctor_name}`;
-    const right = document.createElement('div'); right.textContent = n.urgent ? 'URGENT' : '';
-    const body = document.createElement('div'); body.textContent = n.note;
-    header.appendChild(left); header.appendChild(right);
-    bubble.appendChild(header); bubble.appendChild(body);
-    item.appendChild(dot); item.appendChild(bubble);
+    item.innerHTML = `
+      <div class="timeline-dot"></div>
+      <div class="note-bubble">
+        <div class="note-header">
+          <div>${a.timestamp || ''} — ${a.proctor_id || 'Unknown'}</div>
+          <div>${a.action_type || ''}</div>
+        </div>
+        <div>${a.reason_code || ''}: ${a.details || ''}</div>
+      </div>
+    `;
     tl.appendChild(item);
   });
 }
 
 async function loadDetails(){
   try{
-    const data = await fetchJSON(`/proctor/api/proctor/student/${encodeURIComponent(studentEmail)}`);
-    document.getElementById('studentName').textContent = data.profile?.name || 'Unknown';
-    renderStressChart(data.stress_history || []);
-    renderChats(data.chats || []);
-    renderGrievances(data.grievances || []);
-    renderNotes(data.notes || []);
-  }catch(e){ console.warn('Detail load failed', e); }
+    const data = await fetchJSON(`/proctor/api/student/${encodeURIComponent(anonymousId)}/details`);
+    
+    if(data.success) {
+      const stats = data.data;
+      document.getElementById('totalIncidents').textContent = stats.total_incidents || 0;
+      document.getElementById('highRiskCount').textContent = stats.high_risk_count || 0;
+      document.getElementById('unreviewedCount').textContent = stats.unreviewed_count || 0;
+      
+      renderIncidents(stats.incidents || []);
+      renderActions(stats.actions || []);
+    }
+  }catch(e){ 
+    console.warn('Detail load failed', e);
+    document.getElementById('incidentList').innerHTML = '<div style="color:#ef4444; text-align:center; padding:2rem;">Failed to load student details</div>';
+  }
 }
 
-// Notes submission
+// Action form submission
+document.getElementById('actionForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  // This would apply actions to selected incidents
+  alert('Action functionality would be implemented here');
+});
+
+loadDetails();
+</script>
+{% endblock %}
 const form = document.getElementById('notesForm');
 form.addEventListener('submit', async (ev)=>{
   ev.preventDefault();

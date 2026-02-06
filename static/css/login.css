@@ -1,0 +1,279 @@
+/* ===== AURA LOGIN PAGE ===== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-font-smoothing: antialiased;
+}
+
+.login-container {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    max-width: 1000px;
+    width: 90%;
+    overflow: hidden;
+}
+
+.login-left {
+    flex: 1;
+    padding: 60px 50px;
+}
+
+.login-right {
+    flex: 1;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 60px 50px;
+    color: white;
+}
+
+.logo {
+    font-size: 42px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    font-size: 16px;
+    color: #6b7280;
+    margin-bottom: 40px;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-size: 14px;
+}
+
+.alert-success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+}
+
+.alert-danger {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.alert-warning {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+.alert-info {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+}
+
+form {
+    margin-top: 32px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group input::placeholder {
+    color: #9ca3af;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 8px;
+}
+
+.btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+}
+
+.demo-section {
+    margin-top: 0;
+}
+
+.demo-section h3 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: white;
+}
+
+.demo-account {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.demo-account h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: white;
+}
+
+.demo-account p {
+    font-size: 14px;
+    margin: 4px 0;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.demo-hint {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+    margin-top: 8px;
+}
+
+/* Parent Portal Link */
+.parent-portal-link {
+    margin-top: 28px;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e5e7eb;
+}
+
+.divider span {
+    padding: 0 16px;
+    font-size: 13px;
+    color: #9ca3af;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.btn-parent-portal {
+    display: block;
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #667eea;
+    background: #f0f0ff;
+    border: 2px solid #e0e7ff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    text-decoration: none;
+}
+
+.btn-parent-portal:hover {
+    background: #e0e7ff;
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.parent-hint {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 13px;
+    color: #9ca3af;
+}
+
+.parent-hint a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.parent-hint a:hover {
+    text-decoration: underline;
+}
+
+.demo-account-parent {
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .login-container {
+        flex-direction: column;
+        width: 95%;
+    }
+    
+    .login-left,
+    .login-right {
+        padding: 40px 30px;
+    }
+    
+    .logo {
+        font-size: 36px;
+    }
+    
+    .demo-section {
+        margin-top: 20px;
+    }
+}

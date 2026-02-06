@@ -32,7 +32,10 @@ async function updateMood(mood) {
         
         // Hide modal
         const modal = document.getElementById('moodModal');
-        if (modal) modal.style.display = 'none';
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.classList.remove('mood-modal-open');
+        }
         
         // No redirect: stay on dashboard for all moods
         
@@ -98,18 +101,29 @@ function applyAuraTheme(mood) {
 async function checkDailyMood() {
     try {
         const response = await fetch('/student/api/mood/today');
+        
+        // If API fails, just skip the modal (don't block the user)
+        if (!response.ok) {
+            console.warn('Mood API unavailable, skipping daily mood check');
+            return;
+        }
+        
         const data = await response.json();
         
         if (!data.has_mood_today) {
             // Show modal
             const modal = document.getElementById('moodModal');
-            if (modal) modal.style.display = 'flex';
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.classList.add('mood-modal-open');
+            }
         } else if (data.mood) {
             // Apply saved mood theme
             applyAuraTheme(data.mood);
         }
     } catch (error) {
         console.error('Failed to check daily mood:', error);
+        // Don't show modal on error - let user access dashboard normally
     }
 }
 
@@ -139,6 +153,19 @@ window.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 card.click(); // Trigger the existing theme logic
+            }
+        });
+    });
+
+    // Initialize Check-In Modal keyboard support
+    const checkInButtons = document.querySelectorAll('.mood-btn');
+    checkInButtons.forEach(btn => {
+        btn.setAttribute('tabindex', '0');
+        btn.setAttribute('role', 'button');
+        btn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                btn.click();
             }
         });
     });

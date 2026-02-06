@@ -13,7 +13,7 @@
     document.documentElement.classList.add('mental-page-root');
 })();
 </script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/mental-chatbot.css', v=12) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mental-chatbot.css') }}?v=20260124">
 <style>
 /* CRITICAL: Override ALL base styles for mental chat page */
 html.mental-page-root,
@@ -141,7 +141,7 @@ body.mental-page #messageInput::placeholder {
                     {{ session.get('user_name', 'Student') }}
                 </div>
                 <button class="zen-btn" id="zenModeToggle" title="Toggle Zen Mode">Zen Mode</button>
-                <a href="/logout" class="logout-btn" style="padding: 8px 14px; border-radius: 20px; background: var(--accent); color: white; text-decoration: none; font-size: 14px; transition: all 0.2s;">Logout</a>
+                <a href="{{ url_for('auth.logout') }}" class="logout-btn" style="padding: 8px 14px; border-radius: 20px; background: var(--accent); color: white; text-decoration: none; font-size: 14px; transition: all 0.2s;">Logout</a>
             </div>
         </header>
 
