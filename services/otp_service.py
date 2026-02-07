@@ -1,14 +1,16 @@
 """
 OTP (One-Time Password) Service for Parent Authentication
-Handles OTP generation, storage in MongoDB, and verification.
-
-In production, integrate with an SMS gateway (Twilio, Fast2SMS, MSG91, etc.)
-For demo purposes, OTP is printed to console and returned in API response.
+Handles OTP generation, storage in MongoDB, verification, and SMS delivery via Fast2SMS.
 """
 
 import random
+import requests
+import logging
 from datetime import datetime, timedelta
 from utils.database import get_db
+from config import Config
+
+logger = logging.getLogger(__name__)
 
 
 class OTPService:
@@ -40,8 +42,51 @@ class OTPService:
         return digits
 
     @staticmethod
+    def _send_sms(phone, otp):
+        """Send OTP via Fast2SMS API. Returns True if sent, False otherwise."""
+        api_key = Config.FAST2SMS_API_KEY
+        sms_enabled = Config.SMS_ENABLED
+
+        if not sms_enabled or not api_key:
+            logger.info("SMS disabled or no API key configured — using demo mode")
+            return False
+
+        try:
+            url = "https://www.fast2sms.com/dev/bulkV2"
+            headers = {
+                "authorization": api_key,
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "route": "otp",
+                "variables_values": otp,
+                "numbers": phone,
+                "flash": 0
+            }
+
+            response = requests.post(url, json=payload, headers=headers, timeout=10)
+            result = response.json()
+
+            if result.get("return"):
+                logger.info(f"SMS sent successfully to +91{phone[:3]}***{phone[-3:]}")
+                return True
+            else:
+                logger.error(f"Fast2SMS error: {result.get('message', 'Unknown error')}")
+                return False
+
+        except requests.exceptions.Timeout:
+            logger.error("Fast2SMS request timed out")
+            return False
+        except requests.exceptions.ConnectionError:
+            logger.error("Fast2SMS connection failed — check internet")
+            return False
+        except Exception as e:
+            logger.error(f"SMS sending failed: {str(e)}")
+            return False
+
+    @staticmethod
     def send_otp(phone):
-        """Generate OTP, store in DB, and simulate sending via SMS"""
+        """Generate OTP, store in DB, and send via SMS"""
         db = get_db()
         phone = OTPService.normalize_phone(phone)
         otp = OTPService.generate_otp()
@@ -77,21 +122,22 @@ class OTPService:
         }
         db[OTPService.collection_name].insert_one(otp_record)
 
-        # ===== SMS INTEGRATION POINT =====
-        # In production, send OTP via SMS API:
-        #   Twilio:   client.messages.create(body=f"Your AURA OTP: {otp}", to=f"+91{phone}")
-        #   Fast2SMS: requests.post(url, data={'message': otp, 'numbers': phone})
-        #   MSG91:    requests.post(url, json={'otp': otp, 'mobile': phone})
-        # ==================================
+        # Send OTP via Fast2SMS
+        sms_sent = OTPService._send_sms(phone, otp)
 
+        # Console log (always, for debugging)
         print(f"\n{'='*50}")
         print(f"  📱 AURA OTP SERVICE")
         print(f"  Phone : +91 {phone[:3]}***{phone[-3:]}")
         print(f"  OTP   : {otp}")
+        print(f"  SMS   : {'✅ Sent' if sms_sent else '⚠ Demo mode (SMS not sent)'}")
         print(f"  Valid  : {OTPService.OTP_EXPIRY_MINUTES} minutes")
         print(f"{'='*50}\n")
 
-        return otp, 'OTP sent successfully'
+        if sms_sent:
+            return otp, 'OTP sent to your phone via SMS'
+        else:
+            return otp, 'OTP generated (demo mode - check banner below)'
 
     @staticmethod
     def verify_otp(phone, otp):

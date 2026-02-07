@@ -60,14 +60,23 @@ def send_otp():
         # Mask phone for display
         masked_phone = phone[:2] + '******' + phone[-2:]
 
-        return jsonify({
+        # Check if SMS was actually sent (message will say 'via SMS' if it was)
+        sms_sent = 'via SMS' in message
+
+        response_data = {
             'success': True,
-            'message': f'OTP sent to +91 {masked_phone}',
+            'message': message,
             'masked_phone': masked_phone,
             'student_name': student.get('name', 'Student'),
             'student_roll': student.get('roll_number', ''),
-            'demo_otp': otp  # Remove this line in production!
-        }), 200
+            'sms_sent': sms_sent
+        }
+
+        # Only include demo_otp when SMS was NOT sent (demo mode)
+        if not sms_sent:
+            response_data['demo_otp'] = otp
+
+        return jsonify(response_data), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

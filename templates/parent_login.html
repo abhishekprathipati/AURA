@@ -257,10 +257,11 @@
 
         <div class="alert-box" id="alertBox"></div>
 
-        <!-- Demo OTP Banner -->
+        <!-- Demo OTP Banner (only shown when SMS is not configured) -->
         <div class="demo-banner" id="demoBanner" style="display: none;">
             <div>🔑 Demo Mode — Your OTP</div>
             <div class="otp-display" id="demoOtpValue"></div>
+            <div style="font-size: 0.75rem; margin-top: 4px; opacity: 0.8;">SMS not configured. OTP is shown here for testing.</div>
         </div>
 
         <!-- ===== STEP 1: Phone Number ===== -->
@@ -406,11 +407,15 @@
                     studentRoll = data.student_roll || '';
 
                     document.getElementById('otpSentMsg').textContent =
-                        `Enter the 6-digit code sent to +91 ${data.masked_phone}`;
+                        data.sms_sent
+                        ? `OTP sent via SMS to +91 ${data.masked_phone}`
+                        : `Enter the 6-digit code shown below (Demo Mode)`;
 
                     if (data.demo_otp) {
                         document.getElementById('demoBanner').style.display = 'block';
                         document.getElementById('demoOtpValue').textContent = data.demo_otp;
+                    } else {
+                        document.getElementById('demoBanner').style.display = 'none';
                     }
 
                     document.querySelectorAll('.otp-box').forEach(b => {

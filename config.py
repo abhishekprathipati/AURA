@@ -13,6 +13,11 @@ class Config:
     MONGODB_TLS = False
     MONGODB_TLS_ALLOW_INVALID_CERTIFICATES = False
 
+    # Fast2SMS Configuration (for OTP delivery)
+    FAST2SMS_API_KEY = os.getenv('FAST2SMS_API_KEY', '')
+    FAST2SMS_SENDER_ID = os.getenv('FAST2SMS_SENDER_ID', 'AURASM')  # 6-char sender ID
+    SMS_ENABLED = os.getenv('SMS_ENABLED', 'true').lower() == 'true'  # Set to false to disable real SMS
+
     # Mail (optional; alerts will still be logged without mail)
     MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
     MAIL_PORT = int(os.getenv('MAIL_PORT', '587'))
