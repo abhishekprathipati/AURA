@@ -41,14 +41,17 @@ Flask-SocketIO==5.3.7
 python-socketio==5.11.4
 python-engineio==4.9.1
 
-# Production servers (install manually for non-serverless deploys)
-# gunicorn==23.0.0          # Linux / Docker production WSGI
-# eventlet==0.37.0          # async worker for SocketIO under gunicorn
-# waitress==3.0.2           # Windows-compatible production WSGI
-# redis==5.2.1              # Rate-limit backend (set RATELIMIT_STORAGE_URI)
+# Production servers
+gunicorn==23.0.0            # Linux / Docker production WSGI
+eventlet==0.37.0            # async worker for SocketIO under gunicorn
+waitress==3.0.2             # Windows-compatible production WSGI
+
+# Production rate-limit backend (optional — set RATELIMIT_STORAGE_URI)
+redis==5.2.1
 
 # Environment
 python-dotenv==1.0.1
+colorama==0.4.6
 
 # HTTP
 certifi==2025.11.12

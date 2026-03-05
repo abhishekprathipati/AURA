@@ -1,0 +1,27 @@
+# render.yaml — Render Blueprint (Infrastructure as Code)
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: aura
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "false"
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: PROXY_FIX_ENABLED
+        value: "true"
+      - key: FAST2SMS_API_KEY
+        sync: false
+      - key: SMS_ENABLED
+        value: "true"
+      - key: PYTHON_VERSION
+        value: "3.11.6"
