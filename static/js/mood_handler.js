@@ -18,30 +18,37 @@ async function updateMood(mood) {
         }
 
         const data = await response.json();
-        
+
         // Store theme in localStorage for persistence
-        localStorage.setItem('aura_theme', mood);
-        
-        // Apply theme immediately
+        localStorage.setItem('aura-mood-theme', mood);
         applyAuraTheme(mood);
-        
+
+        // Live-update stress display if engine returned fresh data
+        if (data.stress && window.dashboard && window.dashboard.updateStressDisplay) {
+            window.dashboard.updateStressDisplay({ stress: data.stress });
+        }
+
         // Update wellness streak
         if (window.updateWellnessStreak) {
             window.updateWellnessStreak();
         }
-        
+
         // Hide modal
         const modal = document.getElementById('moodModal');
         if (modal) {
             modal.style.display = 'none';
             document.body.classList.remove('mood-modal-open');
         }
-        
+
         // No redirect: stay on dashboard for all moods
-        
+
     } catch (error) {
         console.error('Mood update failed:', error);
-        alert('Unable to update mood. Please try again.');
+        if (window.dashboard && window.dashboard.showToast) {
+            window.dashboard.showToast('Unable to update mood. Please try again.', 'error');
+        } else {
+            alert('Unable to update mood. Please try again.');
+        }
     }
 }
 
@@ -77,7 +84,7 @@ function applyAuraTheme(mood) {
     }
 
     // Persist for reloads
-    localStorage.setItem('aura_theme', mood);
+    localStorage.setItem('aura-mood-theme', mood);
 
     // Mark active mood card
     document.querySelectorAll('.mood-card').forEach(card => {
@@ -101,15 +108,15 @@ function applyAuraTheme(mood) {
 async function checkDailyMood() {
     try {
         const response = await fetch('/student/api/mood/today');
-        
+
         // If API fails, just skip the modal (don't block the user)
         if (!response.ok) {
             console.warn('Mood API unavailable, skipping daily mood check');
             return;
         }
-        
+
         const data = await response.json();
-        
+
         if (!data.has_mood_today) {
             // Show modal
             const modal = document.getElementById('moodModal');
@@ -132,12 +139,12 @@ async function checkDailyMood() {
  */
 window.addEventListener('DOMContentLoaded', () => {
     // Check for saved theme in localStorage
-    const savedTheme = localStorage.getItem('aura_theme');
-    
+    const savedTheme = localStorage.getItem('aura-mood-theme');
+
     if (savedTheme) {
         applyAuraTheme(savedTheme);
     }
-    
+
     // Check if on student dashboard
     if (window.location.pathname.includes('/dashboard')) {
         checkDailyMood();
@@ -148,7 +155,7 @@ window.addEventListener('DOMContentLoaded', () => {
         card.setAttribute('tabindex', '0'); // Make focusable
         card.setAttribute('role', 'button'); // Semantic role
         card.setAttribute('aria-label', `Select ${card.querySelector('h3')?.textContent} mood`);
-        
+
         card.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();

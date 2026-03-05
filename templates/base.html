@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AURA{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}?v=20260124">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20260124">
     <style>
@@ -33,18 +34,14 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body class="{{ session.get('current_theme', 'theme-normal') }} {% block body_class %}{% endblock %}" style="display: flex; flex-direction: column; min-height: 100vh;">
-    <div id="topEdgeHotspot" aria-hidden="true"></div>
 
+    {% block navbar %}
     {% if show_nav is not defined or show_nav %}
     <header>
-        <!-- NAV_RENDERED: show_nav={{ show_nav|default('UNSET') }} -->
         <nav class="dashboard-nav" role="navigation">
             <div class="logo">AURA</div>
-
             <a href="/student/dashboard" class="{% if request.path.startswith('/student/dashboard') %}active{% endif %}">📊 Dashboard</a>
-
             <div class="spacer"></div>
-
             {% if session.get('user_email') %}
                 <div class="user">
                     <span class="mood-indicator" id="headerMoodIndicator"></span>
@@ -58,42 +55,14 @@
         </nav>
     </header>
     {% endif %}
-
-    {% if show_nav is defined and not show_nav %}
-    <!-- FAILSAFE: Hide any dashboard-like navs when the server explicitly disables navigation -->
-    <style> 
-        .dashboard-nav, div[class*="dashboard-nav"], .dashboard-nav * { display: none !important; visibility: hidden !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
-    </style>
-    <script>
-    // Remove any existing dashboard nav nodes immediately for the dashboard route
-    (function(){
-        try {
-            const removeAll = () => {
-                document.querySelectorAll('.dashboard-nav, div[class*="dashboard-nav"]').forEach(el => el.remove());
-            };
-            // run now if DOM is already parsed
-            if (document.readyState === 'interactive' || document.readyState === 'complete') removeAll();
-            else document.addEventListener('DOMContentLoaded', removeAll);
-            // also guard against later injections
-            const obs = new MutationObserver((mutations)=>{
-                for(const m of mutations){
-                    for(const n of m.addedNodes){
-                        if(n && n.querySelectorAll){
-                            n.querySelectorAll('.dashboard-nav, div[class*="dashboard-nav"]').forEach(el => el.remove());
-                        }
-                        if(n && n.matches && n.matches('.dashboard-nav, div[class*="dashboard-nav"]')){
-                            n.remove();
-                        }
-                    }
-                }
-            });
-            obs.observe(document.documentElement, { childList: true, subtree: true });
-        } catch(e) { console.error('Failsafe removal script error', e); }
-    })();
-    </script>
-    {% endif %}
+    {% endblock %}
 
     <main>
+        {% if session.get('is_demo') %}
+        <div style="background: linear-gradient(90deg, #f59e0b, #d97706); color: #000; text-align: center; padding: 8px 16px; font-size: 13px; font-weight: 600; letter-spacing: 0.3px; position: sticky; top: 0; z-index: 999;">
+            ⚠️ Demo Mode — You can browse all features, but write actions (submit, send, create) are disabled. Register a real account for full access.
+        </div>
+        {% endif %}
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -105,7 +74,7 @@
     </main>
 
     <script src="{{ url_for('static', filename='js/theme-engine.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block extra_js %}{% endblock %}
     <script>
     // Register service worker for offline support

@@ -1,0 +1,60 @@
+# AURA - Student Wellness Monitoring System
+# Core Framework
+Flask==3.0.0
+Werkzeug==3.1.4
+Jinja2==3.1.6
+itsdangerous==2.2.0
+click==8.3.1
+MarkupSafe==3.0.3
+
+# Database
+pymongo==4.7.3
+dnspython==2.8.0
+
+# Authentication & Security
+bcrypt==4.1.2
+Flask-Limiter==4.1.1
+limits==5.6.0
+
+# Email & Communication
+Flask-Mail==0.9.1
+requests==2.32.5
+
+# AI Services
+google-generativeai==0.8.6
+google-genai==1.56.0
+groq==1.0.0
+openai==2.14.0
+
+# AI Dependencies
+google-ai-generativelanguage==0.6.15
+google-api-core==2.28.1
+google-api-python-client==2.187.0
+google-auth==2.45.0
+googleapis-common-protos==1.72.0
+pydantic==2.12.5
+httpx==0.28.1
+anyio==4.12.0
+
+# Real-time
+Flask-SocketIO==5.3.7
+python-socketio==5.11.4
+python-engineio==4.9.1
+
+# Production servers
+gunicorn==23.0.0            # Linux / Docker production WSGI
+eventlet==0.37.0            # async worker for SocketIO under gunicorn
+waitress==3.0.2             # Windows-compatible production WSGI
+
+# Production rate-limit backend (optional — set RATELIMIT_STORAGE_URI)
+redis==5.2.1
+
+# Environment
+python-dotenv==1.0.1
+colorama==0.4.6
+
+# HTTP
+certifi==2025.11.12
+charset-normalizer==3.4.4
+idna==3.11
+urllib3==2.6.2

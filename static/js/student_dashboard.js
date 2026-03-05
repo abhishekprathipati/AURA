@@ -23,8 +23,8 @@ function computeTrend(avgSeries) {
 
     const delta = last - prev;
 
-    if (delta >= 1.0) return { icon: "↑", label: "Improving" };
-    if (delta <= -1.0) return { icon: "↓", label: "Worsening" };
+    if (delta >= 1.0) return { icon: "↑", label: "Worsening" };
+    if (delta <= -1.0) return { icon: "↓", label: "Improving" };
     return { icon: "→", label: "Stable" };
 }
 
@@ -49,20 +49,9 @@ function computeYAxisBounds(values) {
     };
 }
 
-// Inject deterministic, bounded variance to avoid flat-line visuals in demo/pitch mode
+// Pass-through: no artificial noise on real data
 function injectStressVariance(values, maxSpike = 6) {
-    if (values.length < 4) return values;
-
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-
-    // If variance is already meaningful, leave data untouched
-    if (max - min >= 10) return values;
-
-    return values.map((v, i) => {
-        const spike = Math.sin(i * 1.7) * maxSpike;
-        return Math.max(0, Math.round(v + spike));
-    });
+    return values;
 }
 
 // Auto-refresh controller
@@ -70,7 +59,7 @@ let autoRefreshTimer = null;
 
 class AdvancedDashboard {
     constructor() {
-        this.currentStress = 68;
+        this.currentStress = 0;
         this.stressHistory = [];
         this.moodHistory = [];
         this.isLoading = false;
@@ -94,9 +83,17 @@ class AdvancedDashboard {
         this.setupEventListeners();
         this.startRealTimeUpdates();
         this.setupServiceWorker();
+        
+        // New sections
+        this.loadProfile();
+        this.initWellnessGoals();
+        this.loadDailyTip();
+        this.initJournal();
+        this.initGrievanceForm();
     }
 
     initDate() {
+        try {
         const now = luxon.DateTime.now();
         const dateElement = document.getElementById('currentDate');
         if (dateElement) {
@@ -104,18 +101,26 @@ class AdvancedDashboard {
                 weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
             });
         }
-        setInterval(() => {
-            const now = luxon.DateTime.now();
-            const timeString = now.toLocaleString(luxon.DateTime.TIME_SIMPLE);
-            const relativeTime = now.toRelative();
-            const tsEl = document.getElementById('stressTimestamp');
-            if (tsEl) tsEl.textContent = `${timeString} • ${relativeTime}`;
-        }, 60000);
+        // Update timestamp once immediately, then via interval (guarded to run only once)
+        if (!this._dateTimerSet) {
+            this._dateTimerSet = true;
+            this._dateTimer = setInterval(() => {
+                const now = luxon.DateTime.now();
+                const timeString = now.toLocaleString(luxon.DateTime.TIME_SIMPLE);
+                const relativeTime = now.toRelative();
+                const tsEl = document.getElementById('stressTimestamp');
+                if (tsEl) {
+                    const span = tsEl.querySelector('span');
+                    if (span) span.textContent = `${timeString} • ${relativeTime}`;
+                }
+            }, 60000);
+        }
+        } catch(e) { console.warn('initDate error:', e); }
     }
 
     initTheme() {
         const themeToggle = document.getElementById('themeToggle');
-        const savedTheme = localStorage.getItem('aura-theme') || 'light';
+        const savedTheme = localStorage.getItem('aura-ui-theme') || 'light';
         
         // Set initial theme
         this.setTheme(savedTheme);
@@ -132,13 +137,20 @@ class AdvancedDashboard {
 
     setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('aura-theme', theme);
+        localStorage.setItem('aura-ui-theme', theme);
+        
+        // Clear any inline body background so CSS variables take effect immediately
+        document.body.style.removeProperty('background');
+        document.body.style.removeProperty('background-attachment');
+        
+        // Emit themechange event so color theme engine can re-apply
+        window.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
         
         const icon = document.getElementById('themeIcon');
         if (!icon) return;
-        
-        icon.innerHTML = theme === 'dark'
-            ? `<circle cx="12" cy="12" r="5"/>
+
+        // Sun icon (shown in dark mode — click to go light)
+        const sunSVG = `<circle cx="12" cy="12" r="5"/>
                <line x1="12" y1="1" x2="12" y2="4"/>
                <line x1="12" y1="20" x2="12" y2="23"/>
                <line x1="4.22" y1="4.22" x2="6.34" y2="6.34"/>
@@ -146,25 +158,41 @@ class AdvancedDashboard {
                <line x1="1" y1="12" x2="4" y2="12"/>
                <line x1="20" y1="12" x2="23" y2="12"/>
                <line x1="4.22" y1="19.78" x2="6.34" y2="17.66"/>
-               <line x1="17.66" y1="6.34" x2="19.78" y2="4.22"/>`
-            : `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+               <line x1="17.66" y1="6.34" x2="19.78" y2="4.22"/>`;
+        // Moon icon (shown in light mode — click to go dark)
+        const moonSVG = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+
+        icon.innerHTML = theme === 'dark' ? sunSVG : moonSVG;
+        // Ensure SVG attributes are set (in case static HTML didn't include them)
+        icon.setAttribute('fill', 'none');
+        icon.setAttribute('stroke', 'currentColor');
+        icon.setAttribute('stroke-width', '2');
+        icon.setAttribute('stroke-linecap', 'round');
+        icon.setAttribute('stroke-linejoin', 'round');
     }
 
     initCharts() {
         // At this point, data has already been loaded and stressHistory is populated
         // Charts render immediately with real data — no zero flash
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const foreColor = isDark ? '#cbd5e1' : '#64748b';
+        const gridColor = isDark ? 'rgba(148,163,184,0.10)' : 'rgba(100,116,139,0.10)';
+        const tooltipTheme = isDark ? 'dark' : 'light';
+
         this.charts.stress = new ApexCharts(document.getElementById('stressChart'), {
             series: [{ name: 'Stress Level', data: [] }, { name: '7-Day Average', data: [] }],
-            chart: { type: 'area', height: 200, toolbar: { show: false }, zoom: { enabled: false }, animations: { enabled: true, speed: 800 } },
+            chart: { type: 'area', height: 200, toolbar: { show: false }, zoom: { enabled: false }, animations: { enabled: true, speed: 800 }, foreColor: foreColor, background: 'transparent' },
             colors: ['#ef4444', '#10b981'],
             fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.1, stops: [0, 90, 100] } },
             stroke: { width: [3, 3], curve: 'smooth', dashArray: [0, 0] },
-            grid: { show: false },
-            xaxis: { labels: { show: false }, categories: [] },
-            yaxis: { min: 0, max: 100, tickAmount: 5, labels: { show: false, formatter: v => Math.round(v) } },
+            grid: { show: true, borderColor: gridColor, strokeDashArray: 3, xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } }, padding: { left: 8, right: 8 } },
+            xaxis: { labels: { show: true, style: { colors: foreColor, fontSize: '11px', fontFamily: 'Inter, sans-serif' } }, axisBorder: { show: false }, axisTicks: { show: false }, categories: [] },
+            yaxis: { min: 0, max: 100, tickAmount: 5, labels: { show: true, style: { colors: foreColor, fontSize: '11px', fontFamily: 'Inter, sans-serif' }, formatter: v => Math.round(v) } },
             tooltip: { 
-                enabled: true, 
-                x: { show: false }, 
+                enabled: true,
+                theme: tooltipTheme,
+                style: { fontSize: '13px', fontFamily: 'Inter, sans-serif' },
+                x: { show: true },
                 y: { 
                     formatter: (v) => {
                         if (v < 30) return `${v} – Low stress`;
@@ -180,24 +208,27 @@ class AdvancedDashboard {
                     {
                         y: 30,
                         borderColor: '#22c55e',
-                        label: { text: 'Low', style: { color: '#22c55e' } }
+                        strokeDashArray: 4,
+                        label: { text: 'Low', borderColor: '#22c55e', style: { color: '#fff', background: '#22c55e', fontSize: '11px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: { left: 6, right: 6, top: 2, bottom: 2 } }, position: 'right' }
                     },
                     {
                         y: 60,
                         borderColor: '#f59e0b',
-                        label: { text: 'Moderate', style: { color: '#f59e0b' } }
+                        strokeDashArray: 4,
+                        label: { text: 'Moderate', borderColor: '#f59e0b', style: { color: '#fff', background: '#f59e0b', fontSize: '11px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: { left: 6, right: 6, top: 2, bottom: 2 } }, position: 'right' }
                     },
                     {
                         y: 85,
                         borderColor: '#ef4444',
-                        label: { text: 'High', style: { color: '#ef4444' } }
+                        strokeDashArray: 4,
+                        label: { text: 'High', borderColor: '#ef4444', style: { color: '#fff', background: '#ef4444', fontSize: '11px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: { left: 6, right: 6, top: 2, bottom: 2 } }, position: 'right' }
                     }
                 ]
             },
             dataLabels: { enabled: false },
             markers: { size: [4, 0], strokeWidth: 2, hover: { size: 6 } },
-            legend: { show: true, position: 'top', horizontalAlign: 'right', fontSize: '12px', markers: { radius: 4 } },
-            noData: { text: 'Loading stress data...', align: 'center', verticalAlign: 'middle', offsetY: 0 }
+            legend: { show: true, position: 'top', horizontalAlign: 'right', fontSize: '12px', fontFamily: 'Inter, sans-serif', labels: { colors: foreColor }, markers: { radius: 4 } },
+            noData: { text: 'Loading stress data...', align: 'center', verticalAlign: 'middle', offsetY: 0, style: { color: foreColor, fontSize: '14px', fontFamily: 'Inter, sans-serif' } }
         });
         this.charts.stress.render();
 
@@ -206,7 +237,9 @@ class AdvancedDashboard {
                 type: 'line',
                 height: 240,
                 toolbar: { show: false },
-                animations: { enabled: true }
+                animations: { enabled: true },
+                foreColor: foreColor,
+                background: 'transparent'
             },
             stroke: {
                 width: 3,
@@ -229,17 +262,23 @@ class AdvancedDashboard {
             xaxis: {
                 type: 'datetime',
                 labels: {
-                    datetimeUTC: false
-                }
+                    datetimeUTC: false,
+                    style: { colors: foreColor, fontSize: '11px', fontFamily: 'Inter, sans-serif' }
+                },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
             },
             yaxis: {
                 min: 0,
                 max: 100,
                 tickAmount: 5,
-                title: { text: 'Score' },
-                labels: { formatter: v => Math.round(v) }
+                title: { text: 'Score', style: { color: foreColor, fontSize: '12px', fontFamily: 'Inter, sans-serif' } },
+                labels: { style: { colors: foreColor, fontSize: '11px', fontFamily: 'Inter, sans-serif' }, formatter: v => Math.round(v) }
             },
+            grid: { show: true, borderColor: gridColor, strokeDashArray: 3, xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } } },
             tooltip: {
+                theme: tooltipTheme,
+                style: { fontSize: '13px', fontFamily: 'Inter, sans-serif' },
                 x: { format: 'dd MMM' },
                 y: {
                     formatter: v => {
@@ -255,23 +294,28 @@ class AdvancedDashboard {
                     {
                         y: 30,
                         borderColor: '#22c55e',
-                        label: { text: 'Low', style: { color: '#22c55e' } }
+                        strokeDashArray: 4,
+                        label: { text: 'Low', borderColor: '#22c55e', style: { color: '#fff', background: '#22c55e', fontSize: '11px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: { left: 6, right: 6, top: 2, bottom: 2 } }, position: 'right' }
                     },
                     {
                         y: 60,
                         borderColor: '#f59e0b',
-                        label: { text: 'Moderate', style: { color: '#f59e0b' } }
+                        strokeDashArray: 4,
+                        label: { text: 'Moderate', borderColor: '#f59e0b', style: { color: '#fff', background: '#f59e0b', fontSize: '11px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: { left: 6, right: 6, top: 2, bottom: 2 } }, position: 'right' }
                     },
                     {
                         y: 85,
                         borderColor: '#ef4444',
-                        label: { text: 'High', style: { color: '#ef4444' } }
+                        strokeDashArray: 4,
+                        label: { text: 'High', borderColor: '#ef4444', style: { color: '#fff', background: '#ef4444', fontSize: '11px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: { left: 6, right: 6, top: 2, bottom: 2 } }, position: 'right' }
                     }
                 ]
             },
+            legend: { labels: { colors: foreColor }, fontSize: '12px', fontFamily: 'Inter, sans-serif' },
             series: [],
             noData: {
-                text: 'No history data'
+                text: 'No history data',
+                style: { color: foreColor, fontSize: '14px', fontFamily: 'Inter, sans-serif' }
             }
         });
         this.charts.analytics.render();
@@ -306,9 +350,10 @@ class AdvancedDashboard {
         const averages = rollingAverage(stressedScores, Math.min(7, stressedScores.length));
         
         // Update stress chart with real data
+        const _fc = document.documentElement.getAttribute('data-theme') === 'dark' ? '#cbd5e1' : '#64748b';
         this.charts.stress.updateOptions({
             xaxis: { categories: dates },
-            yaxis: { min: 0, max: 100, tickAmount: 5, labels: { formatter: v => Math.round(v) } }
+            yaxis: { min: 0, max: 100, tickAmount: 5, labels: { style: { colors: _fc, fontSize: '11px', fontFamily: 'Inter, sans-serif' }, formatter: v => Math.round(v) } }
         });
         this.charts.stress.updateSeries([
             { name: 'Stress Level', data: stressedScores },
@@ -325,123 +370,15 @@ class AdvancedDashboard {
         ]);
     }
 
-    async loadChartData() {
-        const emptyEl = document.getElementById('stressChartEmpty');
-
-        // Fallback demo data so chart never renders a flat baseline when API data is missing
-        const fallbackStress = [32, 45, 41, 50, 38, 60, 48];
-
-        try {
-            // Show loading state
-            emptyEl.hidden = false;
-            emptyEl.querySelector('.chart-empty-title').textContent = 'Loading stress history…';
-
-            const res = await fetch('/student/api/stress_history');
-            const data = await res.json();
-
-            // Normalize and coerce scores to numbers
-            const rawHistory = Array.isArray(data.history) ? data.history : [];
-            const normalized = rawHistory
-                .map((h, idx) => ({
-                    timestamp: h.timestamp || new Date(Date.now() - (rawHistory.length - idx) * 86400000).toISOString(),
-                    score: Number(h.score)
-                }))
-                .filter(h => Number.isFinite(h.score));
-
-            const validHistory = normalized.length && normalized.some(h => h.score > 0)
-                ? normalized
-                : fallbackStress.map((s, i) => ({
-                    timestamp: new Date(Date.now() - (fallbackStress.length - 1 - i) * 86400000).toISOString(),
-                    score: s
-                }));
-
-            // Hide empty state and show chart
-            emptyEl.hidden = false;
-            emptyEl.hidden = validHistory.length > 0;
-
-            const dates = validHistory.map(h => {
-                const d = new Date(h.timestamp);
-                return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-            });
-            const scores = validHistory.map(h => h.score);
-            
-            // Normalize scores to 0-100 range if they're coming as 0-1
-            const maxScore = Math.max(...scores);
-            const normalizedScores = maxScore > 0 && maxScore <= 1 
-                ? scores.map(s => Math.round(s * 100))
-                : scores.map(s => Math.round(s));
-            
-            const stressedScores = injectStressVariance(normalizedScores);
-            const averages = rollingAverage(stressedScores, Math.min(7, stressedScores.length));
-
-            // Compute and display trend based on rolling average slope
-            const trend = computeTrend(averages);
-            const trendIndicatorEl = document.getElementById('trendIndicator');
-            const trendLabelEl = document.getElementById('trendLabel');
-            if (trendIndicatorEl) trendIndicatorEl.textContent = trend.icon;
-            if (trendLabelEl) trendLabelEl.textContent = trend.label;
-
-            // Update stress chart with actual values and 7-day trend
-            this.charts.stress.updateOptions({
-                xaxis: { categories: dates },
-                yaxis: {
-                    min: 0,
-                    max: 100,
-                    tickAmount: 5,
-                    labels: { formatter: v => Math.round(v) }
-                },
-                markers: {
-                    discrete: [{
-                        seriesIndex: 0,
-                        dataPointIndex: Math.max(stressedScores.length - 1, 0),
-                        fillColor: '#2563eb',
-                        strokeColor: '#1e40af',
-                        size: 7
-                    }]
-                }
-            });
-            this.charts.stress.updateSeries([
-                { name: 'Stress Level', data: stressedScores },
-                { name: '7-Day Average', data: averages }
-            ]);
-
-            // Update analytics chart with same data
-            this.charts.analytics.updateOptions({
-                xaxis: { categories: dates }
-            });
-            this.charts.analytics.updateSeries([
-                { name: 'Stress', data: scores },
-                { name: 'Mood', data: scores.map(s => Math.max(1, 5 - Math.floor(s / 15))) }
-            ]);
-
-            // Validation: log to ensure non-empty numeric data
-            console.log('Stress series length', stressedScores.length, 'values', stressedScores);
-
-            // Start auto-refresh (30s interval) after first successful load
-            if (!autoRefreshTimer) {
-                autoRefreshTimer = setInterval(() => {
-                    this.loadChartData();
-                }, 30000);
-            }
-        } catch (error) {
-            console.error('Failed to load chart data:', error);
-            emptyEl.querySelector('.chart-empty-title').textContent = 'Unable to load stress data';
-            emptyEl.querySelector('.chart-empty-desc').textContent = 'Please try refreshing the page.';
-        }
-    }
-
     initNavigation() {
-        const navFab = document.getElementById('navFab');
-        const navMenu = document.getElementById('navMenu');
-        if (navFab && navMenu) {
-            navFab.addEventListener('click', (e) => { e.stopPropagation(); navMenu.classList.toggle('active'); });
-            document.addEventListener('click', (e) => { if (!navMenu.contains(e.target) && !navFab.contains(e.target)) { navMenu.classList.remove('active'); } });
-            navMenu.querySelectorAll('.nav-item').forEach(item => { item.addEventListener('click', () => navMenu.classList.remove('active')); });
-        }
+        // Reserved for future mobile navigation FAB
     }
 
     initModals() {
         this.modals.support = document.getElementById('supportModal');
+        this.modals.urgent = document.getElementById('urgentModal');
+        this.modals.schedule = document.getElementById('scheduleModal');
+
         const reqBtn = document.getElementById('requestSupportBtn');
         const closeBtn = document.getElementById('closeModalBtn');
         const cancelBtn = document.getElementById('cancelBtn');
@@ -451,6 +388,31 @@ class AdvancedDashboard {
         if (this.modals.support) {
             this.modals.support.addEventListener('click', (e) => { if (e.target === this.modals.support) this.closeModal('support'); });
         }
+
+        // ── Urgent Help modal ──
+        const urgentBtn = document.getElementById('urgentHelpBtn');
+        const urgentCancel = document.getElementById('urgentCancelBtn');
+        const urgentConfirm = document.getElementById('urgentConfirmBtn');
+        if (urgentBtn) urgentBtn.addEventListener('click', () => this.openModal('urgent'));
+        if (urgentCancel) urgentCancel.addEventListener('click', () => this.closeModal('urgent'));
+        if (urgentConfirm) urgentConfirm.addEventListener('click', () => this.triggerUrgentHelp());
+        if (this.modals.urgent) {
+            this.modals.urgent.addEventListener('click', (e) => { if (e.target === this.modals.urgent) this.closeModal('urgent'); });
+        }
+
+        // ── Schedule Session modal ──
+        const schedBtn = document.getElementById('scheduleSessionBtn');
+        const schedClose = document.getElementById('scheduleCloseBtn');
+        const schedCancel = document.getElementById('scheduleCancelBtn');
+        const schedForm = document.getElementById('scheduleForm');
+        if (schedBtn) schedBtn.addEventListener('click', () => { this.openModal('schedule'); this.loadMyBookings(); this.setMinSessionDate(); });
+        if (schedClose) schedClose.addEventListener('click', () => this.closeModal('schedule'));
+        if (schedCancel) schedCancel.addEventListener('click', () => this.closeModal('schedule'));
+        if (schedForm) schedForm.addEventListener('submit', (e) => { e.preventDefault(); this.bookSession(); });
+        if (this.modals.schedule) {
+            this.modals.schedule.addEventListener('click', (e) => { if (e.target === this.modals.schedule) this.closeModal('schedule'); });
+        }
+
         // Form submission handled via setupEventListeners
     }
 
@@ -462,12 +424,7 @@ class AdvancedDashboard {
                 this.fetchData('/student/api/wellness/activities'),
                 this.fetchData('/student/api/stress_history')
             ]);
-            // Normalize history; fall back to demo data so charts never look empty
-            const fallbackHistory = [32, 45, 41, 50, 38, 60, 48].map((score, i) => ({
-                timestamp: new Date(Date.now() - (6 - i) * 86400000).toISOString(),
-                score
-            }));
-
+            // Normalize history; empty array if no real data
             const normalizedHistory = Array.isArray(historyData?.history)
                 ? historyData.history
                     .map((h, idx, arr) => ({
@@ -477,19 +434,17 @@ class AdvancedDashboard {
                     .filter(h => Number.isFinite(h.score))
                 : [];
 
-            const hasMeaningfulData = normalizedHistory.length >= 2 && normalizedHistory.some(h => h.score > 0);
-            this.stressHistory = hasMeaningfulData ? normalizedHistory : fallbackHistory;
+            this.stressHistory = normalizedHistory;
 
             // Use latest stress value if API missing; derive from history
-            const derivedStress = this.stressHistory[this.stressHistory.length - 1];
-            const stressValue = derivedStress ? derivedStress.score : 50;
+            const derivedStress = this.stressHistory.length ? this.stressHistory[this.stressHistory.length - 1] : null;
+            const stressValue = derivedStress ? derivedStress.score : 0;
             const stressPayload = wellnessData?.stress ? wellnessData : { stress: { value: stressValue } };
 
             this.updateStressDisplay(stressPayload);
             this.updateActivityDisplay(activityData);
             this.updateActivityTimeline();
         } catch (error) {
-            console.error('Error loading dashboard data:', error);
             this.showErrorState();
         } finally { this.showLoading(false); }
     }
@@ -502,24 +457,137 @@ class AdvancedDashboard {
 
     updateStressDisplay(data) {
         const stress = data.stress || {};
-        this.currentStress = stress.value ?? 50;
-        document.getElementById('stressValue').textContent = this.currentStress;
-        const descriptor = stress.label || this.getStressDescriptor(this.currentStress);
-        document.getElementById('stressDescriptor').textContent = descriptor;
+        const newStress = stress.value ?? 50;
+        const oldStress = this.currentStress;
+        this.currentStress = newStress;
+
+        // Animate the number change
+        this.animateValueChange('stressValue', oldStress, newStress, 600);
+
+        // Label
+        const descriptor = stress.label || this.getStressDescriptor(newStress);
+        const descEl = document.getElementById('stressDescriptor');
+        if (descEl) descEl.textContent = descriptor;
+
+        // Trend arrow + label
         const trend = stress.trend || 'stable';
         const trendIndicator = document.getElementById('trendIndicator');
         const trendLabel = document.getElementById('trendLabel');
         if (trendIndicator) {
             trendIndicator.textContent = trend === 'up' ? '↑' : (trend === 'down' ? '↓' : '=');
+            trendIndicator.className = 'trend-indicator' + (trend === 'up' ? ' trend-up' : (trend === 'down' ? ' trend-down' : ''));
         }
         if (trendLabel) {
             trendLabel.textContent = trend === 'up' ? 'Increasing' : (trend === 'down' ? 'Decreasing' : 'Stable');
         }
+
+        // Animated bar fill with color zones
         const fill = document.getElementById('stressIndicatorFill');
-        if (fill) fill.style.width = `${Math.min(Math.max(this.currentStress, 0), 100)}%`;
+        if (fill) {
+            const pct = Math.min(Math.max(newStress, 0), 100);
+            fill.style.width = `${pct}%`;
+            fill.style.transition = 'width 0.8s cubic-bezier(0.4,0,0.2,1), background 0.5s ease';
+            if (pct <= 30) {
+                fill.style.background = 'linear-gradient(90deg, #22c55e, #16a34a)';
+            } else if (pct <= 50) {
+                fill.style.background = 'linear-gradient(90deg, #84cc16, #eab308)';
+            } else if (pct <= 70) {
+                fill.style.background = 'linear-gradient(90deg, #eab308, #f97316)';
+            } else if (pct <= 85) {
+                fill.style.background = 'linear-gradient(90deg, #f97316, #ef4444)';
+            } else {
+                fill.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+            }
+        }
+
+        // Insight text
+        const insightEl = document.getElementById('stressInsight');
+        if (insightEl && stress.insight) {
+            insightEl.textContent = stress.insight;
+            insightEl.style.display = '';
+        }
+
+        // Spike alert badge
+        const spikeEl = document.getElementById('spikeAlert');
+        if (spikeEl) {
+            spikeEl.style.display = stress.spike_detected ? 'flex' : 'none';
+        }
+
+        // Signal breakdown bars
+        if (stress.signals) {
+            this.updateSignalBars(stress.signals);
+        }
+
+        // Confidence + Dominant Factor
+        const metaEl = document.getElementById('stressMeta');
+        if (metaEl) {
+            const hasConfidence = stress.confidence !== undefined;
+            const hasDominant = stress.dominant_factor;
+            metaEl.style.display = (hasConfidence || hasDominant) ? 'flex' : 'none';
+
+            if (hasConfidence) {
+                const pct = Math.round(stress.confidence * 100);
+                const confEl = document.getElementById('confidenceValue');
+                if (confEl) confEl.textContent = `${pct}% confidence`;
+                const chip = document.getElementById('confidenceChip');
+                if (chip) chip.classList.toggle('low-confidence', pct < 50);
+            }
+            if (hasDominant) {
+                const nameMap = { mood: 'Mood', sentiment: 'Chat Tone', activity: 'Activity', volatility: 'Stability', time_bias: 'Time', trend: 'Trend' };
+                const domLabel = document.getElementById('dominantLabel');
+                const domDot = document.getElementById('dominantDot');
+                if (domLabel) domLabel.textContent = nameMap[stress.dominant_factor] || stress.dominant_factor;
+                if (domDot) {
+                    const v = stress.signals?.[stress.dominant_factor] ?? 50;
+                    domDot.style.background = v <= 35 ? '#22c55e' : v <= 55 ? '#eab308' : v <= 75 ? '#f97316' : '#ef4444';
+                }
+            }
+        }
+
+        // Update timestamp
+        const tsEl = document.getElementById('stressTimestamp');
+        if (tsEl && stress.insight) {
+            const span = tsEl.querySelector('span');
+            if (span) span.textContent = 'Updated just now';
+        }
     }
 
-    getStressDescriptor(value) { if (value <= 30) return 'Relaxed'; if (value <= 50) return 'Manageable'; if (value <= 70) return 'Elevated'; return 'High'; }
+    updateSignalBars(signals) {
+        const signalMap = {
+            'mood':       { bar: 'signalMood',       val: 'signalMoodVal' },
+            'sentiment':  { bar: 'signalSentiment',  val: 'signalSentimentVal' },
+            'activity':   { bar: 'signalActivity',   val: 'signalActivityVal' },
+            'volatility': { bar: 'signalVolatility', val: 'signalVolatilityVal' },
+            'time_bias':  { bar: 'signalTime',       val: 'signalTimeVal' },
+            'trend':      { bar: 'signalTrend',      val: 'signalTrendVal' },
+        };
+        for (const [key, ids] of Object.entries(signalMap)) {
+            const bar = document.getElementById(ids.bar);
+            const valEl = document.getElementById(ids.val);
+            if (bar && signals[key] !== undefined) {
+                const v = Math.round(signals[key]);
+                bar.style.width = `${v}%`;
+                bar.style.transition = 'width 0.6s cubic-bezier(0.4,0,0.2,1)';
+                bar.setAttribute('data-value', v);
+                // Subtle color palette (lower opacity for production look)
+                if (v <= 35) bar.style.background = 'rgba(34,197,94,0.7)';
+                else if (v <= 55) bar.style.background = 'rgba(234,179,8,0.65)';
+                else if (v <= 75) bar.style.background = 'rgba(249,115,22,0.7)';
+                else bar.style.background = 'rgba(239,68,68,0.75)';
+            }
+            if (valEl && signals[key] !== undefined) {
+                valEl.textContent = Math.round(signals[key]);
+            }
+        }
+    }
+
+    getStressDescriptor(value) {
+        if (value <= 25) return 'Relaxed';
+        if (value <= 45) return 'Manageable';
+        if (value <= 65) return 'Elevated';
+        if (value <= 80) return 'High';
+        return 'Critical';
+    }
 
     updateActivityDisplay(data) {
         // Update check-in counts
@@ -555,29 +623,6 @@ class AdvancedDashboard {
                 trendIcon.style.stroke = '#ef4444';
             }
         }
-    }
-
-    updateChartsData(historyData) {
-        if (!historyData.length) return;
-
-        const rawScores = historyData.map(h => Number(h.score ?? 50));
-        // Normalize to 0-100 if values are 0-1
-        const maxScore = Math.max(...rawScores);
-        const stressData = maxScore > 0 && maxScore <= 1
-            ? rawScores.map(s => Math.round(s * 100))
-            : rawScores.map(s => Math.round(s));
-        
-        const dates = historyData.map(h => luxon.DateTime.fromISO(h.timestamp).toFormat('EEE'));
-        const averages = rollingAverage(stressData, Math.min(7, stressData.length));
-
-        this.charts.stress.updateOptions({ 
-            xaxis: { categories: dates },
-            yaxis: { min: 0, max: 100, tickAmount: 5 }
-        });
-        this.charts.stress.updateSeries([
-            { name: 'Stress Level', data: stressData },
-            { name: '7-Day Average', data: averages }
-        ]);
     }
 
     async loadDetailedHistory(days) {
@@ -634,31 +679,59 @@ class AdvancedDashboard {
                 }
             ]);
         } catch (error) {
-            console.error('Failed to load detailed history:', error);
+            // silently handled
         }
     }
 
     updateChartsTheme(theme) {
         const textColor = theme === 'dark' ? '#cbd5e1' : '#64748b';
-        this.charts.analytics.updateOptions({
+        const gridColor = theme === 'dark' ? 'rgba(148,163,184,0.10)' : 'rgba(100,116,139,0.10)';
+        const tooltipTheme = theme === 'dark' ? 'dark' : 'light';
+
+        const sharedOpts = {
+            chart: { foreColor: textColor },
             xaxis: { labels: { style: { colors: textColor } } },
-            yaxis: { labels: { style: { colors: textColor } }, title: { style: { color: textColor } } }
-        });
+            yaxis: { labels: { style: { colors: textColor } } },
+            grid: { borderColor: gridColor },
+            tooltip: { theme: tooltipTheme },
+            legend: { labels: { colors: textColor } },
+            noData: { style: { color: textColor } }
+        };
+
+        if (this.charts.stress) {
+            this.charts.stress.updateOptions(sharedOpts, false, false);
+        }
+        if (this.charts.analytics) {
+            this.charts.analytics.updateOptions({
+                ...sharedOpts,
+                yaxis: { labels: { style: { colors: textColor } }, title: { style: { color: textColor } } }
+            }, false, false);
+        }
     }
 
     updateActivityTimeline() {
         const now = luxon.DateTime.now();
-        const activities = [
-            { icon: 'fa-heartbeat', title: 'Stress Check-in', time: now.minus({ minutes: 15 }).toFormat('HH:mm'), detail: `Stress: ${this.currentStress}` },
-            { icon: 'fa-brain', title: 'Mood Assessment', time: now.minus({ hours: 2 }).toFormat('HH:mm'), detail: 'Mood: Neutral' },
-            { icon: 'fa-wind', title: 'Breathing Exercise', time: now.minus({ hours: 3 }).toFormat('HH:mm'), detail: 'Duration: 3min' },
-            { icon: 'fa-book', title: 'Study Session', time: now.minus({ hours: 5 }).toFormat('HH:mm'), detail: 'Duration: 45min' }
-        ];
+        // SVG icons instead of Font Awesome
+        const iconSvgs = {
+            heartbeat: '<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M22 12h-4l-3 9L9 3l-3 9H2\"/></svg>',
+            brain: '<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 16v-4M12 8h.01\"/></svg>',
+            wind: '<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2\"/></svg>',
+            book: '<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"/><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"/></svg>',
+            check: '<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><polyline points=\"22 4 12 14.01 9 11.01\"/></svg>'
+        };
+        const activities = this.currentStress > 0 ? [
+            { icon: iconSvgs.heartbeat, title: 'Stress Check-in', time: now.minus({ minutes: 15 }).toFormat('HH:mm'), detail: `Stress: ${this.currentStress}` },
+            { icon: iconSvgs.brain, title: 'Mood Assessment', time: now.minus({ hours: 2 }).toFormat('HH:mm'), detail: 'Logged today' },
+        ] : [];
         const timeline = document.getElementById('activityTimeline');
         if (!timeline) return;
+        if (!activities.length) {
+            timeline.innerHTML = '<div class="activity-item"><div class="activity-content"><div class="activity-title" style="opacity:0.5">No activity yet — try a check-in!</div></div></div>';
+            return;
+        }
         timeline.innerHTML = activities.map(a => `
             <div class="activity-item">
-                <div class="activity-icon"><i class="fas ${a.icon}"></i></div>
+                <div class="activity-icon">${a.icon}</div>
                 <div class="activity-content">
                     <div class="activity-title">${a.title}</div>
                     <div class="activity-time">${a.time} • ${a.detail}</div>
@@ -693,6 +766,29 @@ class AdvancedDashboard {
         });
         const form = document.getElementById('supportForm');
         if (form) form.addEventListener('submit', (e) => { e.preventDefault(); this.submitSupportRequest(); });
+
+        // Character counter for support form description
+        const descTextarea = document.getElementById('descriptionTextarea');
+        const charCounter = document.getElementById('charCount');
+        if (descTextarea && charCounter) {
+            descTextarea.addEventListener('input', () => {
+                charCounter.textContent = descTextarea.value.length;
+                if (descTextarea.value.length > 500) {
+                    charCounter.style.color = '#ef4444';
+                } else {
+                    charCounter.style.color = '';
+                }
+            });
+        }
+
+        // Toast close button
+        const toastClose = document.querySelector('.toast-close');
+        if (toastClose) {
+            toastClose.addEventListener('click', () => {
+                const toast = document.getElementById('notificationToast');
+                if (toast) toast.classList.remove('show');
+            });
+        }
     }
 
     async handleAction(action) {
@@ -704,19 +800,29 @@ class AdvancedDashboard {
             });
             const data = await response.json();
             if (response.ok) {
-                const newStress = data.new_stress ?? data.stress_score ?? this.currentStress;
-                if (feedback) { feedback.textContent = `Stress adjusted to ${newStress}`; feedback.className = 'text-sm text-success'; }
+                const newStress = data.stress_score ?? this.currentStress;
+                const label = data.label || this.getStressDescriptor(newStress);
+                if (feedback) {
+                    feedback.textContent = data.message || `Stress: ${newStress} — ${label}`;
+                    feedback.className = 'text-sm text-success';
+                }
                 this.animateValueChange('stressValue', this.currentStress, newStress, 500);
                 this.currentStress = newStress;
-                document.getElementById('stressDescriptor').textContent = this.getStressDescriptor(this.currentStress);
+                document.getElementById('stressDescriptor').textContent = label;
+                // Update bar fill
+                const fill = document.getElementById('stressIndicatorFill');
+                if (fill) fill.style.width = `${Math.min(Math.max(newStress, 0), 100)}%`;
+                // Update insight
+                const insightEl = document.getElementById('stressInsight');
+                if (insightEl && data.insight) insightEl.textContent = data.insight;
+
                 this.addToActivityTimeline(action, newStress);
-                setTimeout(() => { if (feedback) feedback.textContent = ''; }, 3000);
+                setTimeout(() => { if (feedback) feedback.textContent = ''; }, 4000);
             } else {
-                throw new Error('Action failed');
+                throw new Error(data.error || 'Action failed');
             }
         } catch (error) {
             if (feedback) { feedback.textContent = 'Action failed. Please try again.'; feedback.className = 'text-sm text-error'; }
-            console.error('Action error:', error);
             setTimeout(() => { if (feedback) feedback.textContent = ''; }, 3000);
         }
     }
@@ -743,7 +849,7 @@ class AdvancedDashboard {
         const div = document.createElement('div');
         div.className = 'activity-item';
         div.innerHTML = `
-            <div class="activity-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="activity-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
             <div class="activity-content">
                 <div class="activity-title">${actionNames[action] || 'Action'}</div>
                 <div class="activity-time">${now.toFormat('HH:mm')} • Stress: ${newStress}</div>
@@ -767,8 +873,8 @@ class AdvancedDashboard {
             description: document.getElementById('descriptionTextarea').value,
             confidential: false
         };
-        const originalText = submitBtn.textContent;
-        submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        const originalHTML = submitBtn.innerHTML;
+        submitBtn.disabled = true; submitBtn.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" style=\"animation:spin 1s linear infinite\"><path d=\"M21 12a9 9 0 1 1-6.219-8.56\"/></svg> Submitting...';
         try {
             const response = await fetch('/student/api/support/request', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: `[${formData.category.toUpperCase()}:${formData.priority.toUpperCase()}] ${formData.subject}: ${formData.description}`, metadata: formData })
@@ -784,35 +890,373 @@ class AdvancedDashboard {
                 throw new Error(data.error || 'Submission failed');
             }
         } catch (error) {
-            console.error('Support request error:', error);
             alert('Failed to submit support request. Please try again.');
-        } finally { submitBtn.disabled = false; submitBtn.textContent = originalText; }
+        } finally { submitBtn.disabled = false; submitBtn.innerHTML = originalHTML; }
+    }
+
+    // ── Urgent Help ──
+    async triggerUrgentHelp() {
+        const btn = document.getElementById('urgentConfirmBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+        try {
+            const res = await fetch('/student/api/support/urgent', { method: 'POST' });
+            const data = await res.json();
+            this.closeModal('urgent');
+            if (res.ok && data.success) {
+                this.showToast('A counselor has been notified. Stay calm — help is on the way.', 'success');
+            } else {
+                this.showToast(data.error || 'Failed to send alert. Please try again.', 'error');
+            }
+        } catch (e) {
+            this.closeModal('urgent');
+            this.showToast('Network error. If you are in danger, call 1-800-273-8255.', 'error');
+        } finally { if (btn) { btn.disabled = false; btn.textContent = 'Yes, I Need Help Now'; } }
+    }
+
+    // ── Schedule Session ──
+    setMinSessionDate() {
+        const dateInput = document.getElementById('sessionDate');
+        if (dateInput) { dateInput.min = new Date().toISOString().split('T')[0]; }
+    }
+
+    async bookSession() {
+        const btn = document.getElementById('scheduleSubmitBtn');
+        const form = document.getElementById('scheduleForm');
+        if (!form || !form.checkValidity()) { if (form) form.reportValidity(); return; }
+
+        const payload = {
+            type: document.getElementById('sessionType').value,
+            date: document.getElementById('sessionDate').value,
+            time: document.getElementById('sessionTime').value,
+            notes: (document.getElementById('sessionNotes').value || '').trim()
+        };
+
+        if (btn) { btn.disabled = true; btn.textContent = 'Booking...'; }
+        try {
+            const res = await fetch('/student/api/support/schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                this.closeModal('schedule');
+                form.reset();
+                this.showToast(data.message || 'Session booked successfully!', 'success');
+            } else {
+                this.showToast(data.error || 'Booking failed. Please try again.', 'error');
+            }
+        } catch (e) {
+            this.showToast('Network error. Please try again.', 'error');
+        } finally { if (btn) { btn.disabled = false; btn.textContent = 'Book Session'; } }
+    }
+
+    async loadMyBookings() {
+        const container = document.getElementById('myBookingsList');
+        const section = document.getElementById('scheduleMyBookings');
+        if (!container || !section) return;
+        try {
+            const res = await fetch('/student/api/support/sessions');
+            const data = await res.json();
+            if (data.success && data.sessions && data.sessions.length > 0) {
+                section.style.display = 'block';
+                container.innerHTML = data.sessions.slice(0, 5).map(s =>
+                    `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface-muted);border-radius:8px;font-size:13px;">
+                        <span style="font-weight:500;color:var(--text);">${s.date} at ${s.time}</span>
+                        <span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:${s.status === 'scheduled' ? 'rgba(34,197,94,.15)' : 'rgba(100,116,139,.15)'};color:${s.status === 'scheduled' ? '#22c55e' : '#64748b'};">${s.status}</span>
+                    </div>`
+                ).join('');
+            } else {
+                section.style.display = 'none';
+            }
+        } catch (e) { section.style.display = 'none'; }
+    }
+
+    showToast(message, type = 'success') {
+        const toast = document.getElementById('notificationToast');
+        const msgEl = document.getElementById('toastMessage');
+        if (!toast || !msgEl) { alert(message); return; }
+        msgEl.textContent = message;
+        toast.className = 'toast show ' + type;
+        setTimeout(() => { toast.classList.remove('show'); }, 5000);
     }
 
     startRealTimeUpdates() {
-        setInterval(async () => {
+        this._pollingTimer = setInterval(async () => {
             try {
                 const response = await fetch('/student/api/wellness/current');
                 if (response.ok) {
                     const data = await response.json();
                     this.updateStressDisplay(data);
                 }
-            } catch (e) { console.error('Real-time update error:', e); }
+            } catch (e) { /* silently handled */ }
         }, 30000);
-        setInterval(() => this.initDate(), 60000);
+        // initDate timer is already set internally — no need to call again
     }
 
     showLoading(show) { this.isLoading = show; }
-    showErrorState() { console.log('Showing error state'); }
+    showErrorState() { /* no-op */ }
 
     setupServiceWorker() {
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/static/service-worker.js').catch(err => {
-                    console.log('ServiceWorker registration failed:', err);
+                    // silently handled
                 });
             });
         }
+    }
+
+    // ==============================
+    // PROFILE SECTION
+    // ==============================
+    async loadProfile() {
+        try {
+            const data = await this.fetchData('/student/api/student/profile');
+            const nameEl = document.getElementById('profileName');
+            const emailEl = document.getElementById('profileEmail');
+            const rollEl = document.getElementById('profileRoll');
+            const userNameEl = document.getElementById('userName');
+            
+            if (nameEl) nameEl.textContent = data.name || 'Student';
+            if (emailEl) emailEl.textContent = data.email || '—';
+            if (rollEl) rollEl.textContent = data.roll_number || '—';
+            if (userNameEl) userNameEl.textContent = (data.name || 'Student').split(' ')[0];
+            
+            // Load streak
+            try {
+                const dashData = await this.fetchData('/student/api/student/dashboard-data');
+                const streakEl = document.getElementById('streakValue');
+                if (streakEl) streakEl.textContent = dashData.streak || 0;
+            } catch(e) { /* streak not critical */ }
+        } catch(e) {
+            console.warn('Profile load failed:', e);
+        }
+    }
+
+    // ==============================
+    // WELLNESS GOALS
+    // ==============================
+    initWellnessGoals() {
+        // Load saved goals from localStorage
+        const savedGoals = JSON.parse(localStorage.getItem('aura-goals-' + this.getTodayKey()) || '{}');
+        const goalItems = document.querySelectorAll('.goal-item');
+        let completedCount = 0;
+        
+        goalItems.forEach(item => {
+            const goalId = item.dataset.goal;
+            const checkbox = item.querySelector('.goal-checkbox');
+            
+            if (savedGoals[goalId]) {
+                checkbox.classList.add('checked');
+                item.classList.add('completed');
+                completedCount++;
+            }
+            
+            item.addEventListener('click', () => {
+                const isChecked = checkbox.classList.toggle('checked');
+                item.classList.toggle('completed', isChecked);
+                this.saveGoalState();
+                this.updateGoalsProgress();
+            });
+        });
+        
+        this.updateGoalsProgress();
+    }
+    
+    getTodayKey() {
+        return new Date().toISOString().split('T')[0];
+    }
+    
+    saveGoalState() {
+        const goals = {};
+        document.querySelectorAll('.goal-item').forEach(item => {
+            const goalId = item.dataset.goal;
+            const isChecked = item.querySelector('.goal-checkbox').classList.contains('checked');
+            goals[goalId] = isChecked;
+        });
+        localStorage.setItem('aura-goals-' + this.getTodayKey(), JSON.stringify(goals));
+    }
+    
+    updateGoalsProgress() {
+        const total = document.querySelectorAll('.goal-item').length;
+        const completed = document.querySelectorAll('.goal-checkbox.checked').length;
+        const fill = document.getElementById('goalsProgressFill');
+        const text = document.getElementById('goalsCompleted');
+        
+        if (fill) fill.style.width = `${(completed / total) * 100}%`;
+        if (text) text.textContent = completed;
+    }
+
+    // ==============================
+    // DAILY TIPS
+    // ==============================
+    loadDailyTip() {
+        const tips = [
+            "Take a 5-minute walk between study sessions to refresh your mind.",
+            "Practice gratitude: write down 3 things you're thankful for today.",
+            "Drink plenty of water — dehydration can increase stress levels.",
+            "Try the 20-20-20 rule: every 20 min, look 20 feet away for 20 seconds.",
+            "Deep breathing for just 60 seconds can lower cortisol and calm anxiety.",
+            "Break large tasks into small steps — progress is motivating.",
+            "Listen to calming music while studying to improve focus and reduce stress.",
+            "Get at least 7 hours of sleep — your brain needs rest to perform well.",
+            "Connect with a friend today — social support is a powerful stress buffer.",
+            "Exercise releases endorphins — even 15 minutes of movement helps.",
+            "Limit caffeine after 2 PM for better sleep quality tonight.",
+            "Write down your worries to get them out of your head and onto paper.",
+            "Take a digital detox for 30 minutes — put your phone on airplane mode.",
+            "Practice the box breathing technique: inhale 4s, hold 4s, exhale 4s, hold 4s.",
+            "Set boundaries: it's okay to say no to protect your mental energy.",
+            "Celebrate small wins — they add up to big achievements.",
+            "Try a body scan meditation to identify and release tension.",
+            "Organize your study space — a clean environment reduces mental clutter.",
+            "Eat a balanced meal with protein and complex carbs for sustained energy.",
+            "Laugh! Watch a funny video or call someone who makes you smile.",
+            "Schedule worry time: dedicate 10 minutes to worry, then let it go.",
+            "Use the Pomodoro technique: 25 min focus, 5 min break.",
+            "Write a positive affirmation and say it aloud every morning.",
+            "Spend time in nature — even looking at trees reduces stress hormones.",
+            "End your day by noting one thing that went well today."
+        ];
+        
+        // Use day-of-year as index for consistent daily tip
+        const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+        const tipIndex = dayOfYear % tips.length;
+        
+        const tipEl = document.getElementById('tipText');
+        if (tipEl) tipEl.textContent = tips[tipIndex];
+    }
+
+    // ==============================
+    // JOURNAL
+    // ==============================
+    async initJournal() {
+        const textarea = document.getElementById('journalEntry');
+        const charCount = document.getElementById('journalCharCount');
+        const saveBtn = document.getElementById('saveJournalBtn');
+        
+        if (!textarea || !saveBtn) return;
+        
+        // Load today's journal from server first, fall back to localStorage
+        try {
+            const res = await fetch('/student/api/journal/today');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.entry) {
+                    textarea.value = data.entry;
+                    if (charCount) charCount.textContent = data.entry.length;
+                }
+            }
+        } catch {
+            // Fallback to localStorage
+            const savedJournal = localStorage.getItem('aura-journal-' + this.getTodayKey());
+            if (savedJournal) {
+                textarea.value = savedJournal;
+                if (charCount) charCount.textContent = savedJournal.length;
+            }
+        }
+        
+        textarea.addEventListener('input', () => {
+            if (charCount) charCount.textContent = textarea.value.length;
+        });
+        
+        saveBtn.addEventListener('click', async () => {
+            const entry = textarea.value.trim();
+            if (!entry) return;
+            
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            
+            // Save to server via journal API
+            try {
+                const res = await fetch('/student/api/journal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ entry })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    this.showToast('Journal entry saved!', 'success');
+                } else {
+                    throw new Error(data.error || 'Save failed');
+                }
+            } catch(err) {
+                // Fallback: save to localStorage
+                localStorage.setItem('aura-journal-' + this.getTodayKey(), entry);
+                this.showToast('Saved locally (offline)', 'warning');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Entry';
+            }
+            
+            // Mark journal goal as done
+            const goalItem = document.querySelector('.goal-item[data-goal="checkin"]');
+            if (goalItem) {
+                const cb = goalItem.querySelector('.goal-checkbox');
+                if (cb && !cb.classList.contains('checked')) {
+                    cb.classList.add('checked');
+                    goalItem.classList.add('completed');
+                    this.saveGoalState();
+                    this.updateGoalsProgress();
+                }
+            }
+        });
+    }
+
+    // ==============================
+    // GRIEVANCE FORM
+    // ==============================
+    initGrievanceForm() {
+        const form = document.getElementById('grievanceForm');
+        if (!form) return;
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const subject = document.getElementById('grievanceSubject').value.trim();
+            const description = document.getElementById('grievanceDescription').value.trim();
+            const btn = document.getElementById('submitGrievanceBtn');
+            const feedback = document.getElementById('grievanceFeedback');
+            
+            if (!subject || !description) return;
+            
+            if (btn) { btn.disabled = true; btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Submitting...'; }
+            
+            try {
+                const res = await fetch('/student/api/grievance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subject, description })
+                });
+                const data = await res.json();
+                
+                if (res.ok && data.success) {
+                    if (feedback) {
+                        feedback.className = 'grievance-feedback success';
+                        feedback.textContent = 'Grievance submitted successfully. It will be reviewed confidentially.';
+                        feedback.style.display = 'block';
+                    }
+                    form.reset();
+                    this.showToast('Grievance submitted!', 'success');
+                    setTimeout(() => { if (feedback) feedback.style.display = 'none'; }, 5000);
+                } else {
+                    throw new Error(data.error || 'Submission failed');
+                }
+            } catch(err) {
+                if (feedback) {
+                    feedback.className = 'grievance-feedback error';
+                    feedback.textContent = err.message || 'Failed to submit. Please try again.';
+                    feedback.style.display = 'block';
+                }
+                setTimeout(() => { if (feedback) feedback.style.display = 'none'; }, 5000);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Submit Grievance';
+                }
+            }
+        });
     }
 }
 
@@ -823,5 +1267,9 @@ window.addEventListener('beforeunload', () => {
     if (autoRefreshTimer) {
         clearInterval(autoRefreshTimer);
         autoRefreshTimer = null;
+    }
+    if (window.dashboard) {
+        if (window.dashboard._pollingTimer) clearInterval(window.dashboard._pollingTimer);
+        if (window.dashboard._dateTimer) clearInterval(window.dashboard._dateTimer);
     }
 });

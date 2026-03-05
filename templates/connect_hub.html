@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connect Hub — AURA</title>
+<link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/connect_hub.css') }}?v=50">
+</head>
+<body class="hub-body">
+
+<!-- ═══ TOPBAR ═══ -->
+<header class="hub-topbar glass-bar" id="hubTopbar">
+  <div class="hub-left">
+    <div class="hub-brand">
+      <div class="hub-brand-icon"><i class="fas fa-network-wired"></i></div>
+      <div class="hub-brand-text">
+        <span class="hub-title">Connect Hub</span>
+        <span class="hub-badge"><span class="hub-live-dot"></span>Live</span>
+      </div>
+    </div>
+    <div class="hub-divider"></div>
+    <div class="hub-search-wrap" id="searchBar">
+      <i class="fas fa-search hub-search-icon"></i>
+      <input type="search" id="hubSearchInput" class="hub-search-input"
+             placeholder="Search peers, groups, events… (Ctrl+K)" autocomplete="off">
+      <button class="hub-search-clear" id="searchClear" aria-label="Clear">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="hub-search-results" id="searchResults"></div>
+  </div>
+  <div class="hub-right">
+    <button class="hub-icon-btn" id="hubSearchToggle" title="Search (Ctrl+K)">
+      <i class="fas fa-search"></i>
+    </button>
+    <button class="hub-icon-btn notif-btn" id="notifBell" title="Notifications">
+      <i class="fas fa-bell"></i>
+      <span class="hub-notif-badge" id="notifBadge" style="display:none">0</span>
+    </button>
+    <button class="hub-icon-btn" id="zenToggle" title="Zen mode (Z)">
+      <i class="fas fa-expand-alt"></i>
+    </button>
+    <button class="hub-icon-btn" id="helpBtn" title="Shortcuts (?)">
+      <i class="fas fa-keyboard"></i>
+    </button>
+    <div class="hub-user-chip">
+      <div class="hub-avatar">{{ session.get('user_name','U')[0]|upper }}</div>
+      <div class="hub-user-info">
+        <span class="hub-user-name">{{ session.get('user_name','User') }}</span>
+        <span class="hub-user-dept">{{ session.get('user_department','') }}</span>
+      </div>
+      <span class="hub-status-dot" title="Online"></span>
+    </div>
+    <a href="{{ url_for('auth.logout') }}" class="hub-logout-btn" title="Sign out">
+      <i class="fas fa-sign-out-alt"></i>
+    </a>
+  </div>
+</header>
+
+<!-- ═══ SHELL ═══ -->
+<div class="hub-shell" id="hubShell"
+     data-user-email="{{ session.get('user_email','') }}"
+     data-user-name="{{ session.get('user_name','User') }}"
+     data-user-dept="{{ session.get('user_department','') }}">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="hub-sidebar" id="hubSidebar">
+
+    <!-- User card -->
+    <div class="sidebar-user-card">
+      <div class="sidebar-avatar">{{ session.get('user_name','U')[0]|upper }}</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">{{ session.get('user_name','You') }}</div>
+        <div class="sidebar-user-dept">{{ session.get('user_department','') }}</div>
+      </div>
+      <span class="sidebar-online-dot" title="Online"></span>
+    </div>
+
+    <!-- Stats -->
+    <div class="sidebar-stats">
+      <div class="mini-stat"><span class="stat-num" id="statOnline">—</span><span class="stat-label">Online</span></div>
+      <div class="mini-stat"><span class="stat-num" id="statPeers">—</span><span class="stat-label">Peers</span></div>
+      <div class="mini-stat"><span class="stat-num" id="statGroups">—</span><span class="stat-label">Groups</span></div>
+      <div class="mini-stat"><span class="stat-num" id="statEvents">—</span><span class="stat-label">Events</span></div>
+    </div>
+
+    <!-- Nav Tabs -->
+    <nav class="sidebar-nav" id="sidebarNav" role="tablist">
+      <button class="nav-tab active" data-tab="peers" role="tab">
+        <span class="nav-tab-icon"><i class="fas fa-users"></i></span>
+        <span class="nav-tab-label">Peers</span>
+        <span class="count-badge" id="reqBadge" style="display:none"></span>
+      </button>
+      <button class="nav-tab" data-tab="groups" role="tab">
+        <span class="nav-tab-icon"><i class="fas fa-layer-group"></i></span>
+        <span class="nav-tab-label">Groups</span>
+      </button>
+      <button class="nav-tab" data-tab="events" role="tab">
+        <span class="nav-tab-icon"><i class="fas fa-calendar-alt"></i></span>
+        <span class="nav-tab-label">Events</span>
+      </button>
+      <button class="nav-tab" data-tab="resources" role="tab">
+        <span class="nav-tab-icon"><i class="fas fa-book-open"></i></span>
+        <span class="nav-tab-label">Resources</span>
+      </button>
+      <button class="nav-tab" data-tab="feed" role="tab">
+        <span class="nav-tab-icon"><i class="fas fa-stream"></i></span>
+        <span class="nav-tab-label">Feed</span>
+      </button>
+    </nav>
+
+    <!-- PEERS panel -->
+    <div class="sidebar-panel" id="panel-peers" data-panel="peers">
+      <div class="panel-toolbar">
+        <input type="search" id="peerSearch" class="filter-input" placeholder="Search peers…" autocomplete="off">
+        <button class="text-btn accent" id="showSuggestionsBtn" title="Find people">
+          <i class="fas fa-user-plus"></i>
+        </button>
+        <button class="text-btn" id="showRequestsBtn" title="Requests">
+          <i class="fas fa-user-clock"></i>
+        </button>
+      </div>
+      <div class="contact-list" id="peerList" role="list"></div>
+    </div>
+
+    <!-- GROUPS panel -->
+    <div class="sidebar-panel hidden" id="panel-groups" data-panel="groups">
+      <div class="panel-toolbar">
+        <select id="groupFilter" class="filter-input">
+          <option value="">All types</option>
+          <option value="study">📚 Study</option>
+          <option value="relaxation">🧘 Relaxation</option>
+          <option value="peer_support">💚 Support</option>
+        </select>
+        <button class="text-btn accent" id="createGroupBtn"><i class="fas fa-plus"></i></button>
+      </div>
+      <div class="contact-list" id="groupList" role="list"></div>
+    </div>
+
+    <!-- EVENTS panel -->
+    <div class="sidebar-panel hidden" id="panel-events" data-panel="events">
+      <div class="panel-toolbar">
+        <select id="eventFilter" class="filter-input">
+          <option value="">All types</option>
+          <option value="webinar">🎙 Webinar</option>
+          <option value="meditation">🧘 Meditation</option>
+          <option value="workshop">🔨 Workshop</option>
+        </select>
+        <button class="text-btn accent" id="createEventBtn"><i class="fas fa-plus"></i></button>
+      </div>
+      <div class="contact-list" id="eventList" role="list"></div>
+    </div>
+
+    <!-- RESOURCES panel -->
+    <div class="sidebar-panel hidden" id="panel-resources" data-panel="resources">
+      <div class="panel-toolbar">
+        <select id="resourceSort" class="filter-input">
+          <option value="recent">Recent</option>
+          <option value="popular">Popular</option>
+        </select>
+        <button class="text-btn accent" id="shareResourceBtn"><i class="fas fa-share-alt"></i></button>
+      </div>
+      <div class="contact-list" id="resourceList" role="list"></div>
+    </div>
+
+    <!-- FEED panel -->
+    <div class="sidebar-panel hidden" id="panel-feed" data-panel="feed">
+      <div class="panel-toolbar">
+        <span class="panel-title-txt">Recent Activity</span>
+        <button class="text-btn" id="feedRefreshBtn" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+      </div>
+      <div class="feed-list" id="feedList" role="list"></div>
+    </div>
+
+    <!-- AI Recs -->
+    <div class="sidebar-recs" id="sidebarRecs">
+      <div class="recs-header"><i class="fas fa-robot"></i> Smart Picks</div>
+      <div id="recsList"></div>
+    </div>
+
+  </aside>
+
+  <!-- ─── MAIN ─── -->
+  <main class="hub-main" id="hubMain">
+
+    <!-- Context header (sub-views) -->
+    <div class="context-header" id="contextHeader" style="display:none">
+      <div class="context-left">
+        <button class="context-back" id="contextBack" aria-label="Back">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="context-icon" id="contextIcon"></div>
+        <div class="context-text">
+          <div class="context-title" id="contextTitle">—</div>
+          <div class="context-subtitle" id="contextSubtitle"></div>
+        </div>
+      </div>
+      <div class="context-right" id="contextActions"></div>
+    </div>
+
+    <!-- Views -->
+    <div class="view-container" id="viewContainer">
+
+      <!-- WELCOME -->
+      <div class="hub-view active" data-view="welcome" id="viewWelcome">
+        <div class="welcome-splash">
+          <div class="welcome-hero-icon"><i class="fas fa-network-wired"></i></div>
+          <h2 class="welcome-title">Welcome to Connect Hub</h2>
+          <p class="welcome-sub">Your space to connect, collaborate, and support each other.</p>
+          <div class="welcome-actions">
+            <button class="btn btn-glow" id="welcomeFindPeers">
+              <i class="fas fa-user-plus"></i> Find Peers
+            </button>
+            <button class="btn btn-glass" id="welcomeBrowseGroups">
+              <i class="fas fa-layer-group"></i> Groups
+            </button>
+            <button class="btn btn-glass" id="welcomeBrowseEvents">
+              <i class="fas fa-calendar-alt"></i> Events
+            </button>
+          </div>
+        </div>
+        <div class="welcome-feed-section">
+          <div class="section-heading"><i class="fas fa-stream"></i> Recent Activity</div>
+          <div class="feed-timeline-list" id="mainFeedList"></div>
+        </div>
+      </div>
+
+      <!-- PEERS -->
+      <div class="hub-view" data-view="peers" id="viewPeers">
+        <div class="view-grid" id="peersMainContent"></div>
+      </div>
+
+      <!-- GROUPS -->
+      <div class="hub-view" data-view="groups" id="viewGroups">
+        <div class="view-grid" id="groupsMainContent"></div>
+      </div>
+
+      <!-- EVENTS -->
+      <div class="hub-view" data-view="events" id="viewEvents">
+        <div class="view-grid" id="eventsMainContent"></div>
+      </div>
+
+      <!-- RESOURCES -->
+      <div class="hub-view" data-view="resources" id="viewResources">
+        <div class="view-grid" id="resourcesMainContent"></div>
+      </div>
+
+      <!-- FEED -->
+      <div class="hub-view" data-view="feed" id="viewFeed">
+        <div class="feed-timeline" id="feedMainContent"></div>
+      </div>
+
+      <!-- DM CHAT -->
+      <div class="hub-view" data-view="dm" id="viewDM">
+        <div class="chat-messages" id="dmMessages" role="log" aria-live="polite"></div>
+        <div class="typing-indicator" id="dmTyping" style="display:none">
+          <span class="typing-dots"><span></span><span></span><span></span></span>
+          <span class="typing-name" id="dmTypingName"></span> is typing…
+        </div>
+        <div class="chat-input-wrap">
+          <input type="text" class="chat-input" id="dmInput"
+                 placeholder="Message…" autocomplete="off" maxlength="1000">
+          <button class="send-btn" id="dmSendBtn" aria-label="Send">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- GROUP CHAT -->
+      <div class="hub-view" data-view="groupchat" id="viewGroupChat">
+        <div class="chat-messages" id="groupMessages" role="log" aria-live="polite"></div>
+        <div class="typing-indicator" id="groupTyping" style="display:none">
+          <span class="typing-dots"><span></span><span></span><span></span></span>
+          <span class="typing-name" id="groupTypingName"></span> is typing…
+        </div>
+        <div class="chat-input-wrap">
+          <input type="text" class="chat-input" id="groupChatInput"
+                 placeholder="Message group…" autocomplete="off" maxlength="1000">
+          <button class="send-btn" id="groupSendBtn" aria-label="Send">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- EVENT DETAIL -->
+      <div class="hub-view" data-view="eventdetail" id="viewEventDetail">
+        <div class="detail-content" id="eventDetailContent"></div>
+      </div>
+
+      <!-- RESOURCE DETAIL -->
+      <div class="hub-view" data-view="resourcedetail" id="viewResourceDetail">
+        <div class="detail-content" id="resourceDetailContent"></div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="hub-view" data-view="notifications" id="viewNotifications">
+        <div class="notif-toolbar">
+          <h2 class="view-heading"><i class="fas fa-bell"></i> Notifications</h2>
+          <button class="btn btn-sm btn-glass" id="markAllReadBtn">
+            <i class="fas fa-check-double"></i> Mark all read
+          </button>
+        </div>
+        <div class="notif-list" id="notifList" role="list"></div>
+      </div>
+
+    </div><!-- /view-container -->
+  </main>
+</div><!-- /hub-shell -->
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Create Group -->
+<div class="hub-modal-overlay" id="createGroupModal" role="dialog" aria-modal="true">
+  <div class="hub-modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-layer-group"></i> Create Group</h3>
+      <button class="modal-close" data-close="createGroupModal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Name <span class="req">*</span></label>
+        <input type="text" id="newGroupName" class="modal-input" placeholder="e.g. Physics Study Circle" maxlength="60">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="newGroupDesc" class="modal-input modal-textarea" placeholder="What's this group about?" maxlength="500" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Type <span class="req">*</span></label>
+        <select id="newGroupType" class="modal-input">
+          <option value="study">📚 Study Group</option>
+          <option value="relaxation">🧘 Relaxation & Wellness</option>
+          <option value="peer_support">💚 Peer Support</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-glass" data-close="createGroupModal">Cancel</button>
+      <button class="btn btn-glow" id="submitGroupBtn"><i class="fas fa-plus"></i> Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Event -->
+<div class="hub-modal-overlay" id="createEventModal" role="dialog" aria-modal="true">
+  <div class="hub-modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-calendar-plus"></i> Create Event</h3>
+      <button class="modal-close" data-close="createEventModal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Title <span class="req">*</span></label>
+        <input type="text" id="newEventTitle" class="modal-input" placeholder="e.g. Morning Meditation" maxlength="100">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="newEventDesc" class="modal-input modal-textarea" placeholder="Details…" rows="3" maxlength="500"></textarea>
+      </div>
+      <div class="form-group form-row">
+        <div class="form-col">
+          <label>Type <span class="req">*</span></label>
+          <select id="newEventType" class="modal-input">
+            <option value="webinar">🎙 Webinar</option>
+            <option value="meditation">🧘 Meditation</option>
+            <option value="workshop">🔨 Workshop</option>
+          </select>
+        </div>
+        <div class="form-col">
+          <label>Duration (min)</label>
+          <input type="number" id="newEventDuration" class="modal-input" value="60" min="15" max="480">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Date &amp; Time <span class="req">*</span></label>
+        <input type="datetime-local" id="newEventDate" class="modal-input">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-glass" data-close="createEventModal">Cancel</button>
+      <button class="btn btn-glow" id="submitEventBtn"><i class="fas fa-check"></i> Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share Resource -->
+<div class="hub-modal-overlay" id="shareResourceModal" role="dialog" aria-modal="true">
+  <div class="hub-modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-share-alt"></i> Share Resource</h3>
+      <button class="modal-close" data-close="shareResourceModal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Title <span class="req">*</span></label>
+        <input type="text" id="newResTitle" class="modal-input" placeholder="e.g. Ultimate Calculus Notes" maxlength="120">
+      </div>
+      <div class="form-group">
+        <label>Link <span class="req">*</span></label>
+        <input type="url" id="newResLink" class="modal-input" placeholder="https://…">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="newResDesc" class="modal-input modal-textarea" placeholder="Why is this useful?" rows="3" maxlength="500"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Tags <span class="muted">(comma-separated)</span></label>
+        <input type="text" id="newResTags" class="modal-input" placeholder="calculus, maths, notes">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-glass" data-close="shareResourceModal">Cancel</button>
+      <button class="btn btn-glow" id="submitResourceBtn"><i class="fas fa-share"></i> Share</button>
+    </div>
+  </div>
+</div>
+
+<!-- Find People -->
+<div class="hub-modal-overlay" id="suggestionsModal" role="dialog" aria-modal="true">
+  <div class="hub-modal hub-modal-xl">
+    <div class="modal-header">
+      <div>
+        <h3><i class="fas fa-user-plus"></i> Find Your People</h3>
+        <p class="modal-subtitle">AI-matched peers based on your wellness profile</p>
+      </div>
+      <button class="modal-close" data-close="suggestionsModal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="suggestions-toolbar" id="suggestionsFilters">
+        <button class="filter-chip active" data-filter="all">All</button>
+        <button class="filter-chip" data-filter="online">🟢 Online</button>
+        <button class="filter-chip" data-filter="high_match">⭐ High Match</button>
+        <button class="filter-chip" data-filter="dept">🏫 Same Dept</button>
+        <button class="filter-chip sug-refresh-btn" id="refreshSuggestions">
+          <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+      </div>
+      <input type="search" id="suggestionSearch" class="sug-search" placeholder="Search by name or department…">
+      <div class="invite-row">
+        <span class="invite-label"><i class="fas fa-envelope"></i> Invite by email</span>
+        <div class="invite-controls">
+          <input type="email" id="inviteEmail" class="modal-input invite-input" placeholder="student@college.edu">
+          <button class="btn btn-sm btn-glow" id="inviteSendBtn">Send</button>
+        </div>
+      </div>
+      <div class="suggestion-grid" id="suggestionsList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Connection Requests -->
+<div class="hub-modal-overlay" id="requestsModal" role="dialog" aria-modal="true">
+  <div class="hub-modal hub-modal-lg">
+    <div class="modal-header">
+      <h3><i class="fas fa-user-clock"></i> Connection Requests</h3>
+      <button class="modal-close" data-close="requestsModal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="section-label">Incoming</div>
+      <div id="incomingRequests" class="request-list"></div>
+      <div class="section-label" style="margin-top:16px">Outgoing</div>
+      <div id="outgoingRequests" class="request-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Group Members -->
+<div class="hub-modal-overlay" id="groupMembersModal" role="dialog" aria-modal="true">
+  <div class="hub-modal hub-modal-lg">
+    <div class="modal-header">
+      <h3><i class="fas fa-users"></i> Group Members</h3>
+      <button class="modal-close" data-close="groupMembersModal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="member-list" id="memberList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Peer Profile -->
+<div class="hub-modal-overlay" id="peerProfileModal" role="dialog" aria-modal="true">
+  <div class="hub-modal hub-modal-profile">
+    <button class="modal-close profile-close" data-close="peerProfileModal">×</button>
+    <div id="peerProfileContent">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" id="profileAvatar">?</div>
+      </div>
+      <div class="profile-name" id="profileName">—</div>
+      <div class="profile-dept" id="profileDept"></div>
+      <div class="profile-stress-bar" id="profileStress"></div>
+      <div class="profile-status" id="profileStatus"></div>
+      <div class="profile-actions">
+        <button class="btn btn-glow profile-chat-btn" id="profileChatBtn">
+          <i class="fas fa-comment"></i> Message
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Help -->
+<div class="hub-modal-overlay" id="helpModal" role="dialog" aria-modal="true">
+  <div class="hub-modal hub-modal-sm">
+    <div class="modal-header">
+      <h3><i class="fas fa-keyboard"></i> Shortcuts</h3>
+      <button class="modal-close" data-close="helpModal">×</button>
+    </div>
+    <div class="modal-body shortcut-list">
+      <div class="shortcut-row"><kbd>Ctrl+K</kbd><span>Open search</span></div>
+      <div class="shortcut-row"><kbd>?</kbd><span>Show shortcuts</span></div>
+      <div class="shortcut-row"><kbd>Z</kbd><span>Zen mode</span></div>
+      <div class="shortcut-row"><kbd>Esc</kbd><span>Close / Go back</span></div>
+      <div class="shortcut-row"><kbd>1–5</kbd><span>Switch tabs</span></div>
+      <div class="shortcut-row"><kbd>Enter</kbd><span>Send message</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="hub-toast" id="hubToast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+<script src="{{ url_for('static', filename='js/connect_hub.js') }}?v=50"></script>
+</body>
+</html>

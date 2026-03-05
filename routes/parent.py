@@ -1,12 +1,11 @@
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from utils.auth_helpers import login_required
 from utils.database import get_db
+from utils.helpers import safe_error
 from models.parent import ParentModel
 from models.user import UserModel
-from models.stress import StressModel
 from services.otp_service import OTPService
 from datetime import datetime, timedelta
-import hashlib
 
 parent_bp = Blueprint('parent', __name__)
 
@@ -72,14 +71,15 @@ def send_otp():
             'sms_sent': sms_sent
         }
 
-        # Only include demo_otp when SMS was NOT sent (demo mode)
-        if not sms_sent:
+        # Only include demo_otp when explicitly in DEBUG mode AND SMS was not sent
+        import os as _os
+        if not sms_sent and _os.getenv('FLASK_DEBUG', '').lower() in ('1', 'true', 'yes', 'on'):
             response_data['demo_otp'] = otp
 
         return jsonify(response_data), 200
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'parent')}), 500
 
 
 @parent_bp.route('/api/verify-otp', methods=['POST'])
@@ -135,7 +135,7 @@ def verify_otp():
             }), 200
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'parent')}), 500
 
 
 @parent_bp.route('/api/complete-registration', methods=['POST'])
@@ -176,6 +176,9 @@ def complete_registration():
             db, student_roll, parent_name, phone, relationship
         )
 
+        # Set last_login on first registration
+        ParentModel.update_last_login(db, phone)
+
         # Auto-login the new parent
         session['parent_logged_in'] = True
         session['student_roll'] = student_roll
@@ -190,7 +193,7 @@ def complete_registration():
         }), 201
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'parent')}), 500
 
 
 @parent_bp.route('/logout')
@@ -250,70 +253,137 @@ def dashboard():
 @parent_bp.route('/api/student/performance', methods=['GET'])
 @parent_login_required
 def get_student_performance():
-    """Get student academic performance"""
+    """Get student wellness performance data (stress + mood trends)"""
     try:
         student_roll = session.get('student_roll')
         db = get_db()
-        
-        # Get student info
+
         student = db['users'].find_one({'roll_number': student_roll, 'role': 'student'})
         if not student:
             return jsonify({'error': 'Student not found'}), 404
-        
-        # Get stress data from student_analytics collection
-        stress_records = list(db['student_analytics'].find(
-            {'roll_number': student_roll},
-            sort=[('timestamp', -1)],
+
+        student_email = student.get('email')
+        week_ago = datetime.utcnow() - timedelta(days=30)
+
+        # Read from correct collections: student_wellness (stress) and moods
+        stress_records = list(db['student_wellness'].find(
+            {'student_id': student_email, 'timestamp': {'$gte': week_ago}},
+            sort=[('timestamp', 1)],
             limit=30
         ))
-        
-        # Get mood data from mood_logs collection
-        mood_records = list(db['mood_logs'].find(
-            {'roll_number': student_roll},
-            sort=[('timestamp', -1)],
+
+        mood_records = list(db['moods'].find(
+            {'user_email': student_email, 'created_at': {'$gte': week_ago}},
+            sort=[('created_at', 1)],
             limit=30
         ))
-        
-        # Format stress history for chart
+
+        # Format stress history (keep 0-100 scale)
         stress_history = []
-        for record in reversed(stress_records):
+        for record in stress_records:
             stress_history.append({
-                'level': record.get('stress_level', 5),
+                'level': round(record.get('stress_score', record.get('value', 0)), 1),
                 'date': record.get('timestamp', datetime.utcnow()).isoformat()
             })
-        
-        # Format mood history for chart
+
+        # Format mood history
+        mood_map = {'angry': 1, 'sad': 2, 'neutral': 3, 'happy': 4, 'excited': 5}
         mood_history = []
         for record in mood_records:
+            mood_str = str(record.get('mood', 'neutral')).lower()
             mood_history.append({
-                'mood': record.get('mood', 'neutral'),
-                'date': record.get('timestamp', datetime.utcnow()).isoformat()
+                'mood': mood_str,
+                'score': mood_map.get(mood_str, 3),
+                'date': record.get('created_at', datetime.utcnow()).isoformat()
             })
-        
-        # If no data, create sample data for demonstration
+
+        # Fallback sample data if no records
         if not stress_history:
             now = datetime.utcnow()
             for i in range(7):
                 stress_history.append({
-                    'level': 5,
-                    'date': (now - timedelta(days=6-i)).isoformat()
+                    'level': 0,
+                    'date': (now - timedelta(days=6 - i)).isoformat()
                 })
-        
+
         if not mood_history:
             moods = ['happy', 'calm', 'neutral']
             for i, mood in enumerate(moods):
                 mood_history.append({
                     'mood': mood,
+                    'score': 3,
                     'date': (datetime.utcnow() - timedelta(days=i)).isoformat()
                 })
-        
+
         return jsonify({
             'stress_history': stress_history,
             'mood_history': mood_history
         }), 200
+
+    except Exception as e:
+        return jsonify({'error': safe_error(e, 'parent')}), 500
+
+
+@parent_bp.route('/api/student/academics', methods=['GET'])
+@parent_login_required
+def get_student_academics():
+    """Get student academic records (CGPA, SGPA, Attendance, Credits)"""
+    try:
+        student_roll = session.get('student_roll')
+        db = get_db()
+        
+        # Fetch semester records
+        records = list(db['academic_records'].find(
+            {'student_roll': student_roll}
+        ).sort('semester', 1))
+        
+        if not records:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'records': [],
+                    'summary': {},
+                    'message': 'No academic records found'
+                }
+            }), 200
+        
+        formatted_records = []
+        for r in records:
+            formatted_records.append({
+                'semester': r.get('semester', ''),
+                'sgpa': r.get('sgpa', 0),
+                'cgpa': r.get('cgpa', 0),
+                'attendance': r.get('attendance', 0),
+                'backlogs': r.get('backlogs', 0),
+                'credits_earned': r.get('credits_earned', 0),
+                'total_credits': r.get('total_credits', 0),
+            })
+        
+        # Calculate summary
+        latest = records[-1]
+        total_credits_earned = sum(r.get('credits_earned', 0) for r in records)
+        total_credits_available = sum(r.get('total_credits', 0) for r in records)
+        
+        summary = {
+            'current_cgpa': latest.get('cgpa', 0),
+            'current_sgpa': latest.get('sgpa', 0),
+            'current_semester': latest.get('semester', ''),
+            'attendance': latest.get('attendance', 0),
+            'credits_earned': total_credits_earned,
+            'total_credits': total_credits_available,
+            'backlogs': latest.get('backlogs', 0),
+        }
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'records': formatted_records,
+                'summary': summary,
+            }
+        }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'parent')}), 500
 
 
 @parent_bp.route('/api/complaint/submit', methods=['POST'])
@@ -357,7 +427,7 @@ def submit_complaint():
         }), 201
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'parent')}), 500
 
 
 @parent_bp.route('/api/complaints/list', methods=['GET'])
@@ -387,7 +457,7 @@ def get_complaints():
         ]), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'parent')}), 500
 
 
 @parent_bp.route('/api/suggestion/submit', methods=['POST'])
@@ -428,7 +498,7 @@ def submit_suggestion():
         }), 201
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'parent')}), 500
 
 
 @parent_bp.route('/api/announcements', methods=['GET'])
@@ -452,19 +522,19 @@ def get_announcements():
                     'type': 'achievements',
                     'title': 'National Hackathon Winner',
                     'content': 'Our students secured 1st place in the National Level Hackathon 2024 with their innovative AI project.',
-                    'date': datetime.utcnow() - timedelta(days=2)
+                    'date': (datetime.utcnow() - timedelta(days=2)).isoformat()
                 },
                 {
                     'type': 'placements',
                     'title': 'Top Companies Visit Campus',
                     'content': 'Microsoft, Google, and Amazon conducted campus recruitment drives. 150+ students placed with average package of 12 LPA.',
-                    'date': datetime.utcnow() - timedelta(days=5)
+                    'date': (datetime.utcnow() - timedelta(days=5)).isoformat()
                 },
                 {
                     'type': 'general',
                     'title': 'Annual Tech Fest Announcement',
                     'content': 'Registration open for TechFest 2024. Multiple events including coding, robotics, and innovation challenges.',
-                    'date': datetime.utcnow() - timedelta(days=7)
+                    'date': (datetime.utcnow() - timedelta(days=7)).isoformat()
                 }
             ]
             return jsonify(sample_announcements), 200
@@ -482,7 +552,7 @@ def get_announcements():
         ]), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'parent')}), 500
 
 
 # ==========================================
@@ -535,17 +605,17 @@ def get_student_wellness_summary():
         elif avg_stress > 50 or avg_mood < 3:
             wellness_status = 'moderate'
         
-        # Format stress history for chart
+        # Format stress history for chart (keep 0-100 scale)
         stress_history = []
         for record in reversed(stress_records[:14]):
             stress_history.append({
-                'level': record.get('value', 5) / 10,  # Convert 0-100 to 0-10 scale
+                'level': round(record.get('value', 0), 1),
                 'date': record.get('timestamp').isoformat() if record.get('timestamp') else datetime.utcnow().isoformat()
             })
         
         # Format mood history
         mood_history = []
-        mood_labels = {1: 'very_low', 2: 'low', 3: 'neutral', 4: 'good', 5: 'excellent'}
+        mood_labels = {1: 'very_low', 2: 'low', 3: 'neutral', 4: 'happy', 5: 'excited'}
         for record in mood_records[:10]:
             mood_value = record.get('value', 3)
             mood_history.append({
@@ -568,7 +638,7 @@ def get_student_wellness_summary():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'parent')}), 500
 
 
 @parent_bp.route('/api/student/activity-log', methods=['GET'])
@@ -601,7 +671,7 @@ def get_student_activity_log():
             if activity_type == 'stress':
                 description = f"Stress check-in: {value}/100"
             elif activity_type == 'mood':
-                mood_labels = {1: 'Very Low', 2: 'Low', 3: 'Neutral', 4: 'Good', 5: 'Excellent'}
+                mood_labels = {1: 'Very Low', 2: 'Low', 3: 'Neutral', 4: 'Happy', 5: 'Excited'}
                 description = f"Mood: {mood_labels.get(value, 'Unknown')}"
             else:
                 description = f"{activity_type.capitalize()} activity"
@@ -616,7 +686,7 @@ def get_student_activity_log():
         return jsonify(formatted_activities), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'parent')}), 500
 
 
 @parent_bp.route('/api/notifications', methods=['GET'])
@@ -661,4 +731,4 @@ def get_parent_notifications():
         return jsonify(formatted), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'parent')}), 500

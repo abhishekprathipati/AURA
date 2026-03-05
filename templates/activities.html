@@ -1,283 +1,1647 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wellness Activities — AURA</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+    font-family: 'Inter', sans-serif;
+    background: #f0f2f8;
+    color: #1f2937;
+    min-height: 100vh;
+}
+button { cursor: pointer; font-family: inherit; }
+a { text-decoration: none; color: inherit; }
+input, textarea { font-family: inherit; }
 
-{% block content %}
+/* ═══════════════════════════════════════
+   TOP NAV BAR
+   ═══════════════════════════════════════ */
+.acts-nav {
+    position: sticky;
+    top: 0;
+    z-index: 500;
+    height: 60px;
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    gap: 16px;
+}
+.acts-nav-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    border-radius: 10px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    transition: background 0.18s, transform 0.15s;
+}
+.acts-nav-back:hover { background: #e9eaec; transform: translateX(-2px); }
+.acts-nav-logo {
+    font-size: 18px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #667eea, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+}
+.acts-nav-sep { width: 1px; height: 20px; background: #e5e7eb; }
+.acts-nav-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #374151;
+}
+.acts-nav-spacer { flex: 1; }
+.acts-nav-user {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
 
-{% block body_class %}activities-page{% endblock %}
+/* ═══════════════════════════════════════
+   PAGE WRAPPER
+   ═══════════════════════════════════════ */
+.acts-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px 60px;
+}
 
-<!-- Activities grid: layout moved to static/css/style.css -->
-<div class="activities-grid">
-    <div class="activity-card" onclick="openActivity('breakRoom')">
-        <div class="activity-icon">🎨</div>
-        <div class="activity-title">Virtual Break Room</div>
-        <div class="activity-desc">Scribble freely, draw out your frustration, and clear your mind.</div>
-        <button class="btn-primary" style="margin-top:14px;" onclick="openActivity('breakRoom')">Enter</button>
-    </div>
-    <div class="activity-card" onclick="openActivity('screamMeter')">
-        <div class="activity-icon">🎤</div>
-        <div class="activity-title">Scream Meter</div>
-        <div class="activity-desc">A safe space to vent. We visualize your vocal intensity instantly.</div>
-        <button class="btn-primary" style="margin-top:14px;" onclick="openActivity('screamMeter')">Start</button>
-    </div>
-    <div class="activity-card" onclick="openActivity('boxBreathing')">
-        <div class="activity-icon">🧘</div>
-        <div class="activity-title">Box Breathing</div>
-        <div class="activity-desc">Regain control with the 4-4-4-4 rhythmic breathing technique.</div>
-        <button class="btn-primary" style="margin-top:14px;" onclick="openActivity('boxBreathing')">Breathe</button>
-    </div>
+/* ═══════════════════════════════════════
+   HERO HEADER
+   ═══════════════════════════════════════ */
+.acts-hero {
+    background: linear-gradient(135deg, #1a1040 0%, #302b63 50%, #1e1b4b 100%);
+    border-radius: 28px;
+    padding: 44px 40px;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(48, 43, 99, 0.35);
+}
+.acts-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(168,85,247,0.18), transparent 70%);
+    pointer-events: none;
+}
+.acts-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 10%;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(102,126,234,0.14), transparent 70%);
+    pointer-events: none;
+}
+.acts-hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.7);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+}
+.acts-hero-title {
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 900;
+    color: white;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 12px;
+}
+.acts-hero-title span {
+    background: linear-gradient(90deg, #c084fc, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.acts-hero-sub {
+    font-size: 15px;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 28px;
+    max-width: 560px;
+    line-height: 1.6;
+}
+.acts-hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.acts-hero-pill {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.13);
+    color: rgba(255,255,255,0.75);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* ═══════════════════════════════════════
+   SECTION LABEL
+   ═══════════════════════════════════════ */
+.acts-section-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: #9ca3af;
+    margin-bottom: 16px;
+    padding-left: 2px;
+}
+
+/* ═══════════════════════════════════════
+   ACTIVITY CARDS GRID
+   ═══════════════════════════════════════ */
+.acts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 20px;
+    margin-bottom: 48px;
+}
+.act-card {
+    background: white;
+    border-radius: 22px;
+    padding: 0 0 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+    cursor: pointer;
+    transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), box-shadow 0.22s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+.act-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+}
+.act-card:active { transform: translateY(-2px) scale(0.99); }
+.act-card-banner {
+    height: 100px;
+    border-radius: 22px 22px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+.act-card-banner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.08);
+}
+.banner-blue   { background: linear-gradient(135deg, #667eea, #764ba2); }
+.banner-pink   { background: linear-gradient(135deg, #f093fb, #f5576c); }
+.banner-teal   { background: linear-gradient(135deg, #11998e, #38ef7d); }
+.banner-orange { background: linear-gradient(135deg, #f7971e, #ffd200); }
+.banner-rose   { background: linear-gradient(135deg, #ff6b6b, #feca57); }
+.banner-gold   { background: linear-gradient(135deg, #f6d365, #fda085); }
+.banner-purple { background: linear-gradient(135deg, #a855f7, #6d28d9); }
+.banner-sky    { background: linear-gradient(135deg, #0ea5e9, #38bdf8); }
+
+.act-card-body { padding: 0 22px; flex: 1; display: flex; flex-direction: column; }
+.act-card-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    padding: 3px 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    align-self: flex-start;
+}
+.tag-express  { background: #ede9fe; color: #6d28d9; }
+.tag-breath   { background: #d1fae5; color: #065f46; }
+.tag-focus    { background: #fef3c7; color: #92400e; }
+.tag-ground   { background: #fce7f3; color: #9d174d; }
+.tag-gratitude{ background: #ecfdf5; color: #065f46; }
+.tag-affirm   { background: #f5f3ff; color: #4c1d95; }
+.tag-mindful  { background: #e0f2fe; color: #075985; }
+
+.act-card-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 7px;
+    line-height: 1.25;
+}
+.act-card-desc {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.55;
+    flex: 1;
+    margin-bottom: 18px;
+}
+.act-card-btn {
+    display: block;
+    width: 100%;
+    padding: 11px;
+    border: none;
+    border-radius: 13px;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    transition: opacity 0.18s, transform 0.15s;
+}
+.act-card-btn:hover { opacity: 0.88; transform: scale(0.985); }
+.btn-grad-blue   { background: linear-gradient(135deg, #667eea, #764ba2); }
+.btn-grad-pink   { background: linear-gradient(135deg, #f093fb, #f5576c); }
+.btn-grad-teal   { background: linear-gradient(135deg, #11998e, #38ef7d); color: #064e3b !important; }
+.btn-grad-orange { background: linear-gradient(135deg, #f7971e, #ffd200); color: #78350f !important; }
+.btn-grad-rose   { background: linear-gradient(135deg, #ff6b6b, #feca57); color: #7c2d12 !important; }
+.btn-grad-gold   { background: linear-gradient(135deg, #f6d365, #fda085); color: #7c2d12 !important; }
+.btn-grad-purple { background: linear-gradient(135deg, #a855f7, #6d28d9); }
+.btn-grad-sky    { background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: #0c4a6e !important; }
+
+/* ═══════════════════════════════════════
+   FULLSCREEN OVERLAY BASE
+   ═══════════════════════════════════════ */
+.fs-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    background: linear-gradient(160deg, #0f0c29 0%, #302b63 55%, #1a1040 100%);
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-y: auto;
+    padding: 80px 20px 40px;
+}
+.fs-overlay.active { display: flex; }
+
+.fs-close {
+    position: fixed;
+    top: 18px;
+    right: 22px;
+    z-index: 9100;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    transition: background 0.2s;
+}
+.fs-close:hover { background: rgba(255,255,255,0.2); }
+
+.fs-title {
+    font-size: clamp(20px, 3vw, 30px);
+    font-weight: 900;
+    color: white;
+    text-align: center;
+    margin-bottom: 28px;
+    letter-spacing: -0.5px;
+}
+
+/* glass card used inside overlays */
+.glass-card {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.11);
+    border-radius: 28px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+/* ═══════════════════════════════════════
+   SCREAM METER OVERLAY
+   ═══════════════════════════════════════ */
+.scream-box {
+    background: rgba(255,255,255,0.96);
+    border-radius: 28px;
+    padding: 44px 40px;
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+}
+.scream-bar-track {
+    width: 72px; height: 300px;
+    background: #e2e8f0;
+    border-radius: 36px;
+    position: relative;
+    overflow: hidden;
+    margin: 0 auto;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.08);
+}
+.scream-bar-fill {
+    width: 100%; height: 0%;
+    background: linear-gradient(to top, #4ade80, #facc15, #ef4444);
+    position: absolute; bottom: 0;
+    transition: height 0.05s ease-out;
+    border-radius: 36px;
+}
+.scream-pct {
+    font-size: 52px; font-weight: 900;
+    color: #1e293b; margin: 14px 0;
+    font-variant-numeric: tabular-nums;
+}
+.scream-btn {
+    width: 100%; padding: 14px;
+    border: none; border-radius: 14px;
+    font-size: 15px; font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    transition: opacity 0.2s;
+}
+.scream-btn:hover { opacity: 0.88; }
+
+/* ═══════════════════════════════════════
+   BOX BREATHING OVERLAY
+   ═══════════════════════════════════════ */
+.box-circle {
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(102,126,234,0.22), rgba(118,75,162,0.22));
+    border: 2px solid rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700; color: white;
+    transition: all 4s ease-in-out;
+}
+.box-circle.inhale {
+    transform: scale(1.5);
+    background: linear-gradient(135deg, rgba(67,233,123,0.25), rgba(56,249,215,0.25));
+}
+.box-circle.exhale {
+    transform: scale(1);
+    background: linear-gradient(135deg, rgba(102,126,234,0.14), rgba(118,75,162,0.14));
+}
+.overlay-btn-row { display: flex; gap: 14px; margin-top: 28px; flex-wrap: wrap; justify-content: center; }
+.ov-btn {
+    padding: 13px 30px;
+    border: none; border-radius: 14px;
+    font-size: 15px; font-weight: 700;
+    transition: transform 0.15s, opacity 0.2s;
+}
+.ov-btn:hover { transform: scale(0.97); opacity: 0.9; }
+.ov-btn-primary { background: linear-gradient(135deg, #11998e, #38ef7d); color: #064e3b; }
+.ov-btn-ghost { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+
+/* ═══════════════════════════════════════
+   POMODORO TIMER
+   ═══════════════════════════════════════ */
+.pomo-card {
+    padding: 38px 34px;
+    max-width: 460px; width: 100%;
+    text-align: center;
+}
+.pomo-tabs {
+    display: flex; gap: 6px;
+    justify-content: center;
+    margin-bottom: 30px; flex-wrap: wrap;
+}
+.pomo-tab {
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: 1.5px solid rgba(255,255,255,0.18);
+    background: transparent;
+    color: rgba(255,255,255,0.6);
+    font-size: 12px; font-weight: 700;
+    transition: all 0.2s;
+}
+.pomo-tab.active, .pomo-tab:hover {
+    background: rgba(255,255,255,0.14);
+    color: white;
+    border-color: rgba(255,255,255,0.4);
+}
+.pomo-ring-wrap {
+    position: relative;
+    width: 220px; height: 220px;
+    margin: 0 auto 24px;
+}
+.pomo-ring-wrap svg {
+    position: absolute; inset: 0;
+    transform: rotate(-90deg);
+}
+.pomo-ring-bg   { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 10; }
+.pomo-ring-prog {
+    fill: none;
+    stroke: url(#pomoGrad);
+    stroke-width: 10;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear;
+}
+.pomo-time-inner {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+}
+.pomo-digits {
+    font-size: 50px; font-weight: 900; color: white;
+    font-variant-numeric: tabular-nums; line-height: 1;
+}
+.pomo-sublabel {
+    font-size: 11px; font-weight: 700;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-top: 6px;
+}
+.pomo-dots {
+    display: flex; gap: 8px;
+    justify-content: center;
+    margin-bottom: 22px;
+}
+.pomo-dot {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    transition: background 0.3s;
+}
+.pomo-dot.done   { background: #10b981; }
+.pomo-dot.active { background: #fbbf24; }
+.pomo-ctrls { display: flex; gap: 12px; justify-content: center; }
+.pomo-play {
+    padding: 13px 34px; border: none; border-radius: 14px;
+    font-size: 15px; font-weight: 700;
+    background: linear-gradient(135deg, #667eea, #a855f7);
+    color: white; transition: transform 0.15s, opacity 0.2s;
+}
+.pomo-play:hover { opacity: 0.88; transform: scale(0.97); }
+.pomo-reset {
+    padding: 13px 22px; border-radius: 14px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.18);
+    font-size: 15px; font-weight: 700;
+    transition: transform 0.15s;
+}
+.pomo-reset:hover { transform: scale(0.97); }
+
+/* ═══════════════════════════════════════
+   5-4-3-2-1 GROUNDING
+   ═══════════════════════════════════════ */
+.ground-card {
+    padding: 34px 30px;
+    max-width: 520px; width: 100%;
+}
+.ground-track {
+    display: flex; gap: 6px;
+    margin-bottom: 28px; justify-content: center;
+}
+.ground-dot {
+    height: 5px; border-radius: 3px;
+    background: rgba(255,255,255,0.14);
+    flex: 1; max-width: 60px;
+    transition: background 0.35s;
+}
+.ground-dot.done    { background: #34d399; }
+.ground-dot.current { background: #fbbf24; }
+.ground-big-num {
+    font-size: 72px; font-weight: 900; line-height: 1;
+    text-align: center;
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+}
+.ground-sense {
+    font-size: 20px; font-weight: 800; color: white;
+    text-align: center; margin-bottom: 4px;
+}
+.ground-hint {
+    font-size: 13px; color: rgba(255,255,255,0.55);
+    text-align: center; line-height: 1.55;
+    margin-bottom: 22px;
+}
+.ground-inputs { display: flex; flex-direction: column; gap: 9px; margin-bottom: 22px; }
+.ground-inp {
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.14);
+    border-radius: 12px;
+    padding: 11px 15px;
+    color: white; font-size: 14px; outline: none;
+    transition: border-color 0.2s;
+}
+.ground-inp::placeholder { color: rgba(255,255,255,0.32); }
+.ground-inp:focus { border-color: rgba(255,255,255,0.42); }
+.ground-nav { display: flex; gap: 10px; }
+.ground-next {
+    flex: 1; padding: 12px; border: none; border-radius: 13px;
+    font-size: 15px; font-weight: 700;
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    color: white; transition: transform 0.15s;
+}
+.ground-next:hover { transform: scale(0.97); }
+.ground-prev {
+    padding: 12px 20px; border-radius: 13px;
+    background: rgba(255,255,255,0.09);
+    color: white; border: 1px solid rgba(255,255,255,0.18);
+    font-size: 15px; font-weight: 700;
+    transition: transform 0.15s;
+}
+.ground-prev:hover { transform: scale(0.97); }
+.ground-done { text-align: center; padding: 16px 0; }
+.ground-done-ico { font-size: 64px; }
+.ground-done h3 { color: #34d399; font-size: 22px; font-weight: 800; margin: 12px 0 8px; }
+.ground-done p  { color: rgba(255,255,255,0.55); font-size: 14px; line-height: 1.6; }
+.ground-again {
+    margin-top: 20px; padding: 12px 28px;
+    border: none; border-radius: 13px;
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    color: white; font-size: 15px; font-weight: 700;
+    transition: transform 0.15s;
+}
+.ground-again:hover { transform: scale(0.97); }
+
+/* ═══════════════════════════════════════
+   GRATITUDE JOURNAL
+   ═══════════════════════════════════════ */
+.grat-card {
+    padding: 34px 30px;
+    max-width: 500px; width: 100%;
+}
+.grat-streak-wrap {
+    text-align: center; margin-bottom: 26px;
+}
+.grat-streak-num {
+    font-size: 52px; font-weight: 900; color: #fbbf24; line-height: 1;
+}
+.grat-streak-lbl {
+    font-size: 11px; font-weight: 700;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin-top: 3px;
+}
+.grat-fields { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.grat-row { display: flex; gap: 11px; align-items: flex-start; }
+.grat-badge {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white; font-size: 13px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 9px;
+}
+.grat-ta {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.13);
+    border-radius: 12px;
+    padding: 11px 15px;
+    color: white; font-size: 14px;
+    resize: none; min-height: 50px;
+    outline: none; transition: border-color 0.2s;
+}
+.grat-ta::placeholder { color: rgba(255,255,255,0.3); }
+.grat-ta:focus { border-color: rgba(255,255,255,0.4); }
+.grat-save {
+    width: 100%; padding: 14px;
+    border: none; border-radius: 15px;
+    font-size: 15px; font-weight: 800;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white; margin-bottom: 14px;
+    transition: transform 0.15s, opacity 0.2s;
+}
+.grat-save:hover { transform: scale(0.98); opacity: 0.9; }
+.grat-hist-btn {
+    width: 100%; background: none;
+    border: 1px solid rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.55);
+    padding: 9px; border-radius: 12px;
+    font-size: 13px; font-weight: 600;
+    transition: all 0.2s;
+}
+.grat-hist-btn:hover { background: rgba(255,255,255,0.07); color: white; }
+.grat-hist { margin-top: 14px; max-height: 180px; overflow-y: auto; display: none; }
+.grat-hist.open { display: block; }
+.grat-past {
+    background: rgba(255,255,255,0.05);
+    border-radius: 11px; padding: 12px 14px;
+    margin-bottom: 8px; font-size: 13px;
+    color: rgba(255,255,255,0.68); line-height: 1.55;
+}
+.grat-past-date { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 5px; }
+.grat-ok { text-align: center; padding: 14px 0; display: none; }
+.grat-ok-ico { font-size: 56px; }
+.grat-ok-msg { color: #34d399; font-size: 19px; font-weight: 800; margin-top: 10px; }
+.grat-ok-sub { color: rgba(255,255,255,0.45); font-size: 13px; margin-top: 5px; }
+
+/* ═══════════════════════════════════════
+   AFFIRMATION CARDS
+   ═══════════════════════════════════════ */
+.aff-card-wrap {
+    padding: 34px 30px;
+    max-width: 500px; width: 100%;
+    text-align: center;
+}
+.aff-cats {
+    display: flex; flex-wrap: wrap; gap: 7px;
+    justify-content: center; margin-bottom: 26px;
+}
+.aff-cat {
+    padding: 7px 17px; border-radius: 20px;
+    border: 1.5px solid rgba(255,255,255,0.18);
+    background: transparent;
+    color: rgba(255,255,255,0.65);
+    font-size: 12px; font-weight: 700;
+    transition: all 0.2s;
+}
+.aff-cat.active, .aff-cat:hover {
+    background: rgba(255,255,255,0.14);
+    color: white;
+    border-color: rgba(255,255,255,0.42);
+}
+.aff-display {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 38px 28px;
+    margin-bottom: 22px;
+    min-height: 140px;
+    display: flex; align-items: center; justify-content: center;
+}
+.aff-quote {
+    font-size: clamp(17px, 3vw, 22px);
+    font-weight: 700;
+    color: white;
+    line-height: 1.55;
+    transition: opacity 0.3s;
+}
+.aff-quote.fading { opacity: 0; }
+.aff-ctrls {
+    display: flex; gap: 10px;
+    align-items: center; justify-content: center; flex-wrap: wrap;
+}
+.aff-next {
+    padding: 12px 28px;
+    border: none; border-radius: 13px;
+    font-size: 15px; font-weight: 700;
+    background: linear-gradient(135deg, #a855f7, #6d28d9);
+    color: white; transition: transform 0.15s;
+}
+.aff-next:hover { transform: scale(0.97); }
+.aff-like {
+    width: 46px; height: 46px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.2);
+    background: transparent;
+    font-size: 20px; color: white;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+}
+.aff-like.liked { background: rgba(239,68,68,0.2); border-color: #f87171; }
+.aff-like:hover { transform: scale(1.1); }
+.aff-prog {
+    font-size: 12px; color: rgba(255,255,255,0.38);
+    margin-top: 14px;
+}
+
+/* ═══════════════════════════════════════
+   4-7-8 BREATHING PACER
+   ═══════════════════════════════════════ */
+.pacer-card {
+    padding: 38px 34px;
+    max-width: 440px; width: 100%;
+    text-align: center;
+}
+.pacer-phases {
+    display: flex; gap: 8px;
+    justify-content: center; margin-bottom: 26px;
+}
+.pacer-ph {
+    flex: 1; max-width: 100px;
+    padding: 8px 6px;
+    border-radius: 12px;
+    font-size: 11px; font-weight: 700;
+    color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(255,255,255,0.09);
+    text-transform: uppercase; letter-spacing: 0.4px;
+    line-height: 1.4;
+    transition: all 0.35s;
+}
+.pacer-ph.active {
+    background: rgba(14,165,233,0.2);
+    border-color: #38bdf8;
+    color: #7dd3fc;
+}
+.pacer-ring-wrap {
+    position: relative;
+    width: 195px; height: 195px;
+    margin: 0 auto 22px;
+}
+.pacer-ring-wrap svg {
+    position: absolute; inset: 0;
+    transform: rotate(-90deg);
+}
+.pacer-ring-bg   { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 10; }
+.pacer-ring-prog {
+    fill: none;
+    stroke: url(#pacerGrad);
+    stroke-width: 10;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear;
+}
+.pacer-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+}
+.pacer-num {
+    font-size: 54px; font-weight: 900; color: white;
+    font-variant-numeric: tabular-nums; line-height: 1;
+}
+.pacer-ph-label {
+    font-size: 11px; font-weight: 700;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-top: 5px;
+}
+.pacer-cycles {
+    font-size: 13px; color: rgba(255,255,255,0.4);
+    margin-bottom: 20px;
+}
+.pacer-btns { display: flex; gap: 10px; justify-content: center; }
+.pacer-go {
+    padding: 13px 32px; border: none; border-radius: 14px;
+    font-size: 15px; font-weight: 700;
+    background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+    color: #0c4a6e; transition: transform 0.15s, opacity 0.2s;
+}
+.pacer-go:hover { opacity: 0.88; transform: scale(0.97); }
+.pacer-rst {
+    padding: 13px 22px; border-radius: 14px;
+    background: rgba(255,255,255,0.09);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.18);
+    font-size: 15px; font-weight: 700;
+    transition: transform 0.15s;
+}
+.pacer-rst:hover { transform: scale(0.97); }
+
+/* ═══════════════════════════════════════
+   BREAK ROOM CANVAS OVERLAY
+   ═══════════════════════════════════════ */
+#breakRoomOverlay {
+    padding: 68px 0 0;
+    justify-content: flex-start;
+}
+.canvas-toolbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9200;
+    height: 60px;
+    background: rgba(15,12,41,0.9);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+.toolbar-group {
+    display: flex; align-items: center; gap: 8px;
+}
+.toolbar-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.12); }
+.toolbar-label { font-size: 12px; color: rgba(255,255,255,0.5); }
+.toolbar-icon-btn {
+    background: none; border: none;
+    font-size: 18px; color: white;
+    padding: 5px; border-radius: 8px;
+    transition: background 0.15s;
+}
+.toolbar-icon-btn:hover { background: rgba(255,255,255,0.1); }
+.toolbar-text-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: white;
+    padding: 5px 14px;
+    border-radius: 8px;
+    font-size: 12px; font-weight: 700;
+    transition: background 0.15s;
+}
+.toolbar-text-btn:hover { background: rgba(255,255,255,0.18); }
+.export-btn {
+    background: white; color: #1e293b;
+    border: none; border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px; font-weight: 700;
+    transition: opacity 0.15s;
+}
+.export-btn:hover { opacity: 0.88; }
+#canvasArea {
+    width: 100vw;
+    height: calc(100vh - 60px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+#scribbleBoard {
+    border-radius: 0;
+    cursor: crosshair;
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    background: rgba(255,255,255,0.03);
+}
+
+/* ═══════════════════════════════════════
+   DEMO OVERLAY
+   ═══════════════════════════════════════ */
+.demo-badge {
+    position: fixed; top: 12px; right: 16px;
+    z-index: 99998;
+    background: rgba(245,158,11,0.92);
+    color: #000; padding: 6px 14px;
+    border-radius: 20px; font-size: 12px; font-weight: 700;
+}
+
+/* ═══════════════════════════════════════
+   SCROLLBAR POLISH
+   ═══════════════════════════════════════ */
+.fs-overlay::-webkit-scrollbar { width: 5px; }
+.fs-overlay::-webkit-scrollbar-track { background: transparent; }
+.fs-overlay::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ── Top Nav ── -->
+<nav class="acts-nav">
+    <a href="/student/dashboard" class="acts-nav-back">← Dashboard</a>
+    <div class="acts-nav-sep"></div>
+    <span class="acts-nav-logo">AURA</span>
+    <div class="acts-nav-sep"></div>
+    <span class="acts-nav-title">Wellness Activities</span>
+    <div class="acts-nav-spacer"></div>
+    {% if session.get('user_name') %}
+    <span class="acts-nav-user">{{ session.get('user_name') }}</span>
+    {% endif %}
+</nav>
+
+{% if session.get('is_demo') %}
+<div style="background:linear-gradient(90deg,#f59e0b,#d97706);color:#000;text-align:center;padding:7px 16px;font-size:12px;font-weight:700;">
+    ⚠️ Demo Mode — Browse freely. Write actions are disabled.
 </div>
+{% endif %}
 
-<div id="breakRoom" class="fullscreen-overlay">
-    <button class="close-btn" onclick="closeActivity('breakRoom')">Esc / Close</button>
-    <!-- Pinned Drawing Toolbar: Always visible, topmost -->
-    <div id="breakroom-toolbar" class="floating-toolbar pinned-toolbar" style="position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 12000; width: max-content; display: flex; gap: 1.5rem; align-items: center; background: rgba(30,41,59,0.92); border-radius: 18px; box-shadow: 0 4px 24px rgba(0,0,0,0.18); padding: 0.7rem 2.2rem; backdrop-filter: blur(16px); border: 2.5px solid var(--theme-accent, #4785ff);">
-        <div style="display: flex; align-items: center; gap: 0.7rem;">
-            <span style="font-size: 1.3rem;">🖌️</span>
-            <input type="range" id="penThickness" min="1" max="24" value="5" style="width: 80px;" oninput="document.getElementById('penThicknessValue').textContent=this.value">
-            <span id="penThicknessValue" style="min-width: 2ch; text-align: right; font-size: 1rem;">5</span>px
+<!-- ── Page Content ── -->
+<div class="acts-page">
+
+    <!-- Hero -->
+    <div class="acts-hero">
+        <div class="acts-hero-eyebrow">🌿 AURA Wellness Suite</div>
+        <h1 class="acts-hero-title">Your <span>Mind & Focus</span><br>Toolkit</h1>
+        <p class="acts-hero-sub">Eight science-backed activities to decompress, sharpen focus, and build lasting mental resilience — right from your browser.</p>
+        <div class="acts-hero-pills">
+            <span class="acts-hero-pill">🎨 Creative Expression</span>
+            <span class="acts-hero-pill">🧘 Breathwork</span>
+            <span class="acts-hero-pill">🍅 Focus Timer</span>
+            <span class="acts-hero-pill">🌊 Grounding</span>
+            <span class="acts-hero-pill">🙏 Gratitude</span>
+            <span class="acts-hero-pill">✨ Affirmations</span>
+            <span class="acts-hero-pill">🌬️ 4-7-8 Breathing</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.7rem;">
-            <span style="font-size: 1.3rem;">🎨</span>
-            <input type="color" id="penColor" value="#6366f1" style="border:none; background:none; height: 30px; cursor: pointer;">
+    </div>
+
+    <div class="acts-section-label">All Activities</div>
+
+    <!-- Cards Grid -->
+    <div class="acts-grid">
+
+        <!-- 1. Virtual Break Room -->
+        <div class="act-card" onclick="openAct('breakRoomOverlay')">
+            <div class="act-card-banner banner-blue">🎨</div>
+            <div class="act-card-body">
+                <span class="act-card-tag tag-express">Express</span>
+                <div class="act-card-title">Virtual Break Room</div>
+                <div class="act-card-desc">Scribble freely, smash objects, export your art. Real cathartic release on a digital canvas.</div>
+                <button class="act-card-btn btn-grad-blue" onclick="openAct('breakRoomOverlay')">Open Canvas</button>
+            </div>
         </div>
-        <button onclick="exportCanvasPNG()" title="Download as PNG" style="background: #fff; color: #1e293b; border-radius: 8px; border: none; padding: 0.4rem 1.1rem; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">💾 Export PNG</button>
-        <button onclick="toggleFullscreenCanvas()" title="Fullscreen" style="background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">⛶</button>
-        <button onclick="setPhysicsMode('scribble')" title="Scribble Mode" style="background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">✏️</button>
-        <button onclick="setPhysicsMode('break')" title="Break Objects" style="background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">💥</button>
-        <button onclick="undoCanvas()" title="Undo" style="background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">↩️</button>
-        <button onclick="redoCanvas()" title="Redo" style="background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">↪️</button>
-        <button onclick="clearCanvas()" title="Clear Canvas" style="background: none; border: none; font-size: 1.5rem; color: #fff; cursor: pointer;">🗑️</button>
-    </div>
-    <div class="canvas-container" style="height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.12);">
-        <script>
-        // Ensure toolbar is always pinned and chat input is always visible
-        window.addEventListener('DOMContentLoaded', function() {
-            // Pin toolbar to top
-            const toolbar = document.getElementById('breakroom-toolbar');
-            if (toolbar) {
-                toolbar.style.position = 'fixed';
-                toolbar.style.top = '0';
-                toolbar.style.left = '50%';
-                toolbar.style.transform = 'translateX(-50%)';
-                toolbar.style.zIndex = '12000';
-            }
-            // Lock chat input bar if present
-            const chatBar = document.querySelector('.study-input-area');
-            if (chatBar) {
-                chatBar.style.position = 'fixed';
-                chatBar.style.left = '0';
-                chatBar.style.right = '0';
-                chatBar.style.bottom = '0';
-                chatBar.style.zIndex = '1000';
-            }
-        });
-        </script>
-        <canvas id="scribbleBoard" width="1600" height="900" style="cursor: crosshair; touch-action: none; border-radius: 18px; background: rgba(255,255,255,0.04); box-shadow: 0 8px 32px rgba(0,0,0,0.18);"></canvas>
-    </div>
-    <p style="color: #64748b; margin-top: 15px; text-align: center;">Draw, scribble, break, and export your art. All tools are always visible.</p>
-</div>
 
-<div id="screamMeter" class="fullscreen-overlay">
-    <button class="close-btn" onclick="closeActivity('screamMeter')">Esc / Close</button>
-    <h2 style="color:white; margin-bottom:3rem; font-size: 2.5rem;">🎤 Scream Meter</h2>
-    
-    <div style="background: rgba(255,255,255,0.95); padding: 4rem; border-radius: 30px; text-align: center; width: 100%; max-width: 500px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-        <div id="screamBarContainer" style="width: 80px; height: 350px; background: #e2e8f0; margin: 0 auto; border-radius: 40px; position: relative; overflow: hidden; box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);">
-            <div id="screamBar" style="width: 100%; height: 0%; background: linear-gradient(to top, #4ade80, #facc15, #ef4444); position: absolute; bottom: 0; transition: height 0.05s ease-out;"></div>
+        <!-- 2. Scream Meter -->
+        <div class="act-card" onclick="openAct('screamOverlay')">
+            <div class="act-card-banner banner-pink">🎤</div>
+            <div class="act-card-body">
+                <span class="act-card-tag tag-express">Express</span>
+                <div class="act-card-title">Scream Meter</div>
+                <div class="act-card-desc">A safe and private space to let it out. Visualise your vocal intensity in real time.</div>
+                <button class="act-card-btn btn-grad-pink" onclick="openAct('screamOverlay')">Start Venting</button>
+            </div>
         </div>
-        <h1 id="screamLevel" style="font-size: 3.5rem; margin-top: 1.5rem; font-weight: 800; color: #1e293b;">0%</h1>
-        <button id="screamBtn" onclick="toggleScreamListener()" class="action-btn btn-primary" style="margin-top: 1.5rem; width: 100%; justify-content: center; padding: 1rem;">
-            Start Microphone
-        </button>
+
+        <!-- 3. Box Breathing -->
+        <div class="act-card" onclick="openAct('boxOverlay')">
+            <div class="act-card-banner banner-teal">🧘</div>
+            <div class="act-card-body">
+                <span class="act-card-tag tag-breath">Breathe</span>
+                <div class="act-card-title">Box Breathing</div>
+                <div class="act-card-desc">The military-proven 4-4-4-4 technique that resets your nervous system in minutes.</div>
+                <button class="act-card-btn btn-grad-teal" onclick="openAct('boxOverlay')">Start Session</button>
+            </div>
+        </div>
+
+        <!-- 4. Pomodoro -->
+        <div class="act-card" onclick="openAct('pomodoroOverlay')">
+            <div class="act-card-banner banner-orange">🍅</div>
+            <div class="act-card-body">
+                <span class="act-card-tag tag-focus">Focus</span>
+                <div class="act-card-title">Pomodoro Focus Timer</div>
+                <div class="act-card-desc">Work in 25-min power blocks with automatic short and long breaks to keep you in flow.</div>
+                <button class="act-card-btn btn-grad-orange" onclick="openAct('pomodoroOverlay')">Start Focus</button>
+            </div>
+        </div>
+
+        <!-- 5. 5-4-3-2-1 Grounding -->
+        <div class="act-card" onclick="openAct('groundOverlay')">
+            <div class="act-card-banner banner-rose">🌊</div>
+            <div class="act-card-body">
+                <span class="act-card-tag tag-ground">Ground</span>
+                <div class="act-card-title">5-4-3-2-1 Grounding</div>
+                <div class="act-card-desc">Therapist-recommended sensory technique to snap out of anxiety and return to the present.</div>
+                <button class="act-card-btn btn-grad-rose" onclick="openAct('groundOverlay')">Ground Me</button>
+            </div>
+        </div>
+
+        <!-- 6. Gratitude Journal -->
+        <div class="act-card" onclick="openAct('gratOverlay')">
+            <div class="act-card-banner banner-gold">🙏</div>
+            <div class="act-card-body">
+                <span class="act-card-tag tag-gratitude">Gratitude</span>
+                <div class="act-card-title">Gratitude Journal</div>
+                <div class="act-card-desc">Write three things you're grateful for today. Build a streak and rewire for positivity.</div>
+                <button class="act-card-btn btn-grad-gold" onclick="openAct('gratOverlay')">Write Today</button>
+            </div>
+        </div>
+
+        <!-- 7. Affirmation Cards -->
+        <div class="act-card" onclick="openAct('affOverlay')">
+            <div class="act-card-banner banner-purple">✨</div>
+            <div class="act-card-body">
+                <span class="act-card-tag tag-affirm">Affirm</span>
+                <div class="act-card-title">Affirmation Cards</div>
+                <div class="act-card-desc">40+ affirmations across Confidence, Calm, Academic and Strength. Flip until one lands.</div>
+                <button class="act-card-btn btn-grad-purple" onclick="openAct('affOverlay')">Flip Cards</button>
+            </div>
+        </div>
+
+        <!-- 8. 4-7-8 Breathing -->
+        <div class="act-card" onclick="openAct('pacerOverlay')">
+            <div class="act-card-banner banner-sky">🌬️</div>
+            <div class="act-card-body">
+                <span class="act-card-tag tag-mindful">Breathe</span>
+                <div class="act-card-title">4-7-8 Breathing Pacer</div>
+                <div class="act-card-desc">Dr. Weil's relaxation breath: inhale 4s, hold 7s, exhale 8s. Activates rest-and-digest mode.</div>
+                <button class="act-card-btn btn-grad-sky" onclick="openAct('pacerOverlay')">Start Pacer</button>
+            </div>
+        </div>
+
+    </div>
+</div><!-- /.acts-page -->
+
+
+<!-- ══════════════════════════════════════
+     OVERLAYS
+     ══════════════════════════════════════ -->
+
+<!-- 1. Break Room -->
+<div id="breakRoomOverlay" class="fs-overlay" style="padding:0;">
+    <div class="canvas-toolbar">
+        <button class="toolbar-text-btn" onclick="closeAct('breakRoomOverlay')">✕ Close</button>
+        <div class="toolbar-sep"></div>
+        <div class="toolbar-group">
+            <span class="toolbar-label">Size</span>
+            <input type="range" id="penThickness" min="1" max="24" value="5" style="width:70px;" oninput="document.getElementById('penSizeVal').textContent=this.value">
+            <span id="penSizeVal" style="color:white;font-size:12px;min-width:16px;">5</span>
+        </div>
+        <div class="toolbar-sep"></div>
+        <div class="toolbar-group">
+            <span class="toolbar-label">Colour</span>
+            <input type="color" id="penColor" value="#6366f1" style="border:none;background:none;height:28px;cursor:pointer;width:32px;">
+        </div>
+        <div class="toolbar-sep"></div>
+        <button class="toolbar-icon-btn" onclick="setMode('scribble')" title="Draw">✏️</button>
+        <button class="toolbar-icon-btn" onclick="setMode('break')"    title="Smash Objects">💥</button>
+        <button class="toolbar-icon-btn" onclick="undoCvs()"          title="Undo">↩️</button>
+        <button class="toolbar-icon-btn" onclick="redoCvs()"          title="Redo">↪️</button>
+        <button class="toolbar-icon-btn" onclick="clearCvs()"         title="Clear">🗑️</button>
+        <div class="toolbar-sep"></div>
+        <button class="export-btn" onclick="exportCvs()">💾 Export PNG</button>
+        <button class="toolbar-icon-btn" onclick="fsCvs()" title="Fullscreen">⛶</button>
+    </div>
+    <div id="canvasArea">
+        <canvas id="scribbleBoard"></canvas>
     </div>
 </div>
 
-<div id="boxBreathing" class="fullscreen-overlay">
-    <button class="close-btn" onclick="closeActivity('boxBreathing')">Esc / Close</button>
-    <h2 style="color:white; margin-bottom:3rem; font-size: 2rem;">🧘 Box Breathing Technique</h2>
-    
-    <div class="breathing-circle" id="breathingCircle">
-        <span id="breathingText">Ready</span>
+<!-- 2. Scream Meter -->
+<div id="screamOverlay" class="fs-overlay">
+    <button class="fs-close" onclick="closeAct('screamOverlay')">✕ Close</button>
+    <div class="fs-title">🎤 Scream Meter</div>
+    <div class="scream-box">
+        <div class="scream-bar-track">
+            <div class="scream-bar-fill" id="screamFill"></div>
+        </div>
+        <div class="scream-pct" id="screamPct">0%</div>
+        <button class="scream-btn" id="screamBtn" onclick="toggleScream()">Start Microphone</button>
     </div>
-    
-    <div style="margin-top: 3rem; display: flex; gap: 20px;">
-        <button onclick="startBreathing()" class="action-btn btn-success" style="font-size: 1.2rem; padding: 15px 30px;">Start Session</button>
-        <button onclick="stopBreathing()" class="action-btn btn-danger" style="font-size: 1.2rem; padding: 15px 30px;">Stop</button>
+</div>
+
+<!-- 3. Box Breathing -->
+<div id="boxOverlay" class="fs-overlay">
+    <button class="fs-close" onclick="closeAct('boxOverlay')">✕ Close</button>
+    <div class="fs-title">🧘 Box Breathing — 4-4-4-4</div>
+    <div class="box-circle" id="boxCircle"><span id="boxText">Ready</span></div>
+    <div class="overlay-btn-row">
+        <button class="ov-btn ov-btn-primary" onclick="startBox()">Start Session</button>
+        <button class="ov-btn ov-btn-ghost"   onclick="stopBox()">Stop</button>
+    </div>
+</div>
+
+<!-- 4. Pomodoro -->
+<div id="pomodoroOverlay" class="fs-overlay">
+    <button class="fs-close" onclick="closeAct('pomodoroOverlay')">✕ Close</button>
+    <div class="fs-title">🍅 Pomodoro Focus Timer</div>
+    <div class="glass-card pomo-card">
+        <div class="pomo-tabs">
+            <button class="pomo-tab active" id="ptFocus" onclick="pomoMode('work')">Focus 25m</button>
+            <button class="pomo-tab"        id="ptShort" onclick="pomoMode('short')">Short Break 5m</button>
+            <button class="pomo-tab"        id="ptLong"  onclick="pomoMode('long')">Long Break 15m</button>
+        </div>
+        <div class="pomo-ring-wrap">
+            <svg viewBox="0 0 220 220" width="220" height="220">
+                <defs>
+                    <linearGradient id="pomoGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#667eea"/>
+                        <stop offset="100%" stop-color="#f093fb"/>
+                    </linearGradient>
+                </defs>
+                <circle class="pomo-ring-bg"   cx="110" cy="110" r="98"/>
+                <circle class="pomo-ring-prog" id="pomoRing" cx="110" cy="110" r="98"
+                    stroke-dasharray="615.75" stroke-dashoffset="0"/>
+            </svg>
+            <div class="pomo-time-inner">
+                <div class="pomo-digits"   id="pomoDigits">25:00</div>
+                <div class="pomo-sublabel" id="pomoSub">FOCUS</div>
+            </div>
+        </div>
+        <div class="pomo-dots" id="pomoDots"></div>
+        <div class="pomo-ctrls">
+            <button class="pomo-play" id="pomoPlayBtn" onclick="pomoToggle()">▶ Start</button>
+            <button class="pomo-reset" onclick="pomoReset()">↩ Reset</button>
+        </div>
+    </div>
+</div>
+
+<!-- 5. Grounding 5-4-3-2-1 -->
+<div id="groundOverlay" class="fs-overlay">
+    <button class="fs-close" onclick="closeAct('groundOverlay')">✕ Close</button>
+    <div class="fs-title">🌊 5-4-3-2-1 Grounding</div>
+    <div class="glass-card ground-card">
+        <div class="ground-track" id="groundTrack">
+            <div class="ground-dot current" id="gd0"></div>
+            <div class="ground-dot" id="gd1"></div>
+            <div class="ground-dot" id="gd2"></div>
+            <div class="ground-dot" id="gd3"></div>
+            <div class="ground-dot" id="gd4"></div>
+        </div>
+        <div id="groundBody">
+            <div class="ground-big-num" id="groundNum">5</div>
+            <div class="ground-sense"   id="groundSense">Things You Can SEE</div>
+            <div class="ground-hint"    id="groundHint">Look around and name 5 things visible right now. Be specific.</div>
+            <div class="ground-inputs"  id="groundInputs"></div>
+            <div class="ground-nav">
+                <button class="ground-prev" id="groundPrevBtn" onclick="groundStep(-1)" style="display:none;">← Back</button>
+                <button class="ground-next" onclick="groundStep(1)">Next →</button>
+            </div>
+        </div>
+        <div class="ground-done" id="groundDone" style="display:none;">
+            <div class="ground-done-ico">🌟</div>
+            <h3>You're Grounded</h3>
+            <p>You just brought yourself fully into the present moment.<br>Take a deep breath — you're safe.</p>
+            <button class="ground-again" onclick="groundReset()">Do It Again</button>
+        </div>
+    </div>
+</div>
+
+<!-- 6. Gratitude Journal -->
+<div id="gratOverlay" class="fs-overlay">
+    <button class="fs-close" onclick="closeAct('gratOverlay')">✕ Close</button>
+    <div class="fs-title">🙏 Gratitude Journal</div>
+    <div class="glass-card grat-card">
+        <div class="grat-streak-wrap">
+            <div class="grat-streak-num" id="gratStreak">0</div>
+            <div class="grat-streak-lbl">🔥 Day Streak</div>
+        </div>
+        <div id="gratForm">
+            <div class="grat-fields">
+                <div class="grat-row"><div class="grat-badge">1</div><textarea class="grat-ta" id="g1" placeholder="I'm grateful for…" rows="2"></textarea></div>
+                <div class="grat-row"><div class="grat-badge">2</div><textarea class="grat-ta" id="g2" placeholder="I appreciate…" rows="2"></textarea></div>
+                <div class="grat-row"><div class="grat-badge">3</div><textarea class="grat-ta" id="g3" placeholder="Today I'm thankful for…" rows="2"></textarea></div>
+            </div>
+            <button class="grat-save" onclick="gratSave()">Save Today's Gratitude ✨</button>
+            <button class="grat-hist-btn" onclick="gratHistory()">📖 View Previous Entries</button>
+            <div class="grat-hist" id="gratHist"></div>
+        </div>
+        <div class="grat-ok" id="gratOk">
+            <div class="grat-ok-ico">🌟</div>
+            <div class="grat-ok-msg">Gratitude saved!</div>
+            <div class="grat-ok-sub">Come back tomorrow to keep your streak alive.</div>
+        </div>
+    </div>
+</div>
+
+<!-- 7. Affirmation Cards -->
+<div id="affOverlay" class="fs-overlay">
+    <button class="fs-close" onclick="closeAct('affOverlay')">✕ Close</button>
+    <div class="fs-title">✨ Affirmation Cards</div>
+    <div class="glass-card aff-card-wrap">
+        <div class="aff-cats">
+            <button class="aff-cat active" onclick="affCat('all',this)">All</button>
+            <button class="aff-cat" onclick="affCat('confidence',this)">💪 Confidence</button>
+            <button class="aff-cat" onclick="affCat('calm',this)">🕊️ Calm</button>
+            <button class="aff-cat" onclick="affCat('academic',this)">📚 Academic</button>
+            <button class="aff-cat" onclick="affCat('strength',this)">🔥 Strength</button>
+        </div>
+        <div class="aff-display">
+            <div class="aff-quote" id="affQuote">Loading…</div>
+        </div>
+        <div class="aff-ctrls">
+            <button class="aff-like" id="affLike" onclick="affLike()">♡</button>
+            <button class="aff-next" onclick="affNext()">Next Card →</button>
+        </div>
+        <div class="aff-prog" id="affProg"></div>
+    </div>
+</div>
+
+<!-- 8. 4-7-8 Pacer -->
+<div id="pacerOverlay" class="fs-overlay">
+    <button class="fs-close" onclick="closeAct('pacerOverlay')">✕ Close</button>
+    <div class="fs-title">🌬️ 4-7-8 Breathing Pacer</div>
+    <div class="glass-card pacer-card">
+        <div class="pacer-phases">
+            <div class="pacer-ph" id="ppIn">Inhale<br>4s</div>
+            <div class="pacer-ph" id="ppHold">Hold<br>7s</div>
+            <div class="pacer-ph" id="ppOut">Exhale<br>8s</div>
+        </div>
+        <div class="pacer-ring-wrap">
+            <svg viewBox="0 0 195 195" width="195" height="195">
+                <defs>
+                    <linearGradient id="pacerGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#0ea5e9"/>
+                        <stop offset="100%" stop-color="#38ef7d"/>
+                    </linearGradient>
+                </defs>
+                <circle class="pacer-ring-bg"   cx="97.5" cy="97.5" r="85"/>
+                <circle class="pacer-ring-prog" id="pacerRing" cx="97.5" cy="97.5" r="85"
+                    stroke-dasharray="534.07" stroke-dashoffset="0"/>
+            </svg>
+            <div class="pacer-center">
+                <div class="pacer-num"      id="pacerNum">4</div>
+                <div class="pacer-ph-label" id="pacerLabel">Ready</div>
+            </div>
+        </div>
+        <div class="pacer-cycles" id="pacerCycles">Cycles completed: 0</div>
+        <div class="pacer-btns">
+            <button class="pacer-go"  id="pacerBtn" onclick="pacerToggle()">▶ Start</button>
+            <button class="pacer-rst" onclick="pacerReset()">↩ Reset</button>
+        </div>
     </div>
 </div>
 
 
+<!-- ══════════════════════════════════════
+     SCRIPTS
+     ══════════════════════════════════════ -->
 <script>
-    // --- Navigation Logic ---
-    function openActivity(id) {
-        document.getElementById(id).classList.add('active');
-        document.body.style.overflow = 'hidden'; // Stop background scrolling
-        
-        // If opening scribble board, resize canvas
-        if(id === 'breakRoom') {
-            const canvas = document.getElementById('scribbleBoard');
-            const container = canvas.parentElement;
-            canvas.width = container.offsetWidth;
-            canvas.height = 600; // Fixed height
+/* ── Open / Close ── */
+function openAct(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
+    if (id === 'breakRoomOverlay') initCanvas();
+    if (id === 'affOverlay')       affInit();
+    if (id === 'gratOverlay')      gratInit();
+}
+function closeAct(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+    if (id === 'screamOverlay')   stopScream();
+    if (id === 'boxOverlay')      stopBox();
+    if (id === 'pomodoroOverlay') pomoStop();
+    if (id === 'pacerOverlay')    pacerStop();
+}
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.fs-overlay.active').forEach(el => closeAct(el.id));
+    }
+});
+
+
+/* ══════════════════════════════════════
+   1. CANVAS / BREAK ROOM
+══════════════════════════════════════ */
+(function(){
+    let ctx, painting = false, mode = 'scribble';
+    let undoStack = [], redoStack = [], breakObjs = [];
+
+    window.initCanvas = function() {
+        const cvs = document.getElementById('scribbleBoard');
+        const area = document.getElementById('canvasArea');
+        cvs.width  = area.offsetWidth;
+        cvs.height = area.offsetHeight;
+        ctx = cvs.getContext('2d');
+        if (!cvs._bound) {
+            cvs.addEventListener('mousedown',  e => { painting=true; draw(e); });
+            cvs.addEventListener('mouseup',    () => { painting=false; ctx.beginPath(); snap(); });
+            cvs.addEventListener('mousemove',  draw);
+            cvs.addEventListener('touchstart', e => { e.preventDefault(); painting=true; draw(e); }, {passive:false});
+            cvs.addEventListener('touchend',   () => { painting=false; ctx.beginPath(); snap(); });
+            cvs.addEventListener('touchmove',  e => { e.preventDefault(); draw(e); }, {passive:false});
+            cvs._bound = true;
         }
+    };
+
+    function pt(e) {
+        const r = document.getElementById('scribbleBoard').getBoundingClientRect();
+        const s = e.touches ? e.touches[0] : e;
+        return { x: s.clientX - r.left, y: s.clientY - r.top };
     }
 
-    function closeActivity(id) {
-        document.getElementById(id).classList.remove('active');
-        document.body.style.overflow = 'auto';
-        
-        // Safety stops
-        if(id === 'screamMeter') stopScreamListener();
-        if(id === 'boxBreathing') stopBreathing();
-    }
-
-    // Escape key support
-    document.addEventListener('keydown', function(event) {
-        if (event.key === "Escape") {
-            document.querySelectorAll('.fullscreen-overlay').forEach(el => {
-                el.classList.remove('active');
-            });
-            document.body.style.overflow = 'auto';
-            stopScreamListener();
-            stopBreathing();
-        }
-    });
-
-    // --- 1. Scribble Logic ---
-    const canvas = document.getElementById('scribbleBoard');
-    const ctx = canvas.getContext('2d');
-    const colorPicker = document.getElementById('penColor');
-    let painting = false;
-
-    function startPosition(e) { painting = true; draw(e); }
-    function finishedPosition() { painting = false; ctx.beginPath(); }
-    
     function draw(e) {
         if (!painting) return;
-        const rect = canvas.getBoundingClientRect();
-        
-        // Handle touch vs mouse
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-        ctx.lineWidth = 5;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = colorPicker.value;
-        
-        ctx.lineTo(clientX - rect.left, clientY - rect.top);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(clientX - rect.left, clientY - rect.top);
+        const p = pt(e);
+        if (mode === 'break') { doBreak(p); return; }
+        ctx.lineWidth   = parseInt(document.getElementById('penThickness').value) || 5;
+        ctx.lineCap     = 'round';
+        ctx.strokeStyle = document.getElementById('penColor').value;
+        ctx.lineTo(p.x, p.y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(p.x, p.y);
     }
 
-    // Mouse Events
-    canvas.addEventListener('mousedown', startPosition);
-    canvas.addEventListener('mouseup', finishedPosition);
-    canvas.addEventListener('mousemove', draw);
-    
-    // Touch Events (Mobile)
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startPosition(e); });
-    canvas.addEventListener('touchend', finishedPosition);
-    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+    function snap() { undoStack.push(document.getElementById('scribbleBoard').toDataURL()); redoStack=[]; if(undoStack.length>30)undoStack.shift(); }
+    function restore(src) { const i=new Image(); i.onload=()=>{ ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height); ctx.drawImage(i,0,0); }; i.src=src; }
 
-    function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+    window.clearCvs  = () => { ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height); undoStack=[]; redoStack=[]; };
+    window.undoCvs   = () => { if(!undoStack.length)return; redoStack.push(ctx.canvas.toDataURL()); restore(undoStack.pop()); };
+    window.redoCvs   = () => { if(!redoStack.length)return; undoStack.push(ctx.canvas.toDataURL()); restore(redoStack.pop()); };
+    window.exportCvs = () => { const a=document.createElement('a'); a.download='aura-art-'+Date.now()+'.png'; a.href=ctx.canvas.toDataURL(); a.click(); };
+    window.fsCvs     = () => { const el=document.getElementById('breakRoomOverlay'); !document.fullscreenElement?el.requestFullscreen().catch(()=>{}):document.exitFullscreen(); };
+    window.setMode   = (m) => {
+        mode = m;
+        if (m === 'break') {
+            breakObjs = [];
+            const w=ctx.canvas.width, h=ctx.canvas.height;
+            const colors = ['#ef4444','#f59e0b','#3b82f6','#8b5cf6','#ec4899','#10b981'];
+            for(let i=0;i<14;i++) breakObjs.push({ x:Math.random()*(w-80)+40, y:Math.random()*(h-80)+40, r:26+Math.random()*24, c:colors[i%6], alive:true });
+            drawBreak();
+        }
+    };
 
-    // --- 2. Scream Logic ---
-    let audioContext, analyser, microphone, javascriptNode;
-    let isListening = false;
-
-    function toggleScreamListener() {
-        if (isListening) stopScreamListener();
-        else startScreamListener();
+    function doBreak(p) {
+        breakObjs.forEach(o => {
+            if(!o.alive) return;
+            if(Math.hypot(p.x-o.x,p.y-o.y) < o.r+12) {
+                o.alive=false;
+                for(let i=0;i<8;i++){const a=(Math.PI*2/8)*i; ctx.beginPath(); ctx.arc(o.x+Math.cos(a)*o.r,o.y+Math.sin(a)*o.r,4,0,Math.PI*2); ctx.fillStyle=o.c; ctx.fill();}
+            }
+        });
+        drawBreak();
+        if(breakObjs.every(o=>!o.alive)){ ctx.font='bold 40px Inter,sans-serif'; ctx.fillStyle='#22c55e'; ctx.textAlign='center'; ctx.fillText('All smashed! 💪',ctx.canvas.width/2,ctx.canvas.height/2); }
     }
 
-    async function startScreamListener() {
+    function drawBreak() {
+        ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+        breakObjs.forEach(o=>{ if(!o.alive)return; ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fillStyle=o.c; ctx.fill(); ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=2; ctx.stroke(); });
+    }
+})();
+
+
+/* ══════════════════════════════════════
+   2. SCREAM METER
+══════════════════════════════════════ */
+(function(){
+    let actx, analyser, mic, proc, going=false;
+
+    window.toggleScream = () => going ? stopScream() : startScream();
+
+    async function startScream() {
         try {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioContext.createAnalyser();
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            microphone = audioContext.createMediaStreamSource(stream);
-            javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
-
-            analyser.smoothingTimeConstant = 0.8;
-            analyser.fftSize = 1024;
-
-            microphone.connect(analyser);
-            analyser.connect(javascriptNode);
-            javascriptNode.connect(audioContext.destination);
-
-            javascriptNode.onaudioprocess = function() {
-                const array = new Uint8Array(analyser.frequencyBinCount);
-                analyser.getByteFrequencyData(array);
-                let values = 0;
-                for (let i = 0; i < array.length; i++) { values += array[i]; }
-                
-                const average = values / array.length;
-                const percentage = Math.min(100, Math.round(average * 2.5)); // 2.5x Multiplier for sensitivity
-                
-                document.getElementById('screamBar').style.height = percentage + '%';
-                document.getElementById('screamLevel').innerText = percentage + '%';
+            actx     = new (window.AudioContext||window.webkitAudioContext)();
+            analyser = actx.createAnalyser();
+            const s  = await navigator.mediaDevices.getUserMedia({audio:true});
+            mic      = actx.createMediaStreamSource(s);
+            proc     = actx.createScriptProcessor(2048,1,1);
+            analyser.smoothingTimeConstant=0.8; analyser.fftSize=1024;
+            mic.connect(analyser); analyser.connect(proc); proc.connect(actx.destination);
+            proc.onaudioprocess = () => {
+                const a=new Uint8Array(analyser.frequencyBinCount);
+                analyser.getByteFrequencyData(a);
+                const pct=Math.min(100,Math.round(a.reduce((s,v)=>s+v,0)/a.length*2.5));
+                document.getElementById('screamFill').style.height=pct+'%';
+                document.getElementById('screamPct').textContent=pct+'%';
             };
-            
-            isListening = true;
-            document.getElementById('screamBtn').innerText = "Stop Microphone";
-            document.getElementById('screamBtn').classList.replace('btn-primary', 'btn-danger');
-        } catch (err) {
-            alert("Please allow microphone access to use this feature.");
+            going=true;
+            const btn=document.getElementById('screamBtn');
+            btn.textContent='Stop Microphone';
+            btn.style.background='linear-gradient(135deg,#ef4444,#f97316)';
+        } catch(e){ alert('Allow microphone access to use this feature.'); }
+    }
+
+    window.stopScream = function() {
+        if(actx) actx.close();
+        going=false;
+        document.getElementById('screamFill').style.height='0%';
+        document.getElementById('screamPct').textContent='0%';
+        const btn=document.getElementById('screamBtn');
+        if(btn){ btn.textContent='Start Microphone'; btn.style.background='linear-gradient(135deg,#667eea,#764ba2)'; }
+    };
+})();
+
+
+/* ══════════════════════════════════════
+   3. BOX BREATHING
+══════════════════════════════════════ */
+(function(){
+    let timer;
+    window.startBox = () => {
+        const c=document.getElementById('boxCircle'), t=document.getElementById('boxText');
+        if(timer) clearInterval(timer);
+        function cycle(){
+            t.innerText='Inhale...'; c.className='box-circle inhale';
+            setTimeout(()=>{ t.innerText='Hold...'; },4000);
+            setTimeout(()=>{ t.innerText='Exhale...'; c.className='box-circle exhale'; },8000);
+            setTimeout(()=>{ t.innerText='Hold...'; },12000);
         }
+        cycle();
+        timer=setInterval(cycle,16000);
+    };
+    window.stopBox = () => {
+        clearInterval(timer);
+        document.getElementById('boxText').innerText='Ready';
+        document.getElementById('boxCircle').className='box-circle';
+    };
+})();
+
+
+/* ══════════════════════════════════════
+   4. POMODORO
+══════════════════════════════════════ */
+(function(){
+    const C=2*Math.PI*98; // 615.75
+    const M={work:{secs:25*60,sub:'FOCUS'},short:{secs:5*60,sub:'SHORT BREAK'},long:{secs:15*60,sub:'LONG BREAK'}};
+    let cur='work',total=25*60,rem=25*60,run=false,tmr=null,sess=0;
+
+    function beep(f,d){try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(0.35,c.currentTime+0.01);g.gain.linearRampToValueAtTime(0,c.currentTime+d);o.start();o.stop(c.currentTime+d+0.05);}catch(e){}}
+
+    function render(){
+        const m=String(Math.floor(rem/60)).padStart(2,'0'), s=String(rem%60).padStart(2,'0');
+        const d=document.getElementById('pomoDigits'); if(d) d.textContent=m+':'+s;
+        const r=document.getElementById('pomoRing');   if(r) r.style.strokeDashoffset=C-(C*(rem/total));
+        const sub=document.getElementById('pomoSub');  if(sub) sub.textContent=M[cur].sub;
+        const dots=document.getElementById('pomoDots');
+        if(dots) dots.innerHTML=[0,1,2,3].map(i=>`<div class="pomo-dot ${i<sess?'done':i===sess?'active':''}"></div>`).join('');
     }
 
-    function stopScreamListener() {
-        if(audioContext) audioContext.close();
-        isListening = false;
-        document.getElementById('screamBar').style.height = '0%';
-        document.getElementById('screamLevel').innerText = '0%';
-        const btn = document.getElementById('screamBtn');
-        if(btn) {
-            btn.innerText = "Start Microphone";
-            btn.classList.replace('btn-danger', 'btn-primary');
+    function setMode(m){
+        cur=m; total=rem=M[m].secs;
+        ['work','short','long'].forEach(k=>{
+            const el=document.getElementById('pt'+{work:'Focus',short:'Short',long:'Long'}[k]);
+            if(el) el.classList.toggle('active',k===m);
+        });
+        render();
+    }
+
+    window.pomoMode   = setMode;
+    window.pomoReset  = ()=>{ pomoStop(); setMode(cur); };
+    window.pomoStop   = function(){ if(tmr)clearInterval(tmr); tmr=null; run=false; const b=document.getElementById('pomoPlayBtn'); if(b) b.textContent='▶ Start'; };
+    window.pomoToggle = ()=>{
+        if(run){ pomoStop(); return; }
+        run=true;
+        document.getElementById('pomoPlayBtn').textContent='⏸ Pause';
+        tmr=setInterval(()=>{
+            rem--;
+            if(rem<=0){
+                beep(880,0.5); setTimeout(()=>beep(660,0.35),300);
+                pomoStop();
+                if(cur==='work'){ sess=Math.min(sess+1,4); if(sess>=4){sess=0;setMode('long');}else setMode('short'); }
+                else setMode('work');
+                return;
+            }
+            render();
+        },1000);
+    };
+
+    setMode('work');
+})();
+
+
+/* ══════════════════════════════════════
+   5. GROUNDING 5-4-3-2-1
+══════════════════════════════════════ */
+(function(){
+    const STEPS=[
+        {n:5,sense:'Things You Can SEE',   icon:'👁️',  hint:'Look around. Name 5 things you can see right now — be specific, a colour, a shadow, a texture.'},
+        {n:4,sense:'Things You Can TOUCH', icon:'🤚', hint:'Name 4 things you can physically feel — the chair, the floor, warmth, clothing.'},
+        {n:3,sense:'Things You Can HEAR',  icon:'👂', hint:'Listen carefully. Name 3 distinct sounds in this moment.'},
+        {n:2,sense:'Things You Can SMELL', icon:'👃', hint:'Identify 2 smells. If nothing, recall two you enjoy.'},
+        {n:1,sense:'Thing You Can TASTE',  icon:'👅', hint:'Notice one taste — gum, coffee, or just the air right now.'},
+    ];
+    let step=0;
+
+    function render(){
+        const s=STEPS[step];
+        document.getElementById('groundNum').textContent=s.n;
+        document.getElementById('groundSense').textContent=s.icon+' '+s.sense;
+        document.getElementById('groundHint').textContent=s.hint;
+        document.getElementById('groundInputs').innerHTML=Array.from({length:s.n},(_,i)=>`<input class="ground-inp" placeholder="Item ${i+1}…">`).join('');
+        const pb=document.getElementById('groundPrevBtn'); if(pb) pb.style.display=step===0?'none':'block';
+        for(let i=0;i<5;i++){const d=document.getElementById('gd'+i); if(d) d.className='ground-dot'+(i<step?' done':i===step?' current':'');}
+    }
+
+    window.groundStep=(dir)=>{
+        if(dir>0&&step<4){step++;render();}
+        else if(dir>0&&step===4){document.getElementById('groundBody').style.display='none';document.getElementById('groundDone').style.display='block';}
+        else if(dir<0&&step>0){step--;render();}
+    };
+    window.groundReset=()=>{step=0;document.getElementById('groundBody').style.display='block';document.getElementById('groundDone').style.display='none';render();};
+    render();
+})();
+
+
+/* ══════════════════════════════════════
+   6. GRATITUDE JOURNAL
+══════════════════════════════════════ */
+(function(){
+    const KE='aura_grat_entries', KS='aura_grat_streak', KD='aura_grat_lastday';
+    const today=()=>new Date().toISOString().slice(0,10);
+
+    window.gratInit=()=>{
+        const entries=JSON.parse(localStorage.getItem(KE)||'[]');
+        const streak=parseInt(localStorage.getItem(KS)||'0');
+        document.getElementById('gratStreak').textContent=streak;
+        if(entries.length&&entries[entries.length-1].date===today()){
+            document.getElementById('gratForm').style.display='none';
+            document.getElementById('gratOk').style.display='block';
+        } else {
+            document.getElementById('gratForm').style.display='block';
+            document.getElementById('gratOk').style.display='none';
+            ['g1','g2','g3'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
         }
+        renderHist(entries);
+    };
+
+    window.gratSave=()=>{
+        const v1=(document.getElementById('g1').value||'').trim();
+        const v2=(document.getElementById('g2').value||'').trim();
+        const v3=(document.getElementById('g3').value||'').trim();
+        if(!v1||!v2||!v3){alert('Please fill in all three gratitude entries.');return;}
+        const td=today();
+        const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1);
+        const yd=yesterday.toISOString().slice(0,10);
+        const lastDay=localStorage.getItem(KD);
+        let streak=parseInt(localStorage.getItem(KS)||'0');
+        if(lastDay===yd) streak++;
+        else if(lastDay!==td) streak=1;
+        localStorage.setItem(KS,streak); localStorage.setItem(KD,td);
+        let entries=JSON.parse(localStorage.getItem(KE)||'[]');
+        entries.push({date:td,items:[v1,v2,v3]});
+        if(entries.length>30) entries=entries.slice(-30);
+        localStorage.setItem(KE,JSON.stringify(entries));
+        document.getElementById('gratStreak').textContent=streak;
+        document.getElementById('gratForm').style.display='none';
+        document.getElementById('gratOk').style.display='block';
+    };
+
+    window.gratHistory=()=>{ document.getElementById('gratHist').classList.toggle('open'); };
+
+    function renderHist(entries){
+        const h=document.getElementById('gratHist'); if(!h)return;
+        if(!entries.length){h.innerHTML='<div class="grat-past">No previous entries yet.</div>';return;}
+        h.innerHTML=entries.slice(-8).reverse().map(e=>`<div class="grat-past">${e.items.map((it,i)=>`<div>${i+1}. ${it}</div>`).join('')}<div class="grat-past-date">${e.date}</div></div>`).join('');
+    }
+})();
+
+
+/* ══════════════════════════════════════
+   7. AFFIRMATIONS
+══════════════════════════════════════ */
+(function(){
+    const DATA={
+        confidence:['I am capable of achieving great things.','I believe in my skills and express them fully.','I walk into every room knowing my worth.','My confidence grows with each challenge I face.','I deserve every opportunity that comes my way.','I trust my decisions and stand behind them.','I radiate confidence, certainty, and strength.','I am enough, exactly as I am right now.'],
+        calm:['I choose peace over worry every single moment.','I release what I cannot control and find calm.','My mind is quiet, clear, and at ease.','Every breath I take fills me with calm energy.','I am safe. I am present. I am okay.','Anxiety is just energy — I redirect it easily.','Peaceful thoughts come naturally to me.','I let go of tension and embrace serenity.'],
+        academic:['My brain is wired to learn and grow every day.','Challenges in my studies make me stronger.','I approach exams with calm focus and preparation.','I retain information easily and recall it clearly.','Hard work today builds the future I deserve.','I am a dedicated, committed, and capable student.','Every mistake teaches me something invaluable.','I improve a little every single day.'],
+        strength:['I have overcome every hard day so far — 100%.','Difficult roads lead to beautiful destinations.','I am resilient, resourceful, and ready for anything.','My struggles do not define me; my response does.','I rise above negativity and stay focused on growth.','I am braver than I believe and stronger than I feel.','Each setback is a setup for a major comeback.','The strength I need already lives inside me.'],
+    };
+    let pool=[], idx=0, liked=new Set();
+
+    function build(cat){ pool=(cat==='all'?Object.values(DATA).flat():DATA[cat]||[]).slice().sort(()=>Math.random()-0.5); idx=0; }
+
+    window.affInit=()=>{ build('all'); show(); };
+    window.affCat=(cat,btn)=>{ document.querySelectorAll('.aff-cat').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); build(cat); show(); };
+    window.affNext=()=>{ idx=(idx+1)%pool.length; show(); };
+    window.affLike=()=>{
+        const cur=pool[idx];
+        liked.has(cur)?liked.delete(cur):liked.add(cur);
+        const lb=document.getElementById('affLike');
+        lb.className='aff-like'+(liked.has(cur)?' liked':'');
+        lb.textContent=liked.has(cur)?'♥':'♡';
+    };
+
+    function show(){
+        if(!pool.length)return;
+        const q=document.getElementById('affQuote');
+        q.classList.add('fading');
+        setTimeout(()=>{
+            q.textContent=pool[idx];
+            q.classList.remove('fading');
+            const lb=document.getElementById('affLike');
+            lb.className='aff-like'+(liked.has(pool[idx])?' liked':'');
+            lb.textContent=liked.has(pool[idx])?'♥':'♡';
+            const pg=document.getElementById('affProg');
+            if(pg) pg.textContent=(idx+1)+' / '+pool.length;
+        },300);
+    }
+})();
+
+
+/* ══════════════════════════════════════
+   8. 4-7-8 BREATHING PACER
+══════════════════════════════════════ */
+(function(){
+    const C=2*Math.PI*85; // 534.07
+    const PH=[{secs:4,lbl:'INHALE',id:'ppIn'},{secs:7,lbl:'HOLD',id:'ppHold'},{secs:8,lbl:'EXHALE',id:'ppOut'}];
+    let phi=0,rem=4,cycles=0,run=false,tmr=null;
+
+    function render(){
+        const ph=PH[phi];
+        document.getElementById('pacerNum').textContent=rem;
+        document.getElementById('pacerLabel').textContent=ph.lbl;
+        const ring=document.getElementById('pacerRing');
+        if(ring) ring.style.strokeDashoffset=C*(1-rem/ph.secs);
+        PH.forEach(p=>{ const el=document.getElementById(p.id); if(el) el.className='pacer-ph'+(p.id===ph.id?' active':''); });
+        const cyc=document.getElementById('pacerCycles'); if(cyc) cyc.textContent='Cycles completed: '+cycles;
     }
 
-    // --- 3. Breathing Logic ---
-    let breathingInterval;
-    
-    function startBreathing() {
-        const circle = document.getElementById('breathingCircle');
-        const text = document.getElementById('breathingText');
-        if(breathingInterval) clearInterval(breathingInterval);
-
-        function cycle() {
-            // 1. Inhale (4s)
-            text.innerText = "Inhale...";
-            circle.className = "breathing-circle inhale";
-            
-            setTimeout(() => {
-                // 2. Hold (4s)
-                text.innerText = "Hold...";
-                
-                setTimeout(() => {
-                    // 3. Exhale (4s)
-                    text.innerText = "Exhale...";
-                    circle.className = "breathing-circle exhale";
-                    
-                    setTimeout(() => {
-                        // 4. Hold (4s)
-                        text.innerText = "Hold...";
-                    }, 4000);
-                }, 4000);
-            }, 4000);
-        }
-
-        cycle(); // Run first cycle immediately
-        breathingInterval = setInterval(cycle, 16000); // 16s total cycle
-    }
-
-    function stopBreathing() {
-        clearInterval(breathingInterval);
-        document.getElementById('breathingText').innerText = "Ready";
-        document.getElementById('breathingCircle').className = "breathing-circle";
-    }
-
+    window.pacerToggle=()=>{
+        if(run){pacerStop();return;}
+        run=true;
+        document.getElementById('pacerBtn').textContent='⏸ Pause';
+        tmr=setInterval(()=>{ rem--; if(rem<=0){phi=(phi+1)%3; if(phi===0)cycles++; rem=PH[phi].secs;} render(); },1000);
+    };
+    window.pacerStop=function(){if(tmr)clearInterval(tmr);tmr=null;run=false;const b=document.getElementById('pacerBtn');if(b)b.textContent='▶ Start';};
+    window.pacerReset=()=>{ pacerStop(); phi=0;rem=4;cycles=0; render(); };
+    render();
+})();
 </script>
 
-{% endblock %}
+{% if is_demo %}
+<div id="demoOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.86);backdrop-filter:blur(14px);align-items:center;justify-content:center;">
+    <div style="background:#1e1b4b;border:2px solid #f59e0b;border-radius:22px;padding:48px 40px;max-width:420px;text-align:center;color:#fff;">
+        <div style="font-size:48px;margin-bottom:16px;">⏱️</div>
+        <h2 style="font-size:22px;color:#f59e0b;margin-bottom:10px;">Demo Time Limit Reached</h2>
+        <p style="color:#c4b5fd;font-size:14px;line-height:1.65;margin-bottom:26px;">You've explored the activities for {{ demo_time_limit }} seconds. Register for unlimited access.</p>
+        <a href="/login" style="display:inline-block;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;padding:13px 34px;border-radius:13px;font-weight:800;font-size:15px;">← Back to Login</a>
+    </div>
+</div>
+<div class="demo-badge">⏱ Demo: <span id="demoCD">{{ demo_time_limit }}</span>s</div>
+<script>
+(function(){
+    let r={{ demo_time_limit }};
+    const b=document.querySelector('.demo-badge'), cd=document.getElementById('demoCD'), ov=document.getElementById('demoOverlay');
+    const t=setInterval(()=>{ r--; cd.textContent=r; if(r<=30)b.style.background='rgba(239,68,68,0.95)'; if(r<=0){clearInterval(t);b.style.display='none';ov.style.display='flex';} },1000);
+})();
+</script>
+{% endif %}
+
+</body>
+</html>

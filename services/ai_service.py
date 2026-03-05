@@ -25,9 +25,10 @@ except ImportError:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '').strip()
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '').strip()
-GROQ_API_KEY = os.getenv('GROQ_API_KEY', '').strip()
+GEMINI_API_KEY   = os.getenv('GEMINI_API_KEY',   '').strip()
+OPENAI_API_KEY   = os.getenv('OPENAI_API_KEY',   '').strip()
+GROQ_API_KEY     = os.getenv('GROQ_API_KEY',     '').strip()
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', '').strip()
 STRUCTURED_RESPONSES = os.getenv('AURA_STRUCTURED_RESPONSES', 'true').strip().lower() == 'true'
 REQUIRE_AI = os.getenv('AURA_REQUIRE_AI', 'false').strip().lower() == 'true'
 RESPOND_DYNAMically = os.getenv('AURA_DYNAMIC_LENGTH', 'true').strip().lower() == 'true'
@@ -66,6 +67,20 @@ if GROQ_API_KEY and GroqClient:
     except Exception as e:
         logger.error(f"Failed to configure Groq: {e}")
         groq_client = None
+
+# Initialize DeepSeek (free tier, OpenAI-compatible, excellent for study tasks)
+# Get a free key at: https://platform.deepseek.com → API Keys
+deepseek_client = None
+if DEEPSEEK_API_KEY and OpenAIClient:
+    try:
+        deepseek_client = OpenAIClient(
+            api_key=DEEPSEEK_API_KEY,
+            base_url='https://api.deepseek.com'
+        )
+        logger.info("✓ DeepSeek configured (free study-optimised model)")
+    except Exception as e:
+        logger.error(f"Failed to configure DeepSeek: {e}")
+        deepseek_client = None
 
 
 def _local_fallback(user_message: str, style: str = 'concise') -> str:
@@ -199,6 +214,15 @@ def _classify_request(user_message: str, chat_history: Optional[List[Dict[str, s
             # Respect global toggle: fall back to configured STRUCTURED/concise behavior
             return 'structured' if STRUCTURED_RESPONSES else 'concise'
 
+        # Elaborate / detail trigger words → always structured regardless of length
+        detail_triggers = {
+            'elaborate', 'explain more', 'tell me more', 'expand', 'in detail',
+            'more detail', 'detailed', 'comprehensive', 'full', 'complete', 'thorough',
+            'deep dive', 'breakdown', 'everything about', 'give more', 'more info',
+        }
+        if any(t in ml for t in detail_triggers):
+            return 'structured'
+
         # If trivial greeting or very short text, keep it ultra brief
         if ml in greetings or word_count <= 2:
             return 'ultra_brief'
@@ -225,6 +249,26 @@ def generate_mental_response(user_message: str, chat_history: List[Dict[str, str
     """
     
     style = _classify_request(user_message, chat_history, kind)
+
+    # Crisis Interceptor: Prevent safety filters from abruptly terminating the connection on high-risk keywords
+    msg_lower = user_message.lower()
+    crisis_keywords = ['suicide', 'kill myself', 'kill u', 'kill you', 'want to die', 'end my life', 'hurt myself']
+    if any(k in msg_lower for k in crisis_keywords):
+        return (
+            "### Thought\n"
+            "- The user is expressing severe distress or thoughts of harm.\n"
+            "### Main Response\n"
+            "- **You are not alone.** There is support available right now.\n"
+            "- **Please reach out** to a professional, a counselor, or a free crisis helpline immediately.\n"
+            "### Quick Actions\n"
+            "- Call emergency services if you are in immediate danger.\n"
+            "- Contact a trusted friend or family member.\n"
+            "- Take a deep breath and step away from this screen if you need to.\n"
+            "### Next Step\n"
+            "Would you like me to provide some grounding exercises to help you breathe through this moment?"
+        ) if style == 'structured' else (
+            "I hear how incredibly difficult things are right now. Your life has value. Please reach out to a professional or a crisis helpline immediately. You don't have to carry this alone."
+        )
 
     if not client:
         logger.warning("Gemini client not available - trying fallback providers")
@@ -284,7 +328,7 @@ def generate_mental_response(user_message: str, chat_history: List[Dict[str, str
     ### Next Step
     - End with ONE clear question or a suggested action to move forward.
 
-    Style: warm, supportive, professional. 150–200 words total. Use simple language.
+    Style: warm, supportive, professional. Scale depth to how much the student shares — brief validation for simple check-ins, deeper support for complex emotions. Never truncate mid-sentence.
     """
 
         response = client.models.generate_content(
@@ -294,10 +338,10 @@ def generate_mental_response(user_message: str, chat_history: List[Dict[str, str
                 temperature=0.7,
                 top_p=0.95,
                 top_k=32,
-                max_output_tokens=1024,
+                max_output_tokens=2048,
             )
         )
-        
+
         if response and hasattr(response, 'text') and response.text:
             text = response.text.strip()
             logger.info(f"✓ Generated response ({len(text)} chars)")
@@ -312,18 +356,37 @@ def generate_mental_response(user_message: str, chat_history: List[Dict[str, str
         return _generate_with_fallback(user_message, chat_history, style)
 
 
-def _generate_with_fallback(user_message: str, chat_history: List[Dict[str, str]] = None, style: str = 'concise') -> str:
-    """Try Groq first (free), then OpenAI, then local fallback."""
-    
-    # Try Groq first (free and fast)
+def _generate_with_fallback(user_message: str, chat_history: List[Dict[str, str]] = None, style: str = 'concise', persona: str = 'mental') -> str:
+    """Try DeepSeek → Groq → OpenAI → local fallback. DeepSeek is free and excellent for study tasks."""
+
+    # 1. DeepSeek (free tier, best for study/reasoning tasks)
+    if deepseek_client:
+        try:
+            messages = _build_chat_messages(user_message, chat_history, style, persona)
+            # Use deepseek-reasoner for study tasks (chain-of-thought), deepseek-chat for mental/general
+            model = 'deepseek-reasoner' if persona == 'study' else 'deepseek-chat'
+            resp = deepseek_client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0.7,
+                max_tokens=4096,
+            )
+            text = (resp.choices[0].message.content or '').strip()
+            if text:
+                logger.info(f"✓ DeepSeek ({model}) response ({len(text)} chars)")
+                return text
+        except Exception as de:
+            logger.warning(f"DeepSeek error: {str(de)[:150]}")
+
+    # 2. Groq — free, fast, Llama 3.3 70B
     if groq_client:
         try:
-            messages = _build_chat_messages(user_message, chat_history, style)
+            messages = _build_chat_messages(user_message, chat_history, style, persona)
             resp = groq_client.chat.completions.create(
                 model='llama-3.3-70b-versatile',
                 messages=messages,
                 temperature=0.7,
-                max_tokens=600,
+                max_tokens=4096,
             )
             text = (resp.choices[0].message.content or '').strip()
             if text:
@@ -331,16 +394,16 @@ def _generate_with_fallback(user_message: str, chat_history: List[Dict[str, str]
                 return text
         except Exception as ge:
             logger.warning(f"Groq error: {str(ge)[:150]}")
-    
-    # Fallback to OpenAI
+
+    # 3. OpenAI fallback
     if openai_client:
         try:
-            messages = _build_chat_messages(user_message, chat_history, style)
+            messages = _build_chat_messages(user_message, chat_history, style, persona)
             resp = openai_client.chat.completions.create(
                 model=os.getenv('OPENAI_MODEL', 'gpt-4o-mini'),
                 messages=messages,
                 temperature=0.7,
-                max_tokens=600,
+                max_tokens=4096,
             )
             text = (resp.choices[0].message.content or '').strip()
             if text:
@@ -348,33 +411,62 @@ def _generate_with_fallback(user_message: str, chat_history: List[Dict[str, str]
                 return text
         except Exception as oe:
             logger.error(f"OpenAI error: {str(oe)[:300]}")
-    
-    # Final fallback
+
+    # 4. Final local fallback
     if REQUIRE_AI:
         return "AI is temporarily unavailable. Please try again shortly."
     return _local_fallback(user_message, style)
 
 
-def _build_chat_messages(user_message: str, chat_history: List[Dict[str, str]] = None, style: str = 'concise') -> List[Dict[str, str]]:
-    """Build messages array for OpenAI/Groq APIs."""
-    if style == 'ultra_brief':
-        system = (
-            "You are AURA, a compassionate assistant for students. "
-            "Reply in 1–2 short sentences, empathetic, with an optional single gentle question. No lists or headings."
-        )
-    elif style == 'concise':
-        system = (
-            "You are AURA, a compassionate assistant for students. "
-            "Reply as one concise paragraph (60–120 words) with 1–2 practical tips inline and a short follow-up question."
-        )
-    else:
-        system = (
-            "You are AURA, a compassionate mental health assistant for students. "
-            "Respond with: 1) validation (2–3 sentences), 2) 2–3 practical, specific suggestions with brief explanations, "
-            "3) a gentle follow-up question, 4) encouragement. Be warm, supportive, and practical. Aim for ~180 words."
-        )
+def _build_chat_messages(user_message: str, chat_history: List[Dict[str, str]] = None, style: str = 'concise', persona: str = 'mental') -> List[Dict[str, str]]:
+    """Build messages array for OpenAI/Groq/DeepSeek APIs.
 
-    messages = [{ 'role': 'system', 'content': system }]
+    persona='study'  → academic / study-coach system prompt
+    persona='mental' → mental wellness / AURA compassion prompt (default)
+    """
+    if persona == 'study':
+        if style == 'ultra_brief':
+            system = (
+                "You are the AURA Study Assistant. Answer study questions precisely and briefly — "
+                "1–3 sentences max. Provide the direct answer or formula first."
+            )
+        elif style == 'concise':
+            system = (
+                "You are the AURA Study Assistant, expert across all academic subjects. "
+                "Give clear, accurate answers (80–150 words). Include key formulas or definitions inline. "
+                "Use LaTeX for maths ($...$). End with one concise check-in question."
+            )
+        else:
+            system = (
+                "You are the AURA Advanced Study Assistant. Maximize student comprehension with: "
+                "1) a concept overview scaled to required depth, 2) step-by-step breakdown where needed, "
+                "3) key formulas/facts in LaTeX ($...$ for inline, $$...$$ for display), "
+                "4) a practice suggestion or example problem. "
+                "Scale length to the complexity of the request — brief for simple questions, "
+                "comprehensive for detailed topics, timelines, notes, mind maps, or elaboration requests. "
+                "Never truncate mid-sentence. Be encouraging, precise, and well-organized."
+            )
+    else:
+        # Mental wellness persona
+        if style == 'ultra_brief':
+            system = (
+                "You are AURA, a compassionate assistant for students. "
+                "Reply in 1–2 short sentences, empathetic, with an optional single gentle question. No lists or headings."
+            )
+        elif style == 'concise':
+            system = (
+                "You are AURA, a compassionate mental wellness assistant for students. "
+                "Reply as one concise paragraph (60–120 words) with 1–2 practical tips inline and a short follow-up question."
+            )
+        else:
+            system = (
+                "You are AURA, a compassionate mental health assistant for students. "
+                "Respond with: 1) validation (2–3 sentences), 2) 2–3 practical, specific suggestions with brief explanations, "
+                "3) a gentle follow-up question, 4) encouragement. Be warm, supportive, and practical. "
+                "Expand depth when the user is sharing complex emotions or asking for more. Never cut off mid-thought."
+            )
+
+    messages = [{'role': 'system', 'content': system}]
     for turn in (chat_history or [])[-8:]:
         role = 'user' if turn.get('role') == 'user' else 'assistant'
         content = turn.get('content', '')
@@ -401,13 +493,94 @@ def extract_sentiment(text: str) -> str:
         return 'neutral'
 
 
+def generate_study_response(user_message: str, chat_history: List[Dict[str, str]] = None, conversation_id: str = '') -> str:
+    """Generate a study-assistant response for text-only queries.
+
+    Provider chain: Gemini → DeepSeek → Groq → OpenAI → local fallback.
+    Use this for all study chat messages that do not involve file uploads.
+    """
+    style = _classify_request(user_message, chat_history, 'study')
+
+    # 1. Gemini — multimodal but works for text too; use a study-tuned prompt
+    if client:
+        try:
+            history_block = _format_history(chat_history or [])
+            study_system = (
+                "You are the AURA Advanced Study Assistant — expert across all academic subjects. "
+                "Your goal is to maximize student understanding and productivity."
+            )
+            if style == 'ultra_brief':
+                prompt_text = (
+                    f"{study_system}\n\n"
+                    f"Conversation: {history_block}\n\n"
+                    f'Student: "{user_message}"\n\n'
+                    "Answer in 1–3 precise sentences. Give the direct answer first."
+                )
+            elif style == 'concise':
+                prompt_text = (
+                    f"{study_system}\n\n"
+                    f"Conversation ID: {conversation_id or 'local'}\n"
+                    f"Recent context:\n{history_block}\n\n"
+                    f'Student: "{user_message}"\n\n'
+                    "Reply in 1 concise paragraph (80–150 words). Include key formulas or steps inline. "
+                    "Use LaTeX for maths ($...$). End with one short check-in question."
+                )
+            else:
+                prompt_text = (
+                    f"{study_system}\n\n"
+                    f"Conversation ID: {conversation_id or 'local'}\n"
+                    f"Recent context:\n{history_block}\n\n"
+                    f'Student: "{user_message}"\n\n'
+                    "Respond in clear Markdown:\n"
+                    "1. **Overview** — concept explanation with necessary depth\n"
+                    "2. **Breakdown** — numbered steps or bullet points (expand fully for complex topics)\n"
+                    "3. **Key Points** — formulas/definitions in LaTeX ($...$ inline, $$...$$ display)\n"
+                    "4. **Practice** — example problem or study tip\n"
+                    "Scale response length to the complexity of the request — concise for simple questions, "
+                    "comprehensive and thorough for detailed topics, timelines, notes, mind maps, or elaboration requests. "
+                    "Never cut off mid-sentence or mid-section. Be precise, encouraging, and well-organized."
+                )
+
+            response = client.models.generate_content(
+                model='models/gemini-2.5-flash',
+                contents=prompt_text,
+                config=types.GenerateContentConfig(
+                    temperature=0.5,
+                    top_p=0.9,
+                    max_output_tokens=4096,
+                )
+            )
+            if response and hasattr(response, 'text') and response.text:
+                text = response.text.strip()
+                logger.info(f"✓ Gemini study response ({len(text)} chars)")
+                return text
+        except Exception as e:
+            logger.warning(f"Gemini study error: {str(e)[:150]}")
+
+    # 2–4. DeepSeek → Groq → OpenAI → local
+    return _generate_with_fallback(user_message, chat_history, style, persona='study')
+
+
 def analyze_study_material(prompt: str, file_path: str, mime_type: str = '', history: List[Dict[str, str]] = None, conversation_id: str = '') -> str:
     """Analyze study materials with Gemini (images, PDFs, or text) and return structured Markdown.
 
     Uses AURA Advanced Study Assistant system prompt for professional-grade analysis.
     """
     if not client:
-        return "AI study assistant not configured. Please set GEMINI_API_KEY or GROQ_API_KEY."
+        # For text-only queries, fall through to DeepSeek/Groq/OpenAI chain
+        p = Path(file_path) if file_path else None
+        has_file = p and p.exists() and p.stat().st_size > 0
+        if has_file:
+            return (
+                "File analysis requires Gemini AI (multimodal). "
+                "Please set GEMINI_API_KEY, or paste the text content directly in the chat."
+            )
+        # Text-only — use full provider chain
+        return generate_study_response(
+            prompt or "Help me with my studies.",
+            history,
+            conversation_id
+        )
 
     try:
         p = Path(file_path)
@@ -459,16 +632,23 @@ def analyze_study_material(prompt: str, file_path: str, mime_type: str = '', his
                 types.Part.from_bytes(data=image_bytes, mime_type=mime),
             ]
         elif mime == 'application/pdf' or p.suffix.lower() == '.pdf':
+            with open(file_path, 'rb') as f:
+                pdf_bytes = f.read()
             contents = [
                 types.Part(text=instruction),
-                types.Part.from_bytes(data=open(file_path, 'rb').read(), mime_type=mime),
+                types.Part.from_bytes(data=pdf_bytes, mime_type=mime),
             ]
         else:
             contents = [types.Part(text=instruction)]
 
         response = client.models.generate_content(
             model='models/gemini-2.5-flash',
-            contents=contents
+            contents=contents,
+            config=types.GenerateContentConfig(
+                temperature=0.5,
+                top_p=0.9,
+                max_output_tokens=8192,
+            )
         )
 
         if response and hasattr(response, 'text') and response.text:
@@ -477,6 +657,14 @@ def analyze_study_material(prompt: str, file_path: str, mime_type: str = '', his
 
     except Exception as e:
         logger.error(f"Study analysis error: {str(e)[:200]}")
+        # If no file was involved, fall back to text-only provider chain
+        p_check = Path(file_path) if file_path else None
+        if not p_check or not p_check.exists():
+            return generate_study_response(
+                prompt or "Help me with my studies.",
+                history,
+                conversation_id
+            )
         return f"Error analyzing material: {str(e)[:100]}"
 
 

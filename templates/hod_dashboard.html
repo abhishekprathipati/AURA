@@ -1,38 +1,28 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HOD Dashboard | AURA - Executive Analytics</title>
-    
-    <!-- External Resources -->
+    <title>HOD Dashboard | AURA</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
+
     <style>
-        /* ===== EXECUTIVE DASHBOARD - PREMIUM DESIGN ===== */
         :root {
-            /* Executive Color Palette */
-            --primary: #0f172a;
-            --primary-accent: #6366f1;
-            --secondary: #475569;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #eef2ff;
             --accent: #8b5cf6;
-            --accent-light: #a78bfa;
-            --gold: #f59e0b;
-            --gold-light: #fef3c7;
-            
-            /* Status Colors */
-            --critical: #ef4444;
-            --critical-bg: #fef2f2;
-            --high: #f97316;
-            --high-bg: #fff7ed;
-            --medium: #eab308;
-            --medium-bg: #fefce8;
-            --low: #10b981;
-            --low-bg: #ecfdf5;
-            
-            /* Neutrals */
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --info: #3b82f6;
+            --info-light: #eff6ff;
             --white: #ffffff;
             --gray-50: #f8fafc;
             --gray-100: #f1f5f9;
@@ -44,1480 +34,1055 @@
             --gray-700: #334155;
             --gray-800: #1e293b;
             --gray-900: #0f172a;
-            
-            /* Theme */
-            --bg-primary: #f1f5f9;
-            --bg-secondary: var(--gray-100);
-            --bg-card: var(--white);
-            --text-primary: var(--gray-900);
-            --text-secondary: var(--gray-600);
-            --border: var(--gray-200);
-            
-            /* Shadows */
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
-            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-            --shadow-2xl: 0 25px 50px -12px rgba(0,0,0,0.25);
-            
-            /* Spacing */
-            --space-1: 0.25rem;
-            --space-2: 0.5rem;
-            --space-3: 0.75rem;
-            --space-4: 1rem;
-            --space-5: 1.25rem;
-            --space-6: 1.5rem;
-            --space-8: 2rem;
-            --space-10: 2.5rem;
-            --space-12: 3rem;
-            
-            /* Border Radius */
-            --radius-sm: 6px;
-            --radius-md: 10px;
-            --radius-lg: 16px;
-            --radius-xl: 24px;
-            --radius-full: 9999px;
         }
 
-        [data-theme="dark"] {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-card: #1e293b;
-            --text-primary: #f1f5f9;
-            --text-secondary: #cbd5e1;
-            --border: #334155;
-        }
-
-        /* Reset */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            background: #f0f2f5;
+            color: var(--gray-900);
             line-height: 1.6;
             min-height: 100vh;
         }
 
-        /* ===== EXECUTIVE HEADER - PREMIUM ===== */
-        .executive-header {
-            background: linear-gradient(135deg, var(--primary) 0%, #1e293b 50%, var(--primary) 100%);
-            color: white;
-            padding: 0;
+        /* ═══ HEADER ═══ */
+        .header {
+            background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 50%, #6d28d9 100%);
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: var(--shadow-2xl);
+            box-shadow: 0 4px 20px rgba(30, 27, 75, 0.4);
         }
 
-        .header-top {
-            background: rgba(0,0,0,0.2);
-            padding: var(--space-2) 0;
-            font-size: 0.75rem;
-        }
-
-        .header-top-content {
-            max-width: 1600px;
+        .header-inner {
+            max-width: 1440px;
             margin: 0 auto;
-            padding: 0 var(--space-6);
+            padding: 16px 32px;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
         }
 
-        .header-top .status {
+        .header-brand {
             display: flex;
             align-items: center;
-            gap: var(--space-2);
+            gap: 14px;
         }
 
-        .header-top .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--low);
-            animation: pulse 2s infinite;
-            box-shadow: 0 0 10px var(--low);
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.2); }
-        }
-
-        .header-main {
-            padding: var(--space-6) 0;
-        }
-
-        .header-content {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 0 var(--space-6);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .executive-brand {
-            display: flex;
-            align-items: center;
-            gap: var(--space-5);
-        }
-
-        .brand-logo {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--primary-accent) 0%, var(--accent) 100%);
-            border-radius: var(--radius-lg);
+        .header-logo {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4);
+            backdrop-filter: blur(10px);
         }
 
-        .brand-logo i {
-            font-size: 1.75rem;
-            color: white;
-        }
+        .header-logo i { font-size: 1.4rem; color: white; }
 
-        .brand-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .brand-title {
-            font-size: 1.75rem;
-            font-weight: 800;
-            letter-spacing: -0.025em;
-            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .brand-subtitle {
-            font-size: 0.875rem;
-            opacity: 0.8;
-            font-weight: 400;
-        }
-
-        .executive-info {
-            display: flex;
-            align-items: center;
-            gap: var(--space-6);
-        }
-
-        .role-badge {
-            background: linear-gradient(135deg, var(--gold) 0%, #d97706 100%);
-            color: white;
-            padding: var(--space-3) var(--space-5);
-            border-radius: var(--radius-full);
+        .header-text h1 {
+            font-size: 1.2rem;
             font-weight: 700;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: var(--space-2);
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+            color: white;
         }
 
-        .role-badge i {
-            font-size: 1rem;
+        .header-text p {
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .h-pill {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 6px 16px;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .h-pill.gold {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #34d399;
+            box-shadow: 0 0 8px #34d399;
+            animation: livePulse 2s infinite;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
 
         .header-actions {
             display: flex;
             align-items: center;
-            gap: var(--space-3);
+            gap: 8px;
         }
 
-        .header-btn {
+        .h-btn {
             background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.15);
             color: white;
-            padding: var(--space-3) var(--space-5);
-            border-radius: var(--radius-md);
-            font-size: 0.875rem;
-            font-weight: 600;
+            height: 38px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
-            gap: var(--space-2);
+            justify-content: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+            font-weight: 600;
             text-decoration: none;
+            padding: 0 14px;
+            gap: 6px;
         }
 
-        .header-btn:hover {
+        .h-btn.icon-only { width: 38px; padding: 0; }
+
+        .h-btn:hover {
             background: rgba(255,255,255,0.2);
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
-        .header-btn.primary {
-            background: linear-gradient(135deg, var(--primary-accent) 0%, var(--accent) 100%);
-            border: none;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-        }
-
-        .header-btn.danger {
+        .h-btn.danger {
             background: rgba(239, 68, 68, 0.2);
-            border-color: rgba(239, 68, 68, 0.4);
+            border-color: rgba(239, 68, 68, 0.3);
         }
 
-        .header-btn.danger:hover {
-            background: rgba(239, 68, 68, 0.4);
+        .h-btn.danger:hover { background: rgba(239, 68, 68, 0.4); }
+
+        /* ═══ STATS ═══ */
+        .stats-section {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px 32px 0;
         }
 
-        /* ===== EXECUTIVE KPI DASHBOARD ===== */
-        .kpi-section {
-            max-width: 1600px;
-            margin: calc(-1 * var(--space-8)) auto var(--space-6);
-            padding: 0 var(--space-6);
-            position: relative;
-            z-index: 50;
-        }
-
-        .kpi-grid {
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: var(--space-5);
+            gap: 20px;
         }
 
-        .kpi-card {
-            background: var(--bg-card);
-            border-radius: var(--radius-xl);
-            padding: var(--space-6);
-            box-shadow: var(--shadow-xl);
-            border: 1px solid var(--border);
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .kpi-card::before {
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .stat-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
+            top: 0; left: 0; right: 0;
+            height: 4px;
         }
 
-        .kpi-card.wellness::before { background: linear-gradient(90deg, var(--low) 0%, #059669 100%); }
-        .kpi-card.students::before { background: linear-gradient(90deg, var(--primary-accent) 0%, var(--accent) 100%); }
-        .kpi-card.interventions::before { background: linear-gradient(90deg, var(--gold) 0%, #d97706 100%); }
-        .kpi-card.stress::before { background: linear-gradient(90deg, var(--critical) 0%, #dc2626 100%); }
+        .stat-card.green::before { background: linear-gradient(90deg, #10b981, #34d399); }
+        .stat-card.indigo::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
+        .stat-card.amber::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .stat-card.red::before { background: linear-gradient(90deg, #ef4444, #f87171); }
 
-        .kpi-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow-2xl);
-        }
-
-        .kpi-header {
+        .stat-top {
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: var(--space-4);
+            margin-bottom: 12px;
         }
 
-        .kpi-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: var(--radius-lg);
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        .kpi-card.wellness .kpi-icon { background: var(--low-bg); color: var(--low); }
-        .kpi-card.students .kpi-icon { background: #e0e7ff; color: var(--primary-accent); }
-        .kpi-card.interventions .kpi-icon { background: var(--gold-light); color: var(--gold); }
-        .kpi-card.stress .kpi-icon { background: var(--critical-bg); color: var(--critical); }
-
-        .kpi-trend {
-            display: flex;
-            align-items: center;
-            gap: var(--space-1);
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: var(--space-1) var(--space-2);
-            border-radius: var(--radius-full);
-        }
-
-        .kpi-trend.up { background: var(--low-bg); color: var(--low); }
-        .kpi-trend.down { background: var(--critical-bg); color: var(--critical); }
-
-        .kpi-value {
-            font-size: 3rem;
-            font-weight: 900;
-            line-height: 1;
-            margin-bottom: var(--space-2);
-            color: var(--text-primary);
-        }
-
-        .kpi-value span {
             font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-secondary);
         }
 
-        .kpi-label {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+        .stat-card.green .stat-icon { background: var(--success-light); color: var(--success); }
+        .stat-card.indigo .stat-icon { background: var(--primary-light); color: var(--primary); }
+        .stat-card.amber .stat-icon { background: var(--warning-light); color: var(--warning); }
+        .stat-card.red .stat-icon { background: var(--danger-light); color: var(--danger); }
 
-        .kpi-subtext {
-            font-size: 0.75rem;
-            color: var(--gray-400);
-            margin-top: var(--space-2);
-        }
-
-        /* ===== MAIN DASHBOARD LAYOUT ===== */
-        .executive-dashboard {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: calc(var(--space-12) + var(--space-6)) var(--space-6) var(--space-12);
-            display: grid;
-            grid-template-columns: 1fr 420px;
-            gap: var(--space-6);
-        }
-
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-6);
-        }
-
-        /* ===== EXECUTIVE CARDS ===== */
-        .executive-card {
-            background: var(--bg-card);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border);
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .executive-card:hover {
-            box-shadow: var(--shadow-xl);
-        }
-
-        .card-header {
-            padding: var(--space-5) var(--space-6);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
-        }
-
-        [data-theme="dark"] .card-header {
-            background: linear-gradient(135deg, var(--gray-800) 0%, var(--gray-700) 100%);
-        }
-
-        .card-header h2 {
-            font-size: 1.125rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: var(--space-3);
-        }
-
-        .card-header h2 i {
-            color: var(--primary-accent);
-        }
-
-        .time-select {
-            padding: var(--space-2) var(--space-4);
-            border: 2px solid var(--border);
-            border-radius: var(--radius-md);
-            font-size: 0.875rem;
-            font-weight: 500;
-            background: var(--bg-card);
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .time-select:focus {
-            outline: none;
-            border-color: var(--primary-accent);
-        }
-
-        .card-body {
-            padding: var(--space-6);
-        }
-
-        /* ===== DEPARTMENT HEALTH CHART ===== */
-        .dept-health-chart {
-            height: 320px;
-            margin: var(--space-4) 0;
-        }
-
-        .chart-legend {
-            display: flex;
-            justify-content: center;
-            gap: var(--space-6);
-            flex-wrap: wrap;
-            padding-top: var(--space-4);
-            border-top: 1px solid var(--border);
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: var(--space-2);
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-
-        .legend-color {
-            width: 14px;
-            height: 14px;
-            border-radius: var(--radius-sm);
-        }
-
-        /* ===== RISK DISTRIBUTION ===== */
-        .risk-distribution {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-6);
-            align-items: center;
-        }
-
-        .risk-legend {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-4);
-        }
-
-        .risk-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: var(--space-4);
-            background: var(--gray-50);
-            border-radius: var(--radius-md);
-            transition: all 0.2s ease;
-        }
-
-        [data-theme="dark"] .risk-item {
-            background: var(--gray-800);
-        }
-
-        .risk-item:hover {
-            transform: translateX(8px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .risk-label {
-            display: flex;
-            align-items: center;
-            gap: var(--space-3);
-            font-weight: 500;
-        }
-
-        .risk-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .risk-count {
-            font-size: 1.5rem;
+        .stat-number {
+            font-size: 2.25rem;
             font-weight: 800;
-            color: var(--text-primary);
-        }
-
-        /* ===== INTERVENTION STATS ===== */
-        .intervention-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: var(--space-4);
-            margin-bottom: var(--space-6);
-        }
-
-        .intervention-stat {
-            text-align: center;
-            padding: var(--space-5);
-            background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            transition: all 0.2s ease;
-        }
-
-        [data-theme="dark"] .intervention-stat {
-            background: linear-gradient(135deg, var(--gray-800) 0%, var(--gray-700) 100%);
-        }
-
-        .intervention-stat:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: var(--primary-accent);
+            letter-spacing: -0.03em;
             line-height: 1;
+            color: var(--gray-900);
+        }
+
+        .stat-number .unit {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-400);
         }
 
         .stat-label {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-top: var(--space-2);
+            font-size: 0.85rem;
+            color: var(--gray-500);
             font-weight: 500;
+            margin-top: 4px;
         }
 
-        /* ===== INTERVENTION TIMELINE ===== */
-        .intervention-timeline {
+        /* ═══ MAIN ═══ */
+        .main {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px 32px 48px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .grid-3-1 {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* ═══ CARD ═══ */
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            gap: var(--space-4);
+            transition: box-shadow 0.3s;
         }
 
-        .timeline-item {
-            display: flex;
-            gap: var(--space-4);
-            padding: var(--space-4);
-            background: var(--gray-50);
-            border-radius: var(--radius-lg);
-            border-left: 4px solid var(--primary-accent);
-            transition: all 0.2s ease;
-        }
+        .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 
-        [data-theme="dark"] .timeline-item {
-            background: var(--gray-800);
-        }
-
-        .timeline-item:hover {
-            transform: translateX(8px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .timeline-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--primary-accent) 0%, var(--accent) 100%);
-            border-radius: var(--radius-md);
+        .card-head {
+            padding: 20px 24px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.25rem;
-            flex-shrink: 0;
-        }
-
-        .timeline-content {
-            flex: 1;
-        }
-
-        .timeline-title {
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: var(--space-2);
-        }
-
-        .timeline-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--space-4);
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        .timeline-meta span {
-            display: flex;
-            align-items: center;
-            gap: var(--space-1);
-        }
-
-        /* ===== EXECUTIVE SIDEBAR ===== */
-        .executive-sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-6);
-        }
-
-        /* Priority Alerts */
-        .priority-alerts {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-4);
-        }
-
-        .alert-item {
-            padding: var(--space-4);
-            background: var(--critical-bg);
-            border-radius: var(--radius-lg);
-            border-left: 4px solid var(--critical);
-            transition: all 0.2s ease;
-        }
-
-        .alert-item.medium {
-            background: var(--gold-light);
-            border-left-color: var(--gold);
-        }
-
-        .alert-item:hover {
-            transform: translateX(8px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .alert-title {
-            display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: var(--space-2);
+            border-bottom: 1px solid var(--gray-100);
         }
 
-        .alert-title span:first-child {
+        .card-title {
+            font-size: 1rem;
             font-weight: 700;
-            color: var(--text-primary);
-            font-size: 0.875rem;
-        }
-
-        .alert-time {
-            font-size: 0.7rem;
-            color: var(--gray-400);
-        }
-
-        .alert-desc {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
-
-        /* Action Items */
-        .action-items {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-3);
-        }
-
-        .action-item {
+            color: var(--gray-800);
             display: flex;
             align-items: center;
-            gap: var(--space-4);
-            padding: var(--space-4);
-            background: var(--gray-50);
-            border-radius: var(--radius-lg);
-            text-decoration: none;
-            color: var(--text-primary);
-            transition: all 0.2s ease;
-            border: 1px solid transparent;
+            gap: 10px;
         }
 
-        [data-theme="dark"] .action-item {
-            background: var(--gray-800);
-        }
-
-        .action-item:hover {
-            background: #e0e7ff;
-            border-color: var(--primary-accent);
-            transform: translateX(8px);
-        }
-
-        [data-theme="dark"] .action-item:hover {
-            background: var(--gray-700);
-        }
-
-        .action-icon {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, var(--primary-accent) 0%, var(--accent) 100%);
-            border-radius: var(--radius-md);
+        .icon-wrap {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 1rem;
-            flex-shrink: 0;
+            font-size: 0.85rem;
         }
 
-        .action-content {
+        .icon-danger { background: var(--danger-light); color: var(--danger); }
+        .icon-info { background: var(--info-light); color: var(--info); }
+        .icon-warning { background: var(--warning-light); color: var(--warning); }
+        .icon-success { background: var(--success-light); color: var(--success); }
+        .icon-primary { background: var(--primary-light); color: var(--primary); }
+
+        .count-pill {
+            background: var(--gray-100);
+            color: var(--gray-600);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .count-pill.has-items {
+            background: var(--danger-light);
+            color: var(--danger);
+            animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes badgePop {
+            0% { transform: scale(0.6); }
+            100% { transform: scale(1); }
+        }
+
+        .card-body {
+            padding: 24px;
             flex: 1;
         }
 
-        .action-title {
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: var(--text-primary);
+        .card-body.no-pad { padding: 0; }
+
+        .card-body.scrollable {
+            max-height: 420px;
+            overflow-y: auto;
         }
 
-        .action-subtitle {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
+        .card-body.scrollable::-webkit-scrollbar { width: 4px; }
+        .card-body.scrollable::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
+
+        /* ═══ RISK BARS ═══ */
+        .risk-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--gray-50);
+        }
+
+        .risk-bar-item:last-child { border-bottom: none; }
+
+        .risk-bar-label {
+            width: 80px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .risk-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .risk-bar-track {
+            flex: 1;
+            height: 10px;
+            background: var(--gray-100);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .risk-bar-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%;
+        }
+
+        .risk-bar-count {
+            min-width: 40px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--gray-800);
+            text-align: right;
+        }
+
+        /* ═══ LIST ITEMS ═══ */
+        .list-item {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--gray-50);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: background 0.15s;
+        }
+
+        .list-item:last-child { border-bottom: none; }
+        .list-item:hover { background: var(--gray-50); }
+
+        .list-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .list-content { flex: 1; min-width: 0; }
+
+        .list-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--gray-800);
+        }
+
+        .list-sub {
+            font-size: 0.78rem;
+            color: var(--gray-500);
             margin-top: 2px;
         }
 
-        /* ===== EXECUTIVE FOOTER ===== */
-        .executive-footer {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: var(--space-8) var(--space-6);
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            border-top: 1px solid var(--border);
+        .list-right { text-align: right; flex-shrink: 0; }
+
+        /* ═══ BADGES ═══ */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
         }
 
-        /* ===== NOTIFICATION SYSTEM ===== */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: var(--space-4) var(--space-6);
-            border-radius: var(--radius-lg);
-            color: white;
-            font-weight: 500;
-            box-shadow: var(--shadow-2xl);
-            z-index: 1000;
+        .badge.high { background: #fef2f2; color: #dc2626; }
+        .badge.medium { background: #fffbeb; color: #d97706; }
+        .badge.low { background: #ecfdf5; color: #059669; }
+
+        /* ═══ PROCTOR TABLE ═══ */
+        .tbl { width: 100%; border-collapse: collapse; }
+
+        .tbl th {
+            padding: 12px 24px;
+            text-align: left;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--gray-400);
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .tbl td {
+            padding: 14px 24px;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--gray-50);
+            vertical-align: middle;
+        }
+
+        .tbl tbody tr { transition: background 0.15s; }
+        .tbl tbody tr:hover { background: var(--gray-50); }
+
+        .proctor-cell {
             display: flex;
             align-items: center;
-            gap: var(--space-3);
-            animation: slideIn 0.3s ease-out;
+            gap: 10px;
         }
 
-        .notification.info { background: linear-gradient(135deg, var(--primary-accent) 0%, var(--accent) 100%); }
-        .notification.success { background: linear-gradient(135deg, var(--low) 0%, #059669 100%); }
-        .notification.error { background: linear-gradient(135deg, var(--critical) 0%, #dc2626 100%); }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .proctor-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: white;
+            flex-shrink: 0;
         }
 
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 1400px) {
-            .executive-dashboard {
-                grid-template-columns: 1fr;
-            }
-            
-            .executive-sidebar {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-            }
+        .bar-mini {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
+        .bar-mini-track {
+            width: 60px;
+            height: 6px;
+            background: var(--gray-100);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .bar-mini-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+
+        /* ═══ EMPTY STATE ═══ */
+        .empty {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--gray-400);
+        }
+
+        .empty i {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            display: block;
+            opacity: 0.3;
+        }
+
+        .empty p { font-size: 0.875rem; font-weight: 500; }
+
+        /* ═══ SKELETON ═══ */
+        .skeleton {
+            position: relative;
+            overflow: hidden;
+            background: var(--gray-100);
+            border-radius: 6px;
+        }
+
+        .skeleton::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .skel-number { width: 60px; height: 36px; border-radius: 8px; }
+        .skel-row { display: flex; align-items: center; gap: 12px; padding: 14px 24px; border-bottom: 1px solid var(--gray-50); }
+        .skel-avatar { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; }
+        .skel-line { height: 12px; border-radius: 4px; }
+        .skel-line-sm { width: 40%; }
+        .skel-line-md { width: 65%; }
+        .skel-line-lg { width: 85%; }
+        .skel-chart { width: 100%; height: 260px; border-radius: 12px; }
+
+        /* ═══ ANIMATIONS ═══ */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(16px);
+            animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.05s; }
+        .stat-card:nth-child(2) { animation-delay: 0.1s; }
+        .stat-card:nth-child(3) { animation-delay: 0.15s; }
+        .stat-card:nth-child(4) { animation-delay: 0.2s; }
+
+        .grid-3-1 .card:nth-child(1) { animation-delay: 0.25s; }
+        .grid-3-1 .card:nth-child(2) { animation-delay: 0.3s; }
+        .grid-2 .card:nth-child(1) { animation-delay: 0.35s; }
+        .grid-2 .card:nth-child(2) { animation-delay: 0.4s; }
+
+        .list-item, .tbl tbody tr {
+            animation: rowSlide 0.3s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes rowSlide {
+            from { opacity: 0; transform: translateX(-8px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .stat-card.red.has-critical {
+            animation: criticalPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes criticalPulse {
+            0%, 100% { box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+            50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15), 0 4px 12px rgba(239, 68, 68, 0.1); }
+        }
+
+        .h-btn.spinning i { animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ═══ TOAST ═══ */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: white;
+            z-index: 2000;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { background: linear-gradient(135deg, #059669, #10b981); }
+        .toast.error { background: linear-gradient(135deg, #dc2626, #ef4444); }
+        .toast.info { background: linear-gradient(135deg, #4338ca, #6366f1); }
+
+        /* ═══ RESPONSIVE ═══ */
         @media (max-width: 1024px) {
-            .kpi-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .risk-distribution {
-                grid-template-columns: 1fr;
-            }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .grid-2, .grid-3-1 { grid-template-columns: 1fr; }
+            .header-center { display: none; }
         }
 
-        @media (max-width: 768px) {
-            .kpi-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .executive-sidebar {
-                grid-template-columns: 1fr;
-            }
-            
-            .intervention-stats {
-                grid-template-columns: 1fr;
-            }
-            
-            .header-content {
-                flex-wrap: wrap;
-                gap: var(--space-4);
-            }
-            
-            .executive-info {
-                order: 3;
-                width: 100%;
-                justify-content: center;
+        @media (max-width: 640px) {
+            .header-inner { padding: 12px 16px; }
+            .stats-section { padding: 16px 16px 0; }
+            .main { padding: 16px 16px 32px; }
+            .stat-card { padding: 16px; }
+            .stat-number { font-size: 1.75rem; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
             }
         }
     </style>
 </head>
 <body>
-    <!-- ===== EXECUTIVE HEADER ===== -->
-    <header class="executive-header">
-        <div class="header-top">
-            <div class="header-top-content">
-                <div class="status">
-                    <span class="status-dot"></span>
-                    <span>All Systems Operational</span>
+
+    <!-- ═══ HEADER ═══ -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-brand">
+                <div class="header-logo"><i class="fas fa-brain"></i></div>
+                <div class="header-text">
+                    <h1>AURA Executive</h1>
+                    <p>Department Analytics & Oversight</p>
                 </div>
-                <div id="lastUpdated" style="opacity: 0.8;">Last updated: Loading...</div>
             </div>
-        </div>
-        
-        <div class="header-main">
-            <div class="header-content">
-                <div class="executive-brand">
-                    <div class="brand-logo">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <div class="brand-info">
-                        <div class="brand-title">AURA Executive Analytics</div>
-                        <div class="brand-subtitle">HOD Strategic Intelligence & Department Oversight</div>
-                    </div>
+            <div class="header-center">
+                <div class="h-pill gold">
+                    <i class="fas fa-crown"></i>
+                    Head of {{ session.get('user_department', 'Department') }}
                 </div>
-                
-                <div class="executive-info">
-                    <div class="role-badge">
-                        <i class="fas fa-crown"></i>
-                        <span>Head of {{ session.get('department', 'AIML') }}</span>
-                    </div>
+                <div class="h-pill">
+                    <div class="live-dot"></div>
+                    System Active
                 </div>
-                
-                <div class="header-actions">
-                    <button class="header-btn primary" onclick="exportReport()">
-                        <i class="fas fa-download"></i>
-                        Export Report
-                    </button>
-                    <button class="header-btn" onclick="toggleTheme()">
-                        <i class="fas fa-moon" id="themeIcon"></i>
-                    </button>
-                    <a href="{{ url_for('auth.logout') }}" class="header-btn danger">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Logout
-                    </a>
-                </div>
+            </div>
+            <div class="header-actions">
+                <button class="h-btn icon-only" id="refreshBtn" onclick="refreshData()" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+                <button class="h-btn" onclick="exportReport()"><i class="fas fa-download"></i> Export</button>
+                <a href="{{ url_for('auth.logout') }}" class="h-btn danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
         </div>
     </header>
 
-    <!-- ===== EXECUTIVE KPI DASHBOARD ===== -->
-    <section class="kpi-section">
-        <div class="kpi-grid">
-            <div class="kpi-card wellness">
-                <div class="kpi-header">
-                    <div class="kpi-icon"><i class="fas fa-heart-pulse"></i></div>
-                    <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> +5.1%</div>
+    <!-- ═══ STATS ═══ -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card green fade-up">
+                <div class="stat-top">
+                    <div class="stat-icon"><i class="fas fa-heart-pulse"></i></div>
                 </div>
-                <div class="kpi-value">74<span>%</span></div>
-                <div class="kpi-label">Department Health Index</div>
-                <div class="kpi-subtext">Overall wellness across AIML programs</div>
+                <div class="stat-number" id="wellnessScore"><div class="skeleton skel-number"></div></div>
+                <div class="stat-label">Department Health Index</div>
             </div>
-            
-            <div class="kpi-card students">
-                <div class="kpi-header">
-                    <div class="kpi-icon"><i class="fas fa-user-graduate"></i></div>
-                    <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> +2.4%</div>
+            <div class="stat-card indigo fade-up">
+                <div class="stat-top">
+                    <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
                 </div>
-                <div class="kpi-value">1247</div>
-                <div class="kpi-label">Total AIML Enrollment</div>
-                <div class="kpi-subtext">All years and programs combined</div>
+                <div class="stat-number" id="totalStudents"><div class="skeleton skel-number"></div></div>
+                <div class="stat-label">Department Students</div>
             </div>
-            
-            <div class="kpi-card interventions">
-                <div class="kpi-header">
-                    <div class="kpi-icon"><i class="fas fa-hand-holding-heart"></i></div>
-                    <div class="kpi-trend up"><i class="fas fa-arrow-down"></i> -3</div>
+            <div class="stat-card amber fade-up">
+                <div class="stat-top">
+                    <div class="stat-icon"><i class="fas fa-gavel"></i></div>
                 </div>
-                <div class="kpi-value">23</div>
-                <div class="kpi-label">Strategic Interventions</div>
-                <div class="kpi-subtext">High-priority institutional cases</div>
+                <div class="stat-number" id="proctorActions"><div class="skeleton skel-number"></div></div>
+                <div class="stat-label">Proctor Actions Today</div>
             </div>
-            
-            <div class="kpi-card stress">
-                <div class="kpi-header">
-                    <div class="kpi-icon"><i class="fas fa-brain"></i></div>
-                    <div class="kpi-trend up"><i class="fas fa-arrow-down"></i> -4.2</div>
+            <div class="stat-card red fade-up">
+                <div class="stat-top">
+                    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
                 </div>
-                <div class="kpi-value">58</div>
-                <div class="kpi-label">Department Stress Index</div>
-                <div class="kpi-subtext">Benchmark: 65 (trending positive)</div>
+                <div class="stat-number" id="highRiskCount"><div class="skeleton skel-number"></div></div>
+                <div class="stat-label">High-Risk Unreviewed</div>
             </div>
         </div>
     </section>
 
-    <!-- ===== MAIN DASHBOARD ===== -->
-    <div class="executive-dashboard">
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- 📊 Department Health Overview -->
-            <section class="executive-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-heartbeat"></i> Department Health Overview</h2>
-                    <select class="time-select" id="timeRange">
-                        <option>Last 30 Days</option>
-                        <option>Last Quarter</option>
-                        <option>Academic Year</option>
-                    </select>
-                </div>
-                <div class="card-body">
-                    <h3 style="margin-bottom: var(--space-2); color: var(--text-secondary); font-weight: 500; font-size: 0.875rem;">
-                        Stress Distribution Across AIML Programs
-                    </h3>
-                    <div id="deptHealthChart" class="dept-health-chart"></div>
-                    <div class="chart-legend">
-                        <div class="legend-item">
-                            <span class="legend-color" style="background: var(--low);"></span>
-                            <span>Low Risk (0-50)</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-color" style="background: var(--medium);"></span>
-                            <span>Medium Risk (51-70)</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-color" style="background: var(--high);"></span>
-                            <span>High Risk (71-85)</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-color" style="background: var(--critical);"></span>
-                            <span>Critical (86-100)</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
+    <!-- ═══ MAIN ═══ -->
+    <div class="main">
 
-            <!-- ⚠️ Risk Distribution -->
-            <section class="executive-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-exclamation-triangle"></i> Risk Distribution Analysis</h2>
-                </div>
-                <div class="card-body">
-                    <div class="risk-distribution">
-                        <div class="risk-legend">
-                            <div class="risk-item">
-                                <div class="risk-label">
-                                    <span class="risk-dot" style="background: var(--critical);"></span>
-                                    <span>Critical Risk</span>
-                                </div>
-                                <div class="risk-count" id="criticalCount">8</div>
-                            </div>
-                            <div class="risk-item">
-                                <div class="risk-label">
-                                    <span class="risk-dot" style="background: var(--high);"></span>
-                                    <span>High Risk</span>
-                                </div>
-                                <div class="risk-count" id="highCount">24</div>
-                            </div>
-                            <div class="risk-item">
-                                <div class="risk-label">
-                                    <span class="risk-dot" style="background: var(--medium);"></span>
-                                    <span>Medium Risk</span>
-                                </div>
-                                <div class="risk-count" id="mediumCount">89</div>
-                            </div>
-                            <div class="risk-item">
-                                <div class="risk-label">
-                                    <span class="risk-dot" style="background: var(--low);"></span>
-                                    <span>Low Risk</span>
-                                </div>
-                                <div class="risk-count" id="lowCount">1126</div>
-                            </div>
-                        </div>
-                        <div id="riskChart" style="height: 240px;"></div>
+        <!-- ROW 1: CHARTS -->
+        <div class="grid-3-1">
+            <!-- WELLNESS DONUT -->
+            <div class="card fade-up">
+                <div class="card-head">
+                    <div class="card-title">
+                        <span class="icon-wrap icon-success"><i class="fas fa-heartbeat"></i></span>
+                        Department Health Overview
                     </div>
                 </div>
-            </section>
+                <div class="card-body">
+                    <div id="healthChart" style="min-height:280px;">
+                        <div class="skeleton skel-chart"></div>
+                    </div>
+                </div>
+            </div>
 
-            <!-- 📈 Intervention Effectiveness -->
-            <section class="executive-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-chart-line"></i> Intervention Effectiveness</h2>
-                </div>
-                <div class="card-body">
-                    <div class="intervention-stats">
-                        <div class="intervention-stat">
-                            <div class="stat-value" id="successRate">78%</div>
-                            <div class="stat-label">Success Rate</div>
-                        </div>
-                        <div class="intervention-stat">
-                            <div class="stat-value" id="avgResolution">3.2</div>
-                            <div class="stat-label">Avg Resolution (days)</div>
-                        </div>
-                        <div class="intervention-stat">
-                            <div class="stat-value" id="satisfaction">4.6</div>
-                            <div class="stat-label">Student Satisfaction</div>
-                        </div>
-                    </div>
-                    
-                    <h3 style="margin: var(--space-4) 0 var(--space-3); color: var(--text-secondary); font-weight: 600; font-size: 0.875rem;">
-                        Recent Interventions
-                    </h3>
-                    
-                    <div class="intervention-timeline" id="interventionTimeline">
-                        <div class="timeline-item">
-                            <div class="timeline-icon">
-                                <i class="fas fa-user-md"></i>
-                            </div>
-                            <div class="timeline-content">
-                                <div class="timeline-title">Counseling Session - Rahul Sharma</div>
-                                <div class="timeline-meta">
-                                    <span><i class="fas fa-user"></i> Dr. Ananya Roy</span>
-                                    <span><i class="fas fa-check-circle" style="color: var(--low);"></i> Completed</span>
-                                    <span><i class="fas fa-star" style="color: var(--gold);"></i> Positive</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="timeline-item">
-                            <div class="timeline-icon">
-                                <i class="fas fa-handshake"></i>
-                            </div>
-                            <div class="timeline-content">
-                                <div class="timeline-title">Parent-Teacher Meeting - Anjali Patel</div>
-                                <div class="timeline-meta">
-                                    <span><i class="fas fa-user"></i> Dr. Rajesh Kumar</span>
-                                    <span><i class="fas fa-spinner" style="color: var(--gold);"></i> In Progress</span>
-                                    <span><i class="fas fa-calendar"></i> Follow-up Scheduled</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="timeline-item">
-                            <div class="timeline-icon">
-                                <i class="fas fa-graduation-cap"></i>
-                            </div>
-                            <div class="timeline-content">
-                                <div class="timeline-title">Academic Support - Priya Kumar</div>
-                                <div class="timeline-meta">
-                                    <span><i class="fas fa-user"></i> Dr. Meera Singh</span>
-                                    <span><i class="fas fa-check-circle" style="color: var(--low);"></i> Completed</span>
-                                    <span><i class="fas fa-trophy" style="color: var(--gold);"></i> Excellent</span>
-                                </div>
-                            </div>
-                        </div>
+            <!-- RISK DISTRIBUTION -->
+            <div class="card fade-up">
+                <div class="card-head">
+                    <div class="card-title">
+                        <span class="icon-wrap icon-warning"><i class="fas fa-chart-bar"></i></span>
+                        Risk Distribution
                     </div>
                 </div>
-            </section>
+                <div class="card-body" id="riskBarsContainer">
+                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-lg"></div></div></div>
+                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-md"></div></div></div>
+                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-sm"></div></div></div>
+                </div>
+            </div>
         </div>
 
-        <!-- ===== EXECUTIVE SIDEBAR ===== -->
-        <div class="executive-sidebar">
-            <!-- 🔴 Priority Alerts -->
-            <section class="executive-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-bell"></i> Priority Alerts</h2>
-                </div>
-                <div class="card-body">
-                    <div class="priority-alerts" id="priorityAlerts">
-                        <div class="alert-item">
-                            <div class="alert-title">
-                                <span>3 Critical Students Detected</span>
-                                <span class="alert-time">2 hours ago</span>
-                            </div>
-                            <div class="alert-desc">
-                                Immediate intervention required. Stress levels exceeding 85 points in AIML department.
-                            </div>
-                        </div>
-                        
-                        <div class="alert-item medium">
-                            <div class="alert-title">
-                                <span>Academic Pressure Peak</span>
-                                <span class="alert-time">1 day ago</span>
-                            </div>
-                            <div class="alert-desc">
-                                Mid-semester exams causing elevated stress across 4th year AIML students.
-                            </div>
-                        </div>
-                        
-                        <div class="alert-item">
-                            <div class="alert-title">
-                                <span>Counselor Availability</span>
-                                <span class="alert-time">2 days ago</span>
-                            </div>
-                            <div class="alert-desc">
-                                Dr. Ananya Roy unavailable this week. Reassignment needed for 5 cases.
-                            </div>
-                        </div>
+        <!-- ROW 2: ESCALATIONS + PROCTORS -->
+        <div class="grid-2">
+            <!-- RECENT ESCALATIONS -->
+            <div class="card fade-up">
+                <div class="card-head">
+                    <div class="card-title">
+                        <span class="icon-wrap icon-danger"><i class="fas fa-arrow-circle-up"></i></span>
+                        Recent Escalations
                     </div>
+                    <span class="count-pill" id="escalationBadge">0</span>
                 </div>
-            </section>
+                <div class="card-body no-pad scrollable" id="escalationsList">
+                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-lg"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
+                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-md"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
+                </div>
+            </div>
 
-            <!-- ⚡ Action Items -->
-            <section class="executive-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-bolt"></i> Action Items</h2>
-                </div>
-                <div class="card-body">
-                    <div class="action-items">
-                        <a href="#" class="action-item" onclick="showNotification('Opening budget approval...', 'info')">
-                            <div class="action-icon">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                            <div class="action-content">
-                                <div class="action-title">Approve Budget Request</div>
-                                <div class="action-subtitle">Counseling Department - Pending</div>
-                            </div>
-                        </a>
-                        
-                        <a href="#" class="action-item" onclick="showNotification('Loading quarterly report...', 'info')">
-                            <div class="action-icon">
-                                <i class="fas fa-file-alt"></i>
-                            </div>
-                            <div class="action-content">
-                                <div class="action-title">Review Quarterly Report</div>
-                                <div class="action-subtitle">Due: End of week</div>
-                            </div>
-                        </a>
-                        
-                        <a href="#" class="action-item" onclick="showNotification('Opening meeting scheduler...', 'info')">
-                            <div class="action-icon">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div class="action-content">
-                                <div class="action-title">Faculty Meeting</div>
-                                <div class="action-subtitle">Tomorrow, 10:00 AM</div>
-                            </div>
-                        </a>
-                        
-                        <a href="#" class="action-item" onclick="showNotification('Loading wellness policy editor...', 'info')">
-                            <div class="action-icon">
-                                <i class="fas fa-cog"></i>
-                            </div>
-                            <div class="action-content">
-                                <div class="action-title">Update Wellness Policy</div>
-                                <div class="action-subtitle">Draft ready for review</div>
-                            </div>
-                        </a>
+            <!-- PROCTOR PERFORMANCE -->
+            <div class="card fade-up">
+                <div class="card-head">
+                    <div class="card-title">
+                        <span class="icon-wrap icon-primary"><i class="fas fa-user-shield"></i></span>
+                        Proctor Performance
                     </div>
                 </div>
-            </section>
+                <div class="card-body no-pad scrollable" id="proctorTable">
+                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-lg"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
+                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-md"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- ===== FOOTER ===== -->
-    <footer class="executive-footer">
-        <p>
-            <strong>AURA Executive Dashboard</strong> – Institutional wellness monitoring and strategic decision support
-        </p>
-        <p style="margin-top: var(--space-2); font-size: 0.75rem; opacity: 0.7;">
-            Data refreshed every 15 minutes | Version 3.5.0 | Confidential Executive Use Only
-        </p>
-    </footer>
+    <div class="toast" id="toast"></div>
 
-    <!-- ===== SCRIPTS ===== -->
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
-    
     <script>
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle'}"></i>
-                <span>${message}</span>
-            `;
-            document.body.appendChild(notification);
-            setTimeout(() => {
-                notification.style.animation = 'slideIn 0.3s ease-out reverse';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
+    // ═══ UTILITIES ═══
+    function esc(s) {
+        if (s == null) return '';
+        const d = document.createElement('div');
+        d.appendChild(document.createTextNode(String(s)));
+        return d.innerHTML;
+    }
+
+    function showToast(msg, type = 'info') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast ' + type + ' show';
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function animateCount(el, target, duration = 800) {
+        const start = parseInt(el.textContent) || 0;
+        if (start === target) { el.textContent = target; return; }
+        const range = target - start;
+        const startTime = performance.now();
+        function tick(now) {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.round(start + range * eased);
+            if (progress < 1) requestAnimationFrame(tick);
         }
+        requestAnimationFrame(tick);
+    }
 
-        // Theme toggle
-        function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
-            
-            const icon = document.getElementById('themeIcon');
-            icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-            
-            showNotification(`Switched to ${newTheme} mode`, 'success');
-        }
+    function applyRowDelays(container) {
+        const items = container.querySelectorAll('tr, .list-item');
+        items.forEach((item, i) => { item.style.animationDelay = `${i * 0.05}s`; });
+    }
 
-        // Export report
-        function exportReport() {
-            showNotification('Generating executive report...', 'info');
-            // Download CSV audit log
-            window.location.href = '/proctor/api/audit/export/csv?days=30';
-            setTimeout(() => showNotification('Report downloaded successfully!', 'success'), 2000);
-        }
+    // ═══ CHARTS ═══
+    let healthChart = null;
 
-        // Logout function
-        function logout() {
-            window.location.href = '/auth/logout';
-        }
-
-        // Fetch dashboard data from API
-        async function loadDashboardStats() {
-            try {
-                const response = await fetch('/proctor/api/hod/dashboard-stats');
-                const result = await response.json();
-                
-                if (result.success) {
-                    const data = result.data;
-                    
-                    // Update KPI cards
-                    const wellnessEl = document.querySelector('.kpi-card.wellness .kpi-value');
-                    if (wellnessEl) wellnessEl.innerHTML = `${data.avg_wellness || 0}<span>%</span>`;
-                    
-                    const studentsEl = document.querySelector('.kpi-card.students .kpi-value');
-                    if (studentsEl) studentsEl.textContent = data.active_students || 0;
-                    
-                    const interventionsEl = document.querySelector('.kpi-card.interventions .kpi-value');
-                    if (interventionsEl) interventionsEl.textContent = data.proctor_actions_today || 0;
-                    
-                    const stressEl = document.querySelector('.kpi-card.stress .kpi-value');
-                    if (stressEl) stressEl.textContent = data.high_risk_incidents || 0;
-                }
-            } catch (error) {
-                console.error('Failed to load dashboard stats:', error);
-            }
-        }
-
-        // Fetch risk distribution
-        async function loadRiskDistribution() {
-            try {
-                const response = await fetch('/proctor/api/hod/risk-distribution');
-                const result = await response.json();
-                
-                if (result.success && window.riskChart) {
-                    const data = result.data;
-                    window.riskChart.updateSeries([{
-                        name: 'Incidents',
-                        data: [data.high || 0, data.medium || 0, data.low || 0]
-                    }]);
-                }
-            } catch (error) {
-                console.error('Failed to load risk distribution:', error);
-            }
-        }
-
-        // Fetch wellness trends for chart
-        async function loadWellnessTrends() {
-            try {
-                const response = await fetch('/proctor/api/hod/wellness-trends');
-                const result = await response.json();
-                
-                if (result.success && window.deptHealthChart) {
-                    const data = result.data;
-                    // Update chart with real data
-                    if (data.wellness && data.wellness.length > 0) {
-                        // Calculate distribution from trends
-                        const avgWellness = data.wellness.reduce((a, b) => a + b, 0) / data.wellness.length;
-                        const lowRisk = Math.round(avgWellness);
-                        const mediumRisk = Math.round((100 - avgWellness) * 0.5);
-                        const highRisk = Math.round((100 - avgWellness) * 0.3);
-                        const critical = Math.round((100 - avgWellness) * 0.2);
-                        
-                        window.deptHealthChart.updateSeries([lowRisk, mediumRisk, highRisk, critical]);
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to load wellness trends:', error);
-            }
-        }
-
-        // Fetch recent escalations
-        async function loadRecentEscalations() {
-            try {
-                const response = await fetch('/proctor/api/hod/recent-escalations');
-                const result = await response.json();
-                
-                if (result.success) {
-                    const container = document.getElementById('escalationsList');
-                    if (container && result.data) {
-                        if (result.data.length === 0) {
-                            container.innerHTML = '<div style="text-align:center; color:var(--text-secondary); padding:2rem;">No escalated incidents</div>';
-                        } else {
-                            container.innerHTML = result.data.map(esc => `
-                                <div class="escalation-item" style="padding:1rem; border-bottom:1px solid var(--border);">
-                                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                                        <span class="risk-badge ${esc.risk_level.toLowerCase()}">${esc.risk_level}</span>
-                                        <span style="font-size:0.85rem; color:var(--text-secondary);">${esc.timestamp || ''}</span>
-                                    </div>
-                                    <div style="margin-top:0.5rem; font-weight:500;">${esc.trigger_source || 'Unknown'}</div>
-                                    <div style="color:var(--text-secondary); font-size:0.9rem;">${esc.message_excerpt || ''}</div>
-                                </div>
-                            `).join('');
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to load escalations:', error);
-            }
-        }
-
-        // Fetch proctor performance
-        async function loadProctorPerformance() {
-            try {
-                const response = await fetch('/proctor/api/hod/proctor-performance');
-                const result = await response.json();
-                
-                if (result.success) {
-                    const container = document.getElementById('proctorPerformanceList');
-                    if (container && result.data) {
-                        if (result.data.length === 0) {
-                            container.innerHTML = '<div style="text-align:center; color:var(--text-secondary); padding:2rem;">No proctor activity this week</div>';
-                        } else {
-                            container.innerHTML = result.data.map((p, i) => `
-                                <div class="proctor-item" style="padding:1rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-                                    <div>
-                                        <div style="font-weight:600;">${p.proctor_id || 'Unknown'}</div>
-                                        <div style="font-size:0.85rem; color:var(--text-secondary);">
-                                            ${p.total_actions} actions this week
-                                        </div>
-                                    </div>
-                                    <div style="text-align:right;">
-                                        <span style="color:#10b981;">${p.dismissals || 0} dismissed</span> |
-                                        <span style="color:#f59e0b;">${p.escalations || 0} escalated</span>
-                                    </div>
-                                </div>
-                            `).join('');
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to load proctor performance:', error);
-            }
-        }
-
-        // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', function() {
-            // Update last updated time
-            function updateLastUpdated() {
-                const now = new Date();
-                const el = document.getElementById('lastUpdated');
-                if (el) {
-                    el.textContent = `Last updated: ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
-                }
-            }
-            updateLastUpdated();
-            setInterval(updateLastUpdated, 60000);
-
-            // Department Health Donut Chart
-            const deptHealthOptions = {
-                series: [65, 20, 10, 5],
-                chart: {
-                    type: 'donut',
-                    height: 320,
-                    animations: {
-                        enabled: true,
-                        easing: 'easeinout',
-                        speed: 800
-                    }
-                },
-                labels: ['Low Risk', 'Medium Risk', 'High Risk', 'Critical'],
-                colors: ['#10b981', '#eab308', '#f97316', '#ef4444'],
-                plotOptions: {
-                    pie: {
-                        donut: {
-                            size: '70%',
-                            labels: {
+    function initHealthChart() {
+        healthChart = new ApexCharts(document.querySelector('#healthChart'), {
+            series: [0, 0, 0],
+            chart: {
+                type: 'donut',
+                height: 280,
+                animations: { enabled: true, easing: 'easeinout', speed: 800 }
+            },
+            labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+            colors: ['#10b981', '#f59e0b', '#ef4444'],
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '72%',
+                        labels: {
+                            show: true,
+                            total: {
                                 show: true,
-                                total: {
-                                    show: true,
-                                    label: 'Students',
-                                    fontSize: '16px',
-                                    fontWeight: 600,
-                                    color: '#64748b',
-                                    formatter: () => 'Active'
-                                }
+                                label: 'Health',
+                                fontSize: '14px',
+                                fontWeight: 600,
+                                color: '#64748b',
+                                formatter: () => 'Index'
                             }
                         }
                     }
-                },
-                dataLabels: {
-                    enabled: true,
-                    formatter: (val) => Math.round(val) + '%',
-                    style: {
-                        fontSize: '12px',
-                        fontWeight: 600
-                    }
-                },
-                legend: { show: false },
-                stroke: {
-                    width: 3,
-                    colors: ['#fff']
-                },
-                responsive: [{
-                    breakpoint: 480,
-                    options: {
-                        chart: { height: 280 }
-                    }
-                }]
-            };
-
-            window.deptHealthChart = new ApexCharts(document.querySelector("#deptHealthChart"), deptHealthOptions);
-            window.deptHealthChart.render();
-
-            // Risk Distribution Bar Chart
-            const riskChartOptions = {
-                series: [{
-                    name: 'Incidents',
-                    data: [0, 0, 0]
-                }],
-                chart: {
-                    type: 'bar',
-                    height: 240,
-                    toolbar: { show: false },
-                    animations: {
-                        enabled: true,
-                        easing: 'easeinout',
-                        speed: 800
-                    }
-                },
-                plotOptions: {
-                    bar: {
-                        borderRadius: 8,
-                        horizontal: true,
-                        distributed: true,
-                        barHeight: '70%',
-                        dataLabels: {
-                            position: 'top'
-                        }
-                    }
-                },
-                colors: ['#ef4444', '#f97316', '#10b981'],
-                dataLabels: {
-                    enabled: true,
-                    textAnchor: 'start',
-                    style: {
-                        colors: ['#fff'],
-                        fontSize: '14px',
-                        fontWeight: 700
-                    },
-                    formatter: val => val + ' incidents',
-                    offsetX: 0
-                },
-                xaxis: {
-                    categories: ['High', 'Medium', 'Low'],
-                    labels: { show: false }
-                },
-                yaxis: {
-                    labels: {
-                        style: {
-                            colors: '#64748b',
-                            fontWeight: 500
-                        }
-                    }
-                },
-                grid: { show: false },
-                legend: { show: false },
-                tooltip: {
-                    theme: 'light',
-                    y: { formatter: val => val + ' incidents' }
                 }
-            };
-
-            window.riskChart = new ApexCharts(document.querySelector("#riskChart"), riskChartOptions);
-            window.riskChart.render();
-
-            // Load all data from APIs
-            loadDashboardStats();
-            loadRiskDistribution();
-            loadWellnessTrends();
-            loadRecentEscalations();
-            loadProctorPerformance();
-
-            // Refresh data every 30 seconds
-            setInterval(() => {
-                loadDashboardStats();
-                loadRiskDistribution();
-            }, 30000);
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: val => Math.round(val) + '%',
+                style: { fontSize: '12px', fontWeight: 600 }
+            },
+            legend: { show: false },
+            stroke: { width: 3, colors: ['#fff'] }
         });
+        healthChart.render();
+    }
+
+    // ═══ DATA LOADING ═══
+    let isFirstLoad = true;
+
+    async function loadDashboard() {
+        try {
+            const [stats, risk, trends, escalations, proctors] = await Promise.all([
+                fetch('/proctor/api/hod/dashboard-stats').then(r => r.json()),
+                fetch('/proctor/api/hod/risk-distribution').then(r => r.json()),
+                fetch('/proctor/api/hod/wellness-trends').then(r => r.json()),
+                fetch('/proctor/api/hod/recent-escalations').then(r => r.json()),
+                fetch('/proctor/api/hod/proctor-performance').then(r => r.json())
+            ]);
+
+            // ─── KPI Stats ───
+            if (stats.success) {
+                const d = stats.data;
+                const wEl = document.getElementById('wellnessScore');
+                const sEl = document.getElementById('totalStudents');
+                const pEl = document.getElementById('proctorActions');
+                const hEl = document.getElementById('highRiskCount');
+
+                const wellness = d.avg_wellness || 0;
+                animateCount(wEl, wellness, isFirstLoad ? 800 : 400);
+                // Add % unit after animation
+                setTimeout(() => { wEl.innerHTML = wEl.textContent + '<span class="unit">%</span>'; }, isFirstLoad ? 850 : 450);
+
+                animateCount(sEl, d.total_students || 0, isFirstLoad ? 800 : 400);
+                animateCount(pEl, d.proctor_actions_today || 0, isFirstLoad ? 800 : 400);
+                animateCount(hEl, d.high_risk_incidents || 0, isFirstLoad ? 800 : 400);
+
+                // Critical pulse
+                const redCard = document.querySelector('.stat-card.red');
+                if ((d.high_risk_incidents || 0) > 0) {
+                    redCard.classList.add('has-critical');
+                } else {
+                    redCard.classList.remove('has-critical');
+                }
+            }
+
+            // ─── Risk Distribution Bars ───
+            if (risk.success) {
+                renderRiskBars(risk.data);
+            }
+
+            // ─── Risk Distribution → Update donut with real data ───
+            if (risk.success && healthChart) {
+                const rd = risk.data;
+                const low = rd.low || 0;
+                const med = rd.medium || 0;
+                const high = rd.high || 0;
+                healthChart.updateSeries([low, med, high]);
+            }
+
+            // ─── Escalations ───
+            if (escalations.success) {
+                renderEscalations(escalations.data || []);
+            }
+
+            // ─── Proctor Performance ───
+            if (proctors.success) {
+                renderProctors(proctors.data || []);
+            }
+
+            isFirstLoad = false;
+        } catch (err) {
+            console.error('HOD Dashboard error:', err);
+        }
+    }
+
+    // ═══ RENDER FUNCTIONS ═══
+
+    function renderRiskBars(data) {
+        const container = document.getElementById('riskBarsContainer');
+        const total = (data.high || 0) + (data.medium || 0) + (data.low || 0);
+        const max = Math.max(data.high || 0, data.medium || 0, data.low || 0, 1);
+
+        const items = [
+            { label: 'High', count: data.high || 0, color: '#ef4444', dot: '#ef4444' },
+            { label: 'Medium', count: data.medium || 0, color: '#f59e0b', dot: '#f59e0b' },
+            { label: 'Low', count: data.low || 0, color: '#10b981', dot: '#10b981' }
+        ];
+
+        container.innerHTML = items.map(item => `
+            <div class="risk-bar-item">
+                <div class="risk-bar-label">
+                    <span class="risk-dot" style="background:${item.dot}"></span>
+                    ${item.label}
+                </div>
+                <div class="risk-bar-track">
+                    <div class="risk-bar-fill" style="background:${item.color};" data-width="${max > 0 ? (item.count / max * 100) : 0}"></div>
+                </div>
+                <div class="risk-bar-count">${item.count}</div>
+            </div>
+        `).join('') + `
+            <div style="text-align:center; padding-top:12px; border-top:1px solid var(--gray-100); margin-top:8px;">
+                <span style="font-size:0.8rem; color:var(--gray-500); font-weight:600;">Total Incidents: ${total}</span>
+            </div>
+        `;
+
+        // Animate bars
+        requestAnimationFrame(() => {
+            container.querySelectorAll('.risk-bar-fill').forEach(bar => {
+                bar.style.width = bar.dataset.width + '%';
+            });
+        });
+    }
+
+    function renderEscalations(data) {
+        const el = document.getElementById('escalationsList');
+        const badge = document.getElementById('escalationBadge');
+
+        if (!data.length) {
+            el.innerHTML = '<div class="empty"><i class="fas fa-check-circle"></i><p>No escalated incidents</p></div>';
+            badge.textContent = '0';
+            return;
+        }
+
+        badge.textContent = data.length;
+        if (data.length > 0) badge.classList.add('has-items');
+
+        el.innerHTML = data.slice(0, 10).map(item => {
+            const level = (item.risk_level || 'HIGH').toLowerCase();
+            return `
+                <div class="list-item">
+                    <div class="list-icon" style="background:var(--danger-light);color:var(--danger);">
+                        <i class="fas fa-arrow-circle-up"></i>
+                    </div>
+                    <div class="list-content">
+                        <div class="list-title">${esc(item.trigger_source || 'Escalated Incident')}</div>
+                        <div class="list-sub">${esc(item.message_excerpt || 'No details')} &bull; ${item.timestamp ? new Date(item.timestamp).toLocaleDateString() : ''}</div>
+                    </div>
+                    <div class="list-right">
+                        <span class="badge ${level}">${esc(item.risk_level || 'HIGH')}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        applyRowDelays(el);
+    }
+
+    function renderProctors(data) {
+        const el = document.getElementById('proctorTable');
+
+        if (!data.length) {
+            el.innerHTML = '<div class="empty"><i class="fas fa-user-shield"></i><p>No proctor activity this week</p></div>';
+            return;
+        }
+
+        const maxActions = Math.max(...data.map(p => p.total_actions), 1);
+
+        el.innerHTML = `
+            <table class="tbl">
+                <thead><tr><th>Proctor</th><th>Actions</th><th>Escalated</th><th>Dismissed</th></tr></thead>
+                <tbody>
+                    ${data.slice(0, 10).map(p => {
+                        const initial = (p.proctor_id || 'P').charAt(0).toUpperCase();
+                        const pct = Math.round((p.total_actions / maxActions) * 100);
+                        const barColor = pct > 60 ? '#10b981' : pct > 30 ? '#f59e0b' : '#ef4444';
+                        return `
+                            <tr>
+                                <td>
+                                    <div class="proctor-cell">
+                                        <div class="proctor-avatar">${esc(initial)}</div>
+                                        <span style="font-weight:600;font-size:0.8rem;">${esc(p.proctor_id || 'Unknown')}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="bar-mini">
+                                        <span style="font-weight:700;min-width:20px;">${p.total_actions}</span>
+                                        <div class="bar-mini-track">
+                                            <div class="bar-mini-fill" style="width:${pct}%;background:${barColor};"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span style="color:var(--warning);font-weight:700;">${p.escalations || 0}</span></td>
+                                <td><span style="color:var(--success);font-weight:700;">${p.dismissals || 0}</span></td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+        applyRowDelays(el);
+    }
+
+    // ═══ ACTIONS ═══
+    function exportReport() {
+        showToast('Generating report...', 'info');
+        window.location.href = '/proctor/api/audit/export/csv?days=30';
+        setTimeout(() => showToast('Report downloaded!', 'success'), 2000);
+    }
+
+    async function refreshData() {
+        const btn = document.getElementById('refreshBtn');
+        btn.classList.add('spinning');
+        showToast('Refreshing...', 'info');
+        await loadDashboard();
+        btn.classList.remove('spinning');
+        showToast('Dashboard updated', 'success');
+    }
+
+    // ═══ INIT ═══
+    document.addEventListener('DOMContentLoaded', () => {
+        initHealthChart();
+        loadDashboard();
+    });
+
+    setInterval(loadDashboard, 60000);
     </script>
 </body>
 </html>

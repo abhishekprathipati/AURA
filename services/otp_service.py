@@ -3,7 +3,7 @@ OTP (One-Time Password) Service for Parent Authentication
 Handles OTP generation, storage in MongoDB, verification, and SMS delivery via Fast2SMS.
 """
 
-import random
+import secrets
 import requests
 import logging
 from datetime import datetime, timedelta
@@ -23,8 +23,8 @@ class OTPService:
 
     @staticmethod
     def generate_otp():
-        """Generate a cryptographically random 6-digit OTP"""
-        return str(random.randint(100000, 999999))
+        """Generate a cryptographically secure 6-digit OTP"""
+        return str(secrets.randbelow(900000) + 100000)
 
     @staticmethod
     def normalize_phone(phone):
@@ -125,14 +125,13 @@ class OTPService:
         # Send OTP via Fast2SMS
         sms_sent = OTPService._send_sms(phone, otp)
 
-        # Console log (always, for debugging)
-        print(f"\n{'='*50}")
-        print(f"  📱 AURA OTP SERVICE")
-        print(f"  Phone : +91 {phone[:3]}***{phone[-3:]}")
-        print(f"  OTP   : {otp}")
-        print(f"  SMS   : {'✅ Sent' if sms_sent else '⚠ Demo mode (SMS not sent)'}")
-        print(f"  Valid  : {OTPService.OTP_EXPIRY_MINUTES} minutes")
-        print(f"{'='*50}\n")
+        # Structured log (OTP never exposed)
+        import logging
+        _log = logging.getLogger('aura.otp')
+        _log.info('OTP generated  phone=+91%s***%s  sms=%s  ttl=%dm',
+                  phone[:3], phone[-3:],
+                  'sent' if sms_sent else 'demo',
+                  OTPService.OTP_EXPIRY_MINUTES)
 
         if sms_sent:
             return otp, 'OTP sent to your phone via SMS'

@@ -1,36 +1,253 @@
 // Parent Dashboard JavaScript
+(function () {
+'use strict';
 
 let currentAnnouncementFilter = 'all';
-let stressChart, moodChart;
+let stressChart, moodChart, academicTrendChart;
+
+/* ── XSS helper ─────────────────────────────────────────── */
+function esc(str) {
+    if (str == null) return '';
+    const d = document.createElement('div');
+    d.appendChild(document.createTextNode(String(str)));
+    return d.innerHTML;
+}
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
-    loadPerformanceData();
+    loadAcademicPerformance();
     loadWellnessSummary();
     loadComplaints();
     loadAnnouncements();
     loadActivityLog();
     loadNotifications();
+    bindForms();
 });
 
 // Logout function
-function logout() {
+window.logout = function logout() {
     if (confirm('Are you sure you want to logout?')) {
         window.location.href = '/parent/logout';
     }
-}
+};
 
 // Switch performance tabs
-function switchTab(tab) {
+window.switchTab = function switchTab(tab, evt) {
     const tabs = document.querySelectorAll('.tabs .tab');
     const contents = document.querySelectorAll('.tab-content');
-    
+
     tabs.forEach(t => t.classList.remove('active'));
     contents.forEach(c => c.classList.remove('active'));
-    
-    event.target.classList.add('active');
-    document.getElementById(`${tab}-content`).classList.add('active');
+
+    if (evt && evt.target) evt.target.classList.add('active');
+    const pane = document.getElementById(`${tab}-content`);
+    if (pane) pane.classList.add('active');
+};
+
+// Load academic performance data
+async function loadAcademicPerformance() {
+    try {
+        const response = await fetch('/parent/api/student/academics');
+        if (!response.ok) throw new Error('Failed to load academic data');
+        
+        const result = await response.json();
+        
+        if (!result.success || !result.data.summary) {
+            console.log('No academic data available');
+            return;
+        }
+        
+        const { summary, records } = result.data;
+        
+        // Update semester badge
+        const semEl = document.getElementById('currentSemester');
+        if (semEl) semEl.textContent = summary.current_semester || '—';
+        
+        // Update metric cards
+        const cgpaEl = document.getElementById('metricCgpa');
+        const sgpaEl = document.getElementById('metricSgpa');
+        const attEl = document.getElementById('metricAttendance');
+        const creditsEl = document.getElementById('metricCredits');
+        
+        if (cgpaEl) cgpaEl.textContent = summary.current_cgpa ? summary.current_cgpa.toFixed(2) : '—';
+        if (sgpaEl) sgpaEl.textContent = summary.current_sgpa ? summary.current_sgpa.toFixed(2) : '—';
+        if (attEl) attEl.textContent = summary.attendance ? `${summary.attendance.toFixed(1)}%` : '—';
+        if (creditsEl) creditsEl.textContent = summary.credits_earned && summary.total_credits 
+            ? `${summary.credits_earned}/${summary.total_credits}` 
+            : '—';
+        
+        // Render trend chart if we have semester records
+        if (records && records.length > 0) {
+            renderAcademicTrendChart(records);
+        }
+        
+    } catch (error) {
+        console.error('Error loading academic performance:', error);
+    }
 }
+
+// Render academic trend chart
+function renderAcademicTrendChart(records) {
+    const chartEl = document.getElementById('academicTrendChart');
+    if (!chartEl || records.length === 0) return;
+    
+    const options = {
+        series: [
+            {
+                name: 'CGPA',
+                data: records.map(r => r.cgpa || 0)
+            },
+            {
+                name: 'SGPA',
+                data: records.map(r => r.sgpa || 0)
+            },
+            {
+                name: 'Attendance %',
+                data: records.map(r => r.attendance || 0)
+            }
+        ],
+        chart: {
+            type: 'line',
+            height: 260,
+            fontFamily: 'Inter, sans-serif',
+            toolbar: { show: false },
+            background: 'transparent',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 600
+            }
+        },
+        colors: ['#667eea', '#8b5cf6', '#10b981'],
+        stroke: {
+            curve: 'smooth',
+            width: [3, 3, 2]
+        },
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shade: 'light',
+                type: 'vertical',
+                shadeIntensity: 0.3,
+                opacityFrom: 0.7,
+                opacityTo: 0.2
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        markers: {
+            size: 5,
+            hover: {
+                size: 7
+            }
+        },
+        xaxis: {
+            categories: records.map(r => r.semester || ''),
+            labels: {
+                style: {
+                    colors: '#6b7280',
+                    fontSize: '12px',
+                    fontWeight: 600
+                }
+            },
+            axisBorder: { show: false },
+            axisTicks: { show: false }
+        },
+        yaxis: [
+            {
+                seriesName: 'CGPA',
+                min: 5,
+                max: 10,
+                tickAmount: 5,
+                labels: {
+                    style: {
+                        colors: '#667eea',
+                        fontSize: '12px',
+                        fontWeight: 600
+                    },
+                    formatter: val => val.toFixed(1)
+                },
+                title: {
+                    text: 'GPA',
+                    style: {
+                        color: '#667eea',
+                        fontSize: '13px',
+                        fontWeight: 700
+                    }
+                }
+            },
+            {
+                seriesName: 'CGPA',
+                show: false,
+                min: 5,
+                max: 10
+            },
+            {
+                seriesName: 'Attendance %',
+                opposite: true,
+                min: 0,
+                max: 100,
+                tickAmount: 5,
+                labels: {
+                    style: {
+                        colors: '#10b981',
+                        fontSize: '12px',
+                        fontWeight: 600
+                    },
+                    formatter: val => val.toFixed(0) + '%'
+                },
+                title: {
+                    text: 'Attendance',
+                    style: {
+                        color: '#10b981',
+                        fontSize: '13px',
+                        fontWeight: 700
+                    }
+                }
+            }
+        ],
+        grid: {
+            borderColor: '#f1f5f9',
+            strokeDashArray: 3,
+            xaxis: { lines: { show: false } },
+            yaxis: { lines: { show: true } }
+        },
+        legend: {
+            position: 'top',
+            horizontalAlign: 'right',
+            fontSize: '13px',
+            fontWeight: 600,
+            markers: {
+                width: 12,
+                height: 12,
+                radius: 3
+            },
+            itemMargin: {
+                horizontal: 12
+            }
+        },
+        tooltip: {
+            shared: true,
+            intersect: false,
+            y: {
+                formatter: (val, opts) => {
+                    const seriesIndex = opts.seriesIndex;
+                    if (seriesIndex === 2) return val.toFixed(1) + '%';
+                    return val.toFixed(2);
+                }
+            }
+        }
+    };
+    
+    if (academicTrendChart) {
+        academicTrendChart.destroy();
+    }
+    
+    academicTrendChart = new ApexCharts(chartEl, options);
+    academicTrendChart.render();
+}
+
 
 // Load comprehensive wellness summary
 async function loadWellnessSummary() {
@@ -40,17 +257,17 @@ async function loadWellnessSummary() {
         
         const data = await response.json();
         
-        // Update wellness status display
+        // Update wellness status badge
         const statusEl = document.getElementById('wellnessStatus');
         if (statusEl) {
-            const statusColors = {
-                'good': '#10b981',
-                'moderate': '#f59e0b',
-                'needs_attention': '#ef4444'
+            const statusMap = {
+                'good':             { label: '✅ Good',             cls: '' },
+                'moderate':         { label: '⚠️ Moderate',         cls: 'moderate' },
+                'needs_attention':  { label: '🚨 Needs Attention',  cls: 'needs-attention' }
             };
-            statusEl.style.color = statusColors[data.wellness_status] || '#6b7280';
-            statusEl.textContent = data.wellness_status === 'good' ? 'Good' : 
-                                  data.wellness_status === 'moderate' ? 'Moderate' : 'Needs Attention';
+            const mapped = statusMap[data.wellness_status] || { label: 'Unknown', cls: '' };
+            statusEl.textContent = mapped.label;
+            statusEl.className = 'wellness-status-badge ' + mapped.cls;
         }
         
         // Update stress average
@@ -60,7 +277,7 @@ async function loadWellnessSummary() {
         // Update mood average
         const moodAvgEl = document.getElementById('avgMood');
         if (moodAvgEl) {
-            const moodLabels = {1: 'Very Low', 2: 'Low', 3: 'Neutral', 4: 'Good', 5: 'Excellent'};
+            const moodLabels = {1: 'Very Low', 2: 'Low', 3: 'Neutral', 4: 'Happy', 5: 'Excited'};
             moodAvgEl.textContent = moodLabels[Math.round(data.avg_mood)] || 'Unknown';
         }
         
@@ -71,29 +288,9 @@ async function loadWellnessSummary() {
         // Render charts with real data
         if (data.stress_history) renderStressChart(data.stress_history);
         if (data.mood_history) renderMoodChart(data.mood_history);
-        
+
     } catch (error) {
         console.error('Error loading wellness summary:', error);
-    }
-}
-
-// Load student performance data
-async function loadPerformanceData() {
-    try {
-        const response = await fetch('/parent/api/student/performance');
-        if (!response.ok) throw new Error('Failed to load performance data');
-        
-        const data = await response.json();
-        
-        // Render stress chart
-        renderStressChart(data.stress_history || []);
-        
-        // Render mood chart
-        renderMoodChart(data.mood_history || []);
-        
-    } catch (error) {
-        console.error('Error loading performance:', error);
-        showAlert('complaintAlert', 'Failed to load performance data', 'error');
     }
 }
 
@@ -113,13 +310,13 @@ async function loadActivityLog() {
             return;
         }
         
-        listEl.innerHTML = activities.slice(0, 10).map(a => `
-            <div class="activity-item" style="padding:12px; border-bottom:1px solid #e5e7eb;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span class="badge badge-${a.type}">${a.type.toUpperCase()}</span>
-                    <span style="font-size:12px; color:#9ca3af;">${formatDate(a.timestamp)}</span>
+        listEl.innerHTML = activities.slice(0, 12).map(a => `
+            <div class="activity-item">
+                <div class="act-dot"></div>
+                <div class="act-body">
+                    <div class="act-desc">${esc(a.description)}</div>
+                    <div class="act-time">${esc(formatDate(a.timestamp))}</div>
                 </div>
-                <div style="margin-top:8px; color:#374151;">${a.description}</div>
             </div>
         `).join('');
         
@@ -141,7 +338,7 @@ async function loadNotifications() {
         if (badgeEl) {
             const unreadCount = notifications.filter(n => !n.read).length;
             badgeEl.textContent = unreadCount;
-            badgeEl.style.display = unreadCount > 0 ? 'inline' : 'none';
+            badgeEl.style.display = unreadCount > 0 ? 'flex' : 'none';
         }
         
         if (listEl) {
@@ -151,9 +348,9 @@ async function loadNotifications() {
                 listEl.innerHTML = notifications.map(n => `
                     <div class="notification-item ${n.read ? 'read' : 'unread'}" 
                          style="padding:12px; border-bottom:1px solid #e5e7eb; ${n.read ? '' : 'background:#f0f9ff;'}">
-                        <div style="font-weight:600; color:#1f2937;">${n.title}</div>
-                        <div style="color:#6b7280; font-size:14px; margin-top:4px;">${n.message}</div>
-                        <div style="font-size:12px; color:#9ca3af; margin-top:8px;">${formatDate(n.created_at)}</div>
+                        <div style="font-weight:600; color:#1f2937;">${esc(n.title)}</div>
+                        <div style="color:#6b7280; font-size:14px; margin-top:4px;">${esc(n.message)}</div>
+                        <div style="font-size:12px; color:#9ca3af; margin-top:8px;">${esc(formatDate(n.created_at))}</div>
                     </div>
                 `).join('');
             }
@@ -204,14 +401,16 @@ function renderStressChart(stressHistory) {
         },
         yaxis: {
             min: 0,
-            max: 10,
+            max: 100,
+            tickAmount: 5,
             labels: {
-                style: { fontSize: '12px' }
+                style: { fontSize: '12px' },
+                formatter: val => Math.round(val)
             }
         },
         tooltip: {
             y: {
-                formatter: (val) => `${val}/10`
+                formatter: (val) => `${Math.round(val)}/100`
             }
         },
         grid: {
@@ -271,102 +470,126 @@ function renderMoodChart(moodHistory) {
     moodChart.render();
 }
 
-// Submit complaint form
-document.getElementById('complaintForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const formData = {
-        category: document.getElementById('category').value,
-        subject: document.getElementById('subject').value,
-        description: document.getElementById('description').value,
-        priority: document.getElementById('priority').value
-    };
-    
-    try {
-        const response = await fetch('/parent/api/complaint/submit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        });
-        
-        if (!response.ok) throw new Error('Failed to submit complaint');
-        
-        showAlert('complaintAlert', 'Complaint submitted successfully! We will review it soon.', 'success');
-        document.getElementById('complaintForm').reset();
-        loadComplaints();
-        
-    } catch (error) {
-        console.error('Error submitting complaint:', error);
-        showAlert('complaintAlert', 'Failed to submit complaint. Please try again.', 'error');
-    }
-});
+// Bind forms only when present in DOM
+function bindForms() {
+    const complaintForm = document.getElementById('complaintForm');
+    if (complaintForm) {
+        complaintForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-// Load complaints list
+            const formData = {
+                category: document.getElementById('category').value,
+                subject: document.getElementById('subject').value,
+                description: document.getElementById('description').value,
+                priority: document.getElementById('priority').value
+            };
+
+            try {
+                const response = await fetch('/parent/api/complaint/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) throw new Error('Failed to submit complaint');
+
+                showAlert('complaintAlert', 'Complaint submitted successfully! We will review it soon.', 'success');
+                complaintForm.reset();
+                loadComplaints();
+
+            } catch (error) {
+                console.error('Error submitting complaint:', error);
+                showAlert('complaintAlert', 'Failed to submit complaint. Please try again.', 'error');
+            }
+        });
+    }
+
+    const suggestionForm = document.getElementById('suggestionForm');
+    if (suggestionForm) {
+        suggestionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                title: document.getElementById('suggestionTitle').value,
+                category: document.getElementById('suggestionCategory').value,
+                description: document.getElementById('suggestionDesc').value
+            };
+
+            try {
+                const response = await fetch('/parent/api/suggestion/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) throw new Error('Failed to submit suggestion');
+
+                showAlert('suggestionAlert', 'Thank you! Your suggestion has been submitted.', 'success');
+                suggestionForm.reset();
+
+            } catch (error) {
+                console.error('Error submitting suggestion:', error);
+                showAlert('suggestionAlert', 'Failed to submit suggestion. Please try again.', 'error');
+            }
+        });
+    }
+} // end bindForms
+
+// Load complaints list (outer scope — called from DOMContentLoaded AND after submit)
 async function loadComplaints() {
     try {
         const response = await fetch('/parent/api/complaints/list');
         if (!response.ok) throw new Error('Failed to load complaints');
-        
+
         const complaints = await response.json();
         const listEl = document.getElementById('complaintList');
-        
+
+        if (!listEl) return;
+
         if (complaints.length === 0) {
             listEl.innerHTML = '<div class="empty-state">No complaints submitted yet</div>';
             return;
         }
-        
+
         listEl.innerHTML = complaints.map(c => `
             <div class="complaint-item">
-                <h5>${c.subject}</h5>
-                <p>${c.description}</p>
-                <p><strong>Category:</strong> ${c.category} | <strong>Priority:</strong> ${c.priority}</p>
-                <div class="status status-${c.status}">${c.status.toUpperCase()}</div>
+                <h5>${esc(c.subject)}</h5>
+                <p>${esc(c.description)}</p>
+                <p><strong>Category:</strong> ${esc(c.category)} | <strong>Priority:</strong> ${esc(c.priority)}</p>
+                <div class="status status-${esc(c.status)}">${esc(c.status).toUpperCase()}</div>
             </div>
         `).join('');
-        
+
     } catch (error) {
         console.error('Error loading complaints:', error);
     }
 }
 
-// Submit suggestion form
-document.getElementById('suggestionForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const formData = {
-        title: document.getElementById('suggestionTitle').value,
-        category: document.getElementById('suggestionCategory').value,
-        description: document.getElementById('suggestionDesc').value
-    };
-    
-    try {
-        const response = await fetch('/parent/api/suggestion/submit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        });
-        
-        if (!response.ok) throw new Error('Failed to submit suggestion');
-        
-        showAlert('suggestionAlert', 'Thank you! Your suggestion has been submitted.', 'success');
-        document.getElementById('suggestionForm').reset();
-        
-    } catch (error) {
-        console.error('Error submitting suggestion:', error);
-        showAlert('suggestionAlert', 'Failed to submit suggestion. Please try again.', 'error');
-    }
-});
+// Toggle notifications panel
+window.toggleNotifications = function toggleNotifications() {
+    const panel = document.getElementById('notificationsPanel');
+    if (panel) panel.classList.toggle('is-open');
+};
 
 // Switch announcement filter
-function switchAnnouncement(filter) {
+window.switchAnnouncement = function switchAnnouncement(filter, evt) {
     currentAnnouncementFilter = filter;
-    
-    const tabs = document.querySelectorAll('.announcement-list').parentNode.querySelectorAll('.tab');
-    tabs.forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
-    
+
+    const container = document.getElementById('announcementList');
+    if (container && container.parentNode) {
+        const tabs = container.parentNode.querySelectorAll('.tab');
+        tabs.forEach(t => t.classList.remove('active'));
+    }
+    // evt may be missing when called from inline onclick — find the correct tab by filter value
+    if (evt && evt.target) {
+        evt.target.classList.add('active');
+    } else {
+        const allTabs = document.querySelectorAll('.tab[onclick*="switchAnnouncement"]');
+        allTabs.forEach(t => { if (t.textContent.trim().toLowerCase().includes(filter === 'all' ? 'all' : filter)) t.classList.add('active'); });
+    }
+
     loadAnnouncements();
-}
+};
 
 // Load announcements
 async function loadAnnouncements() {
@@ -376,9 +599,10 @@ async function loadAnnouncements() {
         
         let announcements = await response.json();
         
-        // Filter announcements
+        // Filter announcements (match both singular/plural forms)
         if (currentAnnouncementFilter !== 'all') {
-            announcements = announcements.filter(a => a.type === currentAnnouncementFilter);
+            const f = currentAnnouncementFilter;
+            announcements = announcements.filter(a => a.type === f || a.type === f.replace(/s$/, '') || a.type === f + 's');
         }
         
         const listEl = document.getElementById('announcementList');
@@ -390,11 +614,11 @@ async function loadAnnouncements() {
         
         listEl.innerHTML = announcements.map(a => `
             <div class="announcement-item">
-                <h4>${a.title}</h4>
-                <p>${a.content}</p>
+                <h4>${esc(a.title)}</h4>
+                <p>${esc(a.content)}</p>
                 <div class="meta">
-                    <span class="badge badge-${a.type}">${a.type.toUpperCase()}</span>
-                    <span>${formatDate(a.date)}</span>
+                    <span class="badge badge-${esc(a.type)}">${esc(a.type).toUpperCase()}</span>
+                    <span>${esc(formatDate(a.date))}</span>
                 </div>
             </div>
         `).join('');
@@ -416,16 +640,19 @@ function showAlert(elementId, message, type) {
 // Helper function to format date
 function formatDate(dateString) {
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
     const now = new Date();
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-    
+
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    
+
     return date.toLocaleDateString();
 }
+
+})(); // end IIFE

@@ -1,4 +1,5 @@
-import { initChat } from './chat.js';
+// main.js – layout & header auto-hide
+// initChat is loaded globally by chat-engine.js (no import needed)
 
 function initLayout(){
 	// Mobile sidebar toggle or other layout hooks can go here
@@ -6,7 +7,9 @@ function initLayout(){
 
 window.addEventListener('DOMContentLoaded', () => {
 	initLayout();
-	initChat();
+	// initChat() is already self-initialised by chat-engine.js;
+	// calling again is harmless (elements already cached) but unnecessary.
+	if (typeof window.initChat === 'function') window.initChat();
 
 	// Auto-hide/reveal header at top edge
 	const body = document.body;

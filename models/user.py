@@ -1,13 +1,8 @@
 from typing import Dict, Any
 from datetime import datetime
-import hashlib
 
 class UserModel:
     collection_name = 'users'
-
-    @staticmethod
-    def hash_password(password: str) -> str:
-        return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
     @staticmethod
     def schema() -> Dict[str, Any]:
@@ -15,7 +10,8 @@ class UserModel:
             'email': str,
             'hashed_password': str,  # hashed
             'name': str,
-            'role': str,  # student|proctor|hod
+            'role': str,  # student|proctor|hod|admin
+            'department': str,  # required for RBAC scoping
             'created_at': datetime,
         }
 
@@ -28,5 +24,5 @@ class UserModel:
         if not isinstance(doc.get('name'), str):
             raise ValueError('name must be a string')
         role = doc.get('role')
-        if role not in ('student', 'proctor', 'hod'):
-            raise ValueError('role must be one of student|proctor|hod')
+        if role not in ('student', 'proctor', 'hod', 'admin'):
+            raise ValueError('role must be one of student|proctor|hod|admin')

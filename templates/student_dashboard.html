@@ -1,13 +1,16 @@
 ﻿<!DOCTYPE html>
 <!-- TEMPLATE: student_dashboard.html | EDITED: 2026-01-30 | MOOD POPUP ADDED -->
 <html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | AURA - Student Wellness</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student_dashboard.css') }}?v=20260130">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student_dashboard.css') }}?v=20260305f">
     <style>
         /* SVG Icon System */
         .icon {
@@ -18,90 +21,116 @@
             display: inline-block;
             vertical-align: middle;
         }
-        
+
         .icon.icon-sm {
             width: 16px;
             height: 16px;
         }
-        
+
         .icon.icon-lg {
             width: 32px;
             height: 32px;
         }
-        
+
         /* Additional styles for Connect Hub and enhancements */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .action-feedback {
+            transition: opacity 0.3s;
+        }
+
+        .text-success {
+            color: #22c55e;
+        }
+
+        .text-error {
+            color: #ef4444;
+        }
+
+        .text-info {
+            color: #3b82f6;
+        }
+
         .connection-status {
             display: flex;
             align-items: center;
             gap: 8px;
             padding: 8px 12px;
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(var(--accent-rgb), 0.1);
             border-radius: 8px;
             font-size: 13px;
             margin-top: 8px;
         }
-        
+
         .status-indicator {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #10b981;
+            background: var(--accent);
         }
-        
+
         .status-indicator.offline {
-            background: #ef4444;
+            background: var(--danger);
         }
-        
+
         .hub-features {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
             margin-top: 16px;
         }
-        
+
         .hub-feature {
             display: flex;
             align-items: center;
             gap: 8px;
             padding: 10px;
-            background: rgba(249, 250, 251, 0.8);
+            background: var(--surface-muted);
             border-radius: 8px;
             transition: all 0.2s ease;
         }
-        
+
         .hub-feature:hover {
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(var(--primary-rgb), 0.1);
             transform: translateY(-2px);
         }
-        
+
         .feature-icon {
             width: 32px;
             height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            background: linear-gradient(135deg, var(--primary), var(--primary-strong));
             color: white;
             border-radius: 8px;
             font-size: 14px;
         }
-        
+
         .feature-label {
             font-size: 13px;
             font-weight: 500;
-            color: #374151;
+            color: var(--text);
         }
-        
+
         /* Enhanced dashboard styles */
         .dashboard-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--header-gradient);
             color: white;
             padding: 24px 32px;
             border-radius: 16px;
             margin-bottom: 32px;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+            box-shadow: 0 10px 25px rgba(var(--primary-rgb), 0.2);
         }
-        
+
         .system-identity h1 {
             font-size: 32px;
             font-weight: 800;
@@ -112,43 +141,45 @@
             background-clip: text;
             color: transparent;
         }
-        
+
         .card {
             backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(229, 231, 235, 0.6);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
-        
+
         .card-primary {
-            background: linear-gradient(145deg, #ffffff, #f8fafc);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+            background: linear-gradient(145deg, var(--surface), var(--surface-muted));
+            border: 1px solid rgba(var(--primary-rgb), 0.2);
+            box-shadow: 0 8px 32px rgba(var(--primary-rgb), 0.1);
         }
-        
+
         .metric-value {
             font-size: 72px;
             font-weight: 800;
-            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            background: linear-gradient(135deg, var(--primary-strong), var(--primary));
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
         }
-        
+
         .btn-module {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .btn-module:hover {
             transform: translateY(-4px) scale(1.05);
             box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
+
 <body>
     <!-- DASHBOARD LAYOUT -->
     <div class="dashboard" role="main">
         <!-- student_dashboard.html loaded -->
-        
+
         <!-- ENHANCED HEADER -->
         <header class="dashboard-header" role="banner">
             <div class="header-content">
@@ -158,42 +189,50 @@
                     <div class="system-context">
                         <span class="welcome-text">Welcome back,</span>
                         <span class="user-name" id="userName">Student</span>
+                        <span class="date-text" id="currentDate"
+                            style="display:block;font-size:12px;color:var(--muted);margin-top:2px;"></span>
                     </div>
                 </div>
-                
+
                 <!-- User Controls -->
                 <div class="user-controls">
                     <div class="user-status">
                         <div class="status-badge">
                             <svg class="icon icon-sm" viewBox="0 0 24 24" style="fill: #10b981; stroke: none;">
-                                <circle cx="12" cy="12" r="8"/>
+                                <circle cx="12" cy="12" r="8" />
                             </svg>
                             <span>Active Now</span>
                         </div>
                     </div>
                     <!-- Random Color Theme Button -->
-                    <button class="btn-icon color-theme-btn" id="randomColorBtn" aria-label="Change accent color" title="Random Theme Color">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M12 2a10 10 0 0 0 0 20 10 10 0 0 0 0-20" stroke="url(#rainbowGrad)" stroke-width="3"/>
+                    <button class="btn-icon color-theme-btn" id="randomColorBtn" aria-label="Change accent color"
+                        title="Random Theme Color">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 2a10 10 0 0 0 0 20 10 10 0 0 0 0-20" stroke="url(#rainbowGrad)"
+                                stroke-width="3" />
                             <defs>
                                 <linearGradient id="rainbowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="#ff6b6b"/>
-                                    <stop offset="25%" stop-color="#ffd93d"/>
-                                    <stop offset="50%" stop-color="#6bcb77"/>
-                                    <stop offset="75%" stop-color="#4d96ff"/>
-                                    <stop offset="100%" stop-color="#9b59b6"/>
+                                    <stop offset="0%" stop-color="#ff6b6b" />
+                                    <stop offset="25%" stop-color="#ffd93d" />
+                                    <stop offset="50%" stop-color="#6bcb77" />
+                                    <stop offset="75%" stop-color="#4d96ff" />
+                                    <stop offset="100%" stop-color="#9b59b6" />
                                 </linearGradient>
                             </defs>
                         </svg>
                     </button>
                     <button class="btn-icon theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                        <svg id="themeIcon" viewBox="0 0 24 24" width="18" height="18">
-                            <!-- icon injected by JS -->
+                        <svg id="themeIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                         </svg>
                     </button>
                     <a href="/auth/logout" class="btn-signout" title="Sign out">
-                        <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5m0 0l-5-5m5 5H9"/></svg>
+                        <svg class="icon" viewBox="0 0 24 24" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5m0 0l-5-5m5 5H9" />
+                        </svg>
                         <span>Sign Out</span>
                     </a>
                 </div>
@@ -202,383 +241,1176 @@
 
         <!-- MAIN CONTENT AREA -->
         <div class="dashboard-layout">
-            
+
             <!-- LEFT COLUMN - Main content -->
             <div class="dashboard-left">
-                
-                <!-- STRESS OVERVIEW - Enhanced card -->
-                <section class="card card-primary" aria-labelledby="stress-heading">
-                    <header class="card-header">
-                        <div class="card-header-main">
-                            <h2 id="stress-heading" class="card-title">
-                                <span class="card-title-icon icon-blue">
-                                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+
+                <!-- TABS NAVIGATION -->
+                <div class="dashboard-tabs" id="dashboardTabs">
+                    <button class="dash-tab active" data-target="tab-wellness">
+                        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                        </svg>
+                        <span>Overview</span>
+                    </button>
+                    <button class="dash-tab" data-target="tab-analytics">
+                        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 21H4.6C4.03995 21 3.75992 21 3.54601 20.891C3.35785 20.7951 3.20487 20.6422 3.10899 20.454C3 20.2401 3 19.9601 3 19.4V3M7 10.5V17.5M11.5 7.5V17.5M16 13.5V17.5M20.5 10.5V17.5"/>
+                        </svg>
+                        <span>History & Analytics</span>
+                    </button>
+                    <button class="dash-tab" data-target="tab-academics">
+                        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                        </svg>
+                        <span>Academics</span>
+                    </button>
+                </div>
+
+                <!-- TAB: WELLNESS -->
+                <div id="tab-wellness" class="dash-tab-content active">
+
+                    <!-- STRESS OVERVIEW - Enhanced card -->
+                    <section class="card card-primary" aria-labelledby="stress-heading">
+                        <header class="card-header">
+                            <div class="card-header-main">
+                                <h2 id="stress-heading" class="card-title">
+                                    <span class="card-title-icon icon-blue">
+                                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                                            <path
+                                                d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"
+                                                fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                        </svg>
+                                    </span>
+                                    Stress Level Analysis
+                                </h2>
+                                <div class="card-subtitle">Real-time monitoring & insights</div>
+                            </div>
+                            <div class="card-timestamp" id="stressTimestamp">
+                                <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2" fill="none"
+                                    stroke="currentColor">
+                                    <circle cx="12" cy="12" r="9" />
+                                    <path d="M12 6v6l4 2.5" />
+                                </svg>
+                                <span>Updated just now</span>
+                            </div>
+                        </header>
+
+                        <div class="card-body">
+                            <!-- Primary Metric Display -->
+                            <div class="metric-display">
+                                <div class="metric-value-container">
+                                    <div class="metric-value" id="stressValue" aria-live="polite">--</div>
+                                    <div class="metric-unit">/100</div>
+                                </div>
+                                <div class="metric-info">
+                                    <div class="metric-descriptor" id="stressDescriptor">Calculating...</div>
+                                    <div class="metric-trend">
+                                        <span class="trend-indicator" id="trendIndicator" aria-hidden="true">=</span>
+                                        <span class="trend-label" id="trendLabel">Analyzing</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Spike Alert (hidden by default) -->
+                            <div class="spike-alert" id="spikeAlert" style="display:none;">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path
+                                        d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                                <span>Sudden stress spike detected</span>
+                            </div>
+
+                            <!-- Stress Level Indicator -->
+                            <div class="stress-indicator">
+                                <div class="indicator-bar">
+                                    <div class="indicator-fill" id="stressIndicatorFill"></div>
+                                </div>
+                                <div class="indicator-labels">
+                                    <span>Low</span>
+                                    <span>Moderate</span>
+                                    <span>High</span>
+                                    <span>Critical</span>
+                                </div>
+                            </div>
+
+                            <!-- AI Insight -->
+                            <div class="stress-insight" id="stressInsight" style="display:none;"></div>
+
+                            <!-- Confidence + Dominant Factor -->
+                            <div class="stress-meta" id="stressMeta" style="display:none;">
+                                <div class="meta-chip confidence-chip" id="confidenceChip"
+                                    title="Model confidence based on data availability and signal consistency">
+                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                    </svg>
+                                    <span id="confidenceValue">--</span>
+                                </div>
+                                <div class="meta-chip dominant-chip" id="dominantChip">
+                                    <span class="dominant-dot" id="dominantDot"></span>
+                                    <span id="dominantLabel">--</span>
+                                </div>
+                            </div>
+
+                            <!-- Signal Breakdown (collapsible) -->
+                            <details class="signal-breakdown">
+                                <summary class="signal-toggle">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M12 20V10M18 20V4M6 20v-4" />
+                                    </svg>
+                                    Signal Breakdown
+                                </summary>
+                                <div class="signal-grid">
+                                    <div class="signal-row">
+                                        <span class="signal-label">Mood</span>
+                                        <div class="signal-bar-track">
+                                            <div class="signal-bar-fill" id="signalMood"></div>
+                                        </div>
+                                        <span class="signal-value" id="signalMoodVal">--</span>
+                                    </div>
+                                    <div class="signal-row">
+                                        <span class="signal-label">Chat Tone</span>
+                                        <div class="signal-bar-track">
+                                            <div class="signal-bar-fill" id="signalSentiment"></div>
+                                        </div>
+                                        <span class="signal-value" id="signalSentimentVal">--</span>
+                                    </div>
+                                    <div class="signal-row">
+                                        <span class="signal-label">Activity</span>
+                                        <div class="signal-bar-track">
+                                            <div class="signal-bar-fill" id="signalActivity"></div>
+                                        </div>
+                                        <span class="signal-value" id="signalActivityVal">--</span>
+                                    </div>
+                                    <div class="signal-row">
+                                        <span class="signal-label">Stability</span>
+                                        <div class="signal-bar-track">
+                                            <div class="signal-bar-fill" id="signalVolatility"></div>
+                                        </div>
+                                        <span class="signal-value" id="signalVolatilityVal">--</span>
+                                    </div>
+                                    <div class="signal-row">
+                                        <span class="signal-label">Time</span>
+                                        <div class="signal-bar-track">
+                                            <div class="signal-bar-fill" id="signalTime"></div>
+                                        </div>
+                                        <span class="signal-value" id="signalTimeVal">--</span>
+                                    </div>
+                                    <div class="signal-row">
+                                        <span class="signal-label">Trend</span>
+                                        <div class="signal-bar-track">
+                                            <div class="signal-bar-fill" id="signalTrend"></div>
+                                        </div>
+                                        <span class="signal-value" id="signalTrendVal">--</span>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <!-- Quick Chatbot Access Cards -->
+                            <div class="metric-actions chat-cards">
+                                <a href="{{ url_for('student.mental_chatbot') }}" class="chat-card chat-card-mental">
+                                    <div class="chat-icon-wrapper">
+                                        <svg class="chat-icon" viewBox="0 0 24 24" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM18 14H6V12H18V14ZM18 11H6V9H18V11ZM18 8H6V6H18V8Z"
+                                                fill="white" />
+                                        </svg>
+                                    </div>
+                                    <div class="chat-title">Mental Chat</div>
+                                    <div class="chat-description">Talk about feelings</div>
+                                </a>
+                                <a href="{{ url_for('student.study_chatbot') }}" class="chat-card chat-card-study">
+                                    <div class="chat-icon-wrapper">
+                                        <svg class="chat-icon" viewBox="0 0 24 24" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18ZM12 3L1 9L12 15L21 10.09V17H23V9L12 3Z"
+                                                fill="white" />
+                                        </svg>
+                                    </div>
+                                    <div class="chat-title">Study Chat</div>
+                                    <div class="chat-description">Academic support</div>
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+
+                </div> <!-- END TAB WELLNESS -->
+
+                <!-- TAB: ANALYTICS -->
+                <div id="tab-analytics" class="dash-tab-content">
+
+                    <!-- 7-DAY STRESS HISTORY -->
+                    <section class="card card-elevated" aria-labelledby="chart-heading">
+                        <div class="chart-header">
+                            <h3 class="chart-title">7-Day Stress History</h3>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background: #3b82f6;"></span>
+                                    <span class="legend-label">Stress Level</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background: #10b981;"></span>
+                                    <span class="legend-label">Recovery</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="stressChartEmpty" class="chart-empty" hidden>
+                            <p class="chart-empty-title">Loading stress history…</p>
+                            <p class="chart-empty-desc">Your stress history will appear here after your first check-in.
+                            </p>
+                        </div>
+                        <div id="stressChart" class="chart-container" role="img"
+                            aria-label="Stress level history chart">
+                        </div>
+                    </section>
+
+                    <!-- ACTIVITY SUMMARY - Enhanced -->
+                    <section class="card card-elevated" aria-labelledby="activity-heading">
+                        <header class="card-header">
+                            <h3 id="activity-heading" class="card-title">
+                                <span class="card-title-icon icon-orange">
+                                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                                        <path
+                                            d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 12h2v5H7v-5zm4-3h2v8h-2V9zm4-3h2v11h-2V6z" />
+                                    </svg>
                                 </span>
-                                Stress Level Analysis
-                            </h2>
-                            <div class="card-subtitle">Real-time monitoring & insights</div>
-                        </div>
-                        <div class="card-timestamp" id="stressTimestamp">
-                            <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="9M12 6v6l4 2.5"/></svg>
-                            <span>Updated just now</span>
-                        </div>
-                    </header>
-                    
-                    <div class="card-body">
-                        <!-- Primary Metric Display -->
-                        <div class="metric-display">
-                            <div class="metric-value-container">
-                                <div class="metric-value" id="stressValue" aria-live="polite">--</div>
-                                <div class="metric-unit">/100</div>
+                                Activity Summary
+                            </h3>
+                            <div class="card-period">
+                                <select class="period-select" id="activityPeriod">
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                    <option value="quarter">This Quarter</option>
+                                </select>
                             </div>
-                            <div class="metric-info">
-                                <div class="metric-descriptor" id="stressDescriptor">No data available</div>
-                                <div class="metric-trend">
-                                    <span class="trend-indicator" id="trendIndicator" aria-hidden="true">=</span>
-                                    <span class="trend-label" id="trendLabel">Loading trend</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Stress Level Indicator -->
-                        <div class="stress-indicator">
-                            <div class="indicator-bar">
-                                <div class="indicator-fill" id="stressIndicatorFill"></div>
-                            </div>
-                            <div class="indicator-labels">
-                                <span>Low</span>
-                                <span>Moderate</span>
-                                <span>High</span>
-                                <span>Critical</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Quick Chatbot Access Cards -->
-                        <div class="metric-actions chat-cards">
-                            <a href="{{ url_for('student.mental_chatbot') }}" class="chat-card chat-card-mental">
-                                <div class="chat-icon-wrapper">
-                                    <svg class="chat-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM18 14H6V12H18V14ZM18 11H6V9H18V11ZM18 8H6V6H18V8Z" fill="white"/>
-                                    </svg>
-                                </div>
-                                <div class="chat-title">Mental Chat</div>
-                                <div class="chat-description">Talk about feelings</div>
-                            </a>
-                            <a href="{{ url_for('student.study_chatbot') }}" class="chat-card chat-card-study">
-                                <div class="chat-icon-wrapper">
-                                    <svg class="chat-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18ZM12 3L1 9L12 15L21 10.09V17H23V9L12 3Z" fill="white"/>
-                                    </svg>
-                                </div>
-                                <div class="chat-title">Study Chat</div>
-                                <div class="chat-description">Academic support</div>
-                            </a>
-                        </div>
-                    </div>
-                </section>
+                        </header>
 
-                <!-- 7-DAY STRESS HISTORY -->
-                <section class="card card-elevated" aria-labelledby="chart-heading">
-                    <div class="chart-header">
-                        <h3 class="chart-title">7-Day Stress History</h3>
-                        <div class="chart-legend">
-                            <div class="legend-item">
-                                <span class="legend-color" style="background: #3b82f6;"></span>
-                                <span class="legend-label">Stress Level</span>
+                        <div class="card-body">
+                            <div class="stats-grid">
+                                <div class="stat-item stat-item-highlight">
+                                    <div class="stat-icon">
+                                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                            <line x1="16" y1="2" x2="16" y2="6" />
+                                            <line x1="8" y1="2" x2="8" y2="6" />
+                                            <line x1="3" y1="10" x2="21" y2="10" />
+                                            <path d="M8 14h.01" />
+                                            <path d="M12 14h.01" />
+                                            <path d="M16 14h.01" />
+                                            <path d="M8 18h.01" />
+                                            <path d="M12 18h.01" />
+                                        </svg>
+                                    </div>
+                                    <div class="stat-value" id="checkinsToday">0</div>
+                                    <div class="stat-label">Today</div>
+                                    <div class="stat-change" id="todayChange">+0%</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-icon">
+                                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                            <line x1="16" y1="2" x2="16" y2="6" />
+                                            <line x1="8" y1="2" x2="8" y2="6" />
+                                            <line x1="3" y1="10" x2="21" y2="10" />
+                                        </svg>
+                                    </div>
+                                    <div class="stat-value" id="checkinsWeek">0</div>
+                                    <div class="stat-label">This Week</div>
+                                    <div class="stat-change" id="weekChange">+0%</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-icon">
+                                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="12" y1="20" x2="12" y2="10" />
+                                            <line x1="18" y1="20" x2="18" y2="4" />
+                                            <line x1="6" y1="20" x2="6" y2="16" />
+                                        </svg>
+                                    </div>
+                                    <div class="stat-value" id="weeklyAverage">--</div>
+                                    <div class="stat-label">Weekly Avg</div>
+                                    <div class="stat-change" id="avgChange">+0%</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-icon" id="trendIconContainer">
+                                        <svg class="icon icon-sm" id="trendIcon" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                            <polyline points="17 6 23 6 23 12" />
+                                        </svg>
+                                    </div>
+                                    <div class="stat-value" id="weeklyTrend">0%</div>
+                                    <div class="stat-label">Trend</div>
+                                </div>
                             </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background: #10b981;"></span>
-                                <span class="legend-label">Recovery</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="stressChartEmpty" class="chart-empty" hidden>
-                        <p class="chart-empty-title">Loading stress history…</p>
-                        <p class="chart-empty-desc">Your stress history will appear here after your first check-in.</p>
-                    </div>
-                    <div id="stressChart" class="chart-container" role="img" aria-label="Stress level history chart"></div>
-                </section>
 
-                <!-- ACTIVITY SUMMARY - Enhanced -->
-                <section class="card card-elevated" aria-labelledby="activity-heading">
-                    <header class="card-header">
-                        <h3 id="activity-heading" class="card-title">
-                            <span class="card-title-icon icon-orange">
-                                <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 12h2v5H7v-5zm4-3h2v8h-2V9zm4-3h2v11h-2V6z"/></svg>
-                            </span>
-                            Activity Summary
-                        </h3>
-                        <div class="card-period">
-                            <select class="period-select" id="activityPeriod">
-                                <option value="week">This Week</option>
-                                <option value="month">This Month</option>
-                                <option value="quarter">This Quarter</option>
-                            </select>
-                        </div>
-                    </header>
-                    
-                    <div class="card-body">
-                        <div class="stats-grid">
-                            <div class="stat-item stat-item-highlight">
-                                <div class="stat-icon">
-                                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>
+                            <!-- Activity Timeline -->
+                            <div class="activity-timeline">
+                                <h4 class="timeline-title">Recent Activity</h4>
+                                <div class="timeline-items" id="activityTimeline">
+                                    <!-- Will be populated by JavaScript -->
+                                    <div class="timeline-empty">No recent activity</div>
                                 </div>
-                                <div class="stat-value" id="checkinsToday">0</div>
-                                <div class="stat-label">Today</div>
-                                <div class="stat-change" id="todayChange">+0%</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-icon">
-                                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                </div>
-                                <div class="stat-value" id="checkinsWeek">0</div>
-                                <div class="stat-label">This Week</div>
-                                <div class="stat-change" id="weekChange">+0%</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-icon">
-                                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-                                </div>
-                                <div class="stat-value" id="weeklyAverage">--</div>
-                                <div class="stat-label">Weekly Avg</div>
-                                <div class="stat-change" id="avgChange">+0%</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-icon" id="trendIconContainer">
-                                    <svg class="icon icon-sm" id="trendIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                                </div>
-                                <div class="stat-value" id="weeklyTrend">0%</div>
-                                <div class="stat-label">Trend</div>
                             </div>
                         </div>
-                        
-                        <!-- Activity Timeline -->
-                        <div class="activity-timeline">
-                            <h4 class="timeline-title">Recent Activity</h4>
-                            <div class="timeline-items" id="activityTimeline">
-                                <!-- Will be populated by JavaScript -->
-                                <div class="timeline-empty">No recent activity</div>
+                    </section>
+
+                    <!-- DETAILED HISTORY - Enhanced -->
+                    <section class="card" aria-labelledby="history-heading">
+                        <header class="card-header">
+                            <h3 id="history-heading" class="card-title">
+                                <span class="card-title-icon icon-orange">
+                                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                                        <path
+                                            d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                                    </svg>
+                                </span>
+                                Detailed History
+                            </h3>
+                            <div class="history-controls">
+                                <button class="btn-control active" data-period="7d">7D</button>
+                                <button class="btn-control" data-period="30d">30D</button>
+                                <button class="btn-control" data-period="90d">90D</button>
+                            </div>
+                        </header>
+
+                        <div class="card-body">
+                            <div id="detailedChart" class="chart-container" style="height: 240px;" role="img"
+                                aria-label="Detailed stress history chart"></div>
+                        </div>
+                    </section>
+
+                </div> <!-- END TAB ANALYTICS -->
+
+                <!-- TAB: ACADEMICS -->
+                <div id="tab-academics" class="dash-tab-content">
+
+                    <!-- ═══ ACADEMIC DETAILS ═══ -->
+                    <section class="card card-elevated card-academics" aria-labelledby="academics-heading">
+                        <header class="card-header">
+                            <h3 id="academics-heading" class="card-title">
+                                <span class="card-title-icon icon-indigo">
+                                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                                        <path
+                                            d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z" />
+                                    </svg>
+                                </span>
+                                Academic Performance
+                            </h3>
+                            <div class="card-badge acad-semester-badge" id="acadSemBadge">—</div>
+                        </header>
+
+                        <div class="card-body" style="padding: 20px;">
+                            <!-- Summary Stats Row -->
+                            <div class="acad-stats-grid" id="acadStatsGrid">
+                                <div class="acad-stat">
+                                    <div class="acad-stat-value" id="acadCgpa">—</div>
+                                    <div class="acad-stat-label">CGPA</div>
+                                    <div class="acad-stat-bar">
+                                        <div class="acad-stat-fill acad-fill-primary" id="acadCgpaBar" style="width:0%">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="acad-stat">
+                                    <div class="acad-stat-value" id="acadSgpa">—</div>
+                                    <div class="acad-stat-label">SGPA</div>
+                                    <div class="acad-stat-bar">
+                                        <div class="acad-stat-fill acad-fill-accent" id="acadSgpaBar" style="width:0%">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="acad-stat">
+                                    <div class="acad-stat-value" id="acadAttendance">—</div>
+                                    <div class="acad-stat-label">Attendance</div>
+                                    <div class="acad-stat-bar">
+                                        <div class="acad-stat-fill acad-fill-green" id="acadAttBar" style="width:0%">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="acad-stat">
+                                    <div class="acad-stat-value" id="acadCredits">—</div>
+                                    <div class="acad-stat-label">Credits</div>
+                                    <div class="acad-stat-bar">
+                                        <div class="acad-stat-fill acad-fill-orange" id="acadCredBar" style="width:0%">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CGPA Trend Chart -->
+                            <div class="acad-chart-section">
+                                <h4 class="acad-chart-title">📈 CGPA & SGPA Trend</h4>
+                                <div id="acadTrendChart" style="min-height: 260px;"></div>
+                            </div>
+
+                            <!-- Subject Performance Chart -->
+                            <div class="acad-chart-section" style="margin-top: 24px;">
+                                <h4 class="acad-chart-title">📊 Subject Performance <span class="acad-subtitle"
+                                        id="acadSubSem"></span></h4>
+                                <div id="acadSubjectChart" style="min-height: 280px;"></div>
+                            </div>
+
+                            <!-- Removed Redundant Subject Table -->
+
+                            <!-- Empty State (Hidden initially) -->
+                            <div id="acadEmptyState" class="chart-empty"
+                                style="display:none; text-align:center; padding: 40px 20px;">
+                                <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
+                                <h4 style="font-size: 18px; color: var(--text); margin-bottom: 8px;">No Academic Records
+                                    Found</h4>
+                                <p style="color: var(--muted); max-width: 300px; margin: 0 auto; line-height: 1.5;">Your
+                                    university has not uploaded any CGPA or subject performance data for your account
+                                    yet.</p>
                             </div>
                         </div>
-                    </div>
-                </section>
-                
-                <!-- DETAILED HISTORY - Enhanced -->
-                <section class="card" aria-labelledby="history-heading">
-                    <header class="card-header">
-                        <h3 id="history-heading" class="card-title">
-                            <span class="card-title-icon icon-orange">
-                                <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
-                            </span>
-                            Detailed History
-                        </h3>
-                        <div class="history-controls">
-                            <button class="btn-control active" data-period="7d">7D</button>
-                            <button class="btn-control" data-period="30d">30D</button>
-                            <button class="btn-control" data-period="90d">90D</button>
-                        </div>
-                    </header>
-                    
-                    <div class="card-body">
-                        <div id="detailedChart" class="chart-container" style="height: 240px;" role="img" aria-label="Detailed stress history chart"></div>
-                    </div>
-                </section>
+                    </section>
+
+                </div> <!-- END TAB ACADEMICS -->
+
             </div>
-            
+
             <!-- RIGHT COLUMN - Sidebar -->
             <div class="dashboard-right">
-                
-                <!-- QUICK ACTIONS -->
-                <div class="quick-actions-right">
-                    <div class="qa-header">
+
+                <!-- ══ QUICK ACTIONS — PREMIUM PANEL ══ -->
+                <style>
+                /* ── QA Panel Tabs ── */
+                .qa-tabs-row{display:flex;gap:4px;background:var(--surface-muted,#f3f4f6);border-radius:10px;padding:3px;margin-bottom:14px;}
+                .qa-tab-btn{flex:1;padding:6px 4px;border:none;background:transparent;border-radius:8px;font-size:11px;font-weight:700;color:var(--muted,#9ca3af);cursor:pointer;transition:all .18s;white-space:nowrap;}
+                .qa-tab-btn.active{background:var(--surface,#fff);color:var(--text,#1f2937);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+                [data-theme="dark"] .qa-tabs-row{background:rgba(255,255,255,0.06);}
+                [data-theme="dark"] .qa-tab-btn.active{background:rgba(255,255,255,0.12);color:#f1f5f9;}
+                .qa-pane{display:none;}.qa-pane.active{display:block;}
+                /* ── 3×2 action cards ── */
+                .qa-grid-v2{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+                .qa-card-v2{
+                    display:flex;flex-direction:column;align-items:center;gap:5px;
+                    padding:12px 6px 10px;border-radius:14px;border:none;
+                    background:var(--surface-muted,#f9fafb);
+                    text-decoration:none;cursor:pointer;
+                    transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s,background .15s;
+                    border:1px solid transparent;
+                    position:relative;overflow:hidden;
+                }
+                .qa-card-v2::before{content:'';position:absolute;inset:0;background:var(--qa-glow,rgba(99,102,241,0.08));opacity:0;border-radius:inherit;transition:opacity .2s;}
+                .qa-card-v2:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 8px 24px rgba(0,0,0,0.09);border-color:rgba(0,0,0,0.06);}
+                .qa-card-v2:hover::before{opacity:1;}
+                .qa-card-v2:active{transform:scale(.97);}
+                [data-theme="dark"] .qa-card-v2{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.07);}
+                [data-theme="dark"] .qa-card-v2:hover{background:rgba(255,255,255,0.1);}
+                .qa-v2-ico{
+                    width:38px;height:38px;border-radius:11px;
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:18px;flex-shrink:0;
+                    transition:transform .2s;
+                }
+                .qa-card-v2:hover .qa-v2-ico{transform:scale(1.12) rotate(-4deg);}
+                .qa-v2-label{font-size:11px;font-weight:700;color:var(--text,#1f2937);text-align:center;line-height:1.2;margin:0;}
+                .qa-v2-sub{font-size:10px;color:var(--muted,#9ca3af);text-align:center;margin:0;line-height:1.2;}
+                [data-theme="dark"] .qa-v2-label{color:#f1f5f9;}
+                /* icon colours */
+                .ico-purple{background:linear-gradient(135deg,#8b5cf6,#6d28d9);box-shadow:0 4px 12px rgba(139,92,246,.3);}
+                .ico-teal  {background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 12px rgba(16,185,129,.3);}
+                .ico-indigo{background:linear-gradient(135deg,#6366f1,#4338ca);box-shadow:0 4px 12px rgba(99,102,241,.3);}
+                .ico-blue  {background:linear-gradient(135deg,#3b82f6,#2563eb);box-shadow:0 4px 12px rgba(59,130,246,.3);}
+                .ico-orange{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 12px rgba(245,158,11,.3);}
+                .ico-rose  {background:linear-gradient(135deg,#f43f5e,#e11d48);box-shadow:0 4px 12px rgba(244,63,94,.3);}
+                /* ── Feedback bar ── */
+                .qa-feedback{min-height:20px;padding:0 2px;font-size:12px;font-weight:600;margin-bottom:8px;transition:all .2s;border-radius:6px;}
+                /* ── Insights tab ── */
+                .qa-insights-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+                .qa-ins-card{
+                    background:var(--surface-muted,#f9fafb);
+                    border:1px solid var(--border,#e5e7eb);
+                    border-radius:12px;padding:12px 10px;text-align:center;
+                }
+                [data-theme="dark"] .qa-ins-card{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.08);}
+                .qa-ins-val{font-size:22px;font-weight:900;color:var(--text,#1f2937);line-height:1;}
+                [data-theme="dark"] .qa-ins-val{color:#f8fafc;}
+                .qa-ins-lbl{font-size:10px;font-weight:700;color:var(--muted,#9ca3af);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}
+                .qa-ins-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;margin-top:4px;}
+                .badge-good{background:#d1fae5;color:#065f46;} .badge-warn{background:#fef3c7;color:#92400e;} .badge-bad{background:#fee2e2;color:#991b1b;}
+                [data-theme="dark"] .badge-good{background:rgba(16,185,129,.2);color:#6ee7b7;}
+                [data-theme="dark"] .badge-warn{background:rgba(245,158,11,.2);color:#fcd34d;}
+                [data-theme="dark"] .badge-bad {background:rgba(239,68,68,.2);color:#fca5a5;}
+                .qa-ins-refresh{width:100%;padding:8px;border:1px solid var(--border,#e5e7eb);border-radius:10px;background:transparent;font-size:12px;font-weight:600;color:var(--muted,#6b7280);cursor:pointer;transition:all .15s;margin-top:4px;}
+                .qa-ins-refresh:hover{background:var(--primary,#6366f1);color:white;border-color:var(--primary,#6366f1);}
+                /* ── Feed tab ── */
+                .qa-feed-empty{text-align:center;padding:20px 0;color:var(--muted,#9ca3af);font-size:13px;}
+                /* ── Inline Breathe Panel ── */
+                .qa-inline-panel{
+                    background:var(--surface-muted,#f9fafb);border:1px solid var(--border,#e5e7eb);
+                    border-radius:14px;padding:16px;margin-top:10px;
+                    animation:slideDown .25s cubic-bezier(.34,1.56,.64,1);
+                }
+                [data-theme="dark"] .qa-inline-panel{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);}
+                @keyframes slideDown{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+                .qa-breathe-circle{
+                    width:90px;height:90px;border-radius:50%;
+                    background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(251,146,60,.2));
+                    border:2px solid rgba(245,158,11,.3);
+                    display:flex;flex-direction:column;align-items:center;justify-content:center;
+                    margin:0 auto 12px;
+                    transition:all 4s ease-in-out;
+                    font-size:12px;font-weight:700;color:var(--text,#1f2937);gap:2px;
+                }
+                [data-theme="dark"] .qa-breathe-circle{color:#f1f5f9;}
+                .qa-breathe-circle.grow{transform:scale(1.45);background:linear-gradient(135deg,rgba(16,185,129,.22),rgba(52,211,153,.22));border-color:rgba(16,185,129,.4);}
+                .qa-breathe-circle.shrink{transform:scale(1);background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(99,102,241,.2));border-color:rgba(99,102,241,.3);}
+                .qa-breathe-count{font-size:20px;font-weight:900;line-height:1;}
+                .qa-breathe-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.7;}
+                .qa-panel-close{float:right;background:none;border:none;font-size:16px;color:var(--muted,#9ca3af);cursor:pointer;line-height:1;padding:0;}
+                .qa-panel-title{font-size:13px;font-weight:800;color:var(--text,#1f2937);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+                [data-theme="dark"] .qa-panel-title{color:#f1f5f9;}
+                .qa-breathe-btns{display:flex;gap:8px;justify-content:center;}
+                .qa-breathe-btn{padding:8px 18px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
+                .qa-breathe-start{background:linear-gradient(135deg,#f59e0b,#d97706);color:white;}
+                .qa-breathe-stop{background:var(--border,#e5e7eb);color:var(--text,#374151);}
+                [data-theme="dark"] .qa-breathe-stop{background:rgba(255,255,255,0.1);color:#e2e8f0;}
+                .qa-breathe-progress{display:flex;justify-content:center;gap:5px;margin-bottom:10px;}
+                .qa-bp-dot{width:7px;height:7px;border-radius:50%;background:var(--border,#e5e7eb);transition:background .3s;}
+                .qa-bp-dot.active{background:#f59e0b;} .qa-bp-dot.done{background:#10b981;}
+                /* ── Mood panel ── */
+                .qa-mood-emojis{display:flex;gap:6px;justify-content:center;margin:10px 0;}
+                .qa-mood-btn{font-size:24px;background:none;border:2.5px solid transparent;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;}
+                .qa-mood-btn:hover{transform:scale(1.2);}
+                .qa-mood-btn.selected{border-color:var(--primary,#6366f1);background:rgba(99,102,241,.08);transform:scale(1.15);}
+                .qa-mood-note{width:100%;padding:8px 10px;border-radius:9px;border:1px solid var(--border,#e5e7eb);background:var(--surface,#fff);color:var(--text,#1f2937);font-size:12px;resize:none;outline:none;font-family:inherit;transition:border-color .15s;}
+                [data-theme="dark"] .qa-mood-note{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);color:#f1f5f9;}
+                .qa-mood-note:focus{border-color:var(--primary,#6366f1);}
+                .qa-mood-submit{width:100%;padding:9px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#f43f5e,#e11d48);color:white;margin-top:8px;transition:opacity .15s;}
+                .qa-mood-submit:hover{opacity:.88;}
+                .qa-mood-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted,#9ca3af);font-weight:600;padding:0 4px;}
+                </style>
+
+                <div class="quick-actions-right" id="qaPanel">
+                    <!-- Header -->
+                    <div class="qa-header" style="margin-bottom:10px;">
                         <div class="qa-title">
                             <div class="qa-icon">⚡</div>
                             <h3>Quick Actions</h3>
                         </div>
-                        <span class="qa-count">4</span>
                     </div>
 
-                    <div class="qa-grid-2x2">
-                        <!-- Games -->
-                        <a href="{{ url_for('student.games') }}" class="qa-card">
-                            <div class="qa-card-icon purple">
-                                🎮
-                            </div>
-                            <h4>Games</h4>
-                            <p>Stress relief</p>
-                        </a>
+                    <!-- Tabs -->
+                    <div class="qa-tabs-row" role="tablist">
+                        <button class="qa-tab-btn active" data-tab="actions"  onclick="qaSwitch('actions',this)"  role="tab">⚡ Actions</button>
+                        <button class="qa-tab-btn"        data-tab="feed"     onclick="qaSwitch('feed',this)"     role="tab">📋 Feed</button>
+                        <button class="qa-tab-btn"        data-tab="insights" onclick="qaSwitch('insights',this)" role="tab">📊 Insights</button>
+                    </div>
 
-                        <!-- Wellness Insights -->
-                        <a href="{{ url_for('student.activities') }}" class="qa-card">
-                            <div class="qa-card-icon purple">
-                                📈
-                            </div>
-                            <h4>Insights</h4>
-                            <p>Analytics</p>
-                        </a>
+                    <!-- Feedback -->
+                    <div id="actionFeedback" class="qa-feedback"></div>
 
-                        <!-- Relaxation -->
-                        <a href="{{ url_for('student.relax') }}" class="qa-card">
-                            <div class="qa-card-icon green">
-                                ✔
-                            </div>
-                            <h4>Relaxation</h4>
-                            <p>Meditation</p>
-                        </a>
+                    <!-- ── TAB: ACTIONS ── -->
+                    <div class="qa-pane active" id="qa-pane-actions">
+                        <div class="qa-grid-v2">
+                            <!-- 1. Activities -->
+                            <a href="{{ url_for('student.activities') }}" class="qa-card-v2" style="--qa-glow:rgba(139,92,246,0.1);">
+                                <div class="qa-v2-ico ico-purple">🎯</div>
+                                <p class="qa-v2-label">Activities</p>
+                                <p class="qa-v2-sub">Wellness tools</p>
+                            </a>
+                            <!-- 2. Relax Zone -->
+                            <a href="{{ url_for('student.relax') }}" class="qa-card-v2" style="--qa-glow:rgba(16,185,129,0.1);">
+                                <div class="qa-v2-ico ico-teal">🧘</div>
+                                <p class="qa-v2-label">Relax Zone</p>
+                                <p class="qa-v2-sub">Calm & meditate</p>
+                            </a>
+                            <!-- 3. Games -->
+                            <a href="{{ url_for('student.games') }}" class="qa-card-v2" style="--qa-glow:rgba(99,102,241,0.1);">
+                                <div class="qa-v2-ico ico-indigo">🎮</div>
+                                <p class="qa-v2-label">Games</p>
+                                <p class="qa-v2-sub">Stress relief</p>
+                            </a>
+                            <!-- 4. AI Chat — FIXED: was pointing to activities, now correct -->
+                            <a href="{{ url_for('student.mental_chatbot') }}" class="qa-card-v2" style="--qa-glow:rgba(59,130,246,0.1);">
+                                <div class="qa-v2-ico ico-blue">🤖</div>
+                                <p class="qa-v2-label">AI Insights</p>
+                                <p class="qa-v2-sub">Chat & analyse</p>
+                            </a>
+                            <!-- 5. Quick Breathe (inline) -->
+                            <button type="button" class="qa-card-v2" style="--qa-glow:rgba(245,158,11,0.1);" onclick="qaToggleBreath()">
+                                <div class="qa-v2-ico ico-orange">🫁</div>
+                                <p class="qa-v2-label">Breathe</p>
+                                <p class="qa-v2-sub">Quick reset</p>
+                            </button>
+                            <!-- 6. Log Mood (inline) -->
+                            <button type="button" class="qa-card-v2" style="--qa-glow:rgba(244,63,94,0.1);" onclick="qaToggleMood()">
+                                <div class="qa-v2-ico ico-rose">😊</div>
+                                <p class="qa-v2-label">Log Mood</p>
+                                <p class="qa-v2-sub">How are you?</p>
+                            </button>
+                        </div>
 
-                        <!-- Activities -->
-                        <a href="{{ url_for('student.activities') }}" class="qa-card">
-                            <div class="qa-card-icon orange">
-                                📊
+                        <!-- Inline Breathe Panel -->
+                        <div class="qa-inline-panel" id="qaBreathPanel" style="display:none;">
+                            <div class="qa-panel-title">
+                                <span>🫁 Quick Box Breathing</span>
+                                <button class="qa-panel-close" onclick="qaToggleBreath()">✕</button>
                             </div>
-                            <h4>Activities</h4>
-                            <p>Track tasks</p>
-                        </a>
+                            <div class="qa-breathe-progress" id="qaBpDots">
+                                <div class="qa-bp-dot" id="qbd0"></div>
+                                <div class="qa-bp-dot" id="qbd1"></div>
+                                <div class="qa-bp-dot" id="qbd2"></div>
+                                <div class="qa-bp-dot" id="qbd3"></div>
+                            </div>
+                            <div class="qa-breathe-circle" id="qaBreathCircle">
+                                <span class="qa-breathe-count" id="qaBreathCount">4</span>
+                                <span class="qa-breathe-label" id="qaBreathLabel">Ready</span>
+                            </div>
+                            <div class="qa-breathe-btns">
+                                <button class="qa-breathe-btn qa-breathe-start" id="qaBreathStartBtn" onclick="qaBreathToggle()">▶ Start</button>
+                                <button class="qa-breathe-btn qa-breathe-stop" onclick="qaToggleBreath()">Close</button>
+                            </div>
+                        </div>
+
+                        <!-- Inline Mood Panel -->
+                        <div class="qa-inline-panel" id="qaMoodPanel" style="display:none;">
+                            <div class="qa-panel-title">
+                                <span>😊 How are you feeling?</span>
+                                <button class="qa-panel-close" onclick="qaToggleMood()">✕</button>
+                            </div>
+                            <div class="qa-mood-emojis" id="qaMoodEmojis">
+                                <button class="qa-mood-btn" data-mood="1" data-label="Terrible"   onclick="qaSelectMood(1,this)" title="Terrible">😢</button>
+                                <button class="qa-mood-btn" data-mood="2" data-label="Bad"        onclick="qaSelectMood(2,this)" title="Bad">😟</button>
+                                <button class="qa-mood-btn" data-mood="3" data-label="Neutral"    onclick="qaSelectMood(3,this)" title="Neutral">😐</button>
+                                <button class="qa-mood-btn" data-mood="4" data-label="Good"       onclick="qaSelectMood(4,this)" title="Good">😊</button>
+                                <button class="qa-mood-btn" data-mood="5" data-label="Great"      onclick="qaSelectMood(5,this)" title="Great">😄</button>
+                            </div>
+                            <div class="qa-mood-labels"><span>Terrible</span><span>Great</span></div>
+                            <textarea class="qa-mood-note" id="qaMoodNote" placeholder="Add a note (optional)…" rows="2"></textarea>
+                            <button class="qa-mood-submit" id="qaMoodSubmitBtn" onclick="qaSubmitMood()" disabled>Save Mood</button>
+                        </div>
+                    </div>
+
+                    <!-- ── TAB: FEED ── -->
+                    <div class="qa-pane" id="qa-pane-feed">
+                        <div id="activityTimeline">
+                            <div class="qa-feed-empty">Loading activity…</div>
+                        </div>
+                    </div>
+
+                    <!-- ── TAB: INSIGHTS ── -->
+                    <div class="qa-pane" id="qa-pane-insights">
+                        <div class="qa-insights-grid" id="qaInsightsGrid">
+                            <div class="qa-ins-card"><div class="qa-ins-val" id="qiStress">—</div><div class="qa-ins-lbl">Stress Score</div><div class="qa-ins-badge" id="qiStressBadge"></div></div>
+                            <div class="qa-ins-card"><div class="qa-ins-val" id="qiMood">—</div><div class="qa-ins-lbl">Today's Mood</div><div class="qa-ins-badge" id="qiMoodBadge"></div></div>
+                            <div class="qa-ins-card"><div class="qa-ins-val" id="qiStreak">—</div><div class="qa-ins-lbl">🔥 Streak</div><div style="font-size:10px;color:var(--muted);margin-top:3px;">days</div></div>
+                            <div class="qa-ins-card"><div class="qa-ins-val" id="qiActs">—</div><div class="qa-ins-lbl">Activities</div><div style="font-size:10px;color:var(--muted);margin-top:3px;">this week</div></div>
+                        </div>
+                        <div class="qa-ins-card" style="margin-bottom:8px;text-align:left;padding:10px 12px;">
+                            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">💡 AI Insight</div>
+                            <div id="qiInsight" style="font-size:12px;color:var(--text);line-height:1.55;">Loading…</div>
+                        </div>
+                        <button class="qa-ins-refresh" onclick="qaLoadInsights()">↻ Refresh Insights</button>
                     </div>
                 </div>
 
+                <!-- ── QA Panel JS ── -->
+                <script>
+                (function(){
+                /* ── Tab switch ── */
+                window.qaSwitch = function(tab, btn) {
+                    document.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
+                    document.querySelectorAll('.qa-tab-btn').forEach(b => b.classList.remove('active'));
+                    const pane = document.getElementById('qa-pane-' + tab);
+                    if (pane) pane.classList.add('active');
+                    if (btn) btn.classList.add('active');
+                    if (tab === 'insights') qaLoadInsights();
+                };
+
+                /* ── Inline Breathe ── */
+                let breathTimer = null, breathPhase = 0, breathSec = 4, breathRunning = false;
+                const PHASES = [{lbl:'Inhale',sec:4},{lbl:'Hold',sec:4},{lbl:'Exhale',sec:4},{lbl:'Hold',sec:4}];
+
+                window.qaToggleBreath = function() {
+                    const p = document.getElementById('qaBreathPanel');
+                    const m = document.getElementById('qaMoodPanel');
+                    if (m) m.style.display = 'none';
+                    if (!p) return;
+                    const showing = p.style.display !== 'none';
+                    p.style.display = showing ? 'none' : 'block';
+                    if (showing) qaBreathStop();
+                };
+
+                window.qaBreathToggle = function() {
+                    breathRunning ? qaBreathStop() : qaBreathStart();
+                };
+
+                function qaBreathStart() {
+                    breathRunning = true; breathPhase = 0; breathSec = PHASES[0].sec;
+                    document.getElementById('qaBreathStartBtn').textContent = '⏸ Pause';
+                    renderBreath();
+                    breathTimer = setInterval(function() {
+                        breathSec--;
+                        if (breathSec <= 0) {
+                            breathPhase = (breathPhase + 1) % 4;
+                            breathSec = PHASES[breathPhase].sec;
+                        }
+                        renderBreath();
+                    }, 1000);
+                }
+
+                function qaBreathStop() {
+                    clearInterval(breathTimer); breathRunning = false;
+                    const btn = document.getElementById('qaBreathStartBtn');
+                    if (btn) btn.textContent = '▶ Start';
+                    const c = document.getElementById('qaBreathCircle');
+                    if (c) { c.className = 'qa-breathe-circle'; }
+                    const lbl = document.getElementById('qaBreathLabel');
+                    const cnt = document.getElementById('qaBreathCount');
+                    if (lbl) lbl.textContent = 'Ready';
+                    if (cnt) cnt.textContent = '4';
+                }
+
+                function renderBreath() {
+                    const ph = PHASES[breathPhase];
+                    const c = document.getElementById('qaBreathCircle');
+                    const lbl = document.getElementById('qaBreathLabel');
+                    const cnt = document.getElementById('qaBreathCount');
+                    if (cnt) cnt.textContent = breathSec;
+                    if (lbl) lbl.textContent = ph.lbl;
+                    if (c) {
+                        c.className = 'qa-breathe-circle' + (breathPhase === 0 ? ' grow' : breathPhase === 2 ? ' shrink' : '');
+                    }
+                    for (let i = 0; i < 4; i++) {
+                        const d = document.getElementById('qbd' + i);
+                        if (d) d.className = 'qa-bp-dot' + (i < breathPhase ? ' done' : i === breathPhase ? ' active' : '');
+                    }
+                }
+
+                /* ── Inline Mood ── */
+                let selectedMood = null;
+
+                window.qaToggleMood = function() {
+                    const m = document.getElementById('qaMoodPanel');
+                    const p = document.getElementById('qaBreathPanel');
+                    if (p) { p.style.display = 'none'; qaBreathStop(); }
+                    if (!m) return;
+                    const showing = m.style.display !== 'none';
+                    m.style.display = showing ? 'none' : 'block';
+                    if (!showing) { resetMoodPanel(); }
+                };
+
+                function resetMoodPanel() {
+                    selectedMood = null;
+                    document.querySelectorAll('.qa-mood-btn').forEach(b => b.classList.remove('selected'));
+                    const note = document.getElementById('qaMoodNote');
+                    if (note) note.value = '';
+                    const sub = document.getElementById('qaMoodSubmitBtn');
+                    if (sub) { sub.disabled = true; sub.textContent = 'Save Mood'; }
+                }
+
+                window.qaSelectMood = function(level, btn) {
+                    selectedMood = level;
+                    document.querySelectorAll('.qa-mood-btn').forEach(b => b.classList.remove('selected'));
+                    if (btn) btn.classList.add('selected');
+                    const sub = document.getElementById('qaMoodSubmitBtn');
+                    if (sub) sub.disabled = false;
+                };
+
+                window.qaSubmitMood = async function() {
+                    if (!selectedMood) return;
+                    const moodMap = {1:'stressed', 2:'sad', 3:'normal', 4:'calm', 5:'happy'};
+                    const moodStr = moodMap[selectedMood] || 'normal';
+                    const note = (document.getElementById('qaMoodNote') || {}).value || '';
+                    const btn = document.getElementById('qaMoodSubmitBtn');
+                    if (btn) btn.textContent = 'Saving…';
+                    try {
+                        const r = await fetch('/student/api/mood', {
+                            method: 'POST',
+                            headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({mood: moodStr})
+                        });
+                        const fb = document.getElementById('actionFeedback');
+                        if (r.ok) {
+                            if (fb) { fb.textContent = '✅ Mood logged!'; fb.style.color = '#10b981'; }
+                            if (btn) btn.textContent = '✅ Saved!';
+                            setTimeout(() => { qaToggleMood(); if(fb)fb.textContent=''; }, 1600);
+                        } else {
+                            if (fb) { fb.textContent = '⚠ Could not save mood.'; fb.style.color = '#f59e0b'; }
+                            if (btn) btn.textContent = 'Save Mood';
+                        }
+                    } catch(e) {
+                        const fb = document.getElementById('actionFeedback');
+                        if (fb) { fb.textContent = '⚠ Network error.'; fb.style.color = '#ef4444'; }
+                        if (btn) btn.textContent = 'Save Mood';
+                    }
+                };
+
+                /* ── Insights Tab ── */
+                window.qaLoadInsights = async function() {
+                    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+                    setEl('qiInsight', 'Loading…');
+                    try {
+                        const [wRes, aRes, dRes] = await Promise.all([
+                            fetch('/student/api/wellness/current'),
+                            fetch('/student/api/wellness/activities'),
+                            fetch('/student/api/student/dashboard-data')
+                        ]);
+                        const w = wRes.ok ? await wRes.json() : {};
+                        const a = aRes.ok ? await aRes.json() : {};
+                        const d = dRes.ok ? await dRes.json() : {};
+
+                        // Correct field paths from actual API responses
+                        const stress  = w.stress?.value ?? '—';
+                        const mood    = w.mood?.label ?? (typeof d.mood === 'string' ? d.mood : '—');
+                        const streak  = d.streak ?? '—';
+                        const acts    = a.week ?? a.today ?? '—';
+                        const insight = w.stress?.insight || w.stress?.explanation || d.ai_insight || 'Keep up your wellness routine — consistency is key!';
+
+                        setEl('qiStress', typeof stress === 'number' ? stress + '/100' : stress);
+                        setEl('qiMood',   mood);
+                        setEl('qiStreak', streak);
+                        setEl('qiActs',   acts);
+                        setEl('qiInsight', insight);
+
+                        // Stress badge (0-100 scale)
+                        const sb = document.getElementById('qiStressBadge');
+                        if (sb && typeof stress === 'number') {
+                            sb.textContent = stress <= 35 ? '✅ Low' : stress <= 65 ? '⚠ Moderate' : '🔴 High';
+                            sb.className   = 'qa-ins-badge ' + (stress <= 35 ? 'badge-good' : stress <= 65 ? 'badge-warn' : 'badge-bad');
+                        }
+                        // Mood badge
+                        const mb = document.getElementById('qiMoodBadge');
+                        if (mb && mood && mood !== '—') {
+                            const ml = mood.toLowerCase();
+                            const isGood    = ['excellent','great','good','happy'].some(k => ml.includes(k));
+                            const isNeutral = ['neutral','calm','ok'].some(k => ml.includes(k));
+                            mb.textContent = isGood ? '😊 Great' : isNeutral ? '😐 OK' : '😟 Low';
+                            mb.className   = 'qa-ins-badge ' + (isGood ? 'badge-good' : isNeutral ? 'badge-warn' : 'badge-bad');
+                        }
+                    } catch(e) {
+                        const el = document.getElementById('qiInsight');
+                        if (el) el.textContent = 'Could not load insights. Try again.';
+                    }
+                };
+                })();
+                </script>
+
                 <!-- CONNECT HUB -->
-                <section class="card card-hub" aria-labelledby="hub-heading">
-                    <header class="card-header">
-                        <h3 id="hub-heading" class="card-title">
-                            <span class="card-title-icon icon-green">
-                                <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-                            </span>
-                            Connect Hub
-                        </h3>
-                        <div class="connection-status">
-                            <span class="status-indicator"></span>
-                            <span class="status-text" id="connectionStatus">Connected</span>
-                        </div>
-                    </header>
-                    
-                    <div class="card-body">
-                        <div class="hub-description">
-                            <p>Connect with peers, join group activities, and share experiences in a supportive community.</p>
-                        </div>
-                        
-                        <div class="hub-features">
-                            <a href="#" class="hub-feature">
-                                <div class="feature-icon">
-                                    <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
-                                </div>
-                                <span class="feature-label">Peer Network</span>
-                            </a>
-                            <a href="#" class="hub-feature">
-                                <div class="feature-icon">
-                                    <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
-                                </div>
-                                <span class="feature-label">Group Sessions</span>
-                            </a>
-                            <a href="#" class="hub-feature">
-                                <div class="feature-icon">
-                                    <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                </div>
-                                <span class="feature-label">Events</span>
-                            </a>
-                            <a href="#" class="hub-feature">
-                                <div class="feature-icon">
-                                    <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20m0-2V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10"/></svg>
-                                </div>
-                                <span class="feature-label">Resources</span>
-                            </a>
-                        </div>
-                        
-                        <div class="hub-stats">
-                            <div class="hub-stat">
-                                <div class="hub-stat-value" id="activeUsers">24</div>
-                                <div class="hub-stat-label">Active Now</div>
-                            </div>
-                            <div class="hub-stat">
-                                <div class="hub-stat-value" id="totalGroups">12</div>
-                                <div class="hub-stat-label">Groups</div>
-                            </div>
-                            <div class="hub-stat">
-                                <div class="hub-stat-value" id="upcomingEvents">5</div>
-                                <div class="hub-stat-label">Events</div>
-                            </div>
-                        </div>
-                        
-                        <button class="btn-hub-join" id="joinHubBtn">
-                            <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5m0 0l-5-5m5 5H9"/></svg>
-                            Join Community
-                        </button>
-                    </div>
-                </section>
+                <button class="sidebar-btn" data-panel="panel-hub" type="button">
+                    <span class="sidebar-btn-icon icon-green">
+                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                    </span>
+                    <span class="sidebar-btn-label">Connect Hub</span>
+                    <span class="sidebar-btn-badge green">Connected</span>
+                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
 
                 <!-- SUPPORT -->
-                <section class="card card-support" aria-labelledby="support-heading">
-                    <header class="card-header">
-                        <h3 id="support-heading" class="card-title">
-                            <span class="card-title-icon icon-red">
-                                <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg>
-                            </span>
-                            Support Center
-                        </h3>
-                        <div class="support-badge">
-                            <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5"/><path d="M12 12l4 2.5"/></svg>
-                            <span>24/7 Available</span>
-                        </div>
-                    </header>
-                    
-                    <div class="card-body">
-                        <div class="support-description">
-                            <p>Our wellness team is here to help. Reach out anytime for confidential support.</p>
-                        </div>
-                        
-                        <div class="support-options">
-                            <a href="#" class="support-option urgent">
-                                <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                                <div class="option-content">
-                                    <div class="option-title">Urgent Help</div>
-                                    <div class="option-desc">Immediate assistance</div>
-                                </div>
-                            </a>
-                            <a href="#" class="support-option">
-                                <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><polyline points="9 11 3 3 22 4"/><polyline points="22 4 21 12 9 9 11 3z"/></svg>
-                                <div class="option-content">
-                                    <div class="option-title">Schedule Session</div>
-                                    <div class="option-desc">Book 1-on-1</div>
-                                </div>
-                            </a>
-                        </div>
-                        
-                        <button class="btn-support" id="requestSupportBtn">
-                            <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 6l10 7 10-7"/></svg>
-                            Request Support
-                        </button>
-                        
-                        <div class="support-hotline">
-                            <div class="hotline-label">Wellness Hotline</div>
-                            <div class="hotline-number">1-800-273-8255</div>
-                            <div class="hotline-note">Available 24/7</div>
-                        </div>
-                    </div>
-                </section>
+                <button class="sidebar-btn" data-panel="panel-support" type="button">
+                    <span class="sidebar-btn-icon icon-red">
+                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg>
+                    </span>
+                    <span class="sidebar-btn-label">Support Center</span>
+                    <span class="sidebar-btn-badge red">24/7</span>
+                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+
+                <!-- PROFILE -->
+                <button class="sidebar-btn" data-panel="panel-profile" type="button">
+                    <span class="sidebar-btn-icon icon-blue">
+                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </span>
+                    <span class="sidebar-btn-label">My Profile</span>
+                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+
+                <!-- WELLNESS GOALS -->
+                <button class="sidebar-btn" data-panel="panel-goals" type="button">
+                    <span class="sidebar-btn-icon icon-green">
+                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    </span>
+                    <span class="sidebar-btn-label">Wellness Goals</span>
+                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+
+                <!-- DAILY REFLECTION -->
+                <button class="sidebar-btn" data-panel="panel-journal" type="button">
+                    <span class="sidebar-btn-icon icon-orange">
+                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/></svg>
+                    </span>
+                    <span class="sidebar-btn-label">Daily Reflection</span>
+                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+
+                <!-- GRIEVANCE -->
+                <button class="sidebar-btn" data-panel="panel-grievance" type="button">
+                    <span class="sidebar-btn-icon icon-red">
+                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg>
+                    </span>
+                    <span class="sidebar-btn-label">Submit Grievance</span>
+                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+
             </div>
+        </div>
+
+        <!-- Wellness Disclaimer -->
+        <div class="wellness-disclaimer" role="contentinfo">
+            <p>AURA provides wellness estimation support only and does not constitute medical or psychological diagnosis. If
+                you are in crisis, please contact a professional counselor or emergency services.</p>
+        </div>
+    </div>
+
+    <!-- ===== SLIDE-IN PANELS (opened from sidebar buttons) ===== -->
+    <div class="slide-overlay" id="slideOverlay"></div>
+
+    <!-- CONNECT HUB PANEL -->
+    <div class="slide-panel" id="panel-hub">
+        <div class="slide-panel-header">
+            <div class="slide-panel-title">
+                <span class="sidebar-btn-icon icon-green" style="width:32px;height:32px;">
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                </span>
+                <h3>Connect Hub</h3>
+            </div>
+            <button class="slide-panel-close" aria-label="Close panel">&times;</button>
+        </div>
+        <div class="slide-panel-body">
+            <div class="connection-status" style="margin-bottom:16px;">
+                <span class="status-indicator"></span>
+                <span class="status-text" id="connectionStatus">Connected</span>
+            </div>
+            <div class="hub-description"><p>Connect with peers, join group activities, and share experiences in a supportive community.</p></div>
+            <div class="hub-features">
+                <a href="/student/hub#peers" class="hub-feature"><div class="feature-icon"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg></div><span class="feature-label">Peer Network</span></a>
+                <a href="/student/hub#groups" class="hub-feature"><div class="feature-icon"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg></div><span class="feature-label">Group Sessions</span></a>
+                <a href="/student/hub#events" class="hub-feature"><div class="feature-icon"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><span class="feature-label">Events</span></a>
+                <a href="/student/hub#resources" class="hub-feature"><div class="feature-icon"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20m0-2V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10"/></svg></div><span class="feature-label">Resources</span></a>
+            </div>
+            <div class="hub-stats">
+                <div class="hub-stat"><div class="hub-stat-value" id="activeUsers">24</div><div class="hub-stat-label">Active Now</div></div>
+                <div class="hub-stat"><div class="hub-stat-value" id="totalGroups">12</div><div class="hub-stat-label">Groups</div></div>
+                <div class="hub-stat"><div class="hub-stat-value" id="upcomingEvents">5</div><div class="hub-stat-label">Events</div></div>
+            </div>
+            <a href="/student/hub" class="btn-hub-join" id="joinHubBtn">
+                <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5m0 0l-5-5m5 5H9"/></svg>
+                Open Connect Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- SUPPORT CENTER PANEL -->
+    <div class="slide-panel" id="panel-support">
+        <div class="slide-panel-header">
+            <div class="slide-panel-title">
+                <span class="sidebar-btn-icon icon-red" style="width:32px;height:32px;">
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg>
+                </span>
+                <h3>Support Center</h3>
+            </div>
+            <button class="slide-panel-close" aria-label="Close panel">&times;</button>
+        </div>
+        <div class="slide-panel-body">
+            <div class="support-badge" style="margin-bottom:12px;">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5"/><path d="M12 12l4 2.5"/></svg>
+                <span>24/7 Available</span>
+            </div>
+            <div class="support-description"><p>Our wellness team is here to help. Reach out anytime for confidential support.</p></div>
+            <div class="support-options">
+                <button type="button" class="support-option urgent" id="urgentHelpBtn">
+                    <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    <div class="option-content"><div class="option-title">Urgent Help</div><div class="option-desc">Immediate assistance</div></div>
+                </button>
+                <button type="button" class="support-option" id="scheduleSessionBtn">
+                    <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <div class="option-content"><div class="option-title">Schedule Session</div><div class="option-desc">Book 1-on-1</div></div>
+                </button>
+            </div>
+            <button class="btn-support" id="requestSupportBtn">
+                <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 6l10 7 10-7"/></svg>
+                Request Support
+            </button>
+            <div class="support-hotline">
+                <div class="hotline-label">Wellness Hotline</div>
+                <a href="tel:18002738255" class="hotline-number" style="text-decoration:none;color:inherit;">1-800-273-8255</a>
+                <div class="hotline-note">Available 24/7 · Tap to call</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE PANEL -->
+    <div class="slide-panel" id="panel-profile">
+        <div class="slide-panel-header">
+            <div class="slide-panel-title">
+                <span class="sidebar-btn-icon icon-blue" style="width:32px;height:32px;">
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </span>
+                <h3>My Profile</h3>
+            </div>
+            <button class="slide-panel-close" aria-label="Close panel">&times;</button>
+        </div>
+        <div class="slide-panel-body">
+            <div class="profile-info-grid">
+                <div class="profile-avatar-section">
+                    <div class="profile-avatar" id="profileAvatar">
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 12c2.5 0 4.5-2 4.5-4.5S14.5 3 12 3 7.5 5 7.5 7.5 9.5 12 12 12zm0 1.5c-3 0-9 1.5-9 4.5V21h18v-3c0-3-6-4.5-9-4.5z"/>
+                        </svg>
+                    </div>
+                    <div class="profile-name-section">
+                        <div class="profile-display-name" id="profileName">Student</div>
+                        <div class="profile-role-badge">Student</div>
+                    </div>
+                </div>
+                <div class="profile-details">
+                    <div class="profile-detail-row">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 6l10 7 10-7"/></svg>
+                        <span id="profileEmail">loading...</span>
+                    </div>
+                    <div class="profile-detail-row">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+                        <span id="profileRoll">loading...</span>
+                    </div>
+                </div>
+                <div class="profile-streak-badge" id="profileStreak">
+                    <div class="streak-icon">🔥</div>
+                    <div class="streak-info">
+                        <div class="streak-value" id="streakValue">0</div>
+                        <div class="streak-label">Day Streak</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WELLNESS GOALS PANEL -->
+    <div class="slide-panel" id="panel-goals">
+        <div class="slide-panel-header">
+            <div class="slide-panel-title">
+                <span class="sidebar-btn-icon icon-green" style="width:32px;height:32px;">
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                </span>
+                <h3>Wellness Goals</h3>
+            </div>
+            <button class="slide-panel-close" aria-label="Close panel">&times;</button>
+        </div>
+        <div class="slide-panel-body">
+            <div class="goals-list" id="goalsList">
+                <div class="goal-item" data-goal="checkin">
+                    <div class="goal-checkbox" id="goalCheckin"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                    <div class="goal-content"><div class="goal-title">Daily Check-in</div><div class="goal-desc">Log your mood today</div></div>
+                </div>
+                <div class="goal-item" data-goal="breathing">
+                    <div class="goal-checkbox" id="goalBreathing"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                    <div class="goal-content"><div class="goal-title">Breathing Exercise</div><div class="goal-desc">Complete 1 session</div></div>
+                </div>
+                <div class="goal-item" data-goal="study">
+                    <div class="goal-checkbox" id="goalStudy"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                    <div class="goal-content"><div class="goal-title">Study Session</div><div class="goal-desc">Use Study Chat once</div></div>
+                </div>
+                <div class="goal-item" data-goal="relax">
+                    <div class="goal-checkbox" id="goalRelax"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                    <div class="goal-content"><div class="goal-title">Relaxation</div><div class="goal-desc">Play a game or meditate</div></div>
+                </div>
+            </div>
+            <div class="goals-progress">
+                <div class="goals-progress-bar"><div class="goals-progress-fill" id="goalsProgressFill" style="width:0%"></div></div>
+                <div class="goals-progress-text"><span id="goalsCompleted">0</span>/4 completed</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DAILY REFLECTION PANEL -->
+    <div class="slide-panel" id="panel-journal">
+        <div class="slide-panel-header">
+            <div class="slide-panel-title">
+                <span class="sidebar-btn-icon icon-orange" style="width:32px;height:32px;">
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/></svg>
+                </span>
+                <h3>Daily Reflection</h3>
+            </div>
+            <button class="slide-panel-close" aria-label="Close panel">&times;</button>
+        </div>
+        <div class="slide-panel-body">
+            <div class="daily-tip" id="dailyTip">
+                <div class="tip-icon">💡</div>
+                <div class="tip-content">
+                    <div class="tip-label">Tip of the Day</div>
+                    <div class="tip-text" id="tipText">Loading your daily wellness tip...</div>
+                </div>
+            </div>
+            <div class="journal-section">
+                <label class="journal-label" for="journalEntry">How was your day?</label>
+                <textarea id="journalEntry" class="journal-textarea" rows="4" maxlength="500" placeholder="Write a few lines about your day, feelings, or thoughts..."></textarea>
+                <div class="journal-footer">
+                    <span class="journal-char-count"><span id="journalCharCount">0</span>/500</span>
+                    <button class="btn-journal-save" id="saveJournalBtn">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        Save Entry
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRIEVANCE PANEL -->
+    <div class="slide-panel" id="panel-grievance">
+        <div class="slide-panel-header">
+            <div class="slide-panel-title">
+                <span class="sidebar-btn-icon icon-red" style="width:32px;height:32px;">
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg>
+                </span>
+                <h3>Submit Grievance</h3>
+            </div>
+            <button class="slide-panel-close" aria-label="Close panel">&times;</button>
+        </div>
+        <div class="slide-panel-body">
+            <p class="grievance-desc">Have a concern? Submit it confidentially. Your identity is protected.</p>
+            <form id="grievanceForm" class="grievance-form">
+                <input type="text" id="grievanceSubject" class="grievance-input" placeholder="Subject" maxlength="200" required>
+                <textarea id="grievanceDescription" class="grievance-textarea" rows="4" placeholder="Describe your concern..." maxlength="2000" required></textarea>
+                <button type="submit" class="btn-grievance-submit" id="submitGrievanceBtn">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Submit Grievance
+                </button>
+            </form>
+            <div id="grievanceFeedback" class="grievance-feedback" style="display:none;"></div>
         </div>
     </div>
 
     <!-- ENHANCED SUPPORT MODAL -->
     <div class="modal" id="supportModal" role="dialog" aria-labelledby="modalTitle" aria-hidden="true">
         <div class="modal-overlay"></div>
-        
+
         <div class="modal-content modal-lg">
             <header class="modal-header">
                 <h2 id="modalTitle" class="modal-title">
-                    <svg class="icon modal-title-icon" viewBox="0 0 24 24" stroke-width="2"><path d="M18.364 5.636l-3.536 3.536m9.172-9.172l-21 21M9 19H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4l6-6h4v4l6 6v4a2 2 0 0 1-2 2h-4"/></svg>
+                    <svg class="icon modal-title-icon" viewBox="0 0 24 24" stroke-width="2">
+                        <path
+                            d="M18.364 5.636l-3.536 3.536m9.172-9.172l-21 21M9 19H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4l6-6h4v4l6 6v4a2 2 0 0 1-2 2h-4" />
+                    </svg>
                     Request Support
                 </h2>
                 <button class="modal-close" id="closeModalBtn" aria-label="Close modal">
-                    <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18M6" y1="6" x2="18" y2="18"/></svg>
+                    <svg class="icon" viewBox="0 0 24 24" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18M6" y1="6" x2="18" y2="18" />
+                    </svg>
                 </button>
             </header>
-            
+
             <form id="supportForm" class="modal-body">
                 <div class="form-grid">
                     <div class="form-section">
                         <label for="categorySelect" class="form-label">
-                            <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01"/></svg>
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2">
+                                <path
+                                    d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01" />
+                            </svg>
                             Category
                         </label>
                         <select id="categorySelect" class="form-select" required>
@@ -590,10 +1422,14 @@
                             <option value="other">Other</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-section">
                         <label for="prioritySelect" class="form-label">
-                            <i class="fas fa-flag"></i>
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2" fill="none"
+                                stroke="currentColor">
+                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                                <line x1="4" y1="22" x2="4" y2="15" />
+                            </svg>
                             Priority
                         </label>
                         <select id="prioritySelect" class="form-select">
@@ -604,51 +1440,182 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="form-section">
                     <label for="subjectInput" class="form-label">
-                        <i class="fas fa-heading"></i>
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2" fill="none"
+                            stroke="currentColor">
+                            <path d="M4 7V4h16v3M9 20h6M12 4v16" />
+                        </svg>
                         Subject
                     </label>
-                    <input type="text" id="subjectInput" class="form-input" 
-                           placeholder="Brief description of your concern" required>
+                    <input type="text" id="subjectInput" class="form-input"
+                        placeholder="Brief description of your concern" required>
                 </div>
-                
+
                 <div class="form-section">
                     <label for="descriptionTextarea" class="form-label">
-                        <i class="fas fa-align-left"></i>
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2" fill="none"
+                            stroke="currentColor">
+                            <line x1="17" y1="10" x2="3" y2="10" />
+                            <line x1="21" y1="6" x2="3" y2="6" />
+                            <line x1="21" y1="14" x2="3" y2="14" />
+                            <line x1="17" y1="18" x2="3" y2="18" />
+                        </svg>
                         Detailed Description
                     </label>
-                    <textarea id="descriptionTextarea" class="form-textarea" 
-                              rows="5" placeholder="Please provide detailed explanation of your concern" required></textarea>
+                    <textarea id="descriptionTextarea" class="form-textarea" rows="5"
+                        placeholder="Please provide detailed explanation of your concern" required></textarea>
                     <div class="char-count">
                         <span id="charCount">0</span>/500 characters
                     </div>
                 </div>
-                
+
                 <div class="form-section">
                     <label class="form-label">
-                        <i class="fas fa-paperclip"></i>
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2" fill="none"
+                            stroke="currentColor">
+                            <path
+                                d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                        </svg>
                         Attachments (Optional)
                     </label>
                     <div class="file-upload">
-                        <input type="file" id="attachmentInput" class="file-input" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                        <input type="file" id="attachmentInput" class="file-input"
+                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
                         <label for="attachmentInput" class="file-label">
-                            <i class="fas fa-cloud-upload-alt"></i>
+                            <svg class="icon" viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                            </svg>
                             <span>Choose files or drag here</span>
                             <span class="file-types">JPG, PNG, PDF, DOC up to 10MB</span>
                         </label>
                     </div>
                 </div>
-                
+
                 <div class="form-footer">
                     <button type="button" class="btn btn-secondary" id="cancelBtn">
-                        <i class="fas fa-times"></i>
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2" fill="none"
+                            stroke="currentColor">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
                         Cancel
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane"></i>
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2" fill="none"
+                            stroke="currentColor">
+                            <line x1="22" y1="2" x2="11" y2="13" />
+                            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                        </svg>
                         Submit Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════ URGENT HELP CONFIRMATION MODAL ═══════ -->
+    <div class="modal" id="urgentModal" role="dialog" aria-labelledby="urgentModalTitle" aria-hidden="true">
+        <div class="modal-overlay"></div>
+        <div class="modal-content" style="max-width:440px;">
+            <header class="modal-header"
+                style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border-radius:16px 16px 0 0;padding:20px 24px;">
+                <h2 id="urgentModalTitle" style="margin:0;font-size:18px;display:flex;align-items:center;gap:8px;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+                        <path
+                            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                    Request Immediate Help
+                </h2>
+            </header>
+            <div style="padding:24px;">
+                <p style="margin:0 0 8px;font-size:15px;color:var(--text);line-height:1.6;">
+                    This will <strong>immediately notify</strong> a wellness counselor that you need help.
+                </p>
+                <p style="margin:0 0 20px;font-size:13px;color:var(--muted);">
+                    Your identity is kept confidential. A proctor will be alerted within minutes.
+                </p>
+                <div style="display:flex;gap:12px;justify-content:flex-end;">
+                    <button type="button" class="btn btn-secondary" id="urgentCancelBtn"
+                        style="padding:10px 20px;border-radius:10px;cursor:pointer;">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="urgentConfirmBtn"
+                        style="padding:10px 20px;border-radius:10px;background:#dc2626;color:#fff;border:none;cursor:pointer;font-weight:600;">
+                        Yes, I Need Help Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════ SCHEDULE SESSION MODAL ═══════ -->
+    <div class="modal" id="scheduleModal" role="dialog" aria-labelledby="scheduleModalTitle" aria-hidden="true">
+        <div class="modal-overlay"></div>
+        <div class="modal-content" style="max-width:480px;">
+            <header class="modal-header">
+                <h2 id="scheduleModalTitle" class="modal-title" style="display:flex;align-items:center;gap:8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    Book Counseling Session
+                </h2>
+                <button class="modal-close" id="scheduleCloseBtn" aria-label="Close">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </header>
+            <form id="scheduleForm" style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+                <div>
+                    <label
+                        style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Session
+                        Type</label>
+                    <select id="sessionType" class="form-select"
+                        style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);">
+                        <option value="general">General Wellness</option>
+                        <option value="academic">Academic Stress</option>
+                        <option value="anxiety">Anxiety / Panic</option>
+                        <option value="social">Social / Peer Issues</option>
+                        <option value="crisis">Crisis Follow-up</option>
+                    </select>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label
+                            style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Date</label>
+                        <input type="date" id="sessionDate" class="form-input" required
+                            style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);">
+                    </div>
+                    <div>
+                        <label
+                            style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Time</label>
+                        <input type="time" id="sessionTime" class="form-input" required
+                            style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);">
+                    </div>
+                </div>
+                <div>
+                    <label
+                        style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Notes
+                        (optional)</label>
+                    <textarea id="sessionNotes" rows="3"
+                        placeholder="Anything you'd like the counselor to know beforehand..."
+                        style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);resize:vertical;font-family:inherit;"></textarea>
+                </div>
+                <div id="scheduleMyBookings" style="display:none;margin-top:4px;">
+                    <h4 style="font-size:13px;color:var(--muted);margin:0 0 8px;">Your Upcoming Sessions</h4>
+                    <div id="myBookingsList"
+                        style="display:flex;flex-direction:column;gap:6px;max-height:120px;overflow-y:auto;"></div>
+                </div>
+                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:4px;">
+                    <button type="button" class="btn btn-secondary" id="scheduleCancelBtn"
+                        style="padding:10px 20px;border-radius:10px;cursor:pointer;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="scheduleSubmitBtn"
+                        style="padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:600;">
+                        Book Session
                     </button>
                 </div>
             </form>
@@ -658,11 +1625,18 @@
     <!-- NOTIFICATION TOAST -->
     <div class="toast" id="notificationToast" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-content">
-            <i class="toast-icon fas fa-check-circle"></i>
+            <svg class="toast-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
             <div class="toast-message" id="toastMessage"></div>
         </div>
         <button class="toast-close" aria-label="Close notification">
-            <i class="fas fa-times"></i>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
         </button>
     </div>
 
@@ -706,7 +1680,8 @@
                     <p>Things aren't going well</p>
                 </div>
             </div>
-            <button class="mood-skip-btn" onclick="document.getElementById('moodModal').style.display='none'; document.body.classList.remove('mood-modal-open');">
+            <button class="mood-skip-btn"
+                onclick="document.getElementById('moodModal').style.display='none'; document.body.classList.remove('mood-modal-open');">
                 Skip for now
             </button>
         </div>
@@ -715,90 +1690,681 @@
     <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.2.1/build/global/luxon.min.js"></script>
-    <script src="{{ url_for('static', filename='js/mood_handler.js') }}?v=20260130"></script>
-    <script src="{{ url_for('static', filename='js/student_dashboard.js') }}?v=20260130"></script>
+    <script src="{{ url_for('static', filename='js/mood_handler.js') }}?v=20260227"></script>
+    <script src="{{ url_for('static', filename='js/student_dashboard.js') }}?v=20260227"></script>
     <script>
-    // Random Color Theme Feature
-    (function() {
-        const colorThemes = [
-            { name: 'Ocean', primary: '#0ea5e9', accent: '#06b6d4', gradient: 'linear-gradient(135deg, #0ea5e9, #06b6d4)' },
-            { name: 'Forest', primary: '#22c55e', accent: '#10b981', gradient: 'linear-gradient(135deg, #22c55e, #10b981)' },
-            { name: 'Sunset', primary: '#f97316', accent: '#f59e0b', gradient: 'linear-gradient(135deg, #f97316, #f59e0b)' },
-            { name: 'Berry', primary: '#ec4899', accent: '#d946ef', gradient: 'linear-gradient(135deg, #ec4899, #d946ef)' },
-            { name: 'Lavender', primary: '#8b5cf6', accent: '#a78bfa', gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)' },
-            { name: 'Rose', primary: '#f43f5e', accent: '#fb7185', gradient: 'linear-gradient(135deg, #f43f5e, #fb7185)' },
-            { name: 'Teal', primary: '#14b8a6', accent: '#2dd4bf', gradient: 'linear-gradient(135deg, #14b8a6, #2dd4bf)' },
-            { name: 'Amber', primary: '#f59e0b', accent: '#fbbf24', gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)' },
-            { name: 'Indigo', primary: '#6366f1', accent: '#818cf8', gradient: 'linear-gradient(135deg, #6366f1, #818cf8)' },
-            { name: 'Coral', primary: '#ff6b6b', accent: '#ffa8a8', gradient: 'linear-gradient(135deg, #ff6b6b, #ffa8a8)' },
-            { name: 'Sky', primary: '#38bdf8', accent: '#7dd3fc', gradient: 'linear-gradient(135deg, #38bdf8, #7dd3fc)' },
-            { name: 'Emerald', primary: '#34d399', accent: '#6ee7b7', gradient: 'linear-gradient(135deg, #34d399, #6ee7b7)' }
-        ];
-        
-        let currentColorIndex = -1;
-        
-        function applyColorTheme(theme) {
-            const root = document.documentElement;
-            root.style.setProperty('--primary', theme.primary);
-            root.style.setProperty('--primary-strong', theme.primary);
-            root.style.setProperty('--accent', theme.accent);
-            root.style.setProperty('--accent-strong', theme.accent);
-            
-            // Update header gradient
-            const header = document.querySelector('.dashboard-header');
-            if (header) {
-                header.style.background = `linear-gradient(135deg, #0b1224, ${theme.primary}40 30%, ${theme.accent}60 100%)`;
+        // Random Color Theme Feature — FULL DASHBOARD THEMING ENGINE
+        (function () {
+            const colorThemes = [
+                { name: 'Ocean', primary: '#0ea5e9', accent: '#06b6d4' },
+                { name: 'Forest', primary: '#22c55e', accent: '#10b981' },
+                { name: 'Sunset', primary: '#f97316', accent: '#f59e0b' },
+                { name: 'Berry', primary: '#ec4899', accent: '#d946ef' },
+                { name: 'Lavender', primary: '#8b5cf6', accent: '#a78bfa' },
+                { name: 'Rose', primary: '#f43f5e', accent: '#fb7185' },
+                { name: 'Teal', primary: '#14b8a6', accent: '#2dd4bf' },
+                { name: 'Amber', primary: '#f59e0b', accent: '#fbbf24' },
+                { name: 'Indigo', primary: '#6366f1', accent: '#818cf8' },
+                { name: 'Coral', primary: '#ff6b6b', accent: '#ffa8a8' },
+                { name: 'Sky', primary: '#38bdf8', accent: '#7dd3fc' },
+                { name: 'Emerald', primary: '#34d399', accent: '#6ee7b7' }
+            ];
+
+            let currentColorIndex = -1;
+
+            /* ---- Color Utilities ---- */
+            function hexToRgb(hex) {
+                const n = parseInt(hex.replace('#', ''), 16);
+                return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
             }
-            
-            // Add pulse animation to button
-            const btn = document.getElementById('randomColorBtn');
-            if (btn) {
-                btn.classList.add('color-pulse');
-                setTimeout(() => btn.classList.remove('color-pulse'), 500);
+            function rgbStr(hex) { const c = hexToRgb(hex); return c.r + ', ' + c.g + ', ' + c.b; }
+            function toHex(r, g, b) { return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join(''); }
+            function mix(h1, h2, w) {
+                const a = hexToRgb(h1), b = hexToRgb(h2);
+                return toHex(a.r + (b.r - a.r) * w, a.g + (b.g - a.g) * w, a.b + (b.b - a.b) * w);
             }
-            
-            // Show toast notification
-            showColorToast(theme.name);
-        }
-        
-        function showColorToast(themeName) {
-            let toast = document.getElementById('colorToast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'colorToast';
-                toast.className = 'color-toast';
-                document.body.appendChild(toast);
+            function alpha(hex, a) { const c = hexToRgb(hex); return 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + a + ')'; }
+            function darken(hex, amt) { const c = hexToRgb(hex); const f = 1 - amt; return toHex(c.r * f, c.g * f, c.b * f); }
+
+            /* ---- Main Theme Application (sets EVERY token) ---- */
+            function applyColorTheme(theme) {
+                const root = document.documentElement;
+                const body = document.body;
+                const isDark = root.getAttribute('data-theme') === 'dark';
+
+                /* === Core accent tokens (System 1) === */
+                root.style.setProperty('--primary', theme.primary);
+                root.style.setProperty('--primary-strong', darken(theme.primary, 0.12));
+                root.style.setProperty('--primary-soft', alpha(theme.primary, 0.12));
+                root.style.setProperty('--primary-rgb', rgbStr(theme.primary));
+                root.style.setProperty('--accent', theme.accent);
+                root.style.setProperty('--accent-strong', darken(theme.accent, 0.1));
+                root.style.setProperty('--accent-rgb', rgbStr(theme.accent));
+                root.style.setProperty('--danger-rgb', '239, 68, 68');
+
+                /* === Background / Surface / Border / Text tokens === */
+                if (isDark) {
+                    root.style.setProperty('--bg', mix('#0b1224', theme.primary, 0.06));
+                    root.style.setProperty('--bg-soft', mix('#0f172a', theme.primary, 0.08));
+                    root.style.setProperty('--surface', mix('#111827', theme.primary, 0.05));
+                    root.style.setProperty('--surface-muted', mix('#0f172a', theme.primary, 0.06));
+                    root.style.setProperty('--surface-ghost', mix('#111827', theme.primary, 0.04));
+                    root.style.setProperty('--border', mix('#1f2937', theme.primary, 0.1));
+                    root.style.setProperty('--border-strong', mix('#2c3647', theme.primary, 0.12));
+                    root.style.setProperty('--text', '#e2e8f0');
+                    root.style.setProperty('--muted', '#94a3b8');
+                    root.style.setProperty('--muted-strong', '#cbd5e1');
+                    root.style.setProperty('--shadow', '0 14px 40px ' + alpha(theme.primary, 0.15));
+                    root.style.setProperty('--shadow-soft', '0 10px 24px ' + alpha(theme.primary, 0.1));
+                } else {
+                    root.style.setProperty('--bg', mix('#f8fafc', theme.primary, 0.04));
+                    root.style.setProperty('--bg-soft', mix('#f1f5f9', theme.primary, 0.06));
+                    root.style.setProperty('--surface', mix('#ffffff', theme.primary, 0.025));
+                    root.style.setProperty('--surface-muted', mix('#f8fafc', theme.primary, 0.035));
+                    root.style.setProperty('--surface-ghost', mix('#eff4fb', theme.primary, 0.03));
+                    root.style.setProperty('--border', mix('#e2e8f0', theme.primary, 0.08));
+                    root.style.setProperty('--border-strong', mix('#cbd5e1', theme.primary, 0.1));
+                    root.style.setProperty('--text', '#0f172a');
+                    root.style.setProperty('--muted', '#64748b');
+                    root.style.setProperty('--muted-strong', '#475569');
+                    root.style.setProperty('--shadow', '0 14px 40px ' + alpha(theme.primary, 0.08));
+                    root.style.setProperty('--shadow-soft', '0 10px 24px ' + alpha(theme.primary, 0.05));
+                }
+
+                /* === Header gradient === */
+                const hBase = isDark ? '#0b1224' : '#0f172a';
+                root.style.setProperty('--header-gradient',
+                    'linear-gradient(135deg, ' + mix(hBase, theme.primary, 0.2) + ', ' + mix(hBase, theme.primary, 0.45) + ' 30%, ' + mix(hBase, theme.accent, 0.6) + ' 100%)');
+                root.style.setProperty('--header-glow',
+                    'radial-gradient(circle at 80% 0%, ' + alpha(theme.accent, 0.3) + ', transparent 35%)');
+                root.style.setProperty('--header-halo',
+                    'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.14), transparent 30%)');
+
+                /* === System 2 bridge tokens === */
+                root.style.setProperty('--color-primary', theme.primary);
+                root.style.setProperty('--color-primary-dark', darken(theme.primary, 0.15));
+                root.style.setProperty('--color-primary-light', alpha(theme.primary, 0.12));
+                root.style.setProperty('--color-success', theme.accent);
+                if (isDark) {
+                    root.style.setProperty('--bg-primary', mix('#0f172a', theme.primary, 0.06));
+                    root.style.setProperty('--bg-secondary', mix('#1e293b', theme.primary, 0.05));
+                    root.style.setProperty('--bg-tertiary', mix('#334155', theme.primary, 0.05));
+                    root.style.setProperty('--bg-elevated', mix('#1e293b', theme.primary, 0.04));
+                    root.style.setProperty('--text-primary', '#f8fafc');
+                    root.style.setProperty('--text-secondary', '#cbd5e1');
+                    root.style.setProperty('--text-tertiary', '#94a3b8');
+                    root.style.setProperty('--border-light', mix('#334155', theme.primary, 0.08));
+                    root.style.setProperty('--border-medium', mix('#475569', theme.primary, 0.08));
+                } else {
+                    root.style.setProperty('--bg-primary', mix('#ffffff', theme.primary, 0.025));
+                    root.style.setProperty('--bg-secondary', mix('#f8fafc', theme.primary, 0.035));
+                    root.style.setProperty('--bg-tertiary', mix('#f1f5f9', theme.primary, 0.04));
+                    root.style.setProperty('--bg-elevated', mix('#ffffff', theme.primary, 0.025));
+                    root.style.setProperty('--text-primary', '#0f172a');
+                    root.style.setProperty('--text-secondary', '#475569');
+                    root.style.setProperty('--text-tertiary', '#94a3b8');
+                    root.style.setProperty('--border-light', mix('#e2e8f0', theme.primary, 0.08));
+                    root.style.setProperty('--border-medium', mix('#cbd5e1', theme.primary, 0.08));
+                }
+
+                /* === Global CSS aura tokens (global.css reads these) === */
+                root.style.setProperty('--aura-accent', theme.primary);
+                root.style.setProperty('--aura-accent-rgb', rgbStr(theme.primary));
+                root.style.setProperty('--theme-accent', theme.primary);
+                root.style.setProperty('--theme-accent-rgb', rgbStr(theme.primary));
+
+                /* === Body background (overrides global.css !important) === */
+                const bodyBg = isDark
+                    ? 'radial-gradient(circle at 10% 10%, ' + alpha(theme.primary, 0.12) + ', transparent 25%), '
+                    + 'radial-gradient(circle at 90% 5%, ' + alpha(theme.accent, 0.08) + ', transparent 25%), '
+                    + mix('#0b1224', theme.primary, 0.06)
+                    : 'radial-gradient(circle at 10% 10%, ' + alpha(theme.primary, 0.12) + ', transparent 25%), '
+                    + 'radial-gradient(circle at 90% 5%, ' + alpha(theme.accent, 0.08) + ', transparent 25%), '
+                    + mix('#f8fafc', theme.primary, 0.04);
+                root.style.setProperty('--aura-gradient', bodyBg);
+                body.style.setProperty('background', bodyBg, 'important');
+                body.style.backgroundAttachment = 'fixed';
+
+                /* === Direct element overrides (override inline <style> specificity) === */
+                var header = document.querySelector('.dashboard-header');
+                if (header) {
+                    header.style.background = 'linear-gradient(135deg, ' + mix('#0b1224', theme.primary, 0.2) + ', ' + mix('#0b1224', theme.primary, 0.45) + ' 30%, ' + mix('#0b1224', theme.accent, 0.6) + ' 100%)';
+                    header.style.boxShadow = '0 10px 25px ' + alpha(theme.primary, 0.25);
+                }
+                document.querySelectorAll('.chat-icon-wrapper').forEach(function (el) {
+                    el.style.background = 'linear-gradient(135deg, ' + theme.primary + ', ' + darken(theme.primary, 0.15) + ')';
+                    el.style.boxShadow = '0 4px 12px ' + alpha(theme.primary, 0.25);
+                });
+                document.querySelectorAll('.feature-icon').forEach(function (el) {
+                    el.style.background = 'linear-gradient(135deg, ' + theme.primary + ', ' + darken(theme.primary, 0.2) + ')';
+                });
+                document.querySelectorAll('.card-title-icon.icon-blue').forEach(function (el) {
+                    el.style.background = 'linear-gradient(135deg, ' + theme.primary + ', ' + darken(theme.primary, 0.2) + ')';
+                });
+                document.querySelectorAll('.card-title-icon.icon-green').forEach(function (el) {
+                    el.style.background = 'linear-gradient(135deg, ' + theme.accent + ', ' + darken(theme.accent, 0.2) + ')';
+                });
+                var metricEl = document.querySelector('.metric-value');
+                if (metricEl) {
+                    metricEl.style.background = 'linear-gradient(135deg, ' + darken(theme.primary, 0.3) + ', ' + theme.primary + ')';
+                    metricEl.style.webkitBackgroundClip = 'text';
+                    metricEl.style.backgroundClip = 'text';
+                    metricEl.style.color = 'transparent';
+                }
+                var hubJoin = document.querySelector('.btn-hub-join');
+                if (hubJoin) hubJoin.style.background = 'linear-gradient(135deg, ' + theme.accent + ', ' + darken(theme.accent, 0.15) + ')';
+                var qaIcon = document.querySelector('.qa-icon');
+                if (qaIcon) qaIcon.style.background = theme.primary;
+                var qaCount = document.querySelector('.qa-count');
+                if (qaCount) qaCount.style.background = theme.primary;
+                document.querySelectorAll('.qa-card-icon.purple').forEach(function (el) { el.style.background = theme.primary; });
+                document.querySelectorAll('.qa-card-icon.green').forEach(function (el) { el.style.background = theme.accent; });
+
+                /* === Smooth transition pulse === */
+                var btn = document.getElementById('randomColorBtn');
+                if (btn) { btn.classList.add('color-pulse'); setTimeout(function () { btn.classList.remove('color-pulse'); }, 500); }
+                showColorToast(theme.name);
             }
-            toast.textContent = `🎨 ${themeName} theme applied!`;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2000);
-        }
-        
-        function setRandomColorTheme() {
-            let newIndex;
-            do {
-                newIndex = Math.floor(Math.random() * colorThemes.length);
-            } while (newIndex === currentColorIndex && colorThemes.length > 1);
-            
-            currentColorIndex = newIndex;
-            applyColorTheme(colorThemes[newIndex]);
-            localStorage.setItem('aura-color-theme-index', newIndex);
-        }
-        
-        // Initialize on DOM ready
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedIndex = localStorage.getItem('aura-color-theme-index');
-            if (savedIndex !== null) {
-                currentColorIndex = parseInt(savedIndex);
-                applyColorTheme(colorThemes[currentColorIndex]);
+
+            function showColorToast(themeName) {
+                var toast = document.getElementById('colorToast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'colorToast';
+                    toast.className = 'color-toast';
+                    document.body.appendChild(toast);
+                }
+                toast.textContent = '🎨 ' + themeName + ' theme applied!';
+                toast.classList.add('show');
+                setTimeout(function () { toast.classList.remove('show'); }, 2000);
             }
-            
-            const randomColorBtn = document.getElementById('randomColorBtn');
-            if (randomColorBtn) {
-                randomColorBtn.addEventListener('click', setRandomColorTheme);
+
+            function setRandomColorTheme() {
+                var newIndex;
+                do { newIndex = Math.floor(Math.random() * colorThemes.length); }
+                while (newIndex === currentColorIndex && colorThemes.length > 1);
+                currentColorIndex = newIndex;
+                applyColorTheme(colorThemes[newIndex]);
+                localStorage.setItem('aura-color-theme-index', newIndex);
             }
-        });
-    })();
+
+            /* Expose for external re-application */
+            window.AURA_ColorTheme = {
+                reapply: function () { if (currentColorIndex >= 0) applyColorTheme(colorThemes[currentColorIndex]); },
+                themes: colorThemes,
+                apply: function (i) { if (i >= 0 && i < colorThemes.length) { currentColorIndex = i; applyColorTheme(colorThemes[i]); localStorage.setItem('aura-color-theme-index', i); } }
+            };
+
+            /* Initialize on DOM ready */
+            document.addEventListener('DOMContentLoaded', function () {
+                var savedIndex = localStorage.getItem('aura-color-theme-index');
+                if (savedIndex !== null) {
+                    currentColorIndex = parseInt(savedIndex);
+                    applyColorTheme(colorThemes[currentColorIndex]);
+                }
+                var randomColorBtn = document.getElementById('randomColorBtn');
+                if (randomColorBtn) randomColorBtn.addEventListener('click', setRandomColorTheme);
+            });
+
+            /* Re-apply color theme when light/dark mode toggles */
+            window.addEventListener('themechange', function () {
+                if (currentColorIndex >= 0) setTimeout(function () { applyColorTheme(colorThemes[currentColorIndex]); }, 60);
+            });
+        })();
     </script>
+
+    <!-- ═══ DASHBOARD TABS LOGIC ═══ -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.dash-tab');
+            const contents = document.querySelectorAll('.dash-tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+
+                    tab.classList.add('active');
+                    const targetId = tab.getAttribute('data-target');
+                    const targetEl = document.getElementById(targetId);
+                    if (targetEl) {
+                        targetEl.classList.add('active');
+                        window.dispatchEvent(new Event('resize'));
+                    }
+                });
+            });
+
+            // ── Slide Panel Logic ──
+            const overlay = document.getElementById('slideOverlay');
+            const sidebarBtns = document.querySelectorAll('.sidebar-btn[data-panel]');
+            let activePanel = null;
+
+            function openPanel(panelId) {
+                closePanel(); // close any open one first
+                const panel = document.getElementById(panelId);
+                if (!panel) return;
+                activePanel = panel;
+                panel.classList.add('active');
+                overlay.classList.add('active');
+                document.body.classList.add('panel-open');
+            }
+
+            function closePanel() {
+                if (activePanel) {
+                    activePanel.classList.remove('active');
+                    activePanel = null;
+                }
+                overlay.classList.remove('active');
+                document.body.classList.remove('panel-open');
+            }
+
+            sidebarBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    openPanel(btn.getAttribute('data-panel'));
+                });
+            });
+
+            overlay.addEventListener('click', closePanel);
+
+            document.querySelectorAll('.slide-panel-close').forEach(btn => {
+                btn.addEventListener('click', closePanel);
+            });
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && activePanel) closePanel();
+            });
+        });
+    </script>
+
+    <!-- ═══ ACADEMIC DATA VISUALIZATION ═══ -->
+    <script>
+        (function () {
+            /* ─────────────────────────────────────────────
+               BULLETPROOF: Promise-lock prevents ANY
+               concurrent or duplicate chart creation.
+               ───────────────────────────────────────────── */
+            var _lock = null;                       // Promise-based mutex
+            window._acadTrendChart = null;
+            window._acadSubjectChart = null;
+
+            function loadAcademicData() {
+                // If already running, return the same promise (no duplicate work)
+                if (_lock) return _lock;
+                _lock = _doLoad().finally(function () { _lock = null; });
+                return _lock;
+            }
+
+            async function _doLoad() {
+                try {
+                    var resp = await fetch('/student/api/student/academics');
+                    var json = await resp.json();
+                    if (!json.success || !json.data) return;
+
+                    var records = json.data.records || [];
+                    var subjects = json.data.subjects || [];
+                    var summary = json.data.summary || {};
+                    var $ = function (id) { return document.getElementById(id); };
+
+                    /* ── Empty-state ── */
+                    var emptyState = $('acadEmptyState');
+                    var chartsWrap = document.querySelectorAll('.acad-chart-section');
+
+                    if (!records.length) {
+                        if (emptyState) emptyState.style.display = 'block';
+                        chartsWrap.forEach(function (e) { e.style.display = 'none'; });
+                        if ($('acadSemBadge')) $('acadSemBadge').textContent = '—';
+                        return;
+                    }
+
+                    if (emptyState) emptyState.style.display = 'none';
+                    chartsWrap.forEach(function (e) { e.style.display = 'block'; });
+
+                    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    var textColor = isDark ? '#94a3b8' : '#64748b';
+                    var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
+                    /* ── Summary stats ── */
+                    if ($('acadSemBadge')) $('acadSemBadge').textContent = summary.current_semester || '—';
+                    if ($('acadCgpa')) $('acadCgpa').textContent = summary.current_cgpa ? summary.current_cgpa.toFixed(2) : '—';
+                    if ($('acadSgpa')) $('acadSgpa').textContent = summary.current_sgpa ? summary.current_sgpa.toFixed(2) : '—';
+                    if ($('acadAttendance')) $('acadAttendance').textContent = (summary.avg_attendance || 0) + '%';
+                    if ($('acadCredits')) $('acadCredits').textContent = summary.total_credits || '—';
+
+                    /* ── Progress bars ── */
+                    setTimeout(function () {
+                        if ($('acadCgpaBar')) $('acadCgpaBar').style.width = ((summary.current_cgpa / 10) * 100) + '%';
+                        if ($('acadSgpaBar')) $('acadSgpaBar').style.width = ((summary.current_sgpa / 10) * 100) + '%';
+                        if ($('acadAttBar')) $('acadAttBar').style.width = (summary.avg_attendance || 0) + '%';
+                    }, 300);
+
+                    /* ══════════════════════════════════════
+                       TREND CHART
+                       ══════════════════════════════════════ */
+                    var trendEl = $('acadTrendChart');
+                    if (trendEl) {
+                        var trendOpts = {
+                            series: [
+                                { name: 'CGPA', data: records.map(function (r) { return r.cgpa; }) },
+                                { name: 'SGPA', data: records.map(function (r) { return r.sgpa; }) },
+                                { name: 'Attendance %', data: records.map(function (r) { return r.attendance; }) }
+                            ],
+                            chart: {
+                                type: 'area', height: 260, fontFamily: 'Inter,sans-serif',
+                                toolbar: { show: false }, background: 'transparent',
+                                animations: { enabled: true, easing: 'easeinout', speed: 600 }
+                            },
+                            colors: ['#6366f1', '#8b5cf6', '#10b981'],
+                            fill: { type: 'gradient', gradient: { opacityFrom: 0.35, opacityTo: 0.05, shadeIntensity: 0.5 } },
+                            stroke: { curve: 'smooth', width: [3, 2, 2] },
+                            dataLabels: { enabled: false },
+                            xaxis: {
+                                categories: records.map(function (r) { return r.semester; }),
+                                labels: { style: { colors: textColor, fontSize: '11px' } },
+                                axisBorder: { show: false }, axisTicks: { show: false }
+                            },
+                            yaxis: [
+                                {
+                                    seriesName: 'CGPA', title: { text: 'GPA', style: { color: textColor, fontSize: '11px' } },
+                                    min: 5, max: 10, labels: { style: { colors: textColor, fontSize: '11px' }, formatter: function (v) { return v.toFixed(1); } }
+                                },
+                                { seriesName: 'CGPA', show: false, min: 5, max: 10 },
+                                {
+                                    seriesName: 'Attendance %', opposite: true,
+                                    title: { text: 'Attendance %', style: { color: textColor, fontSize: '11px' } },
+                                    min: 60, max: 100, labels: { style: { colors: textColor, fontSize: '11px' }, formatter: function (v) { return v + '%'; } }
+                                }
+                            ],
+                            grid: { borderColor: gridColor, strokeDashArray: 4 },
+                            legend: { position: 'top', horizontalAlign: 'right', labels: { colors: textColor }, fontSize: '12px' },
+                            tooltip: {
+                                theme: isDark ? 'dark' : 'light',
+                                y: { formatter: function (v, o) { return o.seriesIndex === 2 ? v + '%' : v.toFixed(2); } }
+                            }
+                        };
+
+                        // DOM-LEVEL CHECK: if SVG already exists, chart was already rendered
+                        if (window._acadTrendChart) {
+                            window._acadTrendChart.updateOptions(trendOpts, true, false);
+                        } else if (!trendEl.querySelector('svg')) {
+                            // Only create if NO SVG child exists (absolute guarantee)
+                            trendEl.innerHTML = '';
+                            window._acadTrendChart = new ApexCharts(trendEl, trendOpts);
+                            window._acadTrendChart.render();
+                        }
+                    }
+
+                    /* ══════════════════════════════════════
+                       SUBJECT BAR CHART
+                       ══════════════════════════════════════ */
+                    var subjEl = $('acadSubjectChart');
+                    if (subjEl && subjects.length) {
+                        if ($('acadSubSem')) $('acadSubSem').textContent = '— ' + (summary.current_semester || '');
+
+                        var subOpts = {
+                            series: [
+                                { name: 'Internal', data: subjects.map(function (s) { return { x: s.subject || '', y: s.internal || 0 }; }) },
+                                { name: 'External', data: subjects.map(function (s) { return { x: s.subject || '', y: s.external || 0 }; }) }
+                            ],
+                            chart: {
+                                type: 'bar', height: 280, stacked: true, fontFamily: 'Inter,sans-serif',
+                                toolbar: { show: false }, background: 'transparent',
+                                animations: { enabled: true, easing: 'easeinout', speed: 600 }
+                            },
+                            plotOptions: { bar: { horizontal: true, barHeight: '55%', borderRadius: 6, borderRadiusApplication: 'end' } },
+                            colors: ['#6366f1', '#a78bfa'],
+                            dataLabels: {
+                                enabled: true, style: { fontSize: '10px', fontWeight: 600, colors: ['#fff'] },
+                                formatter: function (v) { return v > 0 ? v : ''; }
+                            },
+                            xaxis: {
+                                max: 100, labels: { style: { colors: textColor, fontSize: '11px' } },
+                                axisBorder: { show: false }, axisTicks: { show: false }
+                            },
+                            yaxis: { labels: { style: { colors: textColor, fontSize: '11px', fontWeight: 600 }, maxWidth: 130 } },
+                            grid: { borderColor: gridColor, strokeDashArray: 4 },
+                            legend: { position: 'top', horizontalAlign: 'right', labels: { colors: textColor }, fontSize: '12px' },
+                            tooltip: { theme: isDark ? 'dark' : 'light', y: { formatter: function (v) { return v + ' marks'; } } }
+                        };
+
+                        if (window._acadSubjectChart) {
+                            window._acadSubjectChart.updateOptions(subOpts, true, false);
+                        } else if (!subjEl.querySelector('svg')) {
+                            subjEl.innerHTML = '';
+                            window._acadSubjectChart = new ApexCharts(subjEl, subOpts);
+                            window._acadSubjectChart.render();
+                        }
+                    }
+
+                } catch (err) {
+                    console.warn('[AURA] Academic data load error:', err);
+                }
+            }
+
+            /* ── Single entry point ── */
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function () { setTimeout(loadAcademicData, 600); });
+            } else {
+                setTimeout(loadAcademicData, 600);
+            }
+
+            /* ── Theme change: re-fetch to update colors (lock prevents duplication) ── */
+            window.addEventListener('themechange', function () {
+                setTimeout(loadAcademicData, 200);
+            });
+        })();
+    </script>
+
+    <!-- ═══ ULTRA-PREMIUM VISUAL EFFECTS ═══ -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ──────── 3D Card Tilt Effect ──────────
+            function init3DTilt() {
+                const tiltElements = document.querySelectorAll('.card-3d-tilt');
+                
+                tiltElements.forEach(el => {
+                    el.addEventListener('mousemove', (e) => {
+                        const rect = el.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        
+                        const centerX = rect.width / 2;
+                        const centerY = rect.height / 2;
+                        
+                        const rotateX = (y - centerY) / 10;
+                        const rotateY = (centerX - x) / 10;
+                        
+                        el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                    });
+                    
+                    el.addEventListener('mouseleave', () => {
+                        el.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+                    });
+                });
+            }
+
+            // ──────── Magnetic Button Effect ──────────
+            function initMagneticButtons() {
+                const magneticBtns = document.querySelectorAll('.magnetic-btn');
+                
+                magneticBtns.forEach(btn => {
+                    btn.addEventListener('mousemove', (e) => {
+                        const rect = btn.getBoundingClientRect();
+                        const x = e.clientX - rect.left - rect.width / 2;
+                        const y = e.clientY - rect.top - rect.height / 2;
+                        
+                        const moveX = x * 0.3;
+                        const moveY = y * 0.3;
+                        
+                        btn.style.transform = `translate(${moveX}px, ${moveY}px)`;
+                    });
+                    
+                    btn.addEventListener('mouseleave', () => {
+                        btn.style.transform = 'translate(0, 0)';
+                    });
+                });
+            }
+
+            // ──────── Animated Number Counter ──────────
+            function animateNumber(element, start, end, duration) {
+                if (!element) return;
+                
+                const range = end - start;
+                const increment = range / (duration / 16);
+                let current = start;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                        current = end;
+                        clearInterval(timer);
+                    }
+                    element.textContent = Math.round(current);
+                }, 16);
+            }
+
+            // ──────── Ripple Effect ──────────
+            function createRipple(e, container) {
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+                
+                const rect = container.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                
+                container.appendChild(ripple);
+                
+                setTimeout(() => ripple.remove(), 600);
+            }
+
+            function initRippleEffects() {
+                const rippleContainers = document.querySelectorAll('.ripple-container');
+                
+                rippleContainers.forEach(container => {
+                    container.addEventListener('click', (e) => {
+                        createRipple(e, container);
+                    });
+                });
+            }
+
+            // ──────── Particle Background ──────────
+            function createParticles() {
+                const dashboard = document.querySelector('.dashboard');
+                if (!dashboard) return;
+                
+                for (let i = 0; i < 12; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle-bg');
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.top = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 8 + 's';
+                    particle.style.animationDuration = (8 + Math.random() * 4) + 's';
+                    dashboard.appendChild(particle);
+                }
+            }
+
+            // ──────── Staggered Entrance Animations ──────────
+            function initEntranceAnimations() {
+                const observerOptions = {
+                    threshold: 0.1,
+                    rootMargin: '0px 0px -50px 0px'
+                };
+                
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('fade-in-up');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, observerOptions);
+                
+                // Observe sidebar buttons
+                document.querySelectorAll('.sidebar-btn').forEach((btn, idx) => {
+                    btn.classList.add(`stagger-${idx + 1}`);
+                    observer.observe(btn);
+                });
+                
+                // Observe QA cards
+                document.querySelectorAll('.qa-card').forEach((card, idx) => {
+                    card.classList.add('scale-in', `stagger-${idx + 1}`);
+                });
+            }
+
+            // ──────── Apply Premium Classes ──────────
+            function applyPremiumClasses() {
+                // Add 3D tilt to main cards
+                document.querySelectorAll('.stress-card, .chat-bot-card, .wellness-card').forEach(card => {
+                    card.classList.add('card-3d-tilt', 'glass-effect', 'shimmer-effect');
+                });
+                
+                // Add magnetic effect to buttons
+                document.querySelectorAll('.sidebar-btn, .dash-tab').forEach(btn => {
+                    btn.classList.add('magnetic-btn');
+                });
+                
+                // Add premium card class to various cards
+                document.querySelectorAll('.wellness-card, .mood-card').forEach(card => {
+                    card.classList.add('premium-card');
+                });
+                
+                // Add ripple to QA cards
+                document.querySelectorAll('.qa-card').forEach(card => {
+                    card.classList.add('ripple-container');
+                });
+                
+                // Add glow effect to active elements
+                document.querySelectorAll('.dash-tab.active').forEach(tab => {
+                    tab.classList.add('glow-effect');
+                });
+                
+                // Add glassmorphism to summary card
+                const summaryCard = document.querySelector('.sidebar-summary-card');
+                if (summaryCard) {
+                    summaryCard.classList.add('glass-effect', 'shadow-premium-hover');
+                }
+            }
+
+            // ──────── Enhanced Tab Transitions ──────────
+            function enhanceTabTransitions() {
+                const tabs = document.querySelectorAll('.dash-tab');
+                
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        tabs.forEach(t => t.classList.remove('glow-effect'));
+                        this.classList.add('glow-effect');
+                    });
+                });
+            }
+
+            // ──────── Initialize All Effects ──────────
+            function initPremiumEffects() {
+                applyPremiumClasses();
+                init3DTilt();
+                initMagneticButtons();
+                initRippleEffects();
+                createParticles();
+                initEntranceAnimations();
+                enhanceTabTransitions();
+                
+                console.log('✨ Ultra-Premium Effects Activated');
+            }
+
+            // Run after DOM is fully loaded
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initPremiumEffects);
+            } else {
+                initPremiumEffects();
+            }
+        })();
+    </script>
+
 </body>
+
 </html>

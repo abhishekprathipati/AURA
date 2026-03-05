@@ -1,14 +1,17 @@
 from flask import Blueprint, render_template, request, jsonify, session
-from utils.auth_helpers import login_required
+from utils.auth_helpers import login_required, demo_restricted, is_demo_account, DEMO_CHAT_LIMIT, DEMO_GAME_TIME_LIMIT
 from utils.database import get_db
+from utils.access_control import create_anonymous_id
+from utils.helpers import safe_error, contains_blocked_content
 from models.mood import MoodModel
 from models.stress import StressModel
 from models.grievance import GrievanceModel
+from services.stress_service import calculate_dynamic_stress, get_stress_history as fetch_stress_history, get_weekly_stats
 from datetime import datetime, timedelta
 from bson import ObjectId
 from collections import OrderedDict
-import hashlib
 import uuid
+import hashlib
 
 # Create the Blueprint
 student_bp = Blueprint('student', __name__)
@@ -66,27 +69,39 @@ def dashboard():
 @student_bp.route('/chat/mental')
 @login_required
 def mental_chatbot():
-    return render_template('mental_chatbot.html', show_nav=True)
+    return render_template('mental_chatbot.html', show_nav=True,
+                           is_demo=is_demo_account(),
+                           demo_chat_limit=DEMO_CHAT_LIMIT,
+                           demo_chat_used=session.get('demo_chat_count', 0))
 
 @student_bp.route('/chat/study')
 @login_required
 def study_chatbot():
-    return render_template('study_chatbot.html', show_nav=True)
+    return render_template('study_chatbot.html', show_nav=True,
+                           is_demo=is_demo_account(),
+                           demo_chat_limit=DEMO_CHAT_LIMIT,
+                           demo_chat_used=session.get('demo_chat_count', 0))
 
 @student_bp.route('/relax')
 @login_required
 def relax():
-    return render_template('relax.html', show_nav=True)
+    return render_template('relax.html', show_nav=True,
+                           is_demo=is_demo_account(),
+                           demo_time_limit=DEMO_GAME_TIME_LIMIT)
 
 @student_bp.route('/activities')
 @login_required
 def activities():
-    return render_template('activities.html', show_nav=True)
+    return render_template('activities.html', show_nav=True,
+                           is_demo=is_demo_account(),
+                           demo_time_limit=DEMO_GAME_TIME_LIMIT)
 
 @student_bp.route('/games')
 @login_required
 def games():
-    return render_template('games.html', show_nav=True)
+    return render_template('games.html', show_nav=True,
+                           is_demo=is_demo_account(),
+                           demo_time_limit=DEMO_GAME_TIME_LIMIT)
 
 @student_bp.route('/_unregister_sw')
 @login_required
@@ -102,7 +117,7 @@ def unregister_sw():
 def get_current_wellness():
     """
     STUDENT-FACING ENDPOINT
-    Returns personal wellness data WITHOUT any risk classification.
+    Returns personal wellness data WITH live-computed stress.
     Student never sees "risk level", "alert", or monitoring language.
     """
     try:
@@ -137,28 +152,12 @@ def get_current_wellness():
         # Neutral mood labels (never alarming)
         mood_labels = {1: 'Very Low', 2: 'Low', 3: 'Neutral', 4: 'Good', 5: 'Excellent'}
         
-        # Get latest stress entry
-        stress_coll = db['student_wellness']
-        latest_stress = stress_coll.find_one(
-            {'student_id': user_email, 'data_type': 'stress'},
-            sort=[('timestamp', -1)]
-        )
-        
-        stress_value = latest_stress.get('value', 50) if latest_stress else 50
-        stress_trend = 'stable'
-        
-        # Neutral stress labels (no alarm language)
-        stress_labels = {
-            (0, 30): 'Relaxed',
-            (31, 50): 'Manageable',
-            (51, 70): 'Elevated',
-            (71, 100): 'High'
-        }
-        stress_label = next((v for (k, l), v in stress_labels.items() if k <= stress_value <= l), 'Manageable')
+        # Live-compute stress using the dynamic engine
+        stress_result = calculate_dynamic_stress(user_email)
         
         # Get check-in count for today
         today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-        checkins_today = stress_coll.count_documents({
+        checkins_today = mood_coll.count_documents({
             'student_id': user_email,
             'timestamp': {'$gte': today_start}
         })
@@ -167,20 +166,26 @@ def get_current_wellness():
             'mood': {
                 'value': mood_value,
                 'trend': mood_trend,
-                'label': mood_labels.get(mood_value, 'Neutral')  # NO RISK LABELS
+                'label': mood_labels.get(mood_value, 'Neutral')
             },
             'stress': {
-                'value': stress_value,
-                'trend': stress_trend,
-                'label': stress_label  # NO RISK LABELS
+                'value': stress_result['score'],
+                'trend': stress_result['trend'],
+                'label': stress_result['label'],
+                'signals': stress_result['signals'],
+                'spike_detected': stress_result['spike_detected'],
+                'insight': stress_result['insight'],
+                'confidence': stress_result.get('confidence', 0),
+                'dominant_factor': stress_result.get('dominant_factor', ''),
+                'explanation': stress_result.get('explanation', ''),
             },
             'checkins_today': checkins_today,
-            'last_checkin': latest_stress.get('timestamp', '').isoformat() if latest_stress else None
+            'last_checkin': stress_result['updated_at']
         }), 200
         
     except Exception as e:
         print(f"[ERROR] get_current_wellness: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 @student_bp.route('/api/wellness/activities', methods=['GET'])
@@ -245,11 +250,12 @@ def get_wellness_activities():
         }), 200
     except Exception as e:
         print(f"[ERROR] get_wellness_activities: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 @student_bp.route('/api/wellness/checkin', methods=['POST'])
 @login_required
+@demo_restricted
 def submit_wellness_checkin():
     """
     STUDENT-FACING ENDPOINT
@@ -294,6 +300,23 @@ def submit_wellness_checkin():
             'source': 'student_checkin'
         }
         db['student_wellness'].insert_many([mood_entry, stress_entry])
+
+        # Bridge write: also update moods + stress collections so the
+        # stress engine (which reads from moods/stress, not student_wellness) picks this up
+        mood_labels = {1: 'very_low', 2: 'low', 3: 'neutral', 4: 'happy', 5: 'excited'}
+        db['moods'].insert_one({
+            'user_email': user_email,
+            'mood': mood_labels.get(mood, 'neutral'),
+            'intensity': mood * 2,   # convert 1-5 scale to 2-10 scale
+            'source': 'wellness_checkin',
+            'created_at': now_ts
+        })
+        db['stress'].insert_one({
+            'user_email': user_email,
+            'score': stress,
+            'source': 'wellness_checkin',
+            'created_at': now_ts
+        })
         
         # TRIGGER: Hidden signal pipeline (student never sees this)
         print(f"[SIGNAL PIPELINE] New check-in from {user_email}: mood={mood}, stress={stress}")
@@ -309,11 +332,145 @@ def submit_wellness_checkin():
         
     except Exception as e:
         print(f"[ERROR] submit_wellness_checkin: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
+
+
+# ==========================================
+# SUPPORT CENTER — Urgent Help & Scheduling
+# ==========================================
+
+@student_bp.route('/api/support/urgent', methods=['POST'])
+@login_required
+@demo_restricted
+def urgent_support():
+    """
+    STUDENT-FACING: Immediate crisis help request.
+    Creates HIGH-priority incident in proctor queue + support_requests log.
+    """
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not authenticated'}), 401
+
+        db = get_db()
+        anonymous_id = create_anonymous_student_id(user_email)
+        incident_id = str(uuid.uuid4())
+
+        # Log support request
+        db['support_requests'].insert_one({
+            'student_id': user_email,
+            'type': 'urgent',
+            'notes': 'Student requested immediate crisis assistance',
+            'timestamp': datetime.utcnow(),
+            'status': 'pending',
+            'priority': 'high'
+        })
+
+        # Create HIGH-priority proctor incident
+        create_proctor_incident(
+            user_email,
+            'urgent_help',
+            'HIGH',
+            'Student pressed Urgent Help — immediate assistance needed'
+        )
+
+        print(f"[URGENT HELP] Crisis request from {anonymous_id}")
+
+        return jsonify({
+            'success': True,
+            'message': 'Help is on the way. A counselor has been notified immediately.'
+        }), 200
+
+    except Exception as e:
+        print(f"[ERROR] urgent_support: {str(e)}")
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
+
+
+@student_bp.route('/api/support/schedule', methods=['POST'])
+@login_required
+@demo_restricted
+def schedule_session():
+    """
+    STUDENT-FACING: Book a 1-on-1 counseling session.
+    Saves session booking to DB and creates a notification for proctor.
+    """
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not authenticated'}), 401
+
+        data = request.get_json() or {}
+        session_date = data.get('date', '')
+        session_time = data.get('time', '')
+        session_type = data.get('type', 'general')
+        session_notes = data.get('notes', '').strip()
+
+        if not session_date or not session_time:
+            return jsonify({'error': 'Date and time are required'}), 400
+
+        db = get_db()
+        anonymous_id = create_anonymous_student_id(user_email)
+
+        booking = {
+            'student_id': user_email,
+            'anonymous_id': anonymous_id,
+            'date': session_date,
+            'time': session_time,
+            'type': session_type,
+            'notes': session_notes,
+            'status': 'scheduled',
+            'created_at': datetime.utcnow()
+        }
+        result = db['counseling_sessions'].insert_one(booking)
+
+        # Create low-priority notification for proctor
+        create_proctor_incident(
+            user_email,
+            'session_booking',
+            'LOW',
+            f'Session booked: {session_date} at {session_time} ({session_type})'
+        )
+
+        print(f"[SESSION BOOKED] {anonymous_id} → {session_date} {session_time}")
+
+        return jsonify({
+            'success': True,
+            'message': f'Session booked for {session_date} at {session_time}. You will receive a confirmation.',
+            'booking_id': str(result.inserted_id)
+        }), 200
+
+    except Exception as e:
+        print(f"[ERROR] schedule_session: {str(e)}")
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
+
+
+@student_bp.route('/api/support/sessions', methods=['GET'])
+@login_required
+def get_my_sessions():
+    """Get student's upcoming counseling sessions."""
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not authenticated'}), 401
+
+        db = get_db()
+        sessions_list = list(db['counseling_sessions'].find(
+            {'student_id': user_email},
+            sort=[('created_at', -1)]
+        ).limit(10))
+
+        for s in sessions_list:
+            s['_id'] = str(s['_id'])
+
+        return jsonify({'success': True, 'sessions': sessions_list}), 200
+
+    except Exception as e:
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 @student_bp.route('/api/support/request', methods=['POST'])
 @login_required
+@demo_restricted
 def request_support():
     """
     STUDENT-FACING ENDPOINT
@@ -343,39 +500,24 @@ def request_support():
         
         # TRIGGER: Create immediate incident (student knows about this)
         anonymous_id = create_anonymous_student_id(user_email)
-        incident_id = str(uuid.uuid4())
         print(f"[SUPPORT REQUEST] From {anonymous_id}: {notes}")
-        
-        incident = {
-            'incident_id': incident_id,
-            'anonymous_student_id': anonymous_id,
-            'student_email': None,  # Never store real identity
-            'incident_type': 'support_request',
-            'risk_level': 'MEDIUM',  # Proctor expects 'risk_level' field
-            'priority': 'MEDIUM',
-            'trigger_source': 'student_support_request',
-            'timestamp': datetime.utcnow(),
-            'status': 'UNREVIEWED',  # Proctor expects 'UNREVIEWED' status
-            'details': notes,
-            'message_excerpt': notes[:200],
-            'action_count': 0,
-            'last_action': None,
-            'audit_trail': [],
-            'resolved_by': None,
-            'resolved_at': None
-        }
-        
-        result = db['risk_incidents'].insert_one(incident)
-        
+
+        result_id = create_proctor_incident(
+            user_email,
+            'support_request',
+            'MEDIUM',
+            notes or 'Student requested support'
+        )
+
         return jsonify({
             'success': True,
             'message': 'Support request sent. A proctor will reach out soon.',
-            'incident_id': str(result.inserted_id)
+            'incident_id': str(result_id) if result_id else None
         }), 200
         
     except Exception as e:
         print(f"[ERROR] request_support: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 # ==========================================
@@ -428,6 +570,13 @@ def evaluate_risk_signals(student_id, wellness_entry):
                 'HIGH',
                 "Distress indicators in check-in: High stress + concerning language"
             )
+
+        # Signal 4: Critical stress auto-escalation (stress > 85 = AUTO urgent support)
+        current_stress = wellness_entry.get('stress', 0)
+        if current_stress > 85:
+            auto_escalated = auto_escalate_critical_stress(student_id, current_stress, db)
+            if auto_escalated:
+                print(f"[SIGNAL PIPELINE] AUTO-ESCALATION triggered for {student_id} (stress={current_stress})")
         
     except Exception as e:
         print(f"[ERROR] evaluate_risk_signals: {str(e)}")
@@ -504,12 +653,93 @@ def check_distress_language(student_id, stress_level, notes):
 
 def create_anonymous_student_id(student_email):
     """
-    Convert student email to anonymous ID.
+    Convert student email to anonymous ID — delegates to centralized helper.
     Format: STU_{hash:05d}
-    Example: STU_34821
     """
-    hash_value = int(hashlib.md5(student_email.encode()).hexdigest(), 16) % 100000
-    return f"STU_{hash_value:05d}"
+    return create_anonymous_id(student_email)
+
+
+def auto_escalate_critical_stress(student_id, stress_value, db):
+    """
+    Signal 4: AUTO-ESCALATION for critical stress (> 85).
+    Creates an urgent support ticket + HIGH proctor incident automatically.
+    
+    Cooldown: Will NOT re-trigger if an auto-escalation was created within the
+    last 6 hours for the same student — prevents alert spam.
+    
+    This is the bridge between the stress engine and the support center.
+    The student does NOT see this happen — it's purely backend.
+    """
+    try:
+        anonymous_id = create_anonymous_student_id(student_id)
+
+        # ── Cooldown check: skip if escalated within last 6 hours ──
+        six_hours_ago = datetime.utcnow() - timedelta(hours=6)
+        recent_escalation = db['support_requests'].find_one({
+            'student_id': student_id,
+            'type': 'auto_urgent',
+            'timestamp': {'$gte': six_hours_ago}
+        })
+        if recent_escalation:
+            print(f"[AUTO-ESCALATION] Cooldown active for {anonymous_id}, skipping (last: {recent_escalation['timestamp']})")
+            return False
+
+        # ── 1. Create urgent support ticket (visible to proctor) ──
+        db['support_requests'].insert_one({
+            'student_id': student_id,
+            'type': 'auto_urgent',
+            'notes': f'SYSTEM AUTO-ESCALATION: Stress level {stress_value}/100 exceeded critical threshold (85). Immediate wellness check recommended.',
+            'timestamp': datetime.utcnow(),
+            'status': 'pending',
+            'priority': 'high',
+            'auto_triggered': True,
+            'stress_value': stress_value
+        })
+
+        # ── 2. Create HIGH proctor incident ──
+        incident_id = str(uuid.uuid4())
+        db['risk_incidents'].insert_one({
+            'incident_id': incident_id,
+            'anonymous_student_id': anonymous_id,
+            'student_email': None,
+            'incident_type': 'critical_stress_auto',
+            'risk_level': 'HIGH',
+            'priority': 'HIGH',
+            'trigger_source': 'stress_engine_auto_escalation',
+            'timestamp': datetime.utcnow(),
+            'status': 'UNREVIEWED',
+            'details': f'Stress engine auto-escalation: Student stress at {stress_value}/100 (threshold: 85). No manual request — system detected critical level.',
+            'message_excerpt': f'AUTO: Stress {stress_value}/100 — critical threshold exceeded',
+            'action_count': 0,
+            'last_action': None,
+            'audit_trail': [],
+            'resolved_by': None,
+            'resolved_at': None,
+            'auto_triggered': True
+        })
+
+        print(f"[AUTO-ESCALATION] Created urgent ticket + incident for {anonymous_id} | stress={stress_value}")
+
+        # ── 3. Push real-time alert to proctor dashboard ──
+        try:
+            from app import emit_proctor_alert
+            emit_proctor_alert({
+                'type': 'critical_auto_escalation',
+                'risk_level': 'HIGH',
+                'anonymous_student_id': anonymous_id,
+                'incident_id': incident_id,
+                'message': f'AUTO-ESCALATION: Stress {stress_value}/100 exceeded critical threshold',
+                'stress_value': stress_value,
+                'timestamp': datetime.utcnow().isoformat(),
+            })
+        except Exception as se:
+            print(f"[SOCKET] Proctor alert emit failed: {se}")
+
+        return True
+
+    except Exception as e:
+        print(f"[ERROR] auto_escalate_critical_stress: {str(e)}")
+        return False
 
 
 def create_proctor_incident(student_id, trigger_type, priority, details):
@@ -580,13 +810,14 @@ def mood_today():
         else:
             return jsonify({'has_mood_today': False})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 @student_bp.route('/api/mood', methods=['POST'])
 @login_required
+@demo_restricted
 def update_mood():
-    """Update user's mood"""
+    """Update user's mood and trigger stress recalculation."""
     try:
         user_email = session.get('user_email')
         data = request.get_json() or {}
@@ -599,9 +830,21 @@ def update_mood():
             'created_at': datetime.utcnow()
         })
         
-        return jsonify({'success': True, 'mood': mood})
+        # Recalculate stress since mood is a primary signal
+        stress_result = calculate_dynamic_stress(user_email)
+        
+        return jsonify({
+            'success': True,
+            'mood': mood,
+            'stress': {
+                'value': stress_result['score'],
+                'label': stress_result['label'],
+                'trend': stress_result['trend'],
+                'insight': stress_result['insight'],
+            }
+        })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 @student_bp.route('/api/student/profile', methods=['GET'])
@@ -616,7 +859,7 @@ def get_student_profile():
             'role': session.get('user_role', 'student')
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 @student_bp.route('/api/activities/count', methods=['GET'])
@@ -635,70 +878,164 @@ def activities_count():
         
         return jsonify({'count': total_count})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
+
+
+@student_bp.route('/api/journal', methods=['POST'])
+@login_required
+@demo_restricted
+def save_journal():
+    """Save a daily reflection journal entry."""
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not authenticated'}), 401
+
+        data = request.get_json() or {}
+        entry = (data.get('entry') or '').strip()
+
+        if not entry:
+            return jsonify({'error': 'Entry cannot be empty'}), 400
+
+        db = get_db()
+        today = datetime.utcnow().strftime('%Y-%m-%d')
+
+        # Upsert: one journal entry per day
+        db['student_journals'].update_one(
+            {'student_id': user_email, 'date': today},
+            {'$set': {
+                'student_id': user_email,
+                'date': today,
+                'entry': entry[:2000],
+                'updated_at': datetime.utcnow()
+            }},
+            upsert=True
+        )
+
+        return jsonify({'success': True, 'message': 'Journal saved!'})
+    except Exception as e:
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
+
+
+@student_bp.route('/api/journal/today', methods=['GET'])
+@login_required
+def get_journal_today():
+    """Get today's journal entry."""
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not authenticated'}), 401
+
+        db = get_db()
+        today = datetime.utcnow().strftime('%Y-%m-%d')
+
+        entry = db['student_journals'].find_one(
+            {'student_id': user_email, 'date': today}
+        )
+
+        if entry:
+            return jsonify({
+                'has_entry': True,
+                'entry': entry.get('entry', ''),
+                'date': today
+            })
+        return jsonify({'has_entry': False, 'date': today})
+    except Exception as e:
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
+
+
+@student_bp.route('/api/wellness/goals', methods=['GET'])
+@login_required
+def get_wellness_goals():
+    """Get wellness goal completion status for today."""
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not authenticated'}), 401
+
+        db = get_db()
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+
+        # Check daily check-in completion
+        has_checkin = db['student_wellness'].count_documents({
+            'student_id': user_email,
+            'timestamp': {'$gte': today_start}
+        }) > 0 or db[MoodModel.collection_name].count_documents({
+            'user_email': user_email,
+            'created_at': {'$gte': today_start}
+        }) > 0
+
+        # Check breathing/exercise
+        has_breathing = db[StressModel.collection_name].count_documents({
+            'user_email': user_email,
+            'source': {'$regex': 'breathing|stretch|wind_down'},
+            'created_at': {'$gte': today_start}
+        }) > 0
+
+        return jsonify({
+            'checkin': has_checkin,
+            'breathing': has_breathing,
+            'study': False,
+            'relax': False,
+        })
+    except Exception as e:
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 @student_bp.route('/api/stress/today', methods=['GET'])
 @login_required
 def stress_today():
+    """Get today's stress — computed live from all signals."""
     try:
         user_email = session.get('user_email')
-        db = get_db()
-        since = datetime.utcnow() - timedelta(hours=24)
-        latest = db[StressModel.collection_name].find_one(
-            {'user_email': user_email, 'created_at': {'$gte': since}}, 
-            sort=[('created_at', -1)]
-        )
-        score = latest.get('score', 50) if latest else 50
-        return jsonify({'score': score})
+        result = calculate_dynamic_stress(user_email)
+        return jsonify({
+            'score': result['score'],
+            'label': result['label'],
+            'trend': result['trend'],
+            'insight': result['insight'],
+            'spike_detected': result['spike_detected'],
+            'signals': result['signals'],
+            'confidence': result.get('confidence', 0),
+            'dominant_factor': result.get('dominant_factor', ''),
+            'explanation': result.get('explanation', ''),
+            'updated_at': result['updated_at'],
+        })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f'[ERROR] stress_today: {e}')
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 @student_bp.route('/api/student/stress-level', methods=['GET'])
 @login_required
 def get_stress_level():
-    """Get current stress level with additional metrics for Pro Dashboard"""
+    """Get current stress level — computed live with weekly stats."""
     try:
         user_email = session.get('user_email')
-        db = get_db()
-        coll = db[StressModel.collection_name]
-        
-        # Get latest stress level
-        latest = coll.find_one(
-            {'user_email': user_email}, 
-            sort=[('created_at', -1)]
-        )
-        current_stress = latest.get('score', 50) if latest else 50
-        
-        # Get today's readings for peak and average
-        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-        today_readings = list(coll.find({
-            'user_email': user_email,
-            'created_at': {'$gte': today_start}
-        }))
-        
-        peak = max([r['score'] for r in today_readings]) if today_readings else current_stress
-        average = int(sum([r['score'] for r in today_readings]) / len(today_readings)) if today_readings else current_stress
-        
-        # Calculate trend (compare last 2 readings)
-        recent = list(coll.find({'user_email': user_email}).sort('created_at', -1).limit(2))
-        trend = 'stable'
-        if len(recent) == 2:
-            diff = recent[0]['score'] - recent[1]['score']
-            if diff > 5:
-                trend = 'up'
-            elif diff < -5:
-                trend = 'down'
+        result = calculate_dynamic_stress(user_email)
+        stats = get_weekly_stats(user_email)
         
         return jsonify({
-            'stress_level': current_stress,
-            'peak': peak,
-            'average': average,
-            'trend': trend
+            'stress_level': result['score'],
+            'label': result['label'],
+            'peak': stats['peak'],
+            'average': stats['average'],
+            'low': stats['low'],
+            'trend': result['trend'],
+            'signals': result['signals'],
+            'spike_detected': result['spike_detected'],
+            'insight': result['insight'],
+            'confidence': result.get('confidence', 0),
+            'dominant_factor': result.get('dominant_factor', ''),
+            'explanation': result.get('explanation', ''),
+            'weekly_change': stats['change_pct'],
+            'weekly_direction': stats['change_direction'],
+            'readings_count': stats['readings_count'],
+            'updated_at': result['updated_at'],
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f'[ERROR] get_stress_level: {e}')
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 @student_bp.route('/api/student/dashboard-data', methods=['GET'])
@@ -734,7 +1071,7 @@ def get_dashboard_data():
             'activities_count': activities_count
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 def calculate_wellness_streak(user_email, stress_coll):
@@ -786,7 +1123,7 @@ def generate_ai_insight(user_email, stress_coll, mood):
         if not recent_readings:
             return 'Getting Started'
         
-        avg_stress = sum([r['score'] for r in recent_readings]) / len(recent_readings)
+        avg_stress = sum([r.get('score', 50) for r in recent_readings]) / len(recent_readings)
         
         if avg_stress < 30:
             return 'Excellent'
@@ -796,54 +1133,63 @@ def generate_ai_insight(user_email, stress_coll, mood):
             return 'Moderate'
         else:
             return 'Needs Attention'
-    except:
+    except Exception:
         return 'Positive'
 
 
 @student_bp.route('/api/grievance', methods=['POST'])
 @login_required
+@demo_restricted
 def submit_grievance():
-    # Simple endpoint to prevent 404s on the dashboard
+    """Submit a student grievance to the proctor queue."""
     try:
-        # Simple endpoint to prevent 404s on the dashboard
+        user_email = session.get('user_email')
+        data = request.get_json(force=True) or {}
+        subject = (data.get('subject') or '').strip()
+        description = (data.get('description') or '').strip()
+
+        if not subject or not description:
+            return jsonify({'error': 'Subject and description are required'}), 400
+
+        db = get_db()
+        db[GrievanceModel.collection_name].insert_one({
+            'user_email': user_email,
+            'subject': subject[:200],
+            'description': description[:2000],
+            'status': 'pending',
+            'created_at': datetime.utcnow(),
+        })
         return jsonify({'success': True})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 @student_bp.route('/api/stress_history', methods=['GET'])
 @login_required
 def stress_history():
-    """Return last 7 days stress history for the logged-in user, bucketed by day."""
+    """Return stress history for the logged-in user, bucketed by day."""
     try:
         user_email = session.get('user_email')
-        db = get_db()
-        coll = db[StressModel.collection_name]
-        since = datetime.utcnow() - timedelta(days=7)
-
-        # Fetch all stress entries from last 7 days
-        cursor = coll.find(
-            {'user_email': user_email, 'created_at': {'$gte': since}},
-            {'_id': 0, 'created_at': 1, 'score': 1}
-        ).sort('created_at', 1)
+        days = int(request.args.get('days', 7))
+        days = max(1, min(90, days))  # Clamp 1-90
         
-        raw_history = []
-        for doc in cursor:
-            raw_history.append({
-                'timestamp': doc['created_at'].isoformat() + 'Z',
-                'score': int(doc.get('score', 50))
-            })
+        history = fetch_stress_history(user_email, days)
         
-        # Bucket by day - keep latest entry per day
-        bucketed = bucket_by_day(raw_history)
+        # Also include weekly stats for context
+        stats = get_weekly_stats(user_email)
 
-        return jsonify({'history': bucketed})
+        return jsonify({
+            'history': history,
+            'stats': stats,
+        })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f'[ERROR] stress_history: {e}')
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 @student_bp.route('/api/quick_actions', methods=['POST'])
 @login_required
+@demo_restricted
 def quick_actions():
     """Handle quick actions like breathing, mood_check, stretch.
     Logs the action and returns appropriate message with stress reduction.
@@ -895,9 +1241,32 @@ def quick_actions():
             'created_at': datetime.utcnow(),
         })
 
-        return jsonify({'message': msg, 'stress_score': new_stress})
+        # Derive label from the new score
+        if new_stress <= 25:   ql = 'Relaxed'
+        elif new_stress <= 45: ql = 'Manageable'
+        elif new_stress <= 65: ql = 'Elevated'
+        elif new_stress <= 80: ql = 'High'
+        else:                  ql = 'Critical'
+
+        # Build insight based on action
+        action_insights = {
+            'breathing': 'Deep breathing activates your parasympathetic nervous system, reducing stress hormones.',
+            'stretch': 'Physical movement releases tension and boosts endorphins.',
+            'hydration': 'Staying hydrated supports cognitive function and reduces fatigue.',
+            'walk': 'A short walk improves circulation and clears mental fog.',
+            'music': 'Music therapy can lower cortisol levels and improve mood.',
+            'journaling': 'Writing helps process emotions and gain perspective.',
+        }
+
+        return jsonify({
+            'message': msg,
+            'stress_score': new_stress,
+            'label': ql,
+            'trend': 'down' if reduction > 0 else 'stable',
+            'insight': action_insights.get(action, 'Taking a break helps your body and mind recover.'),
+        })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 # ==========================================
@@ -914,19 +1283,9 @@ PREDEFINED_ROOMS = [
     {'_id': 'late_night', 'title': 'Late Night Chat'},
 ]
 
-# Basic profanity filter
-BLOCKED_WORDS = [
-    'abuse', 'hate', 'spam', 'inappropriate', 'offensive',
-    'harassment', 'violence', 'threat', 'kill', 'harm'
-]
-
+# Profanity filter — delegates to shared utility in utils.helpers
 def contains_profanity(message):
-    """Check if message contains blocked words"""
-    message_lower = message.lower()
-    for word in BLOCKED_WORDS:
-        if word in message_lower:
-            return True
-    return False
+    return contains_blocked_content(message)
 
 def rate_limit_check(user_id):
     """Check if user can send message (1 per 3 seconds)"""
@@ -955,7 +1314,7 @@ def get_connection_rooms():
             'status': 'success'
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 @student_bp.route('/api/connection/rooms/<room_id>/messages', methods=['GET'])
 @login_required
@@ -987,10 +1346,11 @@ def get_room_messages(room_id):
             'status': 'success'
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 @student_bp.route('/api/connection/rooms/<room_id>/send', methods=['POST'])
 @login_required
+@demo_restricted
 def send_room_message(room_id):
     """Send a message to a room"""
     try:
@@ -1037,7 +1397,7 @@ def send_room_message(room_id):
             'status': 'success'
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
 # ==========================================
@@ -1046,10 +1406,11 @@ def send_room_message(room_id):
 
 @student_bp.route('/api/connection/messages/<message_id>/report', methods=['POST'])
 @login_required
+@demo_restricted
 def report_message(message_id):
     """Report a message for proctor review"""
     try:
-        user_id = session.get('user_id')
+        user_email = session.get('user_email')
         db = get_db()
         
         # Validate message_id format
@@ -1063,7 +1424,7 @@ def report_message(message_id):
             {'_id': obj_id},
             {'$set': {
                 'reported': True,
-                'reported_by': user_id,
+                'reported_by': user_email,
                 'report_time': datetime.utcnow()
             }}
         )
@@ -1079,4 +1440,136 @@ def report_message(message_id):
                 'message': 'Message not found.'
             }), 404
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
+
+
+# ==========================================
+# ACADEMIC PERFORMANCE — Student-facing
+# ==========================================
+
+def _seed_demo_academics(db, roll_number):
+    """Seed sample academic data for demo student if none exists."""
+    if db['academic_records'].count_documents({'student_roll': roll_number}) > 0:
+        return  # already seeded
+
+    semesters = [
+        {'semester': 'Sem 1', 'sgpa': 8.2, 'cgpa': 8.2, 'attendance': 88, 'backlogs': 0, 'credits_earned': 22, 'total_credits': 22},
+        {'semester': 'Sem 2', 'sgpa': 7.8, 'cgpa': 8.0, 'attendance': 82, 'backlogs': 0, 'credits_earned': 24, 'total_credits': 24},
+        {'semester': 'Sem 3', 'sgpa': 8.5, 'cgpa': 8.17, 'attendance': 90, 'backlogs': 0, 'credits_earned': 22, 'total_credits': 22},
+        {'semester': 'Sem 4', 'sgpa': 7.4, 'cgpa': 7.98, 'attendance': 76, 'backlogs': 1, 'credits_earned': 20, 'total_credits': 22},
+        {'semester': 'Sem 5', 'sgpa': 8.8, 'cgpa': 8.14, 'attendance': 92, 'backlogs': 0, 'credits_earned': 24, 'total_credits': 24},
+        {'semester': 'Sem 6', 'sgpa': 8.1, 'cgpa': 8.13, 'attendance': 85, 'backlogs': 0, 'credits_earned': 22, 'total_credits': 22},
+    ]
+    for s in semesters:
+        s['student_roll'] = roll_number
+    db['academic_records'].insert_many(semesters)
+
+    # Subject-wise marks for latest semester
+    subjects = [
+        {'subject': 'Machine Learning',      'code': 'CS601', 'internal': 38, 'external': 52, 'total': 90, 'grade': 'O',  'credits': 4},
+        {'subject': 'Computer Networks',     'code': 'CS602', 'internal': 32, 'external': 40, 'total': 72, 'grade': 'A',  'credits': 4},
+        {'subject': 'Cloud Computing',       'code': 'CS603', 'internal': 36, 'external': 48, 'total': 84, 'grade': 'A+', 'credits': 3},
+        {'subject': 'Software Engineering',  'code': 'CS604', 'internal': 28, 'external': 38, 'total': 66, 'grade': 'B+', 'credits': 3},
+        {'subject': 'Data Analytics Lab',    'code': 'CS605', 'internal': 40, 'external': 45, 'total': 85, 'grade': 'A+', 'credits': 4},
+        {'subject': 'Mini Project',          'code': 'CS606', 'internal': 42, 'external': 50, 'total': 92, 'grade': 'O',  'credits': 4},
+    ]
+    for sub in subjects:
+        sub['student_roll'] = roll_number
+        sub['semester'] = 'Sem 6'
+    db['academic_subjects'].insert_many(subjects)
+
+
+@student_bp.route('/api/student/academics', methods=['GET'])
+@login_required
+def get_my_academics():
+    """
+    STUDENT-FACING
+    Returns academic records (semester-wise CGPA/SGPA/attendance/backlogs)
+    and subject-wise marks for the latest semester.
+    Seeds sample data for demo accounts if none exists.
+    """
+    try:
+        db = get_db()
+        user_email = session.get('user_email', '')
+        roll_number = session.get('user_roll', '')
+
+        if not roll_number:
+            # Fallback: try to find roll from users collection
+            user = db['users'].find_one({'email': user_email})
+            roll_number = user.get('roll_number', '') if user else ''
+
+        if not roll_number:
+            return jsonify({
+                'success': True,
+                'data': {'records': [], 'subjects': [], 'summary': {}},
+                'message': 'No roll number found'
+            })
+
+        # Seed demo data if needed
+        if is_demo_account():
+            _seed_demo_academics(db, roll_number)
+
+        # Fetch semester records
+        records = list(db['academic_records'].find(
+            {'student_roll': roll_number}
+        ).sort('semester', 1))
+
+        formatted_records = []
+        for r in records:
+            formatted_records.append({
+                'semester': r.get('semester', ''),
+                'sgpa': r.get('sgpa', 0),
+                'cgpa': r.get('cgpa', 0),
+                'attendance': r.get('attendance', 0),
+                'backlogs': r.get('backlogs', 0),
+                'credits_earned': r.get('credits_earned', 0),
+                'total_credits': r.get('total_credits', 0),
+            })
+
+        # Fetch subject-wise marks for latest semester
+        latest_sem = records[-1].get('semester', '') if records else ''
+        subjects = list(db['academic_subjects'].find(
+            {'student_roll': roll_number, 'semester': latest_sem}
+        ))
+        formatted_subjects = []
+        for s in subjects:
+            formatted_subjects.append({
+                'subject': s.get('subject', ''),
+                'code': s.get('code', ''),
+                'internal': s.get('internal', 0),
+                'external': s.get('external', 0),
+                'total': s.get('total', 0),
+                'grade': s.get('grade', ''),
+                'credits': s.get('credits', 0),
+            })
+
+        # Calculate summary
+        total_credits_earned = sum(r.get('credits_earned', 0) for r in records)
+        total_credits_available = sum(r.get('total_credits', 0) for r in records)
+        current_cgpa = records[-1].get('cgpa', 0) if records else 0
+        current_sgpa = records[-1].get('sgpa', 0) if records else 0
+        avg_attendance = round(sum(r.get('attendance', 0) for r in records) / max(len(records), 1), 1)
+        total_backlogs = sum(r.get('backlogs', 0) for r in records)
+
+        summary = {
+            'current_cgpa': current_cgpa,
+            'current_sgpa': current_sgpa,
+            'current_semester': latest_sem,
+            'total_credits': f'{total_credits_earned}/{total_credits_available}',
+            'avg_attendance': avg_attendance,
+            'total_backlogs': total_backlogs,
+            'total_semesters': len(records),
+        }
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'records': formatted_records,
+                'subjects': formatted_subjects,
+                'summary': summary,
+            }
+        })
+
+    except Exception as e:
+        print(f'[ERROR] get_my_academics: {e}')
+        return jsonify({'error': safe_error(e, 'student_api')}), 500

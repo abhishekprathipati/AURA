@@ -1,200 +1,983 @@
-﻿{% extends 'base.html' %}
-{% set show_nav = false %}
-
-{% block title %}Mental Wellness - AURA{% endblock %}
-
-{% block body_class %}mental-page{% endblock %}
-
-{% block extra_css %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mental Support — AURA</title>
+<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
 <script>
-// Set dark theme immediately before any CSS loads
-(function() {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    document.documentElement.classList.add('mental-page-root');
+// Force dark theme immediately — zero flash
+document.documentElement.setAttribute('data-theme', 'dark');
+document.documentElement.classList.add('mc-root');
+</script>
+<style>
+/* ── Reset & Root ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #07070e;
+  --surface:    #0f0f1c;
+  --elevated:   #1a1a2e;
+  --border:     #26264a;
+  --border-lit: #38386a;
+  --accent:     #7866f0;
+  --accent-dim: rgba(120,102,240,.18);
+  --accent2:    #38d5b4;
+  --text:       #e8e8f0;
+  --muted:      #8888a8;
+  --dim:        #56566a;
+  --user-bg:    linear-gradient(135deg, #4f3ebd 0%, #6e41c0 100%);
+  --ai-bg:      #141428;
+  --ai-border:  #7866f0;
+  --danger:     #f87171;
+  --success:    #4ade80;
+  --warn:       #fbbf24;
+  --radius-sm:  8px;
+  --radius:     14px;
+  --radius-lg:  20px;
+  --shadow:     0 8px 32px rgba(0,0,0,.5);
+  --shadow-sm:  0 2px 8px rgba(0,0,0,.4);
+  --font:       -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --mono:       'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --sidebar-w:  264px;
+  --header-h:   56px;
+  --input-h:    80px;
+}
+
+html, body {
+  width: 100%; height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-lit); border-radius: 99px; }
+
+/* ── Layout ───────────────────────────────────────────────── */
+.mc-layout {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+.mc-sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform .3s cubic-bezier(.4,0,.2,1), width .3s ease;
+  flex-shrink: 0;
+}
+
+.mc-sidebar-top {
+  padding: 18px 16px 12px;
+  flex-shrink: 0;
+}
+
+.mc-logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+
+.mc-logo-icon {
+  width: 34px; height: 34px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+
+.mc-logo-text {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.mc-new-btn {
+  width: 100%;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s, box-shadow .2s, transform .15s;
+}
+
+.mc-new-btn:hover {
+  background: #8b7cf8;
+  box-shadow: 0 4px 16px rgba(120,102,240,.4);
+  transform: translateY(-1px);
+}
+
+.mc-new-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* History section */
+.mc-history-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+
+.mc-section-label {
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: 8px 4px 6px;
+}
+
+.mc-history-list { display: flex; flex-direction: column; gap: 2px; }
+
+.mc-history-empty {
+  text-align: center;
+  color: var(--dim);
+  font-size: .82rem;
+  padding: 24px 8px;
+  line-height: 1.6;
+}
+
+.mc-history-group-label {
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: 10px 6px 4px;
+}
+
+.mc-history-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background .15s;
+  min-width: 0;
+  position: relative;
+}
+
+.mc-history-item:hover { background: var(--elevated); }
+.mc-history-item.active { background: var(--accent-dim); }
+.mc-history-item.active .mc-history-title { color: var(--accent); }
+
+.mc-history-icon { font-size: 14px; flex-shrink: 0; }
+
+.mc-history-content {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px;
+}
+
+.mc-history-title {
+  font-size: .84rem;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mc-history-meta { font-size: .72rem; color: var(--dim); }
+
+.mc-history-del {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--dim);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.mc-history-item:hover .mc-history-del { display: block; }
+.mc-history-del:hover { color: var(--danger); background: rgba(248,113,113,.1); }
+
+/* Sidebar footer */
+.mc-sidebar-footer {
+  flex-shrink: 0;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.mc-sidebar-links {
+  display: flex; gap: 8px;
+}
+
+.mc-sidebar-link {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 8px 6px;
+  border-radius: var(--radius-sm);
+  font-size: .8rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background .2s, color .2s;
+}
+
+.mc-sidebar-link.primary {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--border);
+}
+
+.mc-sidebar-link.primary:hover { background: rgba(120,102,240,.3); }
+
+.mc-sidebar-link.ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.mc-sidebar-link.ghost:hover { background: var(--elevated); color: var(--text); }
+
+/* Wellness tip card */
+.mc-tip-card {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: .8rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.mc-tip-card strong { color: var(--accent2); }
+
+/* ── Main area ────────────────────────────────────────────── */
+.mc-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--bg);
+  position: relative;
+}
+
+/* ── Top header ───────────────────────────────────────────── */
+.mc-header {
+  height: var(--header-h);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.mc-model-tag {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .92rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.mc-status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 8px var(--success);
+  animation: pulseGreen 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseGreen {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--success); }
+  50% { opacity: .7; box-shadow: 0 0 14px var(--success); }
+}
+
+.mc-status-dot.thinking {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: pulseAccent 1s ease-in-out infinite;
+}
+
+@keyframes pulseAccent {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+
+.mc-header-actions {
+  display: flex; align-items: center; gap: 10px;
+}
+
+.mc-user-chip {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 5px 12px;
+}
+
+.mc-hdr-btn {
+  display: flex; align-items: center;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .2s, color .2s, border-color .2s;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.mc-hdr-btn:hover { background: var(--elevated); color: var(--text); }
+
+.mc-zen-btn.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+/* ── Messages ─────────────────────────────────────────────── */
+.mc-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  scroll-behavior: smooth;
+}
+
+/* Welcome state */
+.mc-welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  gap: 16px;
+  animation: fadeUp .5s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.mc-welcome-glow {
+  width: 72px; height: 72px;
+  border-radius: 22px;
+  background: var(--accent-dim);
+  border: 1.5px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+  box-shadow: 0 0 32px rgba(120,102,240,.25);
+  animation: floatGlow 4s ease-in-out infinite;
+}
+
+@keyframes floatGlow {
+  0%, 100% { transform: translateY(0); box-shadow: 0 0 32px rgba(120,102,240,.25); }
+  50% { transform: translateY(-6px); box-shadow: 0 8px 40px rgba(120,102,240,.4); }
+}
+
+.mc-welcome-title {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.mc-name-grad {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.mc-welcome-sub {
+  font-size: 1rem;
+  color: var(--muted);
+  max-width: 420px;
+  line-height: 1.6;
+}
+
+.mc-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  max-width: 640px;
+  margin-top: 8px;
+}
+
+.mc-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 16px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: .85rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: background .2s, border-color .2s, transform .15s;
+  white-space: nowrap;
+}
+
+.mc-chip:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* Message bubbles */
+.mc-msg {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  animation: msgIn .35s cubic-bezier(.22,.61,.36,1) both;
+}
+
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* User */
+.mc-msg.user { flex-direction: row-reverse; }
+
+.mc-msg.user .mc-bubble-wrap {
+  max-width: 72%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.mc-msg.user .mc-bubble {
+  background: var(--user-bg);
+  color: #fff;
+  border-radius: var(--radius-lg) var(--radius-sm) var(--radius-lg) var(--radius-lg);
+  padding: 12px 16px;
+  font-size: .93rem;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.mc-msg.user .mc-ts {
+  font-size: .7rem;
+  color: rgba(255,255,255,.6);
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* AI */
+.mc-msg.ai .mc-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  position: relative;
+  transition: box-shadow .3s;
+}
+
+.mc-msg.ai.thinking .mc-avatar {
+  box-shadow: 0 0 12px rgba(120,102,240,.6);
+  animation: pulseAccent 1s ease-in-out infinite;
+}
+
+.mc-msg.ai .mc-bubble-wrap { flex: 1; min-width: 0; max-width: 78%; }
+
+.mc-msg.ai .mc-bubble {
+  background: var(--ai-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--ai-border);
+  border-radius: var(--radius-sm) var(--radius-lg) var(--radius-lg) var(--radius-lg);
+  padding: 14px 16px;
+  font-size: .93rem;
+  line-height: 1.7;
+  word-break: break-word;
+  color: var(--text);
+}
+
+/* Markdown styling inside AI bubble */
+.mc-bubble h1, .mc-bubble h2, .mc-bubble h3 {
+  color: var(--text);
+  margin: 12px 0 6px;
+  font-weight: 600;
+}
+
+.mc-bubble h3 { font-size: 1rem; color: var(--accent); }
+
+.mc-bubble p { margin-bottom: 8px; }
+.mc-bubble p:last-child { margin-bottom: 0; }
+
+.mc-bubble ul, .mc-bubble ol {
+  padding-left: 20px; margin-bottom: 8px;
+}
+
+.mc-bubble li { margin-bottom: 4px; }
+
+.mc-bubble strong { color: #c8c8ee; font-weight: 600; }
+.mc-bubble em { color: var(--muted); }
+
+.mc-bubble code {
+  background: rgba(255,255,255,.08);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--mono);
+  font-size: .85em;
+}
+
+.mc-bubble pre {
+  background: #0c0c18;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.mc-bubble pre code {
+  background: none; border: none; padding: 0;
+  font-size: .85rem;
+}
+
+.mc-bubble blockquote {
+  border-left: 3px solid var(--accent2);
+  padding-left: 12px;
+  color: var(--muted);
+  margin: 8px 0;
+}
+
+/* Message footer (timestamp + actions) */
+.mc-msg-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.mc-ts { font-size: .7rem; color: var(--dim); }
+
+.mc-msg-actions {
+  display: flex; gap: 4px;
+  opacity: 0;
+  transition: opacity .2s;
+}
+
+.mc-msg.ai:hover .mc-msg-actions { opacity: 1; }
+
+.mc-action-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: .78rem;
+  cursor: pointer;
+  color: var(--dim);
+  transition: background .2s, color .2s, border-color .2s;
+}
+
+.mc-action-btn:hover {
+  background: var(--elevated);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* Typing indicator */
+.mc-typing .mc-bubble {
+  padding: 12px 18px;
+}
+
+.mc-typing-dots {
+  display: flex; gap: 5px; align-items: center;
+}
+
+.mc-typing-dots span {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: typingBounce 1.2s ease-in-out infinite;
+}
+
+.mc-typing-dots span:nth-child(2) { animation-delay: .15s; }
+.mc-typing-dots span:nth-child(3) { animation-delay: .3s; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: .5; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Scroll button */
+.mc-scroll-btn {
+  position: absolute;
+  bottom: calc(var(--input-h) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 6px 14px;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  z-index: 10;
+  display: flex; align-items: center; gap: 5px;
+  box-shadow: var(--shadow-sm);
+  transition: background .2s;
+}
+
+.mc-scroll-btn:hover { background: var(--accent-dim); }
+.mc-scroll-btn.hidden { display: none; }
+
+/* ── Input area ───────────────────────────────────────────── */
+.mc-input-region {
+  flex-shrink: 0;
+  padding: 10px 20px 14px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  position: relative;
+}
+
+.mc-mood-strip {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.mc-mood-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 4px 10px;
+  font-size: .82rem;
+  cursor: pointer;
+  color: var(--muted);
+  transition: background .15s, border-color .2s, transform .1s;
+}
+
+.mc-mood-btn:hover {
+  background: var(--elevated);
+  border-color: var(--border-lit);
+  transform: scale(1.12);
+}
+
+.mc-mood-btn span { font-size: .95rem; }
+
+.mc-input-pill {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  background: var(--elevated);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 8px 10px 8px 16px;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.mc-input-pill.focused {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(120,102,240,.15);
+}
+
+.mc-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: .95rem;
+  line-height: 1.5;
+  resize: none;
+  min-height: 24px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.mc-textarea::placeholder { color: var(--dim); }
+
+.mc-send-btn {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s, transform .15s, box-shadow .2s;
+  flex-shrink: 0;
+}
+
+.mc-send-btn:hover {
+  background: #8b7cf8;
+  transform: scale(1.06);
+  box-shadow: 0 4px 14px rgba(120,102,240,.4);
+}
+
+.mc-send-btn:disabled {
+  background: var(--dim);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.mc-send-btn svg { width: 16px; height: 16px; fill: #fff; }
+
+.mc-input-hint {
+  font-size: .72rem;
+  color: var(--dim);
+  margin-top: 6px;
+  text-align: center;
+  letter-spacing: .02em;
+}
+
+/* ── Zen Mode ─────────────────────────────────────────────── */
+.mc-layout.zen .mc-sidebar {
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ── Crisis banner ────────────────────────────────────────── */
+.mc-crisis-bar {
+  background: rgba(251,191,36,.08);
+  border: 1px solid rgba(251,191,36,.2);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: .75rem;
+  color: rgba(251,191,36,.8);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+/* ── Demo badge ───────────────────────────────────────────── */
+.demo-badge {
+  position: fixed;
+  top: 12px; right: 16px;
+  z-index: 9999;
+  background: rgba(245,158,11,.92);
+  color: #000;
+  padding: 5px 14px;
+  border-radius: 99px;
+  font-size: .75rem;
+  font-weight: 700;
+  backdrop-filter: blur(6px);
+}
+
+.demo-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  z-index: 99999;
+  background: rgba(0,0,0,.88);
+  backdrop-filter: blur(14px);
+  align-items: center; justify-content: center;
+}
+
+.demo-overlay.show { display: flex; }
+
+.demo-dialog {
+  background: #1e1b4b;
+  border: 2px solid #f59e0b;
+  border-radius: 20px;
+  padding: 48px;
+  max-width: 440px;
+  text-align: center;
+  color: #fff;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .mc-sidebar { display: none; }
+  .mc-messages { padding: 16px 12px; }
+  .mc-input-region { padding: 8px 12px 12px; }
+  .mc-welcome-title { font-size: 1.5rem; }
+}
+
+/* ── Shake animation for empty-submit ────────────────────── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+.mc-input-pill.shake { animation: shake .45s ease-in-out; }
+</style>
+</head>
+<body>
+
+<div class="mc-layout" id="mcLayout">
+
+  <!-- ── Sidebar ─────────────────────────────────────── -->
+  <aside class="mc-sidebar" id="mcSidebar">
+    <div class="mc-sidebar-top">
+      <div class="mc-logo">
+        <div class="mc-logo-icon">🧠</div>
+        <span class="mc-logo-text">AURA</span>
+      </div>
+      <button class="mc-new-btn" id="mcNewChat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        New Chat
+      </button>
+    </div>
+
+    <div class="mc-history-wrap">
+      <p class="mc-section-label">Recent</p>
+      <div id="mcHistoryList" class="mc-history-list">
+        <div class="mc-history-empty">No conversations yet.<br>Start one below!</div>
+      </div>
+    </div>
+
+    <div class="mc-sidebar-footer">
+      <div class="mc-tip-card">
+        <strong>💡 Wellness Tip</strong><br>
+        Taking 3 deep breaths activates your parasympathetic nervous system — instant calm.
+      </div>
+      <div class="mc-sidebar-links">
+        <a href="/student/dashboard" class="mc-sidebar-link primary">← Dashboard</a>
+        <a href="{{ url_for('auth.logout') }}" class="mc-sidebar-link ghost">Logout</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ────────────────────────────────────────── -->
+  <div class="mc-main">
+
+    <!-- Header -->
+    <header class="mc-header">
+      <div class="mc-model-tag">
+        <div class="mc-status-dot" id="mcStatusDot"></div>
+        AURA Mental Support
+      </div>
+      <div class="mc-header-actions">
+        <div class="mc-user-chip">{{ session.get('user_name', 'Student') }}</div>
+        <button class="mc-hdr-btn mc-zen-btn" id="mcZenBtn" title="Ctrl+Z">Zen Mode</button>
+        <a href="/student/dashboard" class="mc-hdr-btn">Dashboard</a>
+        <a href="{{ url_for('auth.logout') }}" class="mc-hdr-btn">Logout</a>
+      </div>
+    </header>
+
+    <!-- Messages -->
+    <div class="mc-messages" id="mcMessages">
+      <!-- Welcome state -->
+      <div class="mc-welcome" id="mcWelcome">
+        <div class="mc-welcome-glow">🧠</div>
+        <h1 class="mc-welcome-title">Hello, <span class="mc-name-grad">{{ session.get('user_name', 'there').split()[0] }}</span></h1>
+        <p class="mc-welcome-sub">I'm AURA — your mental wellness companion. Share what's on your mind and we'll work through it together.</p>
+        <div class="mc-chips-grid" id="mcChips">
+          <button class="mc-chip" data-prompt="I'm feeling really stressed about my exams">😓 Exam stress</button>
+          <button class="mc-chip" data-prompt="I've been feeling anxious lately and don't know why">😰 Anxiety</button>
+          <button class="mc-chip" data-prompt="I want to practice mindfulness and breathing">🧘 Mindfulness</button>
+          <button class="mc-chip" data-prompt="I'm having trouble sleeping and feel exhausted">😴 Sleep issues</button>
+          <button class="mc-chip" data-prompt="I'm feeling overwhelmed with everything">🌊 Overwhelmed</button>
+          <button class="mc-chip" data-prompt="I need help building better study habits">📚 Study habits</button>
+          <button class="mc-chip" data-prompt="I've been feeling lonely and isolated">💙 Loneliness</button>
+          <button class="mc-chip" data-prompt="I want motivation and to improve my mood">⚡ Motivation</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll to bottom -->
+    <button class="mc-scroll-btn hidden" id="mcScrollBtn">↓ New messages</button>
+
+    <!-- Input region -->
+    <div class="mc-input-region">
+      <div class="mc-crisis-bar">
+        🆘 In a mental health crisis? Call <strong>988</strong> (US) or your local emergency number. AURA is support, not a substitute for professional help.
+      </div>
+      <div class="mc-mood-strip">
+        <button class="mc-mood-btn" data-mood="happy" title="I'm feeling happy"><span>😊</span> Happy</button>
+        <button class="mc-mood-btn" data-mood="sad" title="I'm feeling sad"><span>😔</span> Sad</button>
+        <button class="mc-mood-btn" data-mood="anxious" title="I'm feeling anxious"><span>😰</span> Anxious</button>
+        <button class="mc-mood-btn" data-mood="angry" title="I'm feeling angry"><span>😤</span> Angry</button>
+        <button class="mc-mood-btn" data-mood="tired" title="I'm feeling tired"><span>😴</span> Tired</button>
+      </div>
+      <div class="mc-input-pill" id="mcInputPill">
+        <textarea id="mcInput" class="mc-textarea" rows="1"
+          placeholder="Share what's on your mind..." autocomplete="off" spellcheck="true"></textarea>
+        <button id="mcSend" class="mc-send-btn" aria-label="Send message">
+          <svg viewBox="0 0 24 24"><path d="M2 12L22 2 12 22v-8L2 12z"/></svg>
+        </button>
+      </div>
+      <p class="mc-input-hint">Enter to send · Shift+Enter for new line · Ctrl+Z for Zen Mode · / to focus</p>
+    </div>
+
+  </div><!-- .mc-main -->
+</div><!-- .mc-layout -->
+
+{% if is_demo %}
+<div class="demo-badge" id="demoBadge">
+  💬 Demo: <span id="demoRemaining">{{ demo_chat_limit - demo_chat_used }}</span>/{{ demo_chat_limit }} left
+</div>
+<div class="demo-overlay" id="demoOverlay">
+  <div class="demo-dialog">
+    <div style="font-size:48px; margin-bottom:16px">💬</div>
+    <h2 style="font-size:22px; margin-bottom:8px; color:#f59e0b;">Demo Limit Reached</h2>
+    <p style="color:#c4b5fd; font-size:14px; line-height:1.6; margin-bottom:24px">
+      You've used all {{ demo_chat_limit }} demo messages. Register for unlimited access.
+    </p>
+    <a href="/login" style="display:inline-block; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; padding:12px 32px; border-radius:12px; text-decoration:none; font-weight:700; font-size:15px;">← Back to Login</a>
+  </div>
+</div>
+<script>
+(function(){
+  let used = {{ demo_chat_used }};
+  const limit = {{ demo_chat_limit }};
+  const badge = document.getElementById('demoBadge');
+  const remEl = document.getElementById('demoRemaining');
+  const overlay = document.getElementById('demoOverlay');
+  if (used >= limit) { badge.style.display='none'; overlay.classList.add('show'); }
+  const origFetch = window.fetch;
+  window.fetch = function(url, opts) {
+    return origFetch.apply(this, arguments).then(resp => {
+      if (typeof url === 'string' && url.includes('/api/chat') && opts && opts.method === 'POST') {
+        if (resp.status === 200) {
+          used++;
+          const left = Math.max(0, limit - used);
+          remEl.textContent = left;
+          if (left <= 2) badge.style.background = 'rgba(239,68,68,.95)';
+          if (left <= 0) badge.style.display = 'none';
+        } else if (resp.status === 403) {
+          badge.style.display = 'none';
+          overlay.classList.add('show');
+        }
+      }
+      return resp;
+    });
+  };
 })();
 </script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/mental-chatbot.css') }}?v=20260124">
-<style>
-/* CRITICAL: Override ALL base styles for mental chat page */
-html.mental-page-root,
-body.mental-page {
-    height: 100vh !important;
-    width: 100vw !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    background: #0f0f11 !important;
-    color: #e8e8ed !important;
-}
-
-body.mental-page main {
-    padding: 0 !important;
-    max-width: none !important;
-    margin: 0 !important;
-    height: 100vh !important;
-    background: #0f0f11 !important;
-}
-
-body.mental-page header,
-body.mental-page .dashboard-nav,
-body.mental-page nav.dashboard-nav {
-    display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    opacity: 0 !important;
-}
-
-/* Force dark theme variables */
-body.mental-page {
-    --bg-primary: #0f0f11 !important;
-    --bg-surface: #1a1a1f !important;
-    --bg-elevated: #232329 !important;
-    --bg-input: #2a2a32 !important;
-    --text-main: #e8e8ed !important;
-    --text-muted: #9898a6 !important;
-    --border-color: #3a3a45 !important;
-    --accent: #8b7cf7 !important;
-}
-
-/* Override global button styles */
-body.mental-page .new-chat-btn {
-    background: #8b7cf7 !important;
-    color: #ffffff !important;
-    border: none !important;
-    border-radius: 12px !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
-}
-
-body.mental-page .gemini-container {
-    background: #0f0f11 !important;
-}
-
-body.mental-page .gemini-sidebar {
-    background: #1a1a1f !important;
-    border-color: #3a3a45 !important;
-}
-
-body.mental-page .chat-main {
-    background: #0f0f11 !important;
-}
-
-body.mental-page .input-pill {
-    background: #2a2a32 !important;
-    border-color: #3a3a45 !important;
-}
-
-body.mental-page .input-pill input,
-body.mental-page .input-pill textarea,
-body.mental-page #messageInput {
-    background: transparent !important;
-    color: #e8e8ed !important;
-    border: none !important;
-}
-
-body.mental-page .input-pill input::placeholder,
-body.mental-page #messageInput::placeholder {
-    color: #6b6b7a !important;
-}
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="gemini-container">
-    <!-- Sidebar -->
-    <aside class="gemini-sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <div class="sidebar-logo-icon">🧠</div>
-                <span>AURA</span>
-            </div>
-            <button class="new-chat-btn" id="newChatBtn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14M5 12h14"/>
-                </svg>
-                <span>New chat</span>
-            </button>
-        </div>
-        <div class="history-section">
-            <p class="section-label">Recent</p>
-            <div id="history-list" class="history-list">
-                <div class="history-empty">No conversations yet</div>
-            </div>
-        </div>
-    </aside>
-
-    <!-- Chat Viewport -->
-    <main class="chat-viewport">
-        <header class="chat-top-nav">
-            <div class="model-selector">
-                <span class="model-selector-icon">💬</span>
-                AURA Mental Support
-            </div>
-            <div class="nav-actions" style="display: flex; gap: 10px; align-items: center;">
-                <button id="theme-toggle" class="gemini-btn-icon" aria-label="Toggle theme" title="Switch theme">
-                    <span class="theme-icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                        </svg>
-                    </span>
-                </button>
-                <div class="user-profile">
-                    {{ session.get('user_name', 'Student') }}
-                </div>
-                <button class="zen-btn" id="zenModeToggle" title="Toggle Zen Mode">Zen Mode</button>
-                <a href="{{ url_for('auth.logout') }}" class="logout-btn" style="padding: 8px 14px; border-radius: 20px; background: var(--accent); color: white; text-decoration: none; font-size: 14px; transition: all 0.2s;">Logout</a>
-            </div>
-        </header>
-
-        <!-- Messages -->
-        <div id="chat-messages" class="messages-container">
-            <!-- Welcome State -->
-            <div class="welcome-state" id="welcomeState">
-                <h1>Hello, how can I help?</h1>
-                <p>I'm here to listen and support you. Share what's on your mind, and we'll work through it together.</p>
-                <div class="quick-chips">
-                    <button class="quick-chip" data-prompt="I'm feeling stressed about work">
-                        <span class="quick-chip-icon">😓</span> Feeling stressed
-                    </button>
-                    <button class="quick-chip" data-prompt="I need help with anxiety">
-                        <span class="quick-chip-icon">😰</span> Anxiety help
-                    </button>
-                    <button class="quick-chip" data-prompt="I want to practice mindfulness">
-                        <span class="quick-chip-icon">🧘</span> Mindfulness
-                    </button>
-                    <button class="quick-chip" data-prompt="I'm having trouble sleeping">
-                        <span class="quick-chip-icon">😴</span> Sleep issues
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Input Area -->
-        <div class="input-area-wrapper">
-            <form id="chatForm" class="input-pill">
-                <input type="text" id="chat-input" placeholder="Type your message here..." autocomplete="off" required>
-                <div class="input-actions">
-                    <button type="submit" id="send-btn" class="send-icon-btn">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                        </svg>
-                    </button>
-                </div>
-            </form>
-            <p class="input-disclaimer">AURA can provide support but is not a substitute for professional help.</p>
-        </div>
-    </main>
-</div>
+{% endif %}
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="{{ url_for('static', filename='js/theme-engine.js', v=10) }}"></script>
-<script src="{{ url_for('static', filename='js/chat-engine.js', v=12) }}"></script>
-<script>
-// Initialize theme and chat engines
-if (typeof initTheme === 'function') {
-    initTheme();
-}
-if (typeof initChat === 'function') {
-    initChat();
-}
-</script>
-{% endblock %}
+<script src="{{ url_for('static', filename='js/chat-engine.js') }}?v=20260305"></script>
+</body>
+</html>

@@ -3,6 +3,7 @@ from .student import student_bp
 from .proctor import proctor_bp
 from .chat import chat_bp
 from .parent import parent_bp
+from .connect_hub import connect_bp
 
 def init_routes(app):
     app.register_blueprint(auth_bp)
@@ -10,3 +11,4 @@ def init_routes(app):
     app.register_blueprint(proctor_bp, url_prefix='/proctor')
     app.register_blueprint(chat_bp)
     app.register_blueprint(parent_bp, url_prefix='/parent')
+    app.register_blueprint(connect_bp, url_prefix='/student')

@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from utils.database import get_db
 from models.user import UserModel
-from utils.auth_helpers import verify_password
+from utils.auth_helpers import verify_password, DEMO_EMAILS
+from utils.audit_logger import log_activity, AuditAction
+from utils.rate_limit import check_login_rate, record_failed_login, clear_login_attempts
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -14,6 +16,13 @@ def login():
         if not email or not password:
             flash('Email and password are required.', 'danger')
             return render_template('login.html')
+        
+        # ── Brute-force protection ──
+        ip = request.remote_addr or '0.0.0.0'
+        rate_check = check_login_rate(ip, email)
+        if not rate_check['allowed']:
+            flash(rate_check['message'], 'danger')
+            return render_template('login.html'), 429
         
         # Find user in MongoDB
         database = None
@@ -30,18 +39,34 @@ def login():
         user = users_collection.find_one({'email': email})
         
         if not user:
+            record_failed_login(ip, email)
             flash('Invalid email or password.', 'danger')
             return render_template('login.html')
         
         # Verify password
         if not verify_password(user['hashed_password'], password):
+            record_failed_login(ip, email)
             flash('Invalid email or password.', 'danger')
             return render_template('login.html')
+        
+        # Success — clear login rate limit
+        clear_login_attempts(ip, email)
         
         # Set session
         session['user_email'] = user['email']
         session['user_name'] = user['name']
         session['user_role'] = user['role']
+        session['user_department'] = user.get('department', '')
+        session['user_roll'] = user.get('roll_number', '')
+        session['is_demo'] = user['email'] in DEMO_EMAILS
+        
+        if user['role'] in ('proctor', 'hod'):
+            log_activity(
+                action=AuditAction.LOGIN,
+                target_type='session',
+                target_id=user['email'],
+                metadata={'role': user['role'], 'department': user.get('department', '')}
+            )
         
         flash(f'Welcome back, {user["name"]}!', 'success')
         
@@ -60,6 +85,13 @@ def login():
 @auth_bp.route('/logout')
 @auth_bp.route('/auth/logout')  # safety alias for legacy links
 def logout():
+    user_role = session.get('user_role', '')
+    if user_role in ('proctor', 'hod'):
+        log_activity(
+            action=AuditAction.LOGOUT,
+            target_type='session',
+            target_id=session.get('user_email', ''),
+        )
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('auth.login'))

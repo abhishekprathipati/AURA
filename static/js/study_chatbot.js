@@ -2,10 +2,12 @@
 // AURA STUDY CHAT ENGINE - ULTRA PRO v2
 // Advanced features, better UI, smooth scrolling
 // ============================================
+(function () {
+'use strict';
 
 // Request lock to prevent multiple simultaneous API calls
 let isStudyBotActive = false;
-let requestAbortController = null;
+let studyAbortController = null;
 let currentFileMeta = null;
 let conversationHistory = [];
 let currentStreamingMessage = null;
@@ -44,7 +46,6 @@ function initStudyChat() {
   // Ensure scroll container is properly initialized
   if (studyEls.chatMessages) {
     studyEls.chatMessages.scrollTop = studyEls.chatMessages.scrollHeight;
-    console.log('✅ Study Chat v2 initialized');
   }
   
   // Add smooth entrance animation
@@ -91,8 +92,8 @@ function setupStudyEventListeners() {
   // Input handlers with auto-grow
   if (studyEls.userInput) {
     const resizeTextarea = () => {
-      studyEls.userInput.style.height = '44px';
-      const newHeight = Math.min(studyEls.userInput.scrollHeight, 150);
+      studyEls.userInput.style.height = '24px';
+      const newHeight = Math.min(studyEls.userInput.scrollHeight, 140);
       studyEls.userInput.style.height = `${newHeight}px`;
     };
 
@@ -161,11 +162,15 @@ function setupStudyEventListeners() {
       setTimeout(() => btn.classList.remove('clicked'), 200);
       
       switch(action) {
-        case 'summarize': summarizeFile(); break;
-        case 'quiz': generateQuiz(); break;
+        case 'summarize':  summarizeFile();    break;
+        case 'quiz':       generateQuiz();     break;
         case 'flashcards': createFlashcards(); break;
-        case 'explain': explainConcept(); break;
-        case 'notes': generateNotes(); break;
+        case 'explain':    explainConcept();   break;
+        case 'notes':      generateNotes();    break;
+        case 'mindmap':    generateMindMap();  break;
+        case 'timeline':   generateTimeline(); break;
+        default:
+          addStudyMessage('system', `"${action}" is coming soon!`);
       }
     });
   });
@@ -210,8 +215,8 @@ function setupKeyboardShortcuts() {
     }
     
     // Escape = Cancel current request
-    if (e.key === 'Escape' && isStudyBotActive && requestAbortController) {
-      requestAbortController.abort();
+    if (e.key === 'Escape' && isStudyBotActive && studyAbortController) {
+      studyAbortController.abort();
       addStudyMessage('system', 'Request cancelled');
       setStudyBusyState(false);
     }
@@ -267,8 +272,6 @@ async function handleFileUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
 
-  console.log('File selected:', file.name, file.type, file.size);
-  
   // Validate file size (max 20MB)
   if (file.size > 20 * 1024 * 1024) {
     addStudyMessage('error', 'File too large. Maximum size is 20MB.');
@@ -319,13 +322,12 @@ async function handleFileUpload(e) {
     `);
 
     // Update UI
-    updateFileIndicator(currentFileMeta.name);
+    updateFileIndicator(currentFileMeta.name, currentFileMeta.size);
     addFileToActiveList(currentFileMeta.name);
     
     smoothScrollToBottom();
 
   } catch (error) {
-    console.error('Upload error:', error);
     removeUploadProgress(progressId);
     addStudyMessage('error', `Upload failed: ${error.message}`);
   } finally {
@@ -373,11 +375,11 @@ function removeUploadProgress(progressId) {
   }
 }
 
-function updateFileIndicator(fileName) {
+function updateFileIndicator(fileName, fileSize) {
   if (studyEls.userInput) {
     studyEls.userInput.placeholder = `Ask about "${fileName}"...`;
   }
-  
+
   // Add file badge to input area
   let badge = document.querySelector('.file-badge');
   if (!badge) {
@@ -385,7 +387,22 @@ function updateFileIndicator(fileName) {
     badge.className = 'file-badge';
     studyEls.chatForm?.prepend(badge);
   }
-  badge.innerHTML = `<span class="file-badge-icon">📄</span> ${fileName} <button class="file-badge-remove" onclick="clearCurrentFile()">×</button>`;
+  badge.innerHTML = `<span class="file-badge-icon">📄</span> ${escapeHtml(fileName)} <button class="file-badge-remove" onclick="clearCurrentFile()">×</button>`;
+
+  // Update sidebar status card
+  const emptyEl  = document.getElementById('scFileStatusEmpty');
+  const loadedEl = document.getElementById('scFileStatusLoaded');
+  const nameEl   = document.getElementById('scFileStatusName');
+  const sizeEl   = document.getElementById('scFileStatusSize');
+  if (emptyEl)  emptyEl.style.display  = 'none';
+  if (loadedEl) loadedEl.style.display = 'flex';
+  if (nameEl)   nameEl.textContent     = fileName;
+  if (sizeEl && fileSize) {
+    const kb = fileSize > 1024 * 1024
+      ? (fileSize / (1024 * 1024)).toFixed(1) + ' MB'
+      : Math.round(fileSize / 1024) + ' KB';
+    sizeEl.textContent = kb;
+  }
 }
 
 function clearCurrentFile() {
@@ -393,8 +410,13 @@ function clearCurrentFile() {
   const badge = document.querySelector('.file-badge');
   if (badge) badge.remove();
   if (studyEls.userInput) {
-    studyEls.userInput.placeholder = 'Ask a question or upload a file...';
+    studyEls.userInput.placeholder = 'Ask a question, explain a concept, or upload a file…';
   }
+  // Reset sidebar status card
+  const emptyEl  = document.getElementById('scFileStatusEmpty');
+  const loadedEl = document.getElementById('scFileStatusLoaded');
+  if (emptyEl)  emptyEl.style.display  = 'flex';
+  if (loadedEl) loadedEl.style.display = 'none';
 }
 
 function addFileToActiveList(fileName) {
@@ -426,11 +448,13 @@ function addFileToActiveList(fileName) {
 // ============================================
 function setStudyBusyState(isBusy, label = '') {
   isStudyBotActive = isBusy;
-  
+
   if (studyEls.sendBtn) {
     studyEls.sendBtn.disabled = isBusy;
     studyEls.sendBtn.classList.toggle('loading', isBusy);
-    studyEls.sendBtn.innerHTML = isBusy ? '<span class="btn-spinner"></span>' : '🚀';
+    studyEls.sendBtn.innerHTML = isBusy
+      ? '<span class="btn-spinner" style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite"></span>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>';
   }
   
   if (studyEls.userInput) {
@@ -463,7 +487,6 @@ async function handleStudySendMessage(e) {
   if (e) e.preventDefault();
   
   if (isStudyBotActive) {
-    console.warn('Study bot is processing');
     return;
   }
   
@@ -483,14 +506,14 @@ async function handleStudySendMessage(e) {
   
   // Clear input
   studyEls.userInput.value = '';
-  studyEls.userInput.style.height = '44px';
+  studyEls.userInput.style.height = '24px';
   updateSendButtonState();
   
   // Show typing indicator
   const typingId = addTypingIndicator();
   
   try {
-    requestAbortController = new AbortController();
+    studyAbortController = new AbortController();
     
     const formData = new FormData();
     formData.append('prompt', userText);
@@ -502,12 +525,10 @@ async function handleStudySendMessage(e) {
       formData.append('file_id', currentFileMeta.id);
     }
     
-    console.log('Sending to /api/study/analyze');
-    
     const response = await fetch('/api/study/analyze', {
       method: 'POST',
       body: formData,
-      signal: requestAbortController.signal
+      signal: studyAbortController.signal
     });
     
     removeTypingIndicator(typingId);
@@ -515,22 +536,35 @@ async function handleStudySendMessage(e) {
     const data = await response.json().catch(() => ({}));
     
     if (!response.ok) {
+      // Handle demo limit specifically
+      if (response.status === 403 && (data.demo_limited || data.demo_restricted)) {
+        const limitMsg = data.message || 'Demo limit reached. Register a real account for unlimited access.';
+        addStudyMessage('error', '⚠️ ' + limitMsg);
+        setStudyBusyState(false);
+        return;
+      }
       throw new Error(data.error || `HTTP ${response.status}`);
     }
     
     if (data.answer) {
       // Add AI response with typing effect
-      await addStudyMessageWithTyping('ai', data.answer);
-      
+      const msgDiv = await addStudyMessageWithTyping('ai', data.answer);
+
       // Update conversation history
       conversationHistory.push(
         { role: 'user', content: userText },
         { role: 'assistant', content: data.answer }
       );
-      
+
       // Save to local storage
       saveStudyMessage(userText, data.answer);
-      
+
+      // Auto-detect quiz content and add interactive CTA
+      const parsedQs = parseQuizQuestions(data.answer);
+      if (parsedQs.length >= 2 && msgDiv) {
+        requestAnimationFrame(() => maybeAddQuizCTA(msgDiv, data.answer, parsedQs));
+      }
+
       // Show action buttons after response
       showPostResponseActions();
     } else {
@@ -543,12 +577,11 @@ async function handleStudySendMessage(e) {
     if (error.name === 'AbortError') {
       addStudyMessage('system', 'Request cancelled');
     } else {
-      console.error('Error:', error);
       addStudyMessage('error', `${error.message || 'Something went wrong. Please try again.'}`);
     }
   } finally {
     setStudyBusyState(false);
-    requestAbortController = null;
+    studyAbortController = null;
   }
 }
 
@@ -562,11 +595,8 @@ function shakeInput() {
 // ============================================
 function addStudyMessage(role, text) {
   if (!studyEls.chatMessages) {
-    console.error('Chat messages container not found!');
     return null;
   }
-  
-  console.log(`Adding ${role} message:`, text.substring(0, 50) + '...');
   
   const messageDiv = document.createElement('div');
   messageDiv.className = `message ${role}-message`;
@@ -613,25 +643,25 @@ function addStudyMessage(role, text) {
   // Add entrance animation
   messageDiv.classList.add('message-enter');
   studyEls.chatMessages.appendChild(messageDiv);
-  
-  // Trigger animation
+
+  // Trigger animation + post-render (LaTeX, code, flashcard CTA)
   requestAnimationFrame(() => {
     messageDiv.classList.add('message-enter-active');
+    if (role === 'ai') {
+      renderLatexAndCode(messageDiv);
+      maybeAddFlashcardCTA(messageDiv, text);
+    }
   });
-  
+
   smoothScrollToBottom();
-  
-  console.log('Message added successfully');
+
   return messageDiv;
 }
 
 async function addStudyMessageWithTyping(role, text) {
   if (!studyEls.chatMessages) {
-    console.error('Chat messages container not found!');
     return null;
   }
-  
-  console.log(`Adding AI message with typing:`, text.substring(0, 100) + '...');
   
   const messageDiv = document.createElement('div');
   messageDiv.className = `message ${role}-message`;
@@ -664,9 +694,7 @@ async function addStudyMessageWithTyping(role, text) {
     try {
       const parsed = marked.parse(text);
       bodyEl.innerHTML = parsed;
-      console.log('Markdown parsed successfully');
     } catch (e) {
-      console.error('Markdown parse error:', e);
       bodyEl.textContent = text;
     }
     
@@ -675,10 +703,15 @@ async function addStudyMessageWithTyping(role, text) {
       block.classList.add('hljs');
     });
   } else {
-    console.warn('marked.js not available, using plain text');
     bodyEl.textContent = text;
   }
-  
+
+  // Post-render: LaTeX math + code syntax highlighting + flashcard CTA
+  requestAnimationFrame(() => {
+    renderLatexAndCode(messageDiv);
+    maybeAddFlashcardCTA(messageDiv, text);
+  });
+
   // Trigger animation
   requestAnimationFrame(() => {
     messageDiv.classList.add('message-enter-active');
@@ -686,7 +719,6 @@ async function addStudyMessageWithTyping(role, text) {
   
   smoothScrollToBottom();
   
-  console.log('AI message added successfully');
   return messageDiv;
 }
 
@@ -761,24 +793,9 @@ function showPostResponseActions() {
 // ============================================
 function smoothScrollToBottom() {
   if (!studyEls.chatMessages) return;
-  
-  const el = studyEls.chatMessages;
-  
-  const doScroll = () => {
-    el.scrollTo({
-      top: el.scrollHeight,
-      behavior: 'smooth'
-    });
-  };
-  
-  // Multiple scroll attempts for dynamic content
-  doScroll();
-  setTimeout(doScroll, 50);
-  setTimeout(doScroll, 150);
-  setTimeout(doScroll, 300);
-  
+
   requestAnimationFrame(() => {
-    el.scrollTop = el.scrollHeight;
+    studyEls.chatMessages.scrollTop = studyEls.chatMessages.scrollHeight;
   });
 }
 
@@ -818,7 +835,6 @@ function loadStudyChats() {
     const stored = localStorage.getItem(LS_STUDY_CHATS);
     studyChats = stored ? JSON.parse(stored) : [];
   } catch (err) {
-    console.error('Error loading chats:', err);
     studyChats = [];
   }
 }
@@ -827,7 +843,7 @@ function saveStudyChats() {
   try {
     localStorage.setItem(LS_STUDY_CHATS, JSON.stringify(studyChats));
   } catch (err) {
-    console.error('Error saving chats:', err);
+    // silently handled
   }
 }
 
@@ -995,16 +1011,17 @@ function deleteChat(chatId, event) {
 // ============================================
 async function summarizeFile() {
   if (isStudyBotActive) return;
-  
+
   if (!currentFileMeta?.id) {
-    addStudyMessage('system', 'Please upload a document first.');
-    setTimeout(() => studyEls.fileInput?.click(), 300);
+    // Fallback: summarize the conversation context
+    studyEls.userInput.value = 'Please summarize all the key points and main concepts from our conversation so far. Organize it clearly with headings.';
+    handleStudySendMessage();
     return;
   }
-  
+
   hideWelcomeState();
   setStudyBusyState(true);
-  
+
   const typingId = addTypingIndicator();
   
   try {
@@ -1034,37 +1051,77 @@ async function summarizeFile() {
 
 async function generateQuiz() {
   if (isStudyBotActive) return;
-  
-  if (!currentFileMeta?.id) {
-    addStudyMessage('system', 'Please upload a document first.');
-    setTimeout(() => studyEls.fileInput?.click(), 300);
-    return;
-  }
-  
+
   hideWelcomeState();
   setStudyBusyState(true);
-  
+
   const typingId = addTypingIndicator();
-  
+
+  // Structured MCQ prompt — works with or without a file
+  const quizPrompt = [
+    'Generate a 8-question multiple-choice quiz' +
+    (currentFileMeta ? ` based on the uploaded document "${currentFileMeta.name}"` : ' on the topic we have been discussing or a general knowledge topic of your choice') + '.',
+    '',
+    'For EACH question use EXACTLY this format (do not deviate):',
+    '',
+    '**Q1.** [Question text]',
+    'A) [Option A]',
+    'B) [Option B]',
+    'C) [Option C]',
+    'D) [Option D]',
+    '**Correct**: [A/B/C/D]',
+    '**Explanation**: [One sentence explanation]',
+    '',
+    '---',
+    '',
+    'Number questions Q1 through Q8. Every question MUST have exactly 4 options (A–D), a **Correct** line, and an **Explanation** line.',
+  ].join('\n');
+
   try {
-    const response = await fetch('/study/quiz', {
+    const formData = new FormData();
+    formData.append('prompt', quizPrompt);
+    formData.append('conversation_history', JSON.stringify(conversationHistory.slice(-6)));
+    if (currentFileMeta?.id) formData.append('file_id', currentFileMeta.id);
+
+    const response = await fetch('/api/study/analyze', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ file_id: currentFileMeta.id })
+      body: formData,
     });
-    
-    const data = await response.json();
+
+    const data = await response.json().catch(() => ({}));
     removeTypingIndicator(typingId);
-    
+
     if (!response.ok) throw new Error(data.error || 'Quiz generation failed');
-    
-    await addStudyMessageWithTyping('ai', data.quiz || 'Could not generate quiz.');
-    
-    saveStudyMessage(`Quiz: ${currentFileMeta.name}`, data.quiz);
-    
+
+    const rawText = data.answer || '';
+    const questions = parseQuizQuestions(rawText);
+
+    if (questions.length > 0) {
+      // Show a brief "Quiz ready!" message instead of the raw text wall
+      const summaryLines = [`**Quiz ready!** Generated **${questions.length} questions**.`];
+      if (currentFileMeta) summaryLines.push(`Based on: *${currentFileMeta.name}*`);
+      summaryLines.push('\nClick **Take Interactive Quiz** below to start.');
+
+      const msgDiv = await addStudyMessageWithTyping('ai', summaryLines.join('\n'));
+
+      // Append interactive CTA
+      if (msgDiv) {
+        requestAnimationFrame(() => maybeAddQuizCTA(msgDiv, rawText, questions));
+      }
+
+      // Auto-launch quiz modal after short delay
+      setTimeout(() => openQuizMode(questions), 700);
+
+      saveStudyMessage('Generate interactive quiz', summaryLines.join('\n'));
+    } else {
+      // Fallback: render raw text if parsing fails
+      await addStudyMessageWithTyping('ai', rawText || 'Could not generate quiz.');
+      saveStudyMessage('Generate quiz', rawText);
+    }
+
   } catch (error) {
     removeTypingIndicator(typingId);
-    addStudyMessage('error', `${error.message}`);
+    addStudyMessage('error', error.message);
   } finally {
     setStudyBusyState(false);
   }
@@ -1087,12 +1144,19 @@ async function createFlashcards() {
     const data = await response.json();
     
     removeTypingIndicator(typingId);
-    
+
     if (!response.ok) throw new Error(data.error || 'Flashcard generation failed');
-    
-    await addStudyMessageWithTyping('ai', data.answer || 'Could not generate flashcards.');
-    
-    saveStudyMessage('Generate flashcards', data.answer);
+
+    const answer = data.answer || 'Could not generate flashcards.';
+    await addStudyMessageWithTyping('ai', answer);
+
+    saveStudyMessage('Generate flashcards', answer);
+
+    // Auto-launch flashcard modal if parseable cards found
+    const cards = parseFlashcards(answer);
+    if (cards.length > 0) {
+      setTimeout(() => openFlashcardMode(answer), 600);
+    }
     
   } catch (error) {
     removeTypingIndicator(typingId);
@@ -1103,21 +1167,50 @@ async function createFlashcards() {
 }
 
 async function explainConcept() {
-  const concept = prompt('What concept would you like explained?');
-  if (!concept) return;
-  
-  studyEls.userInput.value = `Explain this concept in simple terms: ${concept}`;
+  const typed = studyEls.userInput?.value.trim();
+  if (typed) {
+    // If user has something typed, explain that
+    studyEls.userInput.value = `Explain "${typed}" in simple, clear terms with real-world examples. Cover: what it is, how it works, why it matters, and any common misconceptions.`;
+  } else {
+    // Prompt user to type something
+    if (studyEls.userInput) {
+      studyEls.userInput.focus();
+      studyEls.userInput.placeholder = '✏️ Type a concept or topic to explain, then press Enter...';
+      setTimeout(() => {
+        if (studyEls.userInput) {
+          studyEls.userInput.placeholder = 'Ask a question, explain a concept, or upload a file…';
+        }
+      }, 4000);
+    }
+    return;
+  }
+  handleStudySendMessage();
+}
+
+async function generateMindMap() {
+  const prompt = currentFileMeta?.id
+    ? `Create a detailed mind map of the key concepts from the uploaded document "${currentFileMeta.name}". Use markdown with headings and nested bullet points to show hierarchical relationships. Include: main topic, major branches, sub-topics, and key connections.`
+    : `Create a structured mind map of the topic we have been discussing. Use markdown headings (##, ###) and nested bullet points to show all key concepts, relationships, and connections clearly.`;
+
+  studyEls.userInput.value = prompt;
+  handleStudySendMessage();
+}
+
+async function generateTimeline() {
+  const prompt = currentFileMeta?.id
+    ? `Create a chronological timeline from the uploaded document "${currentFileMeta.name}". Format each entry as:\n**[Date/Period]** — [Event/Development]\n- Context: ...\n- Significance: ...\n\nCover all major events, milestones, and developments in order.`
+    : `Create a chronological timeline of key events and developments from what we have been discussing. Format each entry as: **[Date/Period]** — [Description with context and significance].`;
+
+  studyEls.userInput.value = prompt;
   handleStudySendMessage();
 }
 
 async function generateNotes() {
-  if (!currentFileMeta?.id) {
-    addStudyMessage('system', 'Please upload a document first.');
-    setTimeout(() => studyEls.fileInput?.click(), 300);
-    return;
-  }
-  
-  studyEls.userInput.value = 'Generate comprehensive study notes from this document with key points, definitions, and important concepts organized by topic.';
+  const prompt = currentFileMeta?.id
+    ? `Generate comprehensive study notes from the uploaded document "${currentFileMeta.name}". Organize by topics with: key definitions, important concepts, formulas/rules, examples, and summary points. Use clear headings and bullet points.`
+    : `Generate comprehensive study notes on the topic we have been discussing. Organize by main topics with key definitions, concepts, examples, and a summary. Use clear headings and bullet points.`;
+
+  studyEls.userInput.value = prompt;
   handleStudySendMessage();
 }
 
@@ -1128,6 +1221,431 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+// ============================================
+// LATEX + CODE RENDERING
+// ============================================
+
+/**
+ * Render LaTeX math and syntax-highlight code blocks
+ * inside a message element. Called after each AI response.
+ */
+function renderLatexAndCode(messageEl) {
+  if (!messageEl) return;
+
+  // ── KaTeX: render $...$ and $$...$$ ─────────────────────
+  if (typeof renderMathInElement !== 'undefined') {
+    try {
+      renderMathInElement(messageEl, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true  },
+          { left: '$',  right: '$',  display: false },
+          { left: '\\(', right: '\\)', display: false },
+          { left: '\\[', right: '\\]', display: true  },
+        ],
+        throwOnError: false,
+        errorColor: '#f87171',
+      });
+    } catch (e) {
+      // KaTeX not ready yet, silently skip
+    }
+  }
+
+  // ── highlight.js: syntax-highlight all code blocks ───────
+  if (typeof hljs !== 'undefined') {
+    messageEl.querySelectorAll('pre code').forEach(block => {
+      // Skip if already highlighted
+      if (block.dataset.highlighted) return;
+      hljs.highlightElement(block);
+      block.dataset.highlighted = 'yes';
+
+      // Add copy button to parent <pre>
+      const pre = block.parentElement;
+      if (pre && !pre.querySelector('.code-copy-btn')) {
+        const btn = document.createElement('button');
+        btn.className = 'code-copy-btn';
+        btn.textContent = 'Copy';
+        btn.addEventListener('click', () => {
+          navigator.clipboard.writeText(block.innerText || block.textContent).then(() => {
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+          });
+        });
+        pre.style.position = 'relative';
+        pre.appendChild(btn);
+      }
+    });
+  }
+}
+
+// ============================================
+// FLASHCARD MODAL CONTROLLER
+// ============================================
+
+let fcCards  = [];
+let fcIdx    = 0;
+let fcScore  = { got: 0, again: 0 };
+
+/**
+ * Parse flashcard pairs from an AI response.
+ * Expects lines like:
+ *   **Term/Question**: ...
+ *   **Definition/Answer**: ...
+ *   ---
+ */
+function parseFlashcards(text) {
+  const cards = [];
+  // Split by horizontal rule or numbered item
+  const blocks = text.split(/\n---+\n|\n\d+\.\s/);
+
+  blocks.forEach(block => {
+    // Try to extract front/back from bold label pattern
+    const frontMatch = block.match(/\*\*(?:Term|Question)[^*]*\*\*[:\s]*([\s\S]+?)(?=\*\*(?:Definition|Answer)|$)/i);
+    const backMatch  = block.match(/\*\*(?:Definition|Answer)[^*]*\*\*[:\s]*([\s\S]+?)(?=\n\*\*|$)/i);
+
+    if (frontMatch && backMatch) {
+      const front = frontMatch[1].trim().replace(/\*\*/g, '');
+      const back  = backMatch[1].trim().replace(/\*\*/g, '');
+      if (front && back) cards.push({ front, back });
+    }
+  });
+
+  // Fallback: try Q:/A: pattern
+  if (cards.length === 0) {
+    const qaBlocks = text.split(/\n(?=\d+\.|\*\*Card)/);
+    qaBlocks.forEach(block => {
+      const lines = block.split('\n').filter(l => l.trim());
+      if (lines.length >= 2) {
+        const front = lines[0].replace(/^\d+\.\s*/, '').replace(/\*\*/g, '').trim();
+        const back  = lines.slice(1).join(' ').replace(/\*\*/g, '').trim();
+        if (front && back && front.length < 200) {
+          cards.push({ front, back });
+        }
+      }
+    });
+  }
+
+  return cards;
+}
+
+function openFlashcardMode(text) {
+  const cards = parseFlashcards(text);
+  if (cards.length === 0) {
+    addStudyMessage('system', 'No flashcard pairs found. Ask for flashcards in "Term: … / Definition: …" format.');
+    return;
+  }
+
+  fcCards = cards;
+  fcIdx   = 0;
+  fcScore = { got: 0, again: 0 };
+
+  const overlay  = document.getElementById('fcOverlay');
+  const card     = document.getElementById('fcCard');
+  const front    = document.getElementById('fcFront');
+  const back     = document.getElementById('fcBack');
+  const progress = document.getElementById('fcProgress');
+  const flipBtn  = document.getElementById('fcFlip');
+  const passBtn  = document.getElementById('fcPass');
+  const failBtn  = document.getElementById('fcFail');
+  const closeBtn = document.getElementById('fcClose');
+
+  if (!overlay) return;
+
+  function showCard(i) {
+    const c = fcCards[i];
+    if (!c) return;
+    card.classList.remove('flipped');
+    front.textContent   = c.front;
+    back.textContent    = c.back;
+    progress.textContent = `Card ${i + 1} of ${fcCards.length}`;
+  }
+
+  function nextCard() {
+    if (fcIdx + 1 >= fcCards.length) {
+      // Session complete
+      const pct = Math.round((fcScore.got / fcCards.length) * 100);
+      front.textContent = `Session complete! 🎉`;
+      back.textContent  = `Score: ${fcScore.got}/${fcCards.length} (${pct}%)`;
+      card.classList.remove('flipped');
+      progress.textContent = 'Done';
+      passBtn.disabled = true;
+      failBtn.disabled = true;
+      return;
+    }
+    fcIdx++;
+    showCard(fcIdx);
+  }
+
+  flipBtn.onclick  = () => card.classList.toggle('flipped');
+  card.onclick     = (e) => { if (!e.target.closest('.fc-controls')) card.classList.toggle('flipped'); };
+  passBtn.onclick  = () => { fcScore.got++;   nextCard(); };
+  failBtn.onclick  = () => { fcScore.again++; nextCard(); };
+  closeBtn.onclick = () => {
+    overlay.classList.remove('active');
+    passBtn.disabled = false;
+    failBtn.disabled = false;
+  };
+
+  showCard(0);
+  overlay.classList.add('active');
+}
+
+/**
+ * Detect whether a response contains flashcard content and
+ * optionally append a CTA button to enter flashcard mode.
+ */
+function maybeAddFlashcardCTA(messageDiv, text) {
+  const hasFlashcards = /\*\*(Term|Question|Definition|Answer)/i.test(text) ||
+                        /---/.test(text) && /\*\*/.test(text);
+  if (!hasFlashcards) return;
+
+  const footer = messageDiv?.querySelector('.message-footer');
+  if (!footer) return;
+
+  const cta = document.createElement('button');
+  cta.className = 'fc-cta';
+  cta.innerHTML = '🎴 Enter Flashcard Mode';
+  cta.addEventListener('click', () => openFlashcardMode(text));
+  footer.insertAdjacentElement('afterend', cta);
+}
+
+
+// ============================================
+// INTERACTIVE QUIZ ENGINE
+// ============================================
+
+let qzQuestions = [];
+let qzIdx       = 0;
+let qzScore     = 0;
+
+/**
+ * Parse structured MCQ quiz text into question objects.
+ * Expected AI format:
+ *   **Q1.** Question text
+ *   A) Option text
+ *   B) ...  C) ...  D) ...
+ *   **Correct**: B
+ *   **Explanation**: Why B is correct
+ *   ---
+ */
+function parseQuizQuestions(text) {
+  const questions = [];
+
+  // Split on separators (--- or ### Q) between questions
+  const blocks = text.split(/\n[-─]{2,}\n|\n(?=\*\*Q\d)/);
+
+  blocks.forEach(block => {
+    if (!block.trim()) return;
+
+    // Extract question text
+    const qMatch = block.match(/\*\*Q\d+\.\*\*\s*([\s\S]+?)(?=\n[A-D]\))/i);
+    if (!qMatch) return;
+
+    const questionText = qMatch[1].trim().replace(/\*\*/g, '');
+
+    // Extract options A-D
+    const opts = {};
+    ['A','B','C','D'].forEach(letter => {
+      const re = new RegExp(`^${letter}\\)\\s*(.+)`, 'm');
+      const m = block.match(re);
+      if (m) opts[letter] = m[1].trim();
+    });
+
+    if (Object.keys(opts).length < 2) return;
+
+    // Extract correct answer
+    const corrMatch = block.match(/\*\*Correct\*\*[:\s]+([A-D])/i);
+    if (!corrMatch) return;
+    const correct = corrMatch[1].toUpperCase();
+
+    // Extract explanation
+    const expMatch = block.match(/\*\*Explanation\*\*[:\s]*([\s\S]+?)(?=\n\*\*Q|\n---|$)/i);
+    const explanation = expMatch ? expMatch[1].trim().replace(/\*\*/g, '') : '';
+
+    questions.push({ questionText, opts, correct, explanation });
+  });
+
+  return questions;
+}
+
+/**
+ * Launch the interactive quiz modal with given questions array.
+ */
+function openQuizMode(questions) {
+  if (!questions || questions.length === 0) return;
+
+  qzQuestions = questions;
+  qzIdx       = 0;
+  qzScore     = 0;
+
+  const overlay    = document.getElementById('qzOverlay');
+  const card       = document.getElementById('qzCard');
+  const resultsDiv = document.getElementById('qzResults');
+
+  if (!overlay) return;
+
+  // Hide results, show card
+  card.style.display       = '';
+  resultsDiv.style.display = 'none';
+  resultsDiv.classList.remove('show');
+
+  renderQzQuestion(0);
+  overlay.classList.add('active');
+
+  // Wire static buttons
+  document.getElementById('qzClose').onclick       = closeQuizModal;
+  document.getElementById('qzNext').onclick        = advanceQuiz;
+  document.getElementById('qzRetry').onclick       = () => openQuizMode(qzQuestions);
+  document.getElementById('qzResultsClose').onclick = closeQuizModal;
+}
+
+function closeQuizModal() {
+  const overlay = document.getElementById('qzOverlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+function renderQzQuestion(i) {
+  const q = qzQuestions[i];
+  if (!q) return;
+
+  const total       = qzQuestions.length;
+  const pct         = (i / total) * 100;
+
+  // Update header meta
+  document.getElementById('qzProgressText').textContent = `Q${i+1} of ${total}`;
+  document.getElementById('qzScoreBadge').textContent   = `Score: ${qzScore}`;
+  document.getElementById('qzProgressFill').style.width = `${pct}%`;
+  document.getElementById('qzQLabel').textContent       = `Question ${i+1} of ${total}`;
+  document.getElementById('qzQuestion').textContent     = q.questionText;
+
+  // Hide feedback + next
+  const feedback = document.getElementById('qzFeedback');
+  const nextBtn  = document.getElementById('qzNext');
+  feedback.className = 'qz-feedback';
+  feedback.style.display = '';
+  nextBtn.style.display  = 'none';
+
+  // Update next button label for last question
+  nextBtn.textContent = (i + 1 >= total) ? 'See Results 🎯' : 'Next Question →';
+
+  // Render options
+  const optionsEl = document.getElementById('qzOptions');
+  optionsEl.innerHTML = '';
+
+  ['A','B','C','D'].forEach(letter => {
+    if (!q.opts[letter]) return;
+
+    const btn = document.createElement('button');
+    btn.className = 'qz-option';
+    btn.innerHTML = `
+      <span class="qz-opt-letter">${letter}</span>
+      <span class="qz-opt-text">${escapeHtml(q.opts[letter])}</span>
+    `;
+
+    btn.addEventListener('click', () => handleOptionClick(letter, q));
+    optionsEl.appendChild(btn);
+  });
+}
+
+function handleOptionClick(selected, q) {
+  const optionsEl = document.getElementById('qzOptions');
+  const feedback  = document.getElementById('qzFeedback');
+  const nextBtn   = document.getElementById('qzNext');
+  const isCorrect = selected === q.correct;
+
+  // Disable all options
+  optionsEl.querySelectorAll('.qz-option').forEach((btn, idx) => {
+    const letter = ['A','B','C','D'][idx];
+    btn.disabled = true;
+
+    if (letter === q.correct) {
+      btn.classList.add('correct');
+    } else if (letter === selected && !isCorrect) {
+      btn.classList.add('wrong');
+    } else {
+      btn.classList.add('dimmed');
+    }
+  });
+
+  if (isCorrect) qzScore++;
+
+  // Update score badge
+  document.getElementById('qzScoreBadge').textContent = `Score: ${qzScore}`;
+
+  // Show feedback
+  feedback.innerHTML = `
+    <span class="qz-feedback-icon">${isCorrect ? '✅' : '❌'}</span>
+    <div class="qz-feedback-text">
+      <strong>${isCorrect ? 'Correct!' : `Wrong — correct answer: ${q.correct}) ${escapeHtml(q.opts[q.correct] || '')}`}</strong>
+      ${q.explanation ? escapeHtml(q.explanation) : ''}
+    </div>
+  `;
+  feedback.className = `qz-feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}`;
+
+  // Show next button
+  nextBtn.style.display = 'block';
+}
+
+function advanceQuiz() {
+  qzIdx++;
+  if (qzIdx >= qzQuestions.length) {
+    showQuizResults();
+  } else {
+    renderQzQuestion(qzIdx);
+  }
+}
+
+function showQuizResults() {
+  const card       = document.getElementById('qzCard');
+  const resultsDiv = document.getElementById('qzResults');
+  const total      = qzQuestions.length;
+  const pct        = Math.round((qzScore / total) * 100);
+
+  // Progress bar to 100%
+  document.getElementById('qzProgressFill').style.width = '100%';
+  document.getElementById('qzProgressText').textContent = 'Complete!';
+
+  // Results text
+  document.getElementById('qzResultsScore').textContent = `${qzScore} / ${total}`;
+
+  let icon, title, sub;
+  if (pct === 100)      { icon = '🏆'; title = 'Perfect Score!';    sub = 'Outstanding! You nailed every question.'; }
+  else if (pct >= 80)   { icon = '🎉'; title = 'Excellent!';         sub = `You got ${pct}% — great understanding!`; }
+  else if (pct >= 60)   { icon = '👍'; title = 'Good Job!';           sub = `${pct}% — keep studying to improve.`; }
+  else if (pct >= 40)   { icon = '📖'; title = 'Keep Studying';       sub = `${pct}% — review the material again.`; }
+  else                  { icon = '💪'; title = 'Keep Practicing!';    sub = `${pct}% — don't give up, review the topic.`; }
+
+  document.getElementById('qzResultsIcon').textContent  = icon;
+  document.getElementById('qzResultsTitle').textContent = title;
+  document.getElementById('qzResultsSub').textContent   = sub;
+
+  card.style.display = 'none';
+  resultsDiv.style.display = 'flex';
+  resultsDiv.classList.add('show');
+
+  // Animate bar
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      document.getElementById('qzResultsBar').style.width = `${pct}%`;
+    }, 100);
+  });
+}
+
+/**
+ * Detect quiz content in a message and append "Take Interactive Quiz" CTA.
+ */
+function maybeAddQuizCTA(messageDiv, text, questions) {
+  if (!questions || questions.length === 0) return;
+
+  const footer = messageDiv?.querySelector('.message-footer');
+  if (!footer) return;
+
+  const cta = document.createElement('button');
+  cta.className = 'qz-cta';
+  cta.innerHTML = '📝 Take Interactive Quiz';
+  cta.addEventListener('click', () => openQuizMode(questions));
+  footer.insertAdjacentElement('afterend', cta);
 }
 
 // ============================================
@@ -1143,6 +1661,11 @@ window.copyMessage = copyMessage;
 window.regenerateResponse = regenerateResponse;
 window.deleteChat = deleteChat;
 window.clearCurrentFile = clearCurrentFile;
+window.openFlashcardMode = openFlashcardMode;
+window.renderLatexAndCode = renderLatexAndCode;
+window.openQuizMode = openQuizMode;
+window.closeQuizModal = closeQuizModal;
+window.parseQuizQuestions = parseQuizQuestions;
 
 // ============================================
 // AUTO-INIT
@@ -1152,3 +1675,5 @@ if (document.readyState === 'loading') {
 } else {
   initStudyChat();
 }
+
+})(); // end IIFE

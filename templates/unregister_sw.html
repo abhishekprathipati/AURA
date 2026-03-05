@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Unregister Service Worker | AURA{% endblock %}
+
+{% block content %}
+<div style="max-width:480px;margin:80px auto;text-align:center;padding:32px;">
+    <h2 style="margin-bottom:12px;">Service Worker</h2>
+    <p id="sw-status" style="color:#64748b;margin-bottom:24px;">Checking...</p>
+    <button id="sw-btn" onclick="unregisterSW()" style="padding:10px 24px;border-radius:10px;border:none;background:#6366f1;color:#fff;font-weight:600;cursor:pointer;font-size:0.9rem;" disabled>Unregister</button>
+</div>
+<script>
+async function unregisterSW() {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for (const r of regs) await r.unregister();
+    document.getElementById('sw-status').textContent = 'All service workers unregistered.';
+    document.getElementById('sw-btn').disabled = true;
+}
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+        const el = document.getElementById('sw-status');
+        const btn = document.getElementById('sw-btn');
+        if (regs.length) { el.textContent = regs.length + ' service worker(s) active.'; btn.disabled = false; }
+        else { el.textContent = 'No service workers registered.'; }
+    });
+} else {
+    document.getElementById('sw-status').textContent = 'Service workers not supported.';
+}
+</script>
+{% endblock %}

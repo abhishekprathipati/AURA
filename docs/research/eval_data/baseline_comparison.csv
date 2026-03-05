@@ -1,0 +1,7 @@
+scenario,mood_only_score,v3_score,v3_confidence,delta
+Calm student (positive data),15,16,0.53,1
+Genuinely stressed student,72,83,0.53,11
+Spam-positive after being stressed,78,65,0.45,-13
+No data at all,50,88,0.15,38
+Wildly swinging moods,15,36,0.57,21
+"Previously high, now improving",20,18,0.64,-2

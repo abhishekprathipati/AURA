@@ -1,189 +1,977 @@
-{% extends 'base.html' %}
-{% block content %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile | AURA Proctor</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-<div class="card" style="margin-bottom:1rem;">
-  <div class="pill">Anonymous Student Details</div>
-  <h2 id="studentName">{{ anonymous_id }}</h2>
-  <div style="color:var(--muted);">Anonymous ID: <span id="anonymousId">{{ anonymous_id }}</span></div>
-  <div style="color:var(--muted); margin-top:0.5rem;">Proctor: {{ proctor_id }}</div>
-</div>
+    <style>
+        /* === ROOT VARIABLES === */
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #e0e7ff;
+            --accent: #8b5cf6;
+            
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
+            --warning: #f97316;
+            --warning-bg: #fed7aa;
+            --success: #10b981;
+            --success-bg: #d1fae5;
+            --info: #3b82f6;
+            
+            --white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-900: #0f172a;
+            
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            
+            --radius: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+        }
 
-<div class="grid grid-2" style="margin-bottom:1rem;">
-  <div class="card">
-    <h2>Incident Summary</h2>
-    <div id="incidentStats" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem; margin-top:1rem;">
-      <div style="text-align:center;">
-        <div style="font-size:2rem; font-weight:bold; color:var(--accent);" id="totalIncidents">0</div>
-        <div style="color:var(--muted);">Total Incidents</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:2rem; font-weight:bold; color:#ef4444;" id="highRiskCount">0</div>
-        <div style="color:var(--muted);">High Risk</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:2rem; font-weight:bold; color:#f59e0b;" id="unreviewedCount">0</div>
-        <div style="color:var(--muted);">Unreviewed</div>
-      </div>
+        /* === BASE === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+
+        /* === DEMO BANNER === */
+        .demo-banner {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: var(--space-3);
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        /* === HEADER === */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            padding: var(--space-4) 0;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius);
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .header-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .header-badge {
+            background: rgba(255,255,255,0.2);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* === CONTAINER === */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--space-6);
+        }
+
+        /* === PROFILE CARD === */
+        .profile-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--space-4);
+        }
+
+        .profile-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .profile-info h1 {
+            font-size: 1.5rem;
+            margin-bottom: var(--space-2);
+        }
+
+        .profile-meta {
+            display: flex;
+            gap: var(--space-4);
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        .profile-meta i {
+            color: var(--primary);
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: var(--space-5);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            text-transform: uppercase;
+        }
+
+        .stat.danger .stat-value { color: var(--danger); }
+        .stat.warning .stat-value { color: var(--warning); }
+
+        /* === ACTION BUTTONS === */
+        .action-bar {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .action-bar-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: var(--space-3);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: var(--space-2) var(--space-4);
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            transition: all 0.2s;
+        }
+
+        .action-btn.review {
+            background: var(--info);
+            color: white;
+        }
+
+        .action-btn.assign {
+            background: var(--primary);
+            color: white;
+        }
+
+        .action-btn.contact {
+            background: var(--success);
+            color: white;
+        }
+
+        .action-btn.escalate {
+            background: var(--warning);
+            color: white;
+        }
+
+        .action-btn.close {
+            background: var(--gray-500);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* === GRID LAYOUT === */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+
+        /* === CARD === */
+        .card {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: var(--gray-100);
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin: 0;
+        }
+
+        .card-header h2 i {
+            color: var(--primary);
+        }
+
+        .badge {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: var(--space-4);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        /* === INCIDENT CARD === */
+        .incident {
+            padding: var(--space-4);
+            border-radius: var(--radius);
+            background: var(--gray-50);
+            margin-bottom: var(--space-3);
+            border-left: 4px solid;
+        }
+
+        .incident.high { border-left-color: var(--danger); }
+        .incident.medium { border-left-color: var(--warning); }
+        .incident.low { border-left-color: var(--success); }
+
+        .incident-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-2);
+        }
+
+        .risk-badge {
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .risk-badge.high {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .risk-badge.medium {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .risk-badge.low {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .incident-body {
+            font-size: 0.875rem;
+            color: var(--gray-700);
+        }
+
+        .incident-meta {
+            margin-top: var(--space-2);
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        /* === NOTES === */
+        .note-form {
+            margin-bottom: var(--space-4);
+        }
+
+        .note-form textarea {
+            width: 100%;
+            padding: var(--space-3);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-family: inherit;
+            font-size: 0.875rem;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .note-form textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .note-options {
+            display: flex;
+            gap: var(--space-4);
+            margin-top: var(--space-3);
+            align-items: center;
+        }
+
+        .note-options label {
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .note-btn {
+            width: 100%;
+            padding: var(--space-3);
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: var(--space-3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+        }
+
+        .note-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .note-card {
+            padding: var(--space-3);
+            background: var(--gray-50);
+            border-radius: var(--radius);
+            margin-bottom: var(--space-3);
+            border-left: 3px solid var(--gray-300);
+        }
+
+        .note-card.urgent {
+            border-left-color: var(--danger);
+            background: var(--danger-bg);
+        }
+
+        .note-header {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-bottom: var(--space-2);
+        }
+
+        .note-body {
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        /* === EMPTY STATE === */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-6);
+            color: var(--gray-400);
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+            margin-bottom: var(--space-3);
+            opacity: 0.5;
+        }
+
+        /* === TIMELINE === */
+        .timeline {
+            position: relative;
+            padding-left: var(--space-4);
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--gray-200);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: var(--space-4);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 6px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 2px solid white;
+        }
+
+        .timeline-content {
+            padding: var(--space-3);
+            background: var(--gray-50);
+            border-radius: var(--radius);
+        }
+
+        .timeline-header {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-bottom: var(--space-2);
+        }
+
+        .timeline-body {
+            font-size: 0.875rem;
+        }
+
+        /* === CHART === */
+        .chart-container {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-left {
+                flex-direction: column;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% if session.get('is_demo') %}
+    <div class="demo-banner">
+        <i class="fas fa-exclamation-triangle"></i> Warning: Demo Mode — You can browse all features, but write actions are disabled.
     </div>
-  </div>
-  <div class="card">
-    <h2>Proctor Actions</h2>
-    <form id="actionForm" style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1rem;">
-      <select id="actionType" style="padding:0.75rem; border-radius:8px; border:1px solid var(--border);">
-        <option value="dismiss">Dismiss</option>
-        <option value="escalate">Escalate</option>
-        <option value="remove">Remove</option>
-      </select>
-      <input type="text" id="reasonInput" placeholder="Reason..." style="flex:1; padding:0.75rem; border-radius:8px; border:1px solid var(--border);" />
-      <button class="btn" type="submit">Apply to Selected</button>
-    </form>
-    <div id="actionsTimeline" class="timeline" style="margin-top:0.75rem;"></div>
-  </div>
-</div>
+    {% endif %}
 
-<div class="card" style="margin-bottom:1rem;">
-  <h2>Incident History</h2>
-  <div id="incidentList" style="margin-top:1rem;"></div>
-</div>
-
-<style>
-.timeline { position: relative; padding-left: 1.5rem; }
-.timeline::before { content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 2px; background: var(--border); }
-.timeline-item { position: relative; margin-bottom: 0.9rem; }
-.timeline-dot { position: absolute; left: -0.05rem; top: 0.35rem; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
-.note-bubble { padding: 0.75rem 1rem; border-radius: 12px; background: var(--panel); border: 1px solid var(--border); }
-.note-header { font-size: 0.9rem; color: var(--muted); margin-bottom: 0.35rem; display:flex; justify-content:space-between; }
-.incident-card { padding: 1rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 0.75rem; background: var(--panel); }
-.incident-card.high { border-left: 4px solid #ef4444; }
-.incident-card.medium { border-left: 4px solid #f59e0b; }
-.incident-card.low { border-left: 4px solid #10b981; }
-.risk-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
-.risk-badge.high { background: #fee2e2; color: #dc2626; }
-.risk-badge.medium { background: #fef3c7; color: #d97706; }
-.risk-badge.low { background: #d1fae5; color: #059669; }
-.status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem; }
-.status-badge.unreviewed { background: #dbeafe; color: #2563eb; }
-.status-badge.dismissed { background: #e5e7eb; color: #6b7280; }
-.status-badge.escalated { background: #fef3c7; color: #d97706; }
-</style>
-
-<script>
-const anonymousId = "{{ anonymous_id }}";
-
-async function fetchJSON(url, options={}){
-  const r = await fetch(url, options);
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  return r.json();
-}
-
-function renderIncidents(incidents){
-  const container = document.getElementById('incidentList');
-  container.innerHTML = '';
-  
-  if(!incidents || incidents.length === 0) {
-    container.innerHTML = '<div style="color:var(--muted); text-align:center; padding:2rem;">No incidents found</div>';
-    return;
-  }
-  
-  incidents.forEach(inc => {
-    const riskClass = (inc.risk_level || 'medium').toLowerCase();
-    const statusClass = (inc.status || 'unreviewed').toLowerCase().replace('_', '');
-    
-    const card = document.createElement('div');
-    card.className = `incident-card ${riskClass}`;
-    card.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem;">
-        <div>
-          <span class="risk-badge ${riskClass}">${inc.risk_level || 'UNKNOWN'}</span>
-          <span class="status-badge ${statusClass}">${inc.status || 'UNREVIEWED'}</span>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/proctor/dashboard" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <div class="header-title">
+                    <i class="fas fa-user-shield"></i> Student Intervention Profile
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="header-badge" id="recentActivityBadge">No recent activity</span>
+                <span class="header-badge" id="triggerBadge">Primary: None</span>
+            </div>
         </div>
-        <div style="color:var(--muted); font-size:0.85rem;">${inc.time_since_trigger || inc.timestamp || ''}</div>
-      </div>
-      <div style="font-weight:500; margin-bottom:0.5rem;">${inc.trigger_source || 'Unknown trigger'}</div>
-      <div style="color:var(--muted); font-size:0.9rem;">${inc.message_excerpt || 'No details available'}</div>
-      <div style="margin-top:0.5rem; font-size:0.85rem; color:var(--muted);">
-        Incident ID: ${inc.incident_id || 'N/A'}
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
+    </header>
 
-function renderActions(actions){
-  const tl = document.getElementById('actionsTimeline');
-  tl.innerHTML = '';
-  
-  if(!actions || actions.length === 0) {
-    tl.innerHTML = '<div style="color:var(--muted);">No actions taken yet</div>';
-    return;
-  }
-  
-  actions.forEach(a => {
-    const item = document.createElement('div');
-    item.className = 'timeline-item';
-    item.innerHTML = `
-      <div class="timeline-dot"></div>
-      <div class="note-bubble">
-        <div class="note-header">
-          <div>${a.timestamp || ''} — ${a.proctor_id || 'Unknown'}</div>
-          <div>${a.action_type || ''}</div>
+    <!-- MAIN CONTAINER -->
+    <div class="container">
+        <!-- PROFILE CARD -->
+        <div class="profile-card">
+            <div class="profile-left">
+                <div class="avatar" id="profileAvatar">A</div>
+                <div class="profile-info">
+                    <h1 id="studentLabel">{{ anonymous_id }}</h1>
+                    <div class="profile-meta">
+                        <span><i class="fas fa-fingerprint"></i> Anonymous ID</span>
+                        <span id="caseStatusLabel"><i class="fas fa-tag"></i> NEW</span>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-stats">
+                <div class="stat">
+                    <div class="stat-value" id="statTotal">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat danger">
+                    <div class="stat-value" id="statHigh">0</div>
+                    <div class="stat-label">High Risk</div>
+                </div>
+                <div class="stat warning">
+                    <div class="stat-value" id="statUnreviewed">0</div>
+                    <div class="stat-label">Unreviewed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="statAuto">0</div>
+                    <div class="stat-label">Auto-Escalated</div>
+                </div>
+            </div>
         </div>
-        <div>${a.reason_code || ''}: ${a.details || ''}</div>
-      </div>
-    `;
-    tl.appendChild(item);
-  });
-}
 
-async function loadDetails(){
-  try{
-    const data = await fetchJSON(`/proctor/api/student/${encodeURIComponent(anonymousId)}/details`);
-    
-    if(data.success) {
-      const stats = data.data;
-      document.getElementById('totalIncidents').textContent = stats.total_incidents || 0;
-      document.getElementById('highRiskCount').textContent = stats.high_risk_count || 0;
-      document.getElementById('unreviewedCount').textContent = stats.unreviewed_count || 0;
-      
-      renderIncidents(stats.incidents || []);
-      renderActions(stats.actions || []);
-    }
-  }catch(e){ 
-    console.warn('Detail load failed', e);
-    document.getElementById('incidentList').innerHTML = '<div style="color:#ef4444; text-align:center; padding:2rem;">Failed to load student details</div>';
-  }
-}
+        <!-- ACTION BAR -->
+        <div class="action-bar">
+            <div class="action-bar-title">
+                <i class="fas fa-sitemap"></i> Case Workflow
+            </div>
+            <div class="action-buttons">
+                <button class="action-btn review" onclick="caseAction('review')">
+                    <i class="fas fa-eye"></i> Review
+                </button>
+                <button class="action-btn assign" onclick="showAssignModal()">
+                    <i class="fas fa-user-plus"></i> Assign
+                </button>
+                <button class="action-btn contact" onclick="caseAction('contact')">
+                    <i class="fas fa-phone"></i> Contacted
+                </button>
+                <button class="action-btn escalate" onclick="caseAction('escalate')">
+                    <i class="fas fa-arrow-up"></i> Escalate
+                </button>
+                <button class="action-btn close" onclick="caseAction('close')">
+                    <i class="fas fa-check-circle"></i> Close
+                </button>
+            </div>
+        </div>
 
-// Action form submission
-document.getElementById('actionForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  // This would apply actions to selected incidents
-  alert('Action functionality would be implemented here');
-});
+        <!-- MAIN GRID -->
+        <div class="grid-2">
+            <!-- LEFT COLUMN -->
+            <div>
+                <!-- TRIGGER BREAKDOWN -->
+                <div class="card" style="margin-bottom: var(--space-6);">
+                    <div class="card-header">
+                        <h2><i class="fas fa-chart-pie"></i> Trigger Breakdown</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="triggerChart"></canvas>
+                        </div>
+                    </div>
+                </div>
 
-loadDetails();
-</script>
-{% endblock %}
-const form = document.getElementById('notesForm');
-form.addEventListener('submit', async (ev)=>{
-  ev.preventDefault();
-  const note = document.getElementById('noteInput').value.trim();
-  if(!note) return;
-  try{
-    const urgent = document.getElementById('urgentInput').checked;
-    await fetchJSON(`/proctor/api/proctor/student/${encodeURIComponent(studentEmail)}/notes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ note, urgent })
-    });
-    document.getElementById('noteInput').value='';
-    document.getElementById('urgentInput').checked=false;
-    await loadDetails();
-  }catch(e){ console.warn('Note save failed', e); }
-});
+                <!-- INCIDENT HISTORY -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-history"></i> Incident History</h2>
+                        <span class="badge" id="incidentCountBadge">0</span>
+                    </div>
+                    <div class="card-body" id="incidentList">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No incidents recorded</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-window.addEventListener('DOMContentLoaded', loadDetails);
-</script>
-{% endblock %}
+            <!-- RIGHT COLUMN -->
+            <div>
+                <!-- PROCTOR NOTES -->
+                <div class="card" style="margin-bottom: var(--space-6);">
+                    <div class="card-header">
+                        <h2><i class="fas fa-sticky-note"></i> Proctor Notes</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="noteForm" class="note-form" onsubmit="handleAddNote(event)">
+                            <textarea id="noteInput" placeholder="Add an intervention note..." required></textarea>
+                            <div class="note-options">
+                                <label>
+                                    <input type="checkbox" id="noteUrgent">
+                                    <span style="color: var(--danger); font-weight: 600;">Urgent</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="noteMonitor">
+                                    Flag for monitoring
+                                </label>
+                                <input type="date" id="noteFollowUp" style="padding: 4px 8px; border: 1px solid var(--gray-200); border-radius: 6px;">
+                            </div>
+                            <button type="submit" class="note-btn">
+                                <i class="fas fa-plus"></i> Add Note
+                            </button>
+                        </form>
+                        <div id="notesList">
+                            <div class="empty-state">
+                                <i class="fas fa-clipboard"></i>
+                                <p>No notes yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACTION TIMELINE -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-stream"></i> Action Timeline</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="actionsTimeline" class="timeline">
+                            <div class="empty-state">
+                                <i class="fas fa-clock"></i>
+                                <p>No actions recorded</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === GLOBAL STATE ===
+        const AID = "{{ anonymous_id }}";
+        let studentData = {};
+        let triggerChart = null;
+
+        // === LOAD DATA ===
+        async function loadStudentData() {
+            try {
+                const res = await fetch(`/proctor/api/student/${AID}/details`);
+                if (!res.ok) throw new Error('Failed to load student data');
+                
+                const data = await res.json();
+                studentData = data.data;
+                
+                renderProfile();
+                renderIncidents();
+                renderNotes();
+                renderTimeline();
+                renderTriggerChart();
+            } catch (error) {
+                console.error('Load error:', error);
+                alert('Failed to load student data');
+            }
+        }
+
+        function renderProfile() {
+            const { incidents = [], case_status = 'NEW', trigger_breakdown = {} } = studentData;
+
+            // Stats
+            document.getElementById('statTotal').textContent = incidents.length;
+            document.getElementById('statHigh').textContent = incidents.filter(i => i.risk_level === 'HIGH').length;
+            document.getElementById('statUnreviewed').textContent = incidents.filter(i => (i.status || '').toUpperCase() === 'UNREVIEWED').length;
+            document.getElementById('statAuto').textContent = incidents.filter(i => i.auto_triggered).length;
+
+            // Case status
+            document.getElementById('caseStatusLabel').textContent = case_status.toUpperCase();
+
+            // Primary trigger
+            if (trigger_breakdown && Object.keys(trigger_breakdown).length > 0) {
+                const primary = Object.entries(trigger_breakdown).sort((a,b) => b[1] - a[1])[0];
+                document.getElementById('triggerBadge').textContent = `Primary: ${primary[0].replace(/_/g,' ')} (${primary[1]})`;
+            }
+        }
+
+        function renderIncidents() {
+            const list = document.getElementById('incidentList');
+            const { incidents = [] } = studentData;
+            
+            if (!incidents.length) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No incidents</p></div>';
+                return;
+            }
+
+            document.getElementById('incidentCountBadge').textContent = incidents.length;
+            
+            list.innerHTML = incidents.map(inc => {
+                const riskClass = (inc.risk_level || 'low').toLowerCase();
+                return `
+                    <div class="incident ${riskClass}">
+                        <div class="incident-header">
+                            <span class="risk-badge ${riskClass}">${inc.risk_level || 'UNKNOWN'}</span>
+                            <span style="font-size: 1rem; font-weight: 700;">${inc.incident_type ? inc.incident_type.replace(/_/g,' ') : 'Incident'}</span>
+                        </div>
+                        <div class="incident-body">
+                            Status: <strong>${inc.status || 'UNREVIEWED'}</strong>
+                            ${inc.auto_triggered ? ' <span style="color: var(--warning);">(Auto-escalated)</span>' : ''}
+                            ${inc.message_excerpt ? `<div style="margin-top:4px;font-size:0.85rem;opacity:0.8">"${inc.message_excerpt}"</div>` : ''}
+                        </div>
+                        <div class="incident-meta">
+                            <i class="fas fa-clock"></i> ${inc.time_since_trigger || (inc.timestamp ? new Date(inc.timestamp).toLocaleString() : 'Unknown time')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderNotes() {
+            const list = document.getElementById('notesList');
+            const { notes = [] } = studentData;
+            
+            if (!notes.length) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard"></i><p>No notes</p></div>';
+                return;
+            }
+
+            list.innerHTML = notes.map(note => `
+                <div class="note-card ${note.urgent ? 'urgent' : ''}">
+                    <div class="note-header">
+                        ${note.urgent ? '<i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> ' : ''}
+                        ${note.time_ago || (note.timestamp ? new Date(note.timestamp).toLocaleString() : 'Unknown time')}
+                    </div>
+                    <div class="note-body">${note.note || note.content || ''}</div>
+                    ${note.flag_monitoring ? '<div style="font-size:0.8rem;color:var(--warning);margin-top:4px;"><i class="fas fa-eye"></i> Monitoring flagged</div>' : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderTimeline() {
+            const timeline = document.getElementById('actionsTimeline');
+            const { actions = [] } = studentData;
+            
+            if (!actions.length) {
+                timeline.innerHTML = '<div class="empty-state"><i class="fas fa-clock"></i><p>No actions</p></div>';
+                return;
+            }
+
+            timeline.innerHTML = actions.map(action => `
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            ${action.timestamp ? new Date(action.timestamp).toLocaleString() : 'Unknown time'}
+                        </div>
+                        <div class="timeline-body">
+                            <strong>${(action.action_type || 'Action').replace(/_/g,' ')}</strong>
+                            ${action.details ? `<div>${action.details}</div>` : ''}
+                            ${action.proctor_id ? `<div style="font-size:0.8rem;opacity:0.6">by ${action.proctor_id}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTriggerChart() {
+            const { trigger_breakdown = {} } = studentData;
+            const canvas = document.getElementById('triggerChart');
+
+            if (triggerChart) triggerChart.destroy();
+
+            if (!Object.keys(trigger_breakdown).length) {
+                canvas.parentElement.innerHTML = '<div class="empty-state"><i class="fas fa-chart-pie"></i><p>No trigger data</p></div>';
+                return;
+            }
+
+            const labels = Object.keys(trigger_breakdown).map(k => k.replace(/_/g,' '));
+            const values = Object.values(trigger_breakdown);
+            
+            triggerChart = new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#10b981', '#3b82f6', '#6366f1', '#8b5cf6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // === CASE ACTIONS ===
+        const ACTION_STATUS_MAP = {
+            'review':   'reviewing',
+            'contact':  'contacted',
+            'escalate': 'monitoring',
+            'close':    'resolved'
+        };
+
+        async function caseAction(action) {
+            const caseStatus = ACTION_STATUS_MAP[action];
+            if (!caseStatus) { alert('Unknown action: ' + action); return; }
+            if (!confirm(`Mark case as "${caseStatus}"?`)) return;
+
+            // Use the most recent incident's ID
+            const incidents = studentData.incidents || [];
+            if (!incidents.length) { alert('No incidents found for this student.'); return; }
+            const incidentId = incidents[0].incident_id;
+            if (!incidentId) { alert('Incident ID missing — cannot update.'); return; }
+
+            try {
+                const res = await fetch(`/proctor/api/case/${incidentId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ case_status: caseStatus })
+                });
+
+                if (res.ok) {
+                    alert('Action recorded successfully');
+                    loadStudentData();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert('Failed to record action: ' + (err.error || res.statusText));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function showAssignModal() {
+            const counselor = prompt('Enter counselor name:');
+            if (!counselor) return;
+
+            const incidents = studentData.incidents || [];
+            if (!incidents.length) { alert('No incidents found for this student.'); return; }
+            const incidentId = incidents[0].incident_id;
+            if (!incidentId) { alert('Incident ID missing — cannot assign.'); return; }
+
+            fetch(`/proctor/api/case/${incidentId}/assign`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ counselor, notes: '' })
+            })
+            .then(res => res.ok ? alert('Assigned successfully') : alert('Failed'))
+            .catch(err => alert('Error: ' + err.message));
+        }
+
+        // === ADD NOTE ===
+        async function handleAddNote(e) {
+            e.preventDefault();
+            
+            const content = document.getElementById('noteInput').value.trim();
+            const urgent = document.getElementById('noteUrgent').checked;
+            const monitor = document.getElementById('noteMonitor').checked;
+            const followUp = document.getElementById('noteFollowUp').value;
+            
+            if (!content) return;
+            
+            try {
+                const res = await fetch(`/proctor/api/notes/${AID}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ note: content, urgent, flag_monitoring: monitor, follow_up_date: followUp })
+                });
+                
+                if (res.ok) {
+                    document.getElementById('noteForm').reset();
+                    loadStudentData();
+                } else {
+                    alert('Failed to add note');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // === INIT ===
+        document.addEventListener('DOMContentLoaded', loadStudentData);
+    </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+level,label,total_docs,data_sources,confidence,score
+0,Zero data,0,1,0.15,88
+1,1 mood,1,2,0.3,48
+2,1 mood + 1 chat,2,3,0.35,23
+3,3 moods + 2 chats,5,4,0.47,35
+4,4 moods + 3 chats + 5 hist,12,5,0.69,23
+5,8 moods + 5 chats + 8 hist + 3 wellness,24,6,0.77,18

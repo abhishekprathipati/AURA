@@ -1,428 +1,1361 @@
-{% extends 'base.html' %}
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relaxation Zone — AURA</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-    :root {
-        --primary: #6366f1;
-        --secondary: #a855f7;
-        --bg-dark: #0f172a;
-        --card-bg: rgba(255, 255, 255, 0.05);
-        --glass-border: rgba(255, 255, 255, 0.1);
-    }
+/* ═══════ RESET ═══════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:#0d1117;color:#e2e8f0;min-height:100vh;}
+button{cursor:pointer;font-family:inherit;}
+a{text-decoration:none;color:inherit;}
+input,textarea,select{font-family:inherit;}
+input[type=range]{-webkit-appearance:none;height:5px;border-radius:3px;background:rgba(255,255,255,0.15);outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#818cf8;cursor:pointer;}
 
-    .dashboard-nav {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        backdrop-filter: blur(12px);
-        background: rgba(15, 23, 42, 0.85);
-        border-bottom: 1px solid var(--glass-border);
-        padding: 1.2rem;
-        margin: -2rem -2rem 2rem -2rem;
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        flex-wrap: wrap;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
+/* ═══════ NAV ═══════ */
+.relax-nav{
+    position:sticky;top:0;z-index:500;
+    height:58px;
+    background:rgba(13,17,23,0.88);
+    backdrop-filter:blur(24px);
+    -webkit-backdrop-filter:blur(24px);
+    border-bottom:1px solid rgba(255,255,255,0.07);
+    display:flex;align-items:center;padding:0 28px;gap:16px;
+}
+.nav-back{
+    display:flex;align-items:center;gap:7px;
+    padding:7px 15px;border-radius:10px;
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.11);
+    font-size:13px;font-weight:600;color:#cbd5e1;
+    transition:background .18s,transform .15s;
+}
+.nav-back:hover{background:rgba(255,255,255,0.13);transform:translateX(-2px);}
+.nav-logo{
+    font-size:17px;font-weight:900;letter-spacing:-.5px;
+    background:linear-gradient(135deg,#818cf8,#c084fc);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.nav-sep{width:1px;height:18px;background:rgba(255,255,255,0.1);}
+.nav-title{font-size:14px;font-weight:700;color:#94a3b8;}
+.nav-spacer{flex:1;}
+.nav-user{font-size:13px;color:#64748b;font-weight:500;}
 
-    .dashboard-nav a {
-        color: #e2e8f0;
-        text-decoration: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        backdrop-filter: blur(8px);
-    }
+/* ═══════ PAGE WRAPPER ═══════ */
+.relax-page{max-width:1200px;margin:0 auto;padding:32px 24px 64px;}
 
-    .dashboard-nav a:hover {
-        background: rgba(99, 102, 241, 0.2);
-        border-color: var(--primary);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(99, 102, 241, 0.2);
-    }
+/* ═══════ HERO ═══════ */
+.relax-hero{
+    background:linear-gradient(160deg,#0a0510 0%,#130d2e 40%,#0f1729 100%);
+    border-radius:28px;
+    padding:48px 44px;
+    margin-bottom:40px;
+    position:relative;overflow:hidden;
+    border:1px solid rgba(255,255,255,0.06);
+    box-shadow:0 24px 64px rgba(0,0,0,0.5);
+}
+.relax-hero::before{
+    content:'';position:absolute;
+    top:-80px;right:-80px;width:400px;height:400px;border-radius:50%;
+    background:radial-gradient(circle,rgba(129,140,248,0.12),transparent 65%);
+    pointer-events:none;
+}
+.relax-hero::after{
+    content:'';position:absolute;
+    bottom:-60px;left:5%;width:300px;height:300px;border-radius:50%;
+    background:radial-gradient(circle,rgba(192,132,252,0.09),transparent 65%);
+    pointer-events:none;
+}
+.hero-eyebrow{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(129,140,248,0.12);border:1px solid rgba(129,140,248,0.2);
+    color:rgba(167,139,250,0.9);
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;
+    padding:5px 14px;border-radius:20px;margin-bottom:16px;
+}
+.hero-h1{
+    font-size:clamp(26px,4vw,40px);font-weight:900;color:white;
+    letter-spacing:-1px;line-height:1.1;margin-bottom:12px;
+}
+.hero-h1 span{
+    background:linear-gradient(90deg,#818cf8,#c084fc);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-sub{font-size:15px;color:rgba(255,255,255,0.45);margin-bottom:28px;max-width:520px;line-height:1.65;}
+.hero-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.hero-pill{
+    background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);
+    color:rgba(255,255,255,0.6);padding:5px 14px;
+    border-radius:20px;font-size:12px;font-weight:600;
+}
 
-    .dashboard-nav a.active {
-        background: linear-gradient(135deg, var(--primary), var(--secondary));
-        border-color: var(--primary);
-        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
-        color: white;
-    }
+/* ═══════ SECTION LABEL ═══════ */
+.section-lbl{
+    font-size:11px;font-weight:800;text-transform:uppercase;
+    letter-spacing:1.4px;color:rgba(255,255,255,0.25);
+    margin-bottom:16px;padding-left:2px;
+}
 
-    .relax-container {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
+/* ═══════ CARD GRID ═══════ */
+.relax-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:18px;
+    margin-bottom:48px;
+}
+.r-card{
+    background:#161b22;
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:22px;
+    overflow:hidden;
+    cursor:pointer;
+    transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s ease,border-color .2s;
+    display:flex;flex-direction:column;
+}
+.r-card:hover{
+    transform:translateY(-5px);
+    box-shadow:0 18px 48px rgba(0,0,0,0.4);
+    border-color:rgba(255,255,255,0.14);
+}
+.r-card:active{transform:translateY(-2px) scale(.99);}
+.r-banner{
+    height:96px;display:flex;align-items:center;justify-content:center;
+    font-size:42px;position:relative;overflow:hidden;
+}
+.r-banner::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.12);}
+.bn-violet{background:linear-gradient(135deg,#4c1d95,#7c3aed);}
+.bn-indigo{background:linear-gradient(135deg,#1e3a8a,#3b82f6);}
+.bn-emerald{background:linear-gradient(135deg,#064e3b,#10b981);}
+.bn-cyan{background:linear-gradient(135deg,#164e63,#06b6d4);}
+.bn-rose{background:linear-gradient(135deg,#881337,#f43f5e);}
+.bn-amber{background:linear-gradient(135deg,#78350f,#f59e0b);}
 
-    .relax-header {
-        text-align: center;
-        margin-bottom: 3rem;
-    }
+.r-card-body{padding:20px 20px 20px;flex:1;display:flex;flex-direction:column;}
+.r-tag{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;
+    padding:3px 10px;border-radius:8px;margin-bottom:10px;align-self:flex-start;
+}
+.tag-sound{background:rgba(124,58,237,0.2);color:#a78bfa;}
+.tag-meditate{background:rgba(59,130,246,0.2);color:#93c5fd;}
+.tag-body{background:rgba(16,185,129,0.2);color:#6ee7b7;}
+.tag-wave{background:rgba(6,182,212,0.2);color:#67e8f9;}
+.tag-breath{background:rgba(244,63,94,0.18);color:#fb7185;}
+.tag-visual{background:rgba(245,158,11,0.2);color:#fcd34d;}
 
-    .relax-header h1 {
-        font-size: 2.5rem;
-        margin-bottom: 0.5rem;
-    }
+.r-title{font-size:16px;font-weight:800;color:white;margin-bottom:6px;line-height:1.25;}
+.r-desc{font-size:12.5px;color:#64748b;line-height:1.55;flex:1;margin-bottom:16px;}
+.r-btn{
+    display:block;width:100%;padding:11px;
+    border:none;border-radius:12px;
+    font-size:13px;font-weight:700;color:white;
+    transition:opacity .18s,transform .15s;
+}
+.r-btn:hover{opacity:.86;transform:scale(.985);}
+.rb-violet{background:linear-gradient(135deg,#7c3aed,#a855f7);}
+.rb-indigo{background:linear-gradient(135deg,#3b82f6,#6366f1);}
+.rb-emerald{background:linear-gradient(135deg,#10b981,#34d399);color:#064e3b!important;}
+.rb-cyan{background:linear-gradient(135deg,#06b6d4,#0ea5e9);color:#083344!important;}
+.rb-rose{background:linear-gradient(135deg,#f43f5e,#fb923c);}
+.rb-amber{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#78350f!important;}
 
-    .relax-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
+/* ═══════ OVERLAY BASE ═══════ */
+.ov{
+    display:none;position:fixed;inset:0;z-index:9000;
+    background:linear-gradient(160deg,#0a0510 0%,#130d2e 50%,#0d1729 100%);
+    flex-direction:column;align-items:center;justify-content:flex-start;
+    overflow-y:auto;padding:76px 20px 44px;
+}
+.ov.open{display:flex;}
+.ov-close{
+    position:fixed;top:16px;right:20px;z-index:9100;
+    background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);
+    color:white;padding:8px 20px;border-radius:30px;
+    font-size:13px;font-weight:600;backdrop-filter:blur(10px);
+    transition:background .2s;
+}
+.ov-close:hover{background:rgba(255,255,255,0.16);}
+.ov-title{
+    font-size:clamp(20px,3vw,28px);font-weight:900;color:white;
+    text-align:center;margin-bottom:28px;letter-spacing:-.4px;
+}
+/* glass panel inside overlays */
+.gp{
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:28px;
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+}
 
-    .relax-card {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 2rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: var(--shadow);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
+/* ═══════ 1. AMBIENT SOUNDS ═══════ */
+.amb-panel{padding:34px 30px;max-width:540px;width:100%;}
+.amb-sounds{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:28px;
+}
+.amb-btn{
+    background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);
+    border-radius:16px;padding:16px 8px;
+    display:flex;flex-direction:column;align-items:center;gap:7px;
+    font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);
+    transition:all .2s;
+}
+.amb-btn:hover{background:rgba(255,255,255,0.1);color:white;border-color:rgba(255,255,255,0.25);}
+.amb-btn.playing{
+    background:rgba(124,58,237,0.2);border-color:#7c3aed;color:#c4b5fd;
+}
+.amb-btn span:first-child{font-size:28px;}
+.amb-vol-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.amb-vol-lbl{font-size:13px;color:rgba(255,255,255,0.5);font-weight:600;min-width:56px;}
+.amb-vol-slider{flex:1;}
+.amb-status{
+    text-align:center;padding:12px;
+    background:rgba(255,255,255,0.04);border-radius:12px;
+    font-size:13px;color:rgba(255,255,255,0.4);font-weight:600;
+}
+.amb-status.active{color:#a78bfa;}
 
-    .relax-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    }
+/* ═══════ 2. MEDITATION TIMER ═══════ */
+.med-panel{padding:36px 32px;max-width:450px;width:100%;text-align:center;}
+.med-presets{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:28px;}
+.med-preset{
+    padding:8px 20px;border-radius:20px;
+    border:1.5px solid rgba(255,255,255,0.14);
+    background:transparent;color:rgba(255,255,255,0.55);
+    font-size:13px;font-weight:700;transition:all .2s;
+}
+.med-preset.active,.med-preset:hover{
+    background:rgba(59,130,246,0.18);color:#93c5fd;border-color:#3b82f6;
+}
+.med-ring-wrap{position:relative;width:210px;height:210px;margin:0 auto 22px;}
+.med-ring-wrap svg{position:absolute;inset:0;transform:rotate(-90deg);}
+.med-ring-bg{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:9;}
+.med-ring-prog{fill:none;stroke:url(#medGrad);stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset .9s linear;}
+.med-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.med-digits{font-size:46px;font-weight:900;color:white;font-variant-numeric:tabular-nums;line-height:1;}
+.med-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px;margin-top:5px;}
+.med-sessions{font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:20px;}
+.med-btns{display:flex;gap:10px;justify-content:center;}
+.med-start{
+    padding:12px 30px;border:none;border-radius:13px;
+    font-size:14px;font-weight:700;
+    background:linear-gradient(135deg,#3b82f6,#6366f1);color:white;
+    transition:transform .15s,opacity .2s;
+}
+.med-start:hover{opacity:.88;transform:scale(.97);}
+.med-ghost{
+    padding:12px 22px;border-radius:13px;
+    background:rgba(255,255,255,0.07);color:white;
+    border:1px solid rgba(255,255,255,0.14);
+    font-size:14px;font-weight:700;transition:transform .15s;
+}
+.med-ghost:hover{transform:scale(.97);}
+.med-bell-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:18px;}
+.med-bell-lbl{font-size:12px;color:rgba(255,255,255,0.4);font-weight:600;}
+.med-bell-toggle{
+    width:42px;height:22px;border-radius:11px;
+    background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.14);
+    position:relative;transition:background .2s;cursor:pointer;
+}
+.med-bell-toggle.on{background:#3b82f6;border-color:#3b82f6;}
+.med-bell-thumb{
+    width:16px;height:16px;border-radius:50%;background:white;
+    position:absolute;top:2px;left:2px;transition:transform .2s;
+    box-shadow:0 1px 4px rgba(0,0,0,0.3);
+}
+.med-bell-toggle.on .med-bell-thumb{transform:translateX(20px);}
 
-    .relax-card h2 {
-        margin-top: 0;
-        color: var(--aura-accent);
-        font-size: 1.5rem;
-    }
+/* ═══════ 3. BODY SCAN ═══════ */
+.scan-panel{padding:34px 30px;max-width:520px;width:100%;}
+.scan-track{display:flex;gap:5px;margin-bottom:26px;justify-content:center;}
+.scan-dot{
+    height:5px;border-radius:3px;
+    background:rgba(255,255,255,0.1);
+    flex:1;max-width:44px;transition:background .35s;
+}
+.scan-dot.done{background:#10b981;} .scan-dot.cur{background:#fbbf24;}
+.scan-body-svg{display:block;margin:0 auto 20px;opacity:.7;width:80px;}
+.scan-part{font-size:22px;font-weight:800;color:white;text-align:center;margin-bottom:6px;}
+.scan-instruction{font-size:14px;color:rgba(255,255,255,0.52);text-align:center;line-height:1.6;margin-bottom:24px;}
+.scan-progress-bar{
+    height:4px;background:rgba(255,255,255,0.08);border-radius:2px;
+    margin-bottom:22px;overflow:hidden;
+}
+.scan-progress-fill{
+    height:100%;background:linear-gradient(90deg,#10b981,#34d399);
+    border-radius:2px;transition:width 1s linear;
+}
+.scan-auto-btn{display:flex;align-items:center;gap:8px;margin-bottom:16px;justify-content:center;}
+.scan-toggle{
+    padding:8px 20px;border-radius:20px;border:1.5px solid rgba(255,255,255,0.14);
+    background:transparent;color:rgba(255,255,255,0.55);font-size:13px;font-weight:700;transition:all .2s;
+}
+.scan-toggle.on{background:rgba(16,185,129,0.18);color:#6ee7b7;border-color:#10b981;}
+.scan-nav{display:flex;gap:10px;}
+.scan-next{
+    flex:1;padding:12px;border:none;border-radius:13px;
+    font-size:15px;font-weight:700;
+    background:linear-gradient(135deg,#10b981,#34d399);color:#064e3b;
+    transition:transform .15s;
+}
+.scan-next:hover{transform:scale(.97);}
+.scan-prev{
+    padding:12px 18px;border-radius:13px;
+    background:rgba(255,255,255,0.07);color:white;
+    border:1px solid rgba(255,255,255,0.12);
+    font-size:15px;font-weight:700;transition:transform .15s;
+}
+.scan-prev:hover{transform:scale(.97);}
+.scan-done{text-align:center;padding:12px 0;}
+.scan-done-ico{font-size:60px;}
+.scan-done h3{color:#10b981;font-size:20px;font-weight:800;margin:12px 0 8px;}
+.scan-done p{color:rgba(255,255,255,0.45);font-size:13px;line-height:1.6;}
+.scan-again{
+    margin-top:18px;padding:11px 26px;border:none;border-radius:12px;
+    background:linear-gradient(135deg,#10b981,#34d399);color:#064e3b;
+    font-size:14px;font-weight:700;transition:transform .15s;
+}
+.scan-again:hover{transform:scale(.97);}
 
-    .breathing-circle {
-        width: 200px;
-        height: 200px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--aura-accent), var(--aura-accent-secondary, #764ba2));
-        margin: 2rem auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: white;
-        box-shadow: 0 0 40px rgba(102, 126, 234, 0.5);
-    }
+/* ═══════ 4. BINAURAL BEATS ═══════ */
+.bin-panel{padding:36px 32px;max-width:480px;width:100%;text-align:center;}
+.bin-waves{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:26px;}
+.bin-wave{
+    background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.09);
+    border-radius:18px;padding:18px 12px;
+    display:flex;flex-direction:column;align-items:center;gap:7px;
+    transition:all .2s;cursor:pointer;
+}
+.bin-wave:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.18);}
+.bin-wave.active{background:rgba(6,182,212,0.15);border-color:#06b6d4;}
+.bin-wave-ico{font-size:30px;}
+.bin-wave-name{font-size:14px;font-weight:800;color:white;}
+.bin-wave-hz{font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:.5px;}
+.bin-wave-tag{font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.6px;}
+.bin-wave.active .bin-wave-hz{color:#67e8f9;}
+.bin-state{
+    font-size:36px;font-weight:900;color:white;
+    margin:20px 0 6px;font-variant-numeric:tabular-nums;
+}
+.bin-status{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:22px;}
+.bin-vol{display:flex;align-items:center;gap:12px;margin-bottom:20px;justify-content:center;}
+.bin-vol-ico{font-size:18px;}
+.bin-vol-sl{width:160px;}
+.bin-ctrl{display:flex;gap:10px;justify-content:center;}
+.bin-play{
+    padding:12px 32px;border:none;border-radius:13px;
+    font-size:14px;font-weight:700;
+    background:linear-gradient(135deg,#06b6d4,#0ea5e9);color:#0c4a6e;
+    transition:transform .15s,opacity .2s;
+}
+.bin-play:hover{opacity:.88;transform:scale(.97);}
+.bin-stop{
+    padding:12px 22px;border-radius:13px;
+    background:rgba(255,255,255,0.07);color:white;
+    border:1px solid rgba(255,255,255,0.12);
+    font-size:14px;font-weight:700;transition:transform .15s;
+}
+.bin-stop:hover{transform:scale(.97);}
+.bin-visual{height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-top:20px;}
+.bin-visual-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,#06b6d4,#818cf8);width:0%;transition:width .3s;}
 
-    .breathing-circle.inhale {
-        animation: breatheIn 4s ease-in-out;
-    }
+/* ═══════ 5. CUSTOM BREATHING ═══════ */
+.cbreath-panel{padding:36px 32px;max-width:460px;width:100%;text-align:center;}
+.cbreath-sliders{display:flex;flex-direction:column;gap:16px;margin-bottom:28px;text-align:left;}
+.cb-row{display:flex;align-items:center;gap:12px;}
+.cb-lbl{font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);min-width:72px;}
+.cb-slider{flex:1;}
+.cb-val{font-size:13px;font-weight:800;color:white;min-width:28px;text-align:right;}
+.cb-unit{font-size:12px;color:rgba(255,255,255,0.3);}
+.cbreath-ring-wrap{
+    position:relative;width:200px;height:200px;margin:0 auto 20px;
+}
+.cb-circle{
+    width:200px;height:200px;border-radius:50%;
+    background:linear-gradient(135deg,rgba(244,63,94,0.18),rgba(251,146,60,0.18));
+    border:2px solid rgba(255,255,255,0.12);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    transition:all ease-in-out;
+}
+.cb-circle-label{font-size:18px;font-weight:800;color:white;}
+.cb-circle-count{font-size:42px;font-weight:900;color:white;font-variant-numeric:tabular-nums;line-height:1;}
+.cb-info{font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:20px;}
+.cb-btns{display:flex;gap:10px;justify-content:center;}
+.cb-start{
+    padding:12px 30px;border:none;border-radius:13px;
+    font-size:14px;font-weight:700;
+    background:linear-gradient(135deg,#f43f5e,#fb923c);color:white;
+    transition:transform .15s,opacity .2s;
+}
+.cb-start:hover{opacity:.88;transform:scale(.97);}
+.cb-reset{
+    padding:12px 22px;border-radius:13px;
+    background:rgba(255,255,255,0.07);color:white;
+    border:1px solid rgba(255,255,255,0.12);
+    font-size:14px;font-weight:700;transition:transform .15s;
+}
+.cb-reset:hover{transform:scale(.97);}
 
-    .breathing-circle.hold {
-        animation: hold 4s ease-in-out;
-    }
+/* ═══════ 6. VISUALIZATION JOURNEY ═══════ */
+.viz-panel{padding:34px 30px;max-width:560px;width:100%;}
+.viz-scenes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:24px;}
+.viz-scene-btn{
+    padding:10px 20px;border-radius:14px;
+    border:1.5px solid rgba(255,255,255,0.12);
+    background:transparent;color:rgba(255,255,255,0.55);
+    font-size:13px;font-weight:700;transition:all .2s;display:flex;align-items:center;gap:7px;
+}
+.viz-scene-btn:hover{background:rgba(255,255,255,0.08);color:white;}
+.viz-scene-btn.active{background:rgba(245,158,11,0.16);color:#fcd34d;border-color:#f59e0b;}
+.viz-progress{display:flex;gap:5px;margin-bottom:18px;justify-content:center;}
+.viz-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.12);transition:background .3s;}
+.viz-dot.done{background:#f59e0b;} .viz-dot.cur{background:white;}
+.viz-text-box{
+    background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+    border-radius:18px;padding:28px 26px;
+    font-size:15px;color:rgba(255,255,255,0.8);
+    line-height:1.75;text-align:center;margin-bottom:22px;
+    min-height:130px;display:flex;align-items:center;justify-content:center;
+    transition:opacity .4s;
+}
+.viz-text-box.fading{opacity:0;}
+.viz-step-num{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,0.25);text-align:center;margin-bottom:16px;}
+.viz-nav{display:flex;gap:10px;}
+.viz-next{
+    flex:1;padding:12px;border:none;border-radius:13px;
+    font-size:15px;font-weight:700;
+    background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#78350f;
+    transition:transform .15s;
+}
+.viz-next:hover{transform:scale(.97);}
+.viz-prev{
+    padding:12px 18px;border-radius:13px;
+    background:rgba(255,255,255,0.07);color:white;
+    border:1px solid rgba(255,255,255,0.12);
+    font-size:15px;font-weight:700;transition:transform .15s;
+}
+.viz-prev:hover{transform:scale(.97);}
+.viz-auto-row{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:16px;}
+.viz-auto-lbl{font-size:12px;color:rgba(255,255,255,0.35);font-weight:600;}
+.viz-speed{
+    padding:5px 14px;border-radius:20px;border:1.5px solid rgba(255,255,255,0.12);
+    background:transparent;color:rgba(255,255,255,0.5);
+    font-size:11px;font-weight:700;transition:all .2s;
+}
+.viz-speed.on{background:rgba(245,158,11,0.14);color:#fcd34d;border-color:#f59e0b;}
+.viz-complete{text-align:center;padding:12px 0;}
+.viz-complete-ico{font-size:58px;}
+.viz-complete h3{color:#f59e0b;font-size:20px;font-weight:800;margin:12px 0 8px;}
+.viz-complete p{color:rgba(255,255,255,0.45);font-size:13px;line-height:1.6;}
+.viz-again{
+    margin-top:16px;padding:11px 24px;border:none;border-radius:12px;
+    background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#78350f;
+    font-size:14px;font-weight:700;transition:transform .15s;
+}
+.viz-again:hover{transform:scale(.97);}
 
-    .breathing-circle.exhale {
-        animation: breatheOut 6s ease-in-out;
-    }
+/* scrollbar */
+.ov::-webkit-scrollbar{width:5px;}
+.ov::-webkit-scrollbar-track{background:transparent;}
+.ov::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
 
-    @keyframes breatheIn {
-        0% { transform: scale(1); }
-        100% { transform: scale(1.3); }
-    }
+/* demo badge */
+.demo-badge{
+    position:fixed;top:12px;right:16px;z-index:99998;
+    background:rgba(245,158,11,.92);color:#000;
+    padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;
+}
 
-    @keyframes hold {
-        0%, 100% { transform: scale(1.3); }
-    }
-
-    @keyframes breatheOut {
-        0% { transform: scale(1.3); }
-        100% { transform: scale(1); }
-    }
-
-    .breath-controls {
-        text-align: center;
-        margin-top: 2rem;
-    }
-
-    .breath-btn {
-        padding: 1rem 2rem;
-        font-size: 1.1rem;
-        background: linear-gradient(135deg, var(--aura-accent), var(--aura-accent-secondary, #764ba2));
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        margin: 0.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .breath-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-    }
-
-    .breath-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .timer-display {
-        font-size: 3rem;
-        font-weight: bold;
-        text-align: center;
-        margin: 2rem 0;
-        color: var(--aura-accent);
-    }
-
-    .meditation-options {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-
-    .meditation-btn {
-        padding: 0.8rem 1.5rem;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        color: white;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .meditation-btn:hover, .meditation-btn.active {
-        background: var(--aura-accent);
-        border-color: var(--aura-accent);
-    }
-
-    .affirmations-container {
-        text-align: center;
-        padding: 2rem;
-        min-height: 150px;
-    }
-
-    .affirmation-text {
-        font-size: 1.5rem;
-        font-style: italic;
-        color: var(--aura-accent);
-        margin: 2rem 0;
-        opacity: 0;
-        animation: fadeIn 1s ease-in forwards;
-    }
-
-    @keyframes fadeIn {
-        to { opacity: 1; }
-    }
+@media(max-width:600px){
+    .relax-hero{padding:30px 20px;}
+    .amb-sounds{grid-template-columns:repeat(2,1fr);}
+    .bin-waves{grid-template-columns:1fr;}
+}
 </style>
+</head>
+<body>
 
+<!-- NAV -->
+<nav class="relax-nav">
+    <a href="/student/dashboard" class="nav-back">← Dashboard</a>
+    <div class="nav-sep"></div>
+    <span class="nav-logo">AURA</span>
+    <div class="nav-sep"></div>
+    <span class="nav-title">Relaxation Zone</span>
+    <div class="nav-spacer"></div>
+    {% if session.get('user_name') %}<span class="nav-user">{{ session.get('user_name') }}</span>{% endif %}
+</nav>
 
+{% if session.get('is_demo') %}
+<div style="background:linear-gradient(90deg,#f59e0b,#d97706);color:#000;text-align:center;padding:7px 16px;font-size:12px;font-weight:700;">
+    ⚠️ Demo Mode — Browse freely. Write actions are disabled.
+</div>
+{% endif %}
 
-<div class="relax-container">
-    <div class="relax-header">
-        <h1>🧘 Relaxation Zone</h1>
-        <p class="pill">Find your calm with guided breathing, meditation, and positive affirmations</p>
+<div class="relax-page">
+
+    <!-- HERO -->
+    <div class="relax-hero">
+        <div class="hero-eyebrow">🌙 AURA Relaxation Zone</div>
+        <h1 class="hero-h1">Your Personal<br><span>Calm Centre</span></h1>
+        <p class="hero-sub">Six immersive tools built to quiet your mind, ease your body, and guide you into a state of deep relaxation — no apps, no accounts required.</p>
+        <div class="hero-pills">
+            <span class="hero-pill">🎵 Ambient Sounds</span>
+            <span class="hero-pill">⏱️ Meditation Timer</span>
+            <span class="hero-pill">🌙 Body Scan</span>
+            <span class="hero-pill">🧠 Binaural Beats</span>
+            <span class="hero-pill">💨 Custom Breathing</span>
+            <span class="hero-pill">🌅 Visualization</span>
+        </div>
     </div>
 
+    <div class="section-lbl">All Tools</div>
+
     <div class="relax-grid">
-        <!-- Box Breathing Exercise -->
-        <div class="relax-card">
-            <h2>🌬️ Box Breathing</h2>
-            <p>A simple breathing technique to reduce stress and improve focus.</p>
-            <div class="breathing-circle" id="breathCircle">Ready</div>
-            <div class="breath-controls">
-                <button class="breath-btn" id="startBreathBtn">Start</button>
-                <button class="breath-btn" id="stopBreathBtn" disabled>Stop</button>
-            </div>
-            <p id="breathInstruction" style="text-align: center; margin-top: 1rem; font-size: 1.2rem;"></p>
-        </div>
 
-        <!-- Meditation Timer -->
-        <div class="relax-card">
-            <h2>⏱️ Meditation Timer</h2>
-            <p>Set a timer for your meditation practice.</p>
-            <div class="meditation-options">
-                <button class="meditation-btn" data-minutes="1">1 min</button>
-                <button class="meditation-btn" data-minutes="3">3 min</button>
-                <button class="meditation-btn" data-minutes="5">5 min</button>
-                <button class="meditation-btn" data-minutes="10">10 min</button>
-            </div>
-            <div class="timer-display" id="timerDisplay">00:00</div>
-            <div class="breath-controls">
-                <button class="breath-btn" id="startMeditationBtn">Start</button>
-                <button class="breath-btn" id="pauseMeditationBtn" disabled>Pause</button>
-                <button class="breath-btn" id="resetMeditationBtn">Reset</button>
+        <div class="r-card" onclick="openOv('ambOv')">
+            <div class="r-banner bn-violet">🎵</div>
+            <div class="r-card-body">
+                <span class="r-tag tag-sound">Sound</span>
+                <div class="r-title">Ambient Soundscapes</div>
+                <div class="r-desc">Immersive procedural audio environments — rain, ocean, forest crackling fire and white noise — all generated in your browser, zero downloads.</div>
+                <button class="r-btn rb-violet" onclick="openOv('ambOv')">Play Sounds</button>
             </div>
         </div>
 
-        <!-- Positive Affirmations -->
-        <div class="relax-card">
-            <h2>✨ Daily Affirmations</h2>
-            <p>Boost your mood with positive thoughts.</p>
-            <div class="affirmations-container">
-                <div class="affirmation-text" id="affirmationText">Click below for an affirmation</div>
+        <div class="r-card" onclick="openOv('medOv')">
+            <div class="r-banner bn-indigo">⏱️</div>
+            <div class="r-card-body">
+                <span class="r-tag tag-meditate">Meditate</span>
+                <div class="r-title">Meditation Timer</div>
+                <div class="r-desc">A visual ring timer with interval bells, session counter, and optional ambient hum. Set 1 to 30 minutes and simply sit.</div>
+                <button class="r-btn rb-indigo" onclick="openOv('medOv')">Open Timer</button>
             </div>
-            <div class="breath-controls">
-                <button class="breath-btn" id="newAffirmationBtn">New Affirmation</button>
+        </div>
+
+        <div class="r-card" onclick="openOv('scanOv')">
+            <div class="r-banner bn-emerald">🌙</div>
+            <div class="r-card-body">
+                <span class="r-tag tag-body">Body</span>
+                <div class="r-title">Body Scan Relaxation</div>
+                <div class="r-desc">A 9-step guided progressive muscle relaxation. Move awareness through each part of your body and consciously release all tension.</div>
+                <button class="r-btn rb-emerald" onclick="openOv('scanOv')">Begin Scan</button>
             </div>
+        </div>
+
+        <div class="r-card" onclick="openOv('binOv')">
+            <div class="r-banner bn-cyan">🧠</div>
+            <div class="r-card-body">
+                <span class="r-tag tag-wave">Brainwave</span>
+                <div class="r-title">Binaural Beats</div>
+                <div class="r-desc">Delta, Theta, Alpha, and Gamma wave entrainment via dual-oscillator Web Audio API tones. Tune your brain for sleep, calm, focus or creativity.</div>
+                <button class="r-btn rb-cyan" onclick="openOv('binOv')">Tune In</button>
+            </div>
+        </div>
+
+        <div class="r-card" onclick="openOv('cbOv')">
+            <div class="r-banner bn-rose">💨</div>
+            <div class="r-card-body">
+                <span class="r-tag tag-breath">Breath</span>
+                <div class="r-title">Custom Breathing Builder</div>
+                <div class="r-desc">Design your own breathing pattern. Set exact inhale, hold, and exhale durations with sliders. Animated circle guides every breath.</div>
+                <button class="r-btn rb-rose" onclick="openOv('cbOv')">Build Pattern</button>
+            </div>
+        </div>
+
+        <div class="r-card" onclick="openOv('vizOv')">
+            <div class="r-banner bn-amber">🌅</div>
+            <div class="r-card-body">
+                <span class="r-tag tag-visual">Visualize</span>
+                <div class="r-title">Visualization Journey</div>
+                <div class="r-desc">Three guided meditation journeys — Mountain Lake, Tropical Beach, and Enchanted Forest. Step through immersive scenes with auto-play or at your own pace.</div>
+                <button class="r-btn rb-amber" onclick="openOv('vizOv')">Begin Journey</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════
+     OVERLAYS
+═══════════════════════════════════ -->
+
+<!-- 1. AMBIENT SOUNDS -->
+<div id="ambOv" class="ov">
+    <button class="ov-close" onclick="closeOv('ambOv')">✕ Close</button>
+    <div class="ov-title">🎵 Ambient Soundscapes</div>
+    <div class="gp amb-panel">
+        <div class="amb-sounds">
+            <button class="amb-btn" id="ambRain"    onclick="ambPlay('rain')">   <span>🌧️</span><span>Rain</span></button>
+            <button class="amb-btn" id="ambOcean"   onclick="ambPlay('ocean')">  <span>🌊</span><span>Ocean</span></button>
+            <button class="amb-btn" id="ambForest"  onclick="ambPlay('forest')"> <span>🌲</span><span>Forest</span></button>
+            <button class="amb-btn" id="ambFire"    onclick="ambPlay('fire')">   <span>🔥</span><span>Fire</span></button>
+            <button class="amb-btn" id="ambWhite"   onclick="ambPlay('white')">  <span>☁️</span><span>White Noise</span></button>
+            <button class="amb-btn" id="ambCafe"    onclick="ambPlay('cafe')">   <span>☕</span><span>Café</span></button>
+        </div>
+        <div class="amb-vol-row">
+            <span class="amb-vol-lbl">🔊 Volume</span>
+            <input type="range" class="amb-vol-slider" id="ambVol" min="0" max="100" value="60" oninput="ambSetVol(this.value)">
+            <span style="font-size:12px;color:rgba(255,255,255,0.4);min-width:28px;" id="ambVolVal">60%</span>
+        </div>
+        <div class="amb-status" id="ambStatus">Select a soundscape to begin</div>
+    </div>
+</div>
+
+<!-- 2. MEDITATION TIMER -->
+<div id="medOv" class="ov">
+    <button class="ov-close" onclick="closeOv('medOv')">✕ Close</button>
+    <div class="ov-title">⏱️ Meditation Timer</div>
+    <div class="gp med-panel">
+        <div class="med-presets">
+            <button class="med-preset" data-min="1"  onclick="medSetDur(1,this)">1 min</button>
+            <button class="med-preset" data-min="3"  onclick="medSetDur(3,this)">3 min</button>
+            <button class="med-preset" data-min="5"  onclick="medSetDur(5,this)">5 min</button>
+            <button class="med-preset" data-min="10" onclick="medSetDur(10,this)">10 min</button>
+            <button class="med-preset" data-min="20" onclick="medSetDur(20,this)">20 min</button>
+            <button class="med-preset" data-min="30" onclick="medSetDur(30,this)">30 min</button>
+        </div>
+        <div class="med-ring-wrap">
+            <svg viewBox="0 0 210 210" width="210" height="210">
+                <defs>
+                    <linearGradient id="medGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#3b82f6"/>
+                        <stop offset="100%" stop-color="#818cf8"/>
+                    </linearGradient>
+                </defs>
+                <circle class="med-ring-bg"   cx="105" cy="105" r="93"/>
+                <circle class="med-ring-prog" id="medRing" cx="105" cy="105" r="93"
+                    stroke-dasharray="584.34" stroke-dashoffset="0"/>
+            </svg>
+            <div class="med-center">
+                <div class="med-digits" id="medDigits">00:00</div>
+                <div class="med-lbl"    id="medLabel">Select duration</div>
+            </div>
+        </div>
+        <div class="med-sessions" id="medSessions">Sessions today: 0</div>
+        <div class="med-bell-row">
+            <span class="med-bell-lbl">🔔 Interval bell</span>
+            <div class="med-bell-toggle" id="bellToggle" onclick="medToggleBell()">
+                <div class="med-bell-thumb"></div>
+            </div>
+        </div>
+        <div class="med-btns">
+            <button class="med-start" id="medStartBtn" onclick="medToggle()">▶ Start</button>
+            <button class="med-ghost" onclick="medReset()">↩ Reset</button>
         </div>
     </div>
 </div>
 
+<!-- 3. BODY SCAN -->
+<div id="scanOv" class="ov">
+    <button class="ov-close" onclick="closeOv('scanOv')">✕ Close</button>
+    <div class="ov-title">🌙 Body Scan Relaxation</div>
+    <div class="gp scan-panel">
+        <div class="scan-track" id="scanTrack">
+            <div class="scan-dot cur" id="sd0"></div><div class="scan-dot" id="sd1"></div>
+            <div class="scan-dot" id="sd2"></div><div class="scan-dot" id="sd3"></div>
+            <div class="scan-dot" id="sd4"></div><div class="scan-dot" id="sd5"></div>
+            <div class="scan-dot" id="sd6"></div><div class="scan-dot" id="sd7"></div>
+            <div class="scan-dot" id="sd8"></div>
+        </div>
+        <div id="scanBody">
+            <div class="scan-part" id="scanPart">Head &amp; Scalp</div>
+            <div class="scan-instruction" id="scanInstr">Close your eyes. Bring your awareness to the top of your head. Notice any tightness or tension in your scalp. With each exhale, let it soften and release completely.</div>
+            <div class="scan-progress-bar"><div class="scan-progress-fill" id="scanFill" style="width:0%"></div></div>
+            <div class="scan-auto-btn">
+                <button class="scan-toggle" id="scanAutoBtn" onclick="scanToggleAuto()">⏱ Auto-advance</button>
+                <span style="font-size:12px;color:rgba(255,255,255,0.3);" id="scanAutoInfo">30s per step</span>
+            </div>
+            <div class="scan-nav">
+                <button class="scan-prev" id="scanPrevBtn" style="display:none;" onclick="scanStep(-1)">← Back</button>
+                <button class="scan-next" onclick="scanStep(1)">Next →</button>
+            </div>
+        </div>
+        <div class="scan-done" id="scanDone" style="display:none;">
+            <div class="scan-done-ico">✨</div>
+            <h3>Body Scan Complete</h3>
+            <p>You've moved awareness through your entire body and released all held tension. Rest in this stillness for a moment.</p>
+            <button class="scan-again" onclick="scanReset()">Begin Again</button>
+        </div>
+    </div>
+</div>
+
+<!-- 4. BINAURAL BEATS -->
+<div id="binOv" class="ov">
+    <button class="ov-close" onclick="closeOv('binOv')">✕ Close</button>
+    <div class="ov-title">🧠 Binaural Beats</div>
+    <div class="gp bin-panel">
+        <div class="bin-waves">
+            <div class="bin-wave" id="bwDelta" onclick="binSelect('delta')">
+                <span class="bin-wave-ico">🌛</span>
+                <span class="bin-wave-name">Delta</span>
+                <span class="bin-wave-hz">0.5–3 Hz</span>
+                <span class="bin-wave-tag">Deep Sleep</span>
+            </div>
+            <div class="bin-wave active" id="bwTheta" onclick="binSelect('theta')">
+                <span class="bin-wave-ico">🫧</span>
+                <span class="bin-wave-name">Theta</span>
+                <span class="bin-wave-hz">4–7 Hz</span>
+                <span class="bin-wave-tag">Meditation</span>
+            </div>
+            <div class="bin-wave" id="bwAlpha" onclick="binSelect('alpha')">
+                <span class="bin-wave-ico">🌊</span>
+                <span class="bin-wave-name">Alpha</span>
+                <span class="bin-wave-hz">8–13 Hz</span>
+                <span class="bin-wave-tag">Calm Focus</span>
+            </div>
+            <div class="bin-wave" id="bwGamma" onclick="binSelect('gamma')">
+                <span class="bin-wave-ico">⚡</span>
+                <span class="bin-wave-name">Gamma</span>
+                <span class="bin-wave-hz">30–50 Hz</span>
+                <span class="bin-wave-tag">Creativity</span>
+            </div>
+        </div>
+        <div class="bin-state" id="binHz">6 Hz</div>
+        <div class="bin-status" id="binStatus">Theta waves selected — ideal for deep meditation</div>
+        <div class="bin-vol">
+            <span class="bin-vol-ico">🔊</span>
+            <input type="range" class="bin-vol-sl" id="binVol" min="0" max="100" value="40" oninput="binSetVol(this.value)">
+        </div>
+        <div class="bin-ctrl">
+            <button class="bin-play" id="binPlayBtn" onclick="binToggle()">▶ Play</button>
+            <button class="bin-stop" onclick="binStop()">■ Stop</button>
+        </div>
+        <div class="bin-visual"><div class="bin-visual-bar" id="binBar"></div></div>
+    </div>
+</div>
+
+<!-- 5. CUSTOM BREATHING -->
+<div id="cbOv" class="ov">
+    <button class="ov-close" onclick="closeOv('cbOv')">✕ Close</button>
+    <div class="ov-title">💨 Custom Breathing Builder</div>
+    <div class="gp cbreath-panel">
+        <div class="cbreath-sliders">
+            <div class="cb-row">
+                <span class="cb-lbl">🫁 Inhale</span>
+                <input type="range" class="cb-slider" id="cbIn"   min="1" max="12" value="4" oninput="cbUpdate()">
+                <span class="cb-val" id="cbInV">4</span><span class="cb-unit">s</span>
+            </div>
+            <div class="cb-row">
+                <span class="cb-lbl">⏸ Hold in</span>
+                <input type="range" class="cb-slider" id="cbHold" min="0" max="12" value="4" oninput="cbUpdate()">
+                <span class="cb-val" id="cbHoldV">4</span><span class="cb-unit">s</span>
+            </div>
+            <div class="cb-row">
+                <span class="cb-lbl">💨 Exhale</span>
+                <input type="range" class="cb-slider" id="cbOut"  min="1" max="16" value="6" oninput="cbUpdate()">
+                <span class="cb-val" id="cbOutV">6</span><span class="cb-unit">s</span>
+            </div>
+            <div class="cb-row">
+                <span class="cb-lbl">⏸ Hold out</span>
+                <input type="range" class="cb-slider" id="cbHold2" min="0" max="12" value="2" oninput="cbUpdate()">
+                <span class="cb-val" id="cbHold2V">2</span><span class="cb-unit">s</span>
+            </div>
+        </div>
+        <div class="cb-circle" id="cbCircle">
+            <span class="cb-circle-label" id="cbLabel">Ready</span>
+            <span class="cb-circle-count" id="cbCount">–</span>
+        </div>
+        <div class="cb-info" id="cbInfo">4s inhale · 4s hold · 6s exhale · 2s hold = 16s cycle</div>
+        <div class="cb-btns">
+            <button class="cb-start" id="cbStartBtn" onclick="cbToggle()">▶ Start</button>
+            <button class="cb-reset" onclick="cbReset()">↩ Reset</button>
+        </div>
+    </div>
+</div>
+
+<!-- 6. VISUALIZATION JOURNEY -->
+<div id="vizOv" class="ov">
+    <button class="ov-close" onclick="closeOv('vizOv')">✕ Close</button>
+    <div class="ov-title">🌅 Visualization Journey</div>
+    <div class="gp viz-panel">
+        <div class="viz-scenes">
+            <button class="viz-scene-btn active" id="vs0" onclick="vizScene(0,this)">🏔️ Mountain Lake</button>
+            <button class="viz-scene-btn"        id="vs1" onclick="vizScene(1,this)">🏝️ Tropical Beach</button>
+            <button class="viz-scene-btn"        id="vs2" onclick="vizScene(2,this)">🌲 Enchanted Forest</button>
+        </div>
+        <div class="viz-auto-row">
+            <span class="viz-auto-lbl">Auto-advance</span>
+            <button class="viz-speed" id="vizAutoBtn" onclick="vizToggleAuto()">⏱ 8s per step</button>
+        </div>
+        <div class="viz-progress" id="vizProgress"></div>
+        <div class="viz-step-num" id="vizStepNum">Step 1 of 7</div>
+        <div class="viz-text-box" id="vizText">Loading your journey…</div>
+        <div id="vizMain">
+            <div class="viz-nav">
+                <button class="viz-prev" id="vizPrevBtn" style="display:none;" onclick="vizStep(-1)">← Back</button>
+                <button class="viz-next" onclick="vizStep(1)">Continue →</button>
+            </div>
+        </div>
+        <div class="viz-complete" id="vizComplete" style="display:none;">
+            <div class="viz-complete-ico">🌟</div>
+            <h3>Journey Complete</h3>
+            <p>Take a slow, deep breath and gently return your awareness to the room.<br>Carry this calmness with you.</p>
+            <button class="viz-again" onclick="vizReset()">Begin Again</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════
+     SCRIPTS
+═══════════════════════════════════ -->
 <script>
-// Box Breathing
-let breathingInterval = null;
-let breathingStep = 0;
-const breathCircle = document.getElementById('breathCircle');
-const breathInstruction = document.getElementById('breathInstruction');
-const startBreathBtn = document.getElementById('startBreathBtn');
-const stopBreathBtn = document.getElementById('stopBreathBtn');
-
-const breathingSteps = [
-    { text: 'Breathe In', duration: 4000, class: 'inhale' },
-    { text: 'Hold', duration: 4000, class: 'hold' },
-    { text: 'Breathe Out', duration: 6000, class: 'exhale' },
-    { text: 'Hold', duration: 2000, class: 'hold' }
-];
-
-function startBreathing() {
-    breathingStep = 0;
-    startBreathBtn.disabled = true;
-    stopBreathBtn.disabled = false;
-    runBreathingStep();
+/* ── Open / Close ── */
+function openOv(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';if(id==='vizOv')vizInit();}
+function closeOv(id){
+    document.getElementById(id).classList.remove('open');
+    document.body.style.overflow='';
+    if(id==='ambOv') ambStop();
+    if(id==='medOv') medStop();
+    if(id==='binOv') binStop();
+    if(id==='cbOv')  cbStop();
+    if(id==='scanOv')scanStopAuto();
+    if(id==='vizOv') vizStopAuto();
 }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.ov.open').forEach(o=>closeOv(o.id)); });
 
-function stopBreathing() {
-    clearTimeout(breathingInterval);
-    breathCircle.className = 'breathing-circle';
-    breathCircle.textContent = 'Ready';
-    breathInstruction.textContent = '';
-    startBreathBtn.disabled = false;
-    stopBreathBtn.disabled = true;
-}
+/* ═══════════════════════════════════
+   1. AMBIENT SOUND ENGINE (Web Audio)
+═══════════════════════════════════ */
+(function(){
+    let ctx, gainNode, activeSource=null, activeId=null, vol=0.6;
 
-function runBreathingStep() {
-    const step = breathingSteps[breathingStep];
-    breathCircle.className = 'breathing-circle ' + step.class;
-    breathCircle.textContent = step.text;
-    breathInstruction.textContent = step.text + '...';
-    
-    breathingInterval = setTimeout(() => {
-        breathingStep = (breathingStep + 1) % breathingSteps.length;
-        runBreathingStep();
-    }, step.duration);
-}
+    function getCtx(){ if(!ctx) ctx=new(window.AudioContext||window.webkitAudioContext)(); return ctx; }
 
-startBreathBtn.addEventListener('click', startBreathing);
-stopBreathBtn.addEventListener('click', stopBreathing);
-
-// Meditation Timer
-let meditationSeconds = 0;
-let meditationTimer = null;
-let meditationPaused = false;
-const timerDisplay = document.getElementById('timerDisplay');
-const startMeditationBtn = document.getElementById('startMeditationBtn');
-const pauseMeditationBtn = document.getElementById('pauseMeditationBtn');
-const resetMeditationBtn = document.getElementById('resetMeditationBtn');
-
-document.querySelectorAll('.meditation-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.meditation-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        meditationSeconds = parseInt(btn.dataset.minutes) * 60;
-        updateTimerDisplay();
-        resetMeditation();
-    });
-});
-
-function updateTimerDisplay() {
-    const mins = Math.floor(meditationSeconds / 60);
-    const secs = meditationSeconds % 60;
-    timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-}
-
-function startMeditation() {
-    if (meditationSeconds <= 0) {
-        alert('Please select a duration first!');
-        return;
+    function makeNoise(buffer, sr){
+        const c=getCtx(),buf=c.createBuffer(1,buffer,sr);
+        const d=buf.getChannelData(0);
+        for(let i=0;i<buffer;i++) d[i]=Math.random()*2-1;
+        return buf;
     }
-    meditationPaused = false;
-    startMeditationBtn.disabled = true;
-    pauseMeditationBtn.disabled = false;
-    runMeditationTimer();
-}
 
-function pauseMeditation() {
-    meditationPaused = true;
-    clearInterval(meditationTimer);
-    startMeditationBtn.disabled = false;
-    pauseMeditationBtn.disabled = true;
-}
+    function buildRain(){
+        const c=getCtx();
+        gainNode=c.createGain(); gainNode.gain.value=vol*0.7;
+        gainNode.connect(c.destination);
+        const noise=c.createBufferSource();
+        noise.buffer=makeNoise(c.sampleRate*2,c.sampleRate);
+        noise.loop=true;
+        const hpf=c.createBiquadFilter(); hpf.type='highpass'; hpf.frequency.value=1200;
+        const lpf=c.createBiquadFilter(); lpf.type='lowpass';  lpf.frequency.value=8000;
+        noise.connect(hpf); hpf.connect(lpf); lpf.connect(gainNode);
+        noise.start(); activeSource=noise;
+    }
 
-function resetMeditation() {
-    clearInterval(meditationTimer);
-    meditationPaused = false;
-    startMeditationBtn.disabled = false;
-    pauseMeditationBtn.disabled = true;
-    document.querySelectorAll('.meditation-btn').forEach(btn => {
-        if (btn.classList.contains('active')) {
-            meditationSeconds = parseInt(btn.dataset.minutes) * 60;
+    function buildOcean(){
+        const c=getCtx();
+        gainNode=c.createGain(); gainNode.gain.value=vol*0.6;
+        gainNode.connect(c.destination);
+        const noise=c.createBufferSource();
+        noise.buffer=makeNoise(c.sampleRate*4,c.sampleRate);
+        noise.loop=true;
+        const lpf=c.createBiquadFilter(); lpf.type='lowpass'; lpf.frequency.value=800;
+        const lfo=c.createOscillator(); lfo.frequency.value=0.1;
+        const lfoGain=c.createGain(); lfoGain.gain.value=300;
+        lfo.connect(lfoGain); lfoGain.connect(lpf.frequency);
+        noise.connect(lpf); lpf.connect(gainNode);
+        noise.start(); lfo.start(); activeSource=noise;
+    }
+
+    function buildForest(){
+        const c=getCtx();
+        gainNode=c.createGain(); gainNode.gain.value=vol*0.4;
+        gainNode.connect(c.destination);
+        const noise=c.createBufferSource();
+        noise.buffer=makeNoise(c.sampleRate*2,c.sampleRate);
+        noise.loop=true;
+        const bpf=c.createBiquadFilter(); bpf.type='bandpass'; bpf.frequency.value=3000; bpf.Q.value=0.5;
+        noise.connect(bpf); bpf.connect(gainNode);
+        // add chirp oscillators
+        [1200,1800,2400].forEach((f,i)=>{
+            const osc=c.createOscillator(); osc.frequency.value=f;
+            const g=c.createGain(); g.gain.value=0;
+            const lfo=c.createOscillator(); lfo.frequency.value=0.3+i*0.2;
+            const lg=c.createGain(); lg.gain.value=0.025;
+            lfo.connect(lg); lg.connect(g.gain);
+            osc.connect(g); g.connect(gainNode);
+            osc.start(); lfo.start();
+        });
+        noise.start(); activeSource=noise;
+    }
+
+    function buildFire(){
+        const c=getCtx();
+        gainNode=c.createGain(); gainNode.gain.value=vol*0.5;
+        gainNode.connect(c.destination);
+        const noise=c.createBufferSource();
+        noise.buffer=makeNoise(c.sampleRate*2,c.sampleRate);
+        noise.loop=true;
+        const lpf=c.createBiquadFilter(); lpf.type='lowpass'; lpf.frequency.value=600;
+        const lfo=c.createOscillator(); lfo.frequency.value=4;
+        const lg=c.createGain(); lg.gain.value=150;
+        lfo.connect(lg); lg.connect(lpf.frequency);
+        noise.connect(lpf); lpf.connect(gainNode);
+        noise.start(); lfo.start(); activeSource=noise;
+    }
+
+    function buildWhite(){
+        const c=getCtx();
+        gainNode=c.createGain(); gainNode.gain.value=vol*0.5;
+        gainNode.connect(c.destination);
+        const noise=c.createBufferSource();
+        noise.buffer=makeNoise(c.sampleRate*2,c.sampleRate);
+        noise.loop=true;
+        noise.connect(gainNode);
+        noise.start(); activeSource=noise;
+    }
+
+    function buildCafe(){
+        const c=getCtx();
+        gainNode=c.createGain(); gainNode.gain.value=vol*0.45;
+        gainNode.connect(c.destination);
+        const noise=c.createBufferSource();
+        noise.buffer=makeNoise(c.sampleRate*2,c.sampleRate);
+        noise.loop=true;
+        const bpf=c.createBiquadFilter(); bpf.type='bandpass'; bpf.frequency.value=600; bpf.Q.value=1;
+        const lfo=c.createOscillator(); lfo.frequency.value=0.05;
+        const lg=c.createGain(); lg.gain.value=200;
+        lfo.connect(lg); lg.connect(bpf.frequency);
+        noise.connect(bpf); bpf.connect(gainNode);
+        noise.start(); lfo.start(); activeSource=noise;
+    }
+
+    const BUILDERS={rain:buildRain,ocean:buildOcean,forest:buildForest,fire:buildFire,white:buildWhite,cafe:buildCafe};
+    const NAMES={rain:'🌧️ Rain',ocean:'🌊 Ocean Waves',forest:'🌲 Forest',fire:'🔥 Crackling Fire',white:'☁️ White Noise',cafe:'☕ Café Ambience'};
+
+    window.ambStop=function(){
+        if(ctx){ ctx.close(); ctx=null; }
+        gainNode=null; activeSource=null;
+        if(activeId){ document.getElementById('amb'+cap(activeId)).classList.remove('playing'); activeId=null; }
+        document.getElementById('ambStatus').textContent='Select a soundscape to begin';
+        document.getElementById('ambStatus').classList.remove('active');
+    };
+
+    window.ambPlay=function(id){
+        window.ambStop();
+        activeId=id;
+        BUILDERS[id]();
+        document.getElementById('amb'+cap(id)).classList.add('playing');
+        document.getElementById('ambStatus').textContent='▶ Playing: '+NAMES[id];
+        document.getElementById('ambStatus').classList.add('active');
+    };
+
+    window.ambSetVol=function(v){
+        vol=v/100;
+        document.getElementById('ambVolVal').textContent=v+'%';
+        if(gainNode) gainNode.gain.value=vol*(activeId?{rain:.7,ocean:.6,forest:.4,fire:.5,white:.5,cafe:.45}[activeId]:0.5);
+    };
+
+    function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+})();
+
+
+/* ═══════════════════════════════════
+   2. MEDITATION TIMER
+═══════════════════════════════════ */
+(function(){
+    const C=2*Math.PI*93; // 584.34
+    let total=0,rem=0,run=false,tmr=null,bellOn=true,sessCount=0,sessKey='aura_med_sess';
+
+    function beep(f,d,v){try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(v||0.3,c.currentTime+0.01);g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+d);o.start();o.stop(c.currentTime+d+0.05);}catch(e){}}
+
+    function render(){
+        const m=String(Math.floor(rem/60)).padStart(2,'0'),s=String(rem%60).padStart(2,'0');
+        const d=document.getElementById('medDigits'); if(d)d.textContent=m+':'+s;
+        const ring=document.getElementById('medRing');
+        if(ring&&total>0) ring.style.strokeDashoffset=C-(C*(rem/total));
+    }
+
+    window.medSetDur=function(min,btn){
+        medStop(); total=min*60; rem=total;
+        document.querySelectorAll('.med-preset').forEach(b=>b.classList.remove('active'));
+        if(btn)btn.classList.add('active');
+        document.getElementById('medLabel').textContent=min+(min===1?' minute':' minutes');
+        if(document.getElementById('medRing')) document.getElementById('medRing').style.strokeDashoffset=0;
+        render();
+    };
+
+    window.medToggleBell=function(){
+        bellOn=!bellOn;
+        document.getElementById('bellToggle').classList.toggle('on',bellOn);
+    };
+
+    window.medToggle=function(){
+        if(run){medStop();return;}
+        if(!total){alert('Please select a duration first.');return;}
+        run=true;
+        const b=document.getElementById('medStartBtn'); if(b)b.textContent='⏸ Pause';
+        if(bellOn) beep(528,1.5,0.25); // start bell
+        tmr=setInterval(()=>{
+            rem--;
+            if(bellOn&&rem>0&&rem%60===0) beep(528,1.2,0.2);
+            if(rem<=0){
+                medStop();
+                if(bellOn){beep(528,2,0.35);setTimeout(()=>beep(440,1.5,0.25),700);}
+                sessCount++;
+                localStorage.setItem(sessKey,(parseInt(localStorage.getItem(sessKey)||'0')+1));
+                document.getElementById('medSessions').textContent='Sessions today: '+sessCount;
+                document.getElementById('medLabel').textContent='✅ Done!';
+                return;
+            }
+            render();
+        },1000);
+    };
+
+    function medStop(){
+        if(tmr)clearInterval(tmr);tmr=null;run=false;
+        const b=document.getElementById('medStartBtn'); if(b)b.textContent='▶ Start';
+    }
+    window.medStop=medStop;
+
+    window.medReset=function(){
+        medStop();
+        if(total){rem=total; if(document.getElementById('medRing'))document.getElementById('medRing').style.strokeDashoffset=0; render();}
+    };
+
+    const prev=parseInt(localStorage.getItem('aura_med_sess')||'0');
+    sessCount=prev;
+    setTimeout(()=>{ const el=document.getElementById('medSessions'); if(el)el.textContent='Sessions today: '+sessCount; },200);
+})();
+
+
+/* ═══════════════════════════════════
+   3. BODY SCAN
+═══════════════════════════════════ */
+(function(){
+    const STEPS=[
+        {part:'Head & Scalp',instr:'Close your eyes. Bring your awareness to the top of your head. Notice any tightness in your scalp. With each exhale, let it soften and release completely.'},
+        {part:'Face & Jaw',instr:'Bring awareness to your face. Notice tension around your eyes, brow, and jaw. Let your jaw drop slightly, teeth apart. Feel your face smooth and relax.'},
+        {part:'Neck & Shoulders',instr:'Gently move awareness to your neck and shoulders. This is where most people carry stress. Let your shoulders soften away from your ears. Feel warmth spreading.'},
+        {part:'Chest & Hands',instr:'Bring awareness to your chest. Notice the gentle rise and fall. Move down to your arms and hands. Let your fingers uncurl, releasing all grip.'},
+        {part:'Chest & Heart',instr:'Rest your awareness on your chest and your heartbeat. Feel gratitude for your body working for you. Let each heartbeat wash tension away.'},
+        {part:'Belly & Core',instr:'Move awareness to your stomach and core. If you are holding your belly in, let it relax. Breathe deeply, letting your belly rise fully.'},
+        {part:'Hips & Lower Back',instr:'Bring attention to your lower back and hips. These joints carry your weight all day. With this breath, pour warmth into this area and let it release.'},
+        {part:'Legs & Knees',instr:'Move awareness down along your legs. Notice any heaviness or aching. Feel your thighs and knees growing heavy and warm, sinking into relaxation.'},
+        {part:'Feet & Toes',instr:'Finally, bring all awareness to your feet and toes. Wiggle your toes gently, then let them relax. Feel grounded, heavy, and completely at ease.'},
+    ];
+    let step=0, autoTimer=null, autoSecs=30, fillTimer=null, autoOn=false;
+
+    function render(){
+        const s=STEPS[step];
+        document.getElementById('scanPart').textContent=s.part;
+        document.getElementById('scanInstr').textContent=s.instr;
+        document.getElementById('scanFill').style.width='0%';
+        const pb=document.getElementById('scanPrevBtn'); if(pb)pb.style.display=step===0?'none':'block';
+        for(let i=0;i<9;i++){const d=document.getElementById('sd'+i);if(d)d.className='scan-dot'+(i<step?' done':i===step?' cur':'');}
+        if(autoOn) startFill();
+    }
+
+    function startFill(){
+        if(fillTimer)clearInterval(fillTimer);
+        let pct=0; const inc=100/(autoSecs*10);
+        document.getElementById('scanFill').style.width='0%';
+        fillTimer=setInterval(()=>{
+            pct=Math.min(100,pct+inc);
+            document.getElementById('scanFill').style.width=pct+'%';
+            if(pct>=100){ clearInterval(fillTimer); scanStep(1); }
+        },100);
+    }
+
+    window.scanToggleAuto=function(){
+        autoOn=!autoOn;
+        const btn=document.getElementById('scanAutoBtn');
+        btn.classList.toggle('on',autoOn);
+        btn.textContent=autoOn?'⏱ On (30s)':'⏱ Auto-advance';
+        if(autoOn) startFill();
+        else{ if(fillTimer)clearInterval(fillTimer); document.getElementById('scanFill').style.width='0%'; }
+    };
+
+    window.scanStep=function(dir){
+        if(dir>0&&step<8){step++;render();}
+        else if(dir>0&&step===8){
+            if(fillTimer)clearInterval(fillTimer);
+            document.getElementById('scanBody').style.display='none';
+            document.getElementById('scanDone').style.display='block';
+        }else if(dir<0&&step>0){step--;render();}
+    };
+
+    window.scanReset=function(){
+        step=0; autoOn=false;
+        if(fillTimer)clearInterval(fillTimer);
+        document.getElementById('scanBody').style.display='block';
+        document.getElementById('scanDone').style.display='none';
+        document.getElementById('scanAutoBtn').classList.remove('on');
+        document.getElementById('scanAutoBtn').textContent='⏱ Auto-advance';
+        render();
+    };
+
+    window.scanStopAuto=function(){ if(fillTimer)clearInterval(fillTimer); };
+    render();
+})();
+
+
+/* ═══════════════════════════════════
+   4. BINAURAL BEATS
+═══════════════════════════════════ */
+(function(){
+    const WAVES={
+        delta:{hz:2,  carrier:100,name:'Delta',status:'Delta waves — promotes deep sleep and restoration'},
+        theta:{hz:6,  carrier:200,name:'Theta',status:'Theta waves — ideal for deep meditation'},
+        alpha:{hz:10, carrier:200,name:'Alpha',status:'Alpha waves — calm, focused awareness'},
+        gamma:{hz:40, carrier:200,name:'Gamma',status:'Gamma waves — creativity and peak cognition'},
+    };
+    let actx=null, leftOsc=null, rightOsc=null, masterGain=null, playing=false, selected='theta', vol=0.4, animBar=null;
+
+    window.binSelect=function(w){
+        selected=w;
+        document.querySelectorAll('.bin-wave').forEach(el=>el.classList.remove('active'));
+        document.getElementById('bw'+w.charAt(0).toUpperCase()+w.slice(1)).classList.add('active');
+        document.getElementById('binHz').textContent=WAVES[w].hz+' Hz';
+        document.getElementById('binStatus').textContent=WAVES[w].status;
+        if(playing){ binStop(); binStart(); }
+    };
+
+    function binStart(){
+        actx=new(window.AudioContext||window.webkitAudioContext)();
+        masterGain=actx.createGain(); masterGain.gain.value=vol;
+        masterGain.connect(actx.destination);
+        const w=WAVES[selected];
+        const merger=actx.createChannelMerger(2);
+        merger.connect(masterGain);
+        leftOsc=actx.createOscillator(); leftOsc.frequency.value=w.carrier;
+        rightOsc=actx.createOscillator(); rightOsc.frequency.value=w.carrier+w.hz;
+        const lGain=actx.createGain(); lGain.gain.value=1;
+        const rGain=actx.createGain(); rGain.gain.value=1;
+        leftOsc.connect(lGain); lGain.connect(merger,0,0);
+        rightOsc.connect(rGain); rGain.connect(merger,0,1);
+        leftOsc.start(); rightOsc.start();
+        playing=true;
+        document.getElementById('binPlayBtn').textContent='⏸ Pause';
+        // animate bar
+        let d=0; animBar=setInterval(()=>{ d=(d+2)%201; document.getElementById('binBar').style.width=(d<=100?d:200-d)+'%'; },30);
+    }
+
+    window.binStop=function(){
+        if(actx){actx.close();actx=null;}
+        leftOsc=null;rightOsc=null;masterGain=null;playing=false;
+        if(animBar)clearInterval(animBar);
+        document.getElementById('binPlayBtn').textContent='▶ Play';
+        document.getElementById('binBar').style.width='0%';
+    };
+
+    window.binToggle=function(){
+        if(playing)window.binStop(); else binStart();
+    };
+
+    window.binSetVol=function(v){
+        vol=v/100;
+        if(masterGain) masterGain.gain.value=vol;
+    };
+
+    window.binSelect('theta');
+})();
+
+
+/* ═══════════════════════════════════
+   5. CUSTOM BREATHING BUILDER
+═══════════════════════════════════ */
+(function(){
+    let tmr=null, run=false, phase=0, rem=4;
+    const PHASES=['Inhale','Hold','Exhale','Hold'];
+
+    function getDurs(){
+        return [
+            parseInt(document.getElementById('cbIn').value),
+            parseInt(document.getElementById('cbHold').value),
+            parseInt(document.getElementById('cbOut').value),
+            parseInt(document.getElementById('cbHold2').value),
+        ];
+    }
+
+    window.cbUpdate=function(){
+        ['cbIn','cbHold','cbOut','cbHold2'].forEach((id,i)=>{
+            const v=document.getElementById(id).value;
+            document.getElementById(['cbInV','cbHoldV','cbOutV','cbHold2V'][i]).textContent=v;
+        });
+        const d=getDurs();
+        const total=d.reduce((a,b)=>a+b,0);
+        document.getElementById('cbInfo').textContent=`${d[0]}s inhale · ${d[1]}s hold · ${d[2]}s exhale · ${d[3]}s hold = ${total}s cycle`;
+    };
+
+    function tick(){
+        rem--;
+        const d=getDurs();
+        if(rem<=0){
+            phase=(phase+1)%4;
+            // skip zero-duration phases
+            while(d[phase]===0) phase=(phase+1)%4;
+            rem=d[phase];
         }
-    });
-    updateTimerDisplay();
-}
+        const c=document.getElementById('cbCircle');
+        const lbl=document.getElementById('cbLabel');
+        const cnt=document.getElementById('cbCount');
+        lbl.textContent=PHASES[phase];
+        cnt.textContent=rem;
+        // scale animation
+        const scale=phase===0?(0.95+0.05*(1-rem/d[phase])*5):phase===2?(1.45-0.05*(1-rem/d[phase])*5):1.45;
+        c.style.transform=`scale(${Math.min(1.5,Math.max(1,scale))})`;
+        c.style.transition=`transform 1s ease-in-out`;
+        // colour
+        const cols={0:'rgba(244,63,94,0.25)',1:'rgba(251,146,60,0.22)',2:'rgba(59,130,246,0.22)',3:'rgba(16,185,129,0.2)'};
+        c.style.background=cols[phase];
+    }
 
-function runMeditationTimer() {
-    meditationTimer = setInterval(() => {
-        if (meditationSeconds > 0) {
-            meditationSeconds--;
-            updateTimerDisplay();
-        } else {
-            clearInterval(meditationTimer);
-            alert('🧘 Meditation complete! Great job!');
-            resetMeditation();
-        }
-    }, 1000);
-}
+    window.cbToggle=function(){
+        if(run){cbStop();return;}
+        run=true; phase=0;
+        const d=getDurs(); rem=d[0];
+        document.getElementById('cbStartBtn').textContent='⏸ Pause';
+        document.getElementById('cbLabel').textContent='Inhale';
+        document.getElementById('cbCount').textContent=rem;
+        tick();
+        tmr=setInterval(tick,1000);
+    };
 
-startMeditationBtn.addEventListener('click', startMeditation);
-pauseMeditationBtn.addEventListener('click', pauseMeditation);
-resetMeditationBtn.addEventListener('click', resetMeditation);
+    function cbStop(){
+        if(tmr)clearInterval(tmr);tmr=null;run=false;
+        document.getElementById('cbStartBtn').textContent='▶ Start';
+    }
+    window.cbStop=cbStop;
 
-// Affirmations
-const affirmations = [
-    "I am capable of achieving my goals.",
-    "I choose to focus on what I can control.",
-    "I am worthy of love and respect.",
-    "I embrace challenges as opportunities to grow.",
-    "I am enough, just as I am.",
-    "I trust in my ability to overcome obstacles.",
-    "I am grateful for all that I have.",
-    "I release what no longer serves me.",
-    "I am creating the life I want to live.",
-    "I deserve peace and happiness.",
-    "I am strong, resilient, and brave.",
-    "I choose to be positive and optimistic.",
-    "I am in charge of how I feel.",
-    "I am making progress every day.",
-    "I believe in myself and my abilities."
-];
+    window.cbReset=function(){
+        cbStop();
+        document.getElementById('cbLabel').textContent='Ready';
+        document.getElementById('cbCount').textContent='–';
+        document.getElementById('cbCircle').style.transform='scale(1)';
+        document.getElementById('cbCircle').style.background='linear-gradient(135deg,rgba(244,63,94,0.18),rgba(251,146,60,0.18))';
+    };
 
-const affirmationText = document.getElementById('affirmationText');
-const newAffirmationBtn = document.getElementById('newAffirmationBtn');
+    window.cbUpdate();
+})();
 
-function showAffirmation() {
-    const randomIndex = Math.floor(Math.random() * affirmations.length);
-    affirmationText.style.animation = 'none';
-    setTimeout(() => {
-        affirmationText.textContent = affirmations[randomIndex];
-        affirmationText.style.animation = 'fadeIn 1s ease-in forwards';
-    }, 10);
-}
 
-newAffirmationBtn.addEventListener('click', showAffirmation);
+/* ═══════════════════════════════════
+   6. VISUALIZATION JOURNEY
+═══════════════════════════════════ */
+(function(){
+    const SCENES=[
+        {name:'Mountain Lake',steps:[
+            'Close your eyes and take three deep, slow breaths. With each exhale, let your body grow heavier and more still.',
+            'You are standing at the edge of a crystal-clear mountain lake. The water is perfectly still, mirroring the snow-capped peaks above. Cool, clean air fills your lungs.',
+            'Feel smooth stones beneath your bare feet. The sun warms your shoulders as a gentle breeze moves through tall pine trees. You hear birdsong and the soft lap of water.',
+            'You walk slowly along the water\'s edge. The lake reflects the deep blue sky perfectly — clouds are white brushstrokes drifting peacefully overhead.',
+            'You sit on a sun-warmed flat rock by the water. Your breathing is slow and easy. The mountain holds you with ancient, unshakeable stillness.',
+            'A fish breaks the surface briefly, sending ripples across the mirror-like water. Each ripple fades, and the lake returns to perfect stillness — like your mind right now.',
+            'Rest here as long as you wish. You carry this mountain stillness with you everywhere you go. Slowly, gently, bring your awareness back to the room.',
+        ]},
+        {name:'Tropical Beach',steps:[
+            'Settle into stillness. Let your breath slow. Feel the weight of your body release into the surface beneath you.',
+            'You are standing on a white sand beach. Soft, warm sand shifts beneath your feet. The ocean stretches endlessly ahead, a brilliant turquoise broken by foaming white waves.',
+            'Warm sunlight presses gently against your skin. A soft ocean breeze carries the scent of salt and flowers. The rhythmic crash of waves fills all other sounds.',
+            'You wade into the warm, shallow water. Gentle waves wash over your feet, cool and clear. The sand pulls softly beneath your toes as each wave retreats.',
+            'You lie back on the beach, arms open wide. The warm sand holds you perfectly. Above you, the sky is the purest blue, a few white clouds drifting past.',
+            'You hear the distant cry of a seabird and the endless, patient rhythm of the waves. Your breathing matches the ocean — in with each wave, out as it retreats.',
+            'Feel completely held, completely safe, and completely at peace. Begin to bring your awareness back slowly — carry the warmth of this beach with you.',
+        ]},
+        {name:'Enchanted Forest',steps:[
+            'Breathe deeply and let go. Each breath takes you deeper into quiet. Your body is heavy and warm.',
+            'You are standing at the entrance to an ancient forest. Massive trees rise around you, their canopy forming a cathedral of green light above. The air smells of earth and moss.',
+            'Golden light filters through leaves in soft, shimmering columns. You walk slowly along a mossy path, each step completely silent. Ferns brush gently against your hands.',
+            'You hear a small stream ahead. Following the sound, you find a clear brook flowing over smooth, colourful stones. You sit beside it and feel the cool mist on your face.',
+            'A deer steps quietly into the clearing, glances at you with dark, gentle eyes, and moves on. In this forest, everything is safe and unhurried.',
+            'The trees speak in subtle ways — a creak, a sway, the patter of a single raindrop on leaves far above. You feel ancient, rooted, and at peace like the forest itself.',
+            'Gently return your awareness to your breath, then to your body, then to the room around you. The forest peace lives inside you now.',
+        ]},
+    ];
+    let sceneIdx=0, step=0, autoOn=false, autoTimer=null, autoSecs=8;
 
-// Show initial affirmation
-showAffirmation();
+    function buildDots(){
+        const n=SCENES[sceneIdx].steps.length;
+        const el=document.getElementById('vizProgress');
+        if(el)el.innerHTML=Array.from({length:n},(_,i)=>`<div class="viz-dot ${i<step?'done':i===step?'cur':''}"></div>`).join('');
+    }
+
+    function render(){
+        const steps=SCENES[sceneIdx].steps;
+        const el=document.getElementById('vizText');
+        if(el){el.classList.add('fading');setTimeout(()=>{el.textContent=steps[step];el.classList.remove('fading');},380);}
+        const sn=document.getElementById('vizStepNum'); if(sn)sn.textContent=`Step ${step+1} of ${steps.length}`;
+        const pb=document.getElementById('vizPrevBtn'); if(pb)pb.style.display=step===0?'none':'block';
+        buildDots();
+        if(autoOn) scheduleAutoStep();
+    }
+
+    function scheduleAutoStep(){
+        if(autoTimer)clearTimeout(autoTimer);
+        autoTimer=setTimeout(()=>vizStep(1), autoSecs*1000);
+    }
+
+    window.vizScene=function(idx,btn){
+        if(autoTimer)clearTimeout(autoTimer);
+        sceneIdx=idx; step=0;
+        document.querySelectorAll('.viz-scene-btn').forEach(b=>b.classList.remove('active'));
+        if(btn)btn.classList.add('active');
+        document.getElementById('vizMain').style.display='block';
+        document.getElementById('vizComplete').style.display='none';
+        render();
+    };
+
+    window.vizToggleAuto=function(){
+        autoOn=!autoOn;
+        const b=document.getElementById('vizAutoBtn');
+        b.classList.toggle('on',autoOn); b.textContent=autoOn?'⏱ On (8s)':'⏱ 8s per step';
+        if(autoOn)scheduleAutoStep(); else if(autoTimer)clearTimeout(autoTimer);
+    };
+
+    window.vizStep=function(dir){
+        const maxSteps=SCENES[sceneIdx].steps.length-1;
+        if(autoTimer)clearTimeout(autoTimer);
+        if(dir>0&&step<maxSteps){step++;render();}
+        else if(dir>0&&step===maxSteps){
+            document.getElementById('vizMain').style.display='none';
+            document.getElementById('vizComplete').style.display='block';
+            buildDots();
+        }else if(dir<0&&step>0){step--;render();}
+    };
+
+    window.vizReset=function(){
+        step=0;autoOn=false;
+        if(autoTimer)clearTimeout(autoTimer);
+        document.getElementById('vizMain').style.display='block';
+        document.getElementById('vizComplete').style.display='none';
+        document.getElementById('vizAutoBtn').classList.remove('on');
+        document.getElementById('vizAutoBtn').textContent='⏱ 8s per step';
+        render();
+    };
+
+    window.vizStopAuto=function(){if(autoTimer)clearTimeout(autoTimer);};
+    window.vizInit=function(){render();};
+    render();
+})();
 </script>
-{% endblock %}
+
+{% if is_demo %}
+<div id="demoOv" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.88);backdrop-filter:blur(14px);align-items:center;justify-content:center;">
+    <div style="background:#1e1b4b;border:2px solid #f59e0b;border-radius:22px;padding:48px 40px;max-width:420px;text-align:center;color:#fff;">
+        <div style="font-size:48px;margin-bottom:16px;">⏱️</div>
+        <h2 style="font-size:22px;color:#f59e0b;margin-bottom:10px;">Demo Time Limit Reached</h2>
+        <p style="color:#c4b5fd;font-size:14px;line-height:1.65;margin-bottom:26px;">You've explored the Relaxation Zone for {{ demo_time_limit }} seconds. Register for unlimited access.</p>
+        <a href="/login" style="display:inline-block;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;padding:13px 34px;border-radius:13px;font-weight:800;font-size:15px;">← Back to Login</a>
+    </div>
+</div>
+<div class="demo-badge">⏱ Demo: <span id="demoCd">{{ demo_time_limit }}</span>s</div>
+<script>
+(function(){
+    let r={{ demo_time_limit }};
+    const b=document.querySelector('.demo-badge'),cd=document.getElementById('demoCd'),ov=document.getElementById('demoOv');
+    const t=setInterval(()=>{r--;cd.textContent=r;if(r<=30)b.style.background='rgba(239,68,68,.95)';if(r<=0){clearInterval(t);b.style.display='none';ov.style.display='flex';}},1000);
+})();
+</script>
+{% endif %}
+
+</body>
+</html>

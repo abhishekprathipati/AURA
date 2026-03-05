@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parent Dashboard | AURA</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}?v=3">
@@ -112,6 +113,7 @@
             align-items: center;
             gap: 12px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         
         .card-icon {
@@ -329,10 +331,324 @@
             margin-bottom: 16px;
         }
         
+        /* ═══ Premium Academic Metrics ═══ */
+        .semester-badge {
+            margin-left: auto;
+            padding: 6px 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 16px;
+            padding: 18px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.8) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(102, 126, 234, 0.15);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+        
+        .metric-card:hover::before {
+            opacity: 1;
+        }
+        
+        .metric-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .metric-cgpa .metric-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .metric-sgpa .metric-icon { background: linear-gradient(135deg, #8b5cf6, #6366f1); }
+        .metric-attendance .metric-icon { background: linear-gradient(135deg, #10b981, #059669); }
+        .metric-credits .metric-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        
+        .metric-content {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .metric-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: #1f2937;
+            line-height: 1.1;
+            margin-bottom: 2px;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .chart-section {
+            margin-top: 8px;
+            padding-top: 24px;
+            border-top: 2px solid #f1f5f9;
+        }
+        
+        .chart-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #academicTrendChart {
+            min-height: 260px;
+        }
+        
         @media (max-width: 768px) {
             .top-nav { padding: 16px 20px; }
             .dashboard-grid { grid-template-columns: 1fr; }
             .container { padding: 20px; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        @media (max-width: 480px) {
+            .metrics-grid { grid-template-columns: 1fr; }
+            .metric-card { padding: 16px 14px; }
+            .metric-value { font-size: 22px; }
+        }
+
+        /* ═══ Notification Bell ═══ */
+        .notif-bell {
+            position: relative;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .notif-bell:hover { background: #e0e7ff; transform: scale(1.05); }
+        .notif-count {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            font-weight: 700;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .notif-panel {
+            display: none;
+            position: fixed;
+            top: 72px;
+            right: 20px;
+            width: 340px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+            z-index: 300;
+            max-height: 420px;
+            overflow-y: auto;
+            border: 1px solid rgba(102,126,234,0.12);
+        }
+        .notif-panel.is-open { display: block; }
+        .notif-panel-hd {
+            padding: 18px 20px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+        .notif-panel-hd span { font-size: 17px; font-weight: 700; color: #1f2937; }
+        .notif-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .notif-close:hover { background: #f3f4f6; color: #1f2937; }
+
+        /* ═══ Wellness Section ═══ */
+        .wellness-section {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        .wellness-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #4facfe, #43e97b);
+        }
+        .wellness-hd {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .wellness-hd h3 {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1f2937;
+        }
+        .wellness-status-badge {
+            padding: 8px 20px;
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            background: #d1fae5;
+            color: #059669;
+            transition: all 0.4s;
+        }
+        .wellness-status-badge.moderate { background: #fef3c7; color: #d97706; }
+        .wellness-status-badge.needs-attention { background: #fee2e2; color: #dc2626; }
+        .wellness-stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        .w-stat {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 16px;
+            padding: 18px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .w-stat:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(102,126,234,0.12);
+            border-color: rgba(102,126,234,0.15);
+        }
+        .w-stat-ico {
+            width: 48px; height: 48px;
+            border-radius: 13px;
+            font-size: 24px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ico-stress  { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .ico-mood    { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+        .ico-act     { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .ico-checkin { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .w-stat-val { font-size: 24px; font-weight: 800; color: #1f2937; line-height: 1.1; }
+        .w-stat-lbl { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+        .wellness-charts-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .wellness-chart-box {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 20px;
+        }
+        .wellness-chart-box h4 {
+            font-size: 15px; font-weight: 700; color: #1f2937; margin-bottom: 12px;
+        }
+
+        /* ═══ Activity Log Section ═══ */
+        .activity-section {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .activity-section h3 {
+            font-size: 20px; font-weight: 800; color: #1f2937; margin-bottom: 20px;
+        }
+        .activity-item {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            padding: 14px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .act-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #667eea;
+            flex-shrink: 0;
+            margin-top: 5px;
+        }
+        .act-body { flex: 1; }
+        .act-desc { font-size: 14px; color: #374151; line-height: 1.5; }
+        .act-time { font-size: 12px; color: #9ca3af; margin-top: 3px; }
+
+        @media (max-width: 768px) {
+            .wellness-charts-row { grid-template-columns: 1fr; }
+            .notif-panel { width: calc(100vw - 40px); right: 20px; }
         }
     </style>
 </head>
@@ -341,17 +657,71 @@
         <h1>🎓 AURA Parent Portal</h1>
         <div class="user-info">
             <span class="user-name">{{ parent.name }}</span>
+            <div class="notif-bell" onclick="window.toggleNotifications()" title="Notifications" role="button" aria-label="Notifications">
+                🔔
+                <span id="notificationBadge" class="notif-count">0</span>
+            </div>
             <button class="btn-logout" onclick="logout()">Logout</button>
         </div>
     </nav>
+
+    <!-- Notifications Panel -->
+    <div id="notificationsPanel" class="notif-panel" role="dialog" aria-label="Notifications">
+        <div class="notif-panel-hd">
+            <span>Notifications</span>
+            <button class="notif-close" onclick="window.toggleNotifications()" aria-label="Close">✕</button>
+        </div>
+        <div id="notificationsList" style="padding:8px 0;"></div>
+    </div>
     
     <div class="container">
         <div class="student-info">
             <h2>👨‍🎓 Student Information</h2>
             <div class="detail">
-                <strong>Roll Number:</strong> {{ student.roll_number }} | 
-                <strong>Name:</strong> {{ student.name }} | 
+                <strong>Roll Number:</strong> {{ student.roll_number }} |
+                <strong>Name:</strong> {{ student.name }} |
                 <strong>Email:</strong> {{ student.email }}
+            </div>
+        </div>
+
+        <!-- Wellness Overview Section -->
+        <div class="wellness-section">
+            <div class="wellness-hd">
+                <h3>❤️ Student Wellness Overview</h3>
+                <span class="wellness-status-badge" id="wellnessStatus">Loading…</span>
+            </div>
+            <div class="wellness-stats-row">
+                <div class="w-stat">
+                    <div class="w-stat-ico ico-stress">😰</div>
+                    <div>
+                        <div class="w-stat-val" id="avgStress">—</div>
+                        <div class="w-stat-lbl">Avg Stress (7d)</div>
+                    </div>
+                </div>
+                <div class="w-stat">
+                    <div class="w-stat-ico ico-mood">😊</div>
+                    <div>
+                        <div class="w-stat-val" id="avgMood">—</div>
+                        <div class="w-stat-lbl">Avg Mood (7d)</div>
+                    </div>
+                </div>
+                <div class="w-stat">
+                    <div class="w-stat-ico ico-act">📊</div>
+                    <div>
+                        <div class="w-stat-val" id="totalActivities">—</div>
+                        <div class="w-stat-lbl">Activities (7d)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="wellness-charts-row">
+                <div class="wellness-chart-box">
+                    <h4>📈 Stress Trend (7 Days)</h4>
+                    <div id="stressChart"></div>
+                </div>
+                <div class="wellness-chart-box">
+                    <h4>🎭 Mood Distribution</h4>
+                    <div id="moodChart"></div>
+                </div>
             </div>
         </div>
         
@@ -361,16 +731,45 @@
                 <div class="card-header">
                     <div class="card-icon performance-icon">📊</div>
                     <h3>Academic Performance</h3>
+                    <span class="semester-badge" id="currentSemester">—</span>
                 </div>
-                <div class="tabs">
-                    <button class="tab active" onclick="switchTab('stress')">Stress Levels</button>
-                    <button class="tab" onclick="switchTab('mood')">Mood Tracking</button>
+                
+                <!-- Horizontal Metrics Grid -->
+                <div class="metrics-grid" id="metricsGrid">
+                    <div class="metric-card metric-cgpa">
+                        <div class="metric-icon">🎓</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="metricCgpa">—</div>
+                            <div class="metric-label">CGPA</div>
+                        </div>
+                    </div>
+                    <div class="metric-card metric-sgpa">
+                        <div class="metric-icon">📚</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="metricSgpa">—</div>
+                            <div class="metric-label">SGPA</div>
+                        </div>
+                    </div>
+                    <div class="metric-card metric-attendance">
+                        <div class="metric-icon">📅</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="metricAttendance">—</div>
+                            <div class="metric-label">Attendance</div>
+                        </div>
+                    </div>
+                    <div class="metric-card metric-credits">
+                        <div class="metric-icon">🏆</div>
+                        <div class="metric-content">
+                            <div class="metric-value" id="metricCredits">—</div>
+                            <div class="metric-label">Credits</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="tab-content active" id="stress-content">
-                    <div id="stressChart"></div>
-                </div>
-                <div class="tab-content" id="mood-content">
-                    <div id="moodChart"></div>
+                
+                <!-- CGPA & SGPA Trend Chart -->
+                <div class="chart-section">
+                    <h4 class="chart-title">📈 CGPA & SGPA Trend</h4>
+                    <div id="academicTrendChart"></div>
                 </div>
             </div>
             
@@ -454,15 +853,22 @@
                     <h3>Announcements</h3>
                 </div>
                 <div class="tabs">
-                    <button class="tab active" onclick="switchAnnouncement('all')">All</button>
-                    <button class="tab" onclick="switchAnnouncement('achievements')">Achievements</button>
-                    <button class="tab" onclick="switchAnnouncement('placements')">Placements</button>
+                    <button class="tab active" onclick="switchAnnouncement('all', event)">All</button>
+                    <button class="tab" onclick="switchAnnouncement('achievements', event)">Achievements</button>
+                    <button class="tab" onclick="switchAnnouncement('placements', event)">Placements</button>
                 </div>
                 <div class="announcement-list" id="announcementList"></div>
             </div>
         </div>
+        <!-- Activity Log Section -->
+        <div class="activity-section">
+            <h3>🕐 Recent Activity</h3>
+            <div id="activityLog">
+                <div class="empty-state">Loading activity...</div>
+            </div>
+        </div>
     </div>
-    
-    <script src="{{ url_for('static', filename='js/parent_dashboard.js') }}?v=1"></script>
+
+    <script src="{{ url_for('static', filename='js/parent_dashboard.js') }}?v=2"></script>
 </body>
 </html>

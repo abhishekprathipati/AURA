@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import json
 import mimetypes
 import os
@@ -6,9 +6,13 @@ import time
 from datetime import datetime
 from flask import Blueprint, request, jsonify, session
 from flask import send_from_directory
+from werkzeug.utils import secure_filename
 from utils.database import get_db
 from models.chat import ChatModel
-from services.ai_service import generate_mental_response, extract_sentiment, analyze_study_material
+from services.ai_service import generate_mental_response, generate_study_response, extract_sentiment, analyze_study_material
+from services.stress_service import calculate_dynamic_stress
+from utils.auth_helpers import demo_restricted, demo_chat_limited
+from utils.helpers import safe_error
 
 chat_bp = Blueprint('chat', __name__)
 log = logging.getLogger(__name__)
@@ -28,7 +32,7 @@ def _save_and_track_file(file):
     upload_dir = os.path.join('static', 'uploads')
     os.makedirs(upload_dir, exist_ok=True)
 
-    unique_filename = f"{int(time.time())}_{filename}"
+    unique_filename = f"{int(time.time())}_{secure_filename(filename)}"
     save_path = os.path.join(upload_dir, unique_filename)
     file.save(save_path)
 
@@ -85,6 +89,7 @@ def _get_db():
 
 
 @chat_bp.route('/api/chat/mental', methods=['POST'])
+@demo_chat_limited
 def api_chat_mental():
     """Process user message and return AI-generated response."""
     try:
@@ -97,7 +102,7 @@ def api_chat_mental():
         client_history = (data or {}).get('context') or (data or {}).get('conversation_history') or []
         user_email = session.get('user_email')
         
-        log.info(f"Message: {user_message[:50]}... | User: {user_email}")
+        log.info(f"Message received | User: {(user_email or '')[:3]}***")
         
         if not user_message:
             log.warning("Empty message")
@@ -110,7 +115,7 @@ def api_chat_mental():
         history = []
         chats_coll = None
         if db is not None:
-            log.info("✓ Database connected")
+            log.info("âœ“ Database connected")
             chats_coll = db[ChatModel.collection_name]
             # Fetch recent chat history for context
             recent = list(chats_coll.find({
@@ -123,9 +128,9 @@ def api_chat_mental():
                 for msg in recent
             ]
             history = db_history
-            log.info(f"✓ Loaded {len(history)} history items")
+            log.info(f"âœ“ Loaded {len(history)} history items")
         else:
-            log.warning("✗ Database not available - running without persistence")
+            log.warning("âœ— Database not available - running without persistence")
 
         # Prefer client-provided conversation history if available (memory injection)
         if isinstance(client_history, list) and len(client_history) > 0:
@@ -139,14 +144,14 @@ def api_chat_mental():
                         normalized.append({'role': role, 'content': content})
                 if normalized:
                     history = normalized
-                    log.info(f"✓ Using client-provided history ({len(history)})")
+                    log.info(f"âœ“ Using client-provided history ({len(history)})")
             except Exception as _:
                 pass
 
         # Generate AI response
-        log.info("→ Calling generate_mental_response...")
+        log.info("â†’ Calling generate_mental_response...")
         ai_response = generate_mental_response(user_message, history, kind=kind, conversation_id=conversation_id)
-        log.info(f"✓ Got response ({len(ai_response)} chars)")
+        log.info(f"âœ“ Got response ({len(ai_response)} chars)")
 
         # Save to database
         chat_doc = {
@@ -160,28 +165,44 @@ def api_chat_mental():
         }
         if chats_coll is not None:
             chats_coll.insert_one(chat_doc)
-            log.info("✓ Saved to database")
+            log.info("âœ“ Saved to database")
         else:
-            log.info("⊘ Not saving to DB (unavailable)")
+            log.info("âŠ˜ Not saving to DB (unavailable)")
+
+        # Trigger stress recalculation for mental chats (non-blocking)
+        stress_update = None
+        if (kind or 'mental') == 'mental' and user_email:
+            try:
+                result = calculate_dynamic_stress(user_email)
+                stress_update = {
+                    'score': result['score'],
+                    'label': result['label'],
+                    'trend': result['trend'],
+                }
+            except Exception as se:
+                log.warning(f"Stress recalc after chat failed: {se}")
 
         log.info("=== Chat request complete ===")
-        return jsonify({
+        resp = {
             'user_message': user_message,
             'ai_response': ai_response,
             'sentiment': extract_sentiment(user_message),
             'timestamp': chat_doc['created_at'].isoformat(),
-        })
+        }
+        if stress_update:
+            resp['stress'] = stress_update
+        return jsonify(resp)
     
     except Exception as e:
-        log.error(f"❌ Chat error: {str(e)[:300]}")
+        log.error(f"âŒ Chat error: {safe_error(e, 'chat')}")
         log.exception("Full traceback:")
         return jsonify({
             'error': 'AI service error. Please try again.',
-            'debug': str(e)[:200]
         }), 500
 
 
 @chat_bp.route('/api/chat', methods=['POST'])
+@demo_chat_limited
 def api_chat_unified():
     """Unified chat endpoint for single-bot applications. Proxies to mental handler with kind support."""
     # Reuse the mental endpoint logic (it already accepts kind/context/conversation_id)
@@ -199,11 +220,11 @@ def api_chat_history():
         db = _get_db()
         chats_coll = db[ChatModel.collection_name]
         
-        # Fetch mental chats
+        # Fetch mental chats (paginated â€” max 200)
         cursor = chats_coll.find({
             'user_email': user_email,
             'type': 'mental',
-        }).sort('created_at', 1)
+        }).sort('created_at', -1).limit(200)
         
         history = [
             {
@@ -214,14 +235,17 @@ def api_chat_history():
             }
             for msg in cursor
         ]
+        history.reverse()  # oldest first
         
         return jsonify({'history': history})
     
     except Exception as e:
-        return jsonify({'error': f'History error: {str(e)[:100]}'}), 500
+        log.error(f"Chat history error: {e}")
+        return jsonify({'error': 'Could not load history'}), 500
 
 
 @chat_bp.route('/api/chat/clear', methods=['POST'])
+@demo_restricted
 def api_chat_clear():
     """Clear chat history for current user."""
     try:
@@ -240,10 +264,11 @@ def api_chat_clear():
         return jsonify({'deleted': result.deleted_count})
     
     except Exception as e:
-        return jsonify({'error': f'Clear error: {str(e)[:100]}'}), 500
+        return jsonify({'error': f'Clear error: {safe_error(e, 'chat')}'}), 500
 
 
 @chat_bp.route('/upload_study_file', methods=['POST'])
+@demo_restricted
 def upload_study_file():
     """Handle file upload for study assistant with validation."""
     try:
@@ -259,7 +284,7 @@ def upload_study_file():
             return jsonify({'error': 'No file selected'}), 400
 
         meta = _save_and_track_file(file)
-        log.info(f"✓ File uploaded: {meta['file_id']} by {user_email}")
+        log.info(f"âœ“ File uploaded: {meta['file_id']} by {user_email}")
 
         return jsonify({
             'ok': True,
@@ -271,10 +296,11 @@ def upload_study_file():
 
     except Exception as e:
         log.error(f"Upload error: {str(e)}")
-        return jsonify({'error': f'Upload failed: {str(e)[:180]}'}), 500
+        return jsonify({'error': f'Upload failed: {safe_error(e, 'chat')}'}), 500
 
 
 @chat_bp.route('/study/upload', methods=['POST'])
+@demo_restricted
 def study_upload():
     """Preferred upload route for Study Assistant UI."""
     try:
@@ -286,7 +312,7 @@ def study_upload():
             return jsonify({'error': 'No file provided'}), 400
 
         meta = _save_and_track_file(request.files['file'])
-        log.info(f"✓ Study upload via /study/upload: {meta['file_id']} by {user_email}")
+        log.info(f"âœ“ Study upload via /study/upload: {meta['file_id']} by {user_email}")
         return jsonify({
             'ok': True,
             'file_id': meta['file_id'],
@@ -295,10 +321,11 @@ def study_upload():
         })
     except Exception as e:
         log.error(f"Study upload error: {str(e)}")
-        return jsonify({'error': str(e)[:180]}), 500
+        return jsonify({'error': safe_error(e, 'chat')}), 500
 
 
 @chat_bp.route('/study/summarize', methods=['POST'])
+@demo_chat_limited
 def study_summarize():
     """Summarize the most recent uploaded study file."""
     try:
@@ -319,10 +346,11 @@ def study_summarize():
         return jsonify({'summary': summary, 'file_id': meta['file_id'], 'file_name': meta['original_filename']})
     except Exception as e:
         log.error(f"Study summarize error: {str(e)}")
-        return jsonify({'error': str(e)[:180]}), 500
+        return jsonify({'error': safe_error(e, 'chat')}), 500
 
 
 @chat_bp.route('/study/quiz', methods=['POST'])
+@demo_chat_limited
 def study_quiz():
     """Generate a quiz from the most recent uploaded study file."""
     try:
@@ -343,10 +371,11 @@ def study_quiz():
         return jsonify({'quiz': quiz, 'file_id': meta['file_id'], 'file_name': meta['original_filename']})
     except Exception as e:
         log.error(f"Study quiz error: {str(e)}")
-        return jsonify({'error': str(e)[:180]}), 500
+        return jsonify({'error': safe_error(e, 'chat')}), 500
 
 
 @chat_bp.route('/api/study/analyze', methods=['POST'])
+@demo_chat_limited
 def api_study_analyze():
     """Analyze study query with optional file upload."""
     try:
@@ -382,7 +411,7 @@ def api_study_analyze():
         has_file = 'file' in request.files and request.files['file'].filename
         
         if not prompt and not has_file:
-            return jsonify({'error': 'Please provide a prompt or upload a file', 'debug': debug_info}), 400
+            return jsonify({'error': 'Please provide a prompt or upload a file'}), 400
 
         # Resolve uploaded file either from direct upload or stored session file
         if has_file:
@@ -400,13 +429,14 @@ def api_study_analyze():
         if file_meta:
             answer = analyze_study_material(prompt, file_meta['path'], file_meta['mime'], history=history, conversation_id=conversation_id)
         else:
-            # Text-only query using Gemini
-            answer = generate_mental_response(prompt, history, kind='study', conversation_id=conversation_id)
+            # Text-only study query — use dedicated study provider chain
+            answer = generate_study_response(prompt, history, conversation_id=conversation_id)
 
-        return jsonify({'answer': answer, 'debug': debug_info, 'file_id': file_meta['file_id'] if file_meta else None})
+        return jsonify({'answer': answer, 'file_id': file_meta['file_id'] if file_meta else None})
 
     except Exception as e:
-        return jsonify({'error': f'Study analyze error: {str(e)[:180]}'}), 500
+        log.error(f"Study analyze error: {e}")
+        return jsonify({'error': 'Study analysis failed. Please try again.'}), 500
 
 
 @chat_bp.route('/api/chat/feedback', methods=['POST'])
@@ -426,13 +456,14 @@ def api_chat_feedback():
         # Minimal log into database if available, otherwise noop
         db = get_db()
         if db is not None:
-            db.execute(
-                "INSERT INTO feedback (user_email, action, text) VALUES (?, ?, ?)",
-                (user_email, action, text[:500])
-            )
-            db.commit()
+            db['feedback'].insert_one({
+                'user_email': user_email,
+                'action': action,
+                'text': text[:500],
+                'timestamp': datetime.utcnow()
+            })
 
         return jsonify({'ok': True})
     except Exception as e:
         # Do not break UX; return 200 with error info for observability
-        return jsonify({'ok': False, 'error': str(e)[:180]}), 200
+        return jsonify({'ok': False, 'error': safe_error(e, 'chat')}), 200

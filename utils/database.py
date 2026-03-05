@@ -1,4 +1,3 @@
-import ssl
 from typing import Any, Dict
 from pymongo import MongoClient, ASCENDING, errors
 from datetime import datetime
@@ -60,6 +59,34 @@ def _ensure_indexes(database) -> None:
     ts_coll = database['message_timestamps']
     ts_coll.create_index([('user_id', ASCENDING)], unique=True)
 
+    # ── RBAC indexes (role-based access control) ──
+    # Use try/except to handle existing indexes with different names
+    def _safe_index(coll, keys, **kwargs):
+        try:
+            coll.create_index(keys, **kwargs)
+        except errors.OperationFailure as e:
+            if e.code == 85:  # IndexOptionsConflict — index exists with different name
+                pass
+            else:
+                raise
+
+    ps = database['proctor_students']
+    _safe_index(ps, [('proctor_id', ASCENDING)])
+    _safe_index(ps, [('department', ASCENDING)])
+    _safe_index(ps, [('anonymous_id', ASCENDING)])
+    _safe_index(ps, [('status', ASCENDING)])
+    _safe_index(ps, [('proctor_id', ASCENDING), ('status', ASCENDING)])
+    _safe_index(ps, [('department', ASCENDING), ('status', ASCENDING)])
+
+    ri = database['risk_incidents']
+    _safe_index(ri, [('anonymous_student_id', ASCENDING)])
+    _safe_index(ri, [('department', ASCENDING)])
+    _safe_index(ri, [('anonymous_student_id', ASCENDING), ('status', ASCENDING)])
+
+    # users role + department
+    _safe_index(database['users'], [('role', ASCENDING)])
+    _safe_index(database['users'], [('department', ASCENDING)])
+
 def seed_demo_data(database) -> Dict[str, Any]:
     from utils.auth_helpers import hash_password
     users = database[UserModel.collection_name]
@@ -76,7 +103,7 @@ def seed_demo_data(database) -> Dict[str, Any]:
             'role': 'student',
             'roll_number': 'STU001',
             'parent_phone': '9876543210',
-            'department': 'Computer Science',
+            'department': 'AIML',
             'created_at': datetime.utcnow(),
         },
         {
@@ -84,6 +111,7 @@ def seed_demo_data(database) -> Dict[str, Any]:
             'hashed_password': hash_password('password123'),
             'name': 'Demo Proctor',
             'role': 'proctor',
+            'department': 'AIML',
             'created_at': datetime.utcnow(),
         },
         {
@@ -91,67 +119,74 @@ def seed_demo_data(database) -> Dict[str, Any]:
             'hashed_password': hash_password('password123'),
             'name': 'Demo HOD',
             'role': 'hod',
+            'department': 'AIML',
             'created_at': datetime.utcnow(),
         },
     ]
     for u in demo_users:
-        users.update_one({'email': u['email']}, {'$setOnInsert': u}, upsert=True)
+        users.update_one(
+            {'email': u['email']},
+            {'$setOnInsert': u},
+            upsert=True
+        )
 
-    # Ensure existing demo student has academic fields (parent phone for OTP auth)
+    # Ensure department is always set on demo proctor/HOD (backfill existing records)
     users.update_one(
-        {'email': 'student@aura.edu'},
-        {'$set': {
-            'roll_number': 'STU001',
-            'parent_phone': '9876543210',
-            'department': 'Computer Science'
-        }}
+        {'email': 'proctor@aura.edu'},
+        {'$set': {'department': 'AIML'}}
+    )
+    users.update_one(
+        {'email': 'hod@aura.edu'},
+        {'$set': {'department': 'AIML'}}
     )
 
-    # Demo chat
-    chats.insert_one({
-        'user_email': 'student@aura.edu',
-        'message': 'I feel stressed about exams',
-        'response': 'Let’s break tasks into smaller chunks.',
-        'type': 'mental',
-        'created_at': datetime.utcnow(),
-    })
+    # Demo data — only seed if no demo data exists (prevents duplicates on restart)
+    if chats.count_documents({'user_email': 'student@aura.edu'}) == 0:
+        chats.insert_one({
+            'user_email': 'student@aura.edu',
+            'message': 'I feel stressed about exams',
+            'response': "Let's break tasks into smaller chunks.",
+            'type': 'mental',
+            'created_at': datetime.utcnow(),
+        })
 
-    # Demo mood
-    moods.insert_one({
-        'user_email': 'student@aura.edu',
-        'mood': 'anxious',
-        'intensity': 7,
-        'created_at': datetime.utcnow(),
-    })
+    if moods.count_documents({'user_email': 'student@aura.edu'}) == 0:
+        moods.insert_one({
+            'user_email': 'student@aura.edu',
+            'mood': 'anxious',
+            'intensity': 7,
+            'created_at': datetime.utcnow(),
+        })
 
-    # Demo stress
-    stress.insert_one({
-        'user_email': 'student@aura.edu',
-        'score': 62,
-        'source': 'exams',
-        'created_at': datetime.utcnow(),
-    })
+    if stress.count_documents({'user_email': 'student@aura.edu'}) == 0:
+        stress.insert_one({
+            'user_email': 'student@aura.edu',
+            'score': 62,
+            'source': 'exams',
+            'created_at': datetime.utcnow(),
+        })
     
     # Connection Hub seed data
     connection_rooms = database['room_messages']
-    demo_messages = [
-        {
-            'room_id': 'exam_stress',
-            'user_id': 'demo@aura.edu',
-            'display_name': 'Anonymous Student',
-            'message': 'Anyone else feeling the exam pressure? Lets talk about it.',
-            'created_at': datetime.utcnow(),
-        },
-        {
-            'room_id': 'exam_stress',
-            'user_id': 'demo2@aura.edu',
-            'display_name': 'Anonymous Student',
-            'message': 'Ive been studying for 6 hours straight. Feeling burned out!',
-            'created_at': datetime.utcnow(),
-        },
-    ]
-    for msg in demo_messages:
-        connection_rooms.insert_one(msg)
+    if connection_rooms.count_documents({'user_id': 'demo@aura.edu'}) == 0:
+        demo_messages = [
+            {
+                'room_id': 'exam_stress',
+                'user_id': 'demo@aura.edu',
+                'display_name': 'Anonymous Student',
+                'message': 'Anyone else feeling the exam pressure? Lets talk about it.',
+                'created_at': datetime.utcnow(),
+            },
+            {
+                'room_id': 'exam_stress',
+                'user_id': 'demo2@aura.edu',
+                'display_name': 'Anonymous Student',
+                'message': 'Ive been studying for 6 hours straight. Feeling burned out!',
+                'created_at': datetime.utcnow(),
+            },
+        ]
+        for msg in demo_messages:
+            connection_rooms.insert_one(msg)
 
     return {
         'users': users.count_documents({}),
@@ -172,7 +207,7 @@ def create_demo_users(database) -> int:
             'role': 'student',
             'roll_number': 'STU001',
             'parent_phone': '9876543210',
-            'department': 'Computer Science',
+            'department': 'AIML',
             'created_at': datetime.utcnow(),
         },
         {
@@ -180,6 +215,7 @@ def create_demo_users(database) -> int:
             'hashed_password': hash_password('password123'),
             'name': 'Demo Proctor',
             'role': 'proctor',
+            'department': 'AIML',
             'created_at': datetime.utcnow(),
         },
         {
@@ -187,6 +223,7 @@ def create_demo_users(database) -> int:
             'hashed_password': hash_password('password123'),
             'name': 'Demo HOD',
             'role': 'hod',
+            'department': 'AIML',
             'created_at': datetime.utcnow(),
         },
     ]
@@ -196,14 +233,22 @@ def create_demo_users(database) -> int:
         if res.upserted_id is not None:
             inserted += 1
 
-    # Ensure existing demo student has academic fields (parent phone for OTP auth)
+    # Ensure existing demo users have critical fields (backfill)
     users.update_one(
         {'email': 'student@aura.edu'},
         {'$set': {
             'roll_number': 'STU001',
             'parent_phone': '9876543210',
-            'department': 'Computer Science'
+            'department': 'AIML'
         }}
+    )
+    users.update_one(
+        {'email': 'proctor@aura.edu'},
+        {'$set': {'department': 'AIML'}}
+    )
+    users.update_one(
+        {'email': 'hod@aura.edu'},
+        {'$set': {'department': 'AIML'}}
     )
     return inserted
 
@@ -212,6 +257,7 @@ def init_db(app=None):
     client = _build_client()
     db = client[Config.MONGODB_DB_NAME]
     _ensure_indexes(db)
+    seed_demo_data(db)
     return db
 
 

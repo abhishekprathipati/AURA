@@ -1,7 +1,9 @@
 # Python
 __pycache__/
 *.pyc
+*.pyo
 .env
+.env.production
 *.sqlite3
 instance/
 .venv/
@@ -14,3 +16,10 @@ instance/
 
 # Uploads
 static/uploads/*
+!static/uploads/.gitkeep
+
+# Secrets / API keys
+_api_keys_and_tokens_.txt
+
+# One-off scripts
+tmp_*.py
