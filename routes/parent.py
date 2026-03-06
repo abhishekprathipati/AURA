@@ -71,9 +71,11 @@ def send_otp():
             'sms_sent': sms_sent
         }
 
-        # Only include demo_otp when explicitly in DEBUG mode AND SMS was not sent
+        # Include demo_otp when SMS was not sent (debug mode OR SMS disabled)
         import os as _os
-        if not sms_sent and _os.getenv('FLASK_DEBUG', '').lower() in ('1', 'true', 'yes', 'on'):
+        sms_disabled = _os.getenv('SMS_ENABLED', 'true').strip().lower() in ('0', 'false', 'no', 'off')
+        is_debug = _os.getenv('FLASK_DEBUG', '').lower() in ('1', 'true', 'yes', 'on')
+        if not sms_sent and (is_debug or sms_disabled):
             response_data['demo_otp'] = otp
 
         return jsonify(response_data), 200
