@@ -35,9 +35,8 @@ Flask-SocketIO==5.3.7
 python-socketio==5.11.4
 python-engineio==4.9.1
 
-# Production server (gunicorn + eventlet for SocketIO on Render/Linux)
+# Production server (gthread workers — compatible with Flask-SocketIO threading mode)
 gunicorn==23.0.0
-eventlet==0.37.0
 
 # Environment
 python-dotenv==1.0.1
