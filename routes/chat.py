@@ -264,7 +264,7 @@ def api_chat_clear():
         return jsonify({'deleted': result.deleted_count})
     
     except Exception as e:
-        return jsonify({'error': f'Clear error: {safe_error(e, 'chat')}'}), 500
+        return jsonify({"error": f"Clear error: {safe_error(e, 'chat')}"}), 500
 
 
 @chat_bp.route('/upload_study_file', methods=['POST'])
@@ -296,7 +296,7 @@ def upload_study_file():
 
     except Exception as e:
         log.error(f"Upload error: {str(e)}")
-        return jsonify({'error': f'Upload failed: {safe_error(e, 'chat')}'}), 500
+        return jsonify({"error": f"Upload failed: {safe_error(e, 'chat')}"}), 500
 
 
 @chat_bp.route('/study/upload', methods=['POST'])
