@@ -436,6 +436,10 @@ body.theme-anxious {
   width: 100vw;
 }
 
+@media (max-width: 768px) {
+    .app { grid-template-columns: 1fr; }
+}
+
 h3 {
   margin: 0 0 10px;
   font-size: 14px;

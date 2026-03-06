@@ -1071,6 +1071,12 @@ details[open] .signal-toggle::after {
     text-align: center;
 }
 
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
 .btn-action:hover {
     background: var(--bg-secondary);
     border-color: var(--color-primary);
@@ -1405,7 +1411,7 @@ details[open] .signal-toggle::after {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, transparent, rgba(var(--color-primary), 0.05));
+    background: linear-gradient(135deg, transparent, rgba(99, 102, 241, 0.05));
     opacity: 0;
     transition: opacity var(--transition-normal);
 }
@@ -1460,7 +1466,7 @@ details[open] .signal-toggle::after {
     align-items: center;
     gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
-    background: rgba(var(--color-success), 0.1);
+    background: rgba(16, 185, 129, 0.1);
     border-radius: var(--radius-full);
     font-size: var(--font-size-xs);
     font-weight: 500;
@@ -1597,7 +1603,7 @@ details[open] .signal-toggle::after {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    background: rgba(var(--color-danger), 0.1);
+    background: rgba(239, 68, 68, 0.1);
     color: var(--color-danger);
     padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-full);
@@ -1643,7 +1649,7 @@ details[open] .signal-toggle::after {
 
 .support-option.urgent:hover {
     border-color: var(--color-danger);
-    background: rgba(var(--color-danger), 0.05);
+    background: rgba(239, 68, 68, 0.05);
 }
 
 .support-option i {
@@ -1863,7 +1869,7 @@ details[open] .signal-toggle::after {
 .form-textarea:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(var(--color-primary), 0.1);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .form-textarea {
@@ -4965,4 +4971,24 @@ body.panel-open {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+/* ── Mobile Responsiveness ── */
+@media (max-width: 768px) {
+    .dash-tabs { gap: 4px; padding: 4px; }
+    .dash-tab { font-size: 0.85rem; padding: 8px 12px; }
+    .slide-panel { width: 100vw; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+}
+
+@media (max-width: 480px) {
+    .dash-header { flex-direction: column; gap: 12px; text-align: center; }
+    .dash-tabs { flex-direction: column; width: 100%; }
+    .dash-tab { width: 100%; text-align: center; }
+    .stat-grid { grid-template-columns: 1fr; }
+    .slide-panel { width: 100vw; border-radius: 0; }
+    .modal-content { width: 95%; margin: 10px; }
+    .form-grid { grid-template-columns: 1fr !important; }
+    .chat-modules { grid-template-columns: 1fr !important; }
+    .quick-actions-grid { grid-template-columns: repeat(2, 1fr); }
 }

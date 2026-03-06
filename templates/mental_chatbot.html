@@ -812,7 +812,13 @@ html, body {
 
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .mc-sidebar { display: none; }
+  .mc-sidebar {
+    position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000;
+    width: 280px; transition: left 0.3s ease;
+  }
+  .mc-sidebar.open { left: 0; }
+  .mc-main { width: 100%; }
+  .mobile-toggle { display: flex !important; }
   .mc-messages { padding: 16px 12px; }
   .mc-input-region { padding: 8px 12px 12px; }
   .mc-welcome-title { font-size: 1.5rem; }
@@ -833,6 +839,8 @@ html, body {
 <body>
 
 <div class="mc-layout" id="mcLayout">
+
+  <button class="mobile-toggle" onclick="document.querySelector('.mc-sidebar').classList.toggle('open')" style="display:none;position:fixed;top:12px;left:12px;z-index:1001;background:var(--mc-primary,#6366f1);color:white;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:1.2rem;">&#9776;</button>
 
   <!-- ── Sidebar ─────────────────────────────────────── -->
   <aside class="mc-sidebar" id="mcSidebar">

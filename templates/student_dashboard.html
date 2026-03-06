@@ -442,6 +442,23 @@
                         </div>
                     </section>
 
+                    <!-- Quick Wellness Actions -->
+                    <section class="card" aria-labelledby="quick-wellness-heading">
+                        <header class="card-header">
+                            <div class="card-header-main">
+                                <h2 id="quick-wellness-heading" class="card-title">Quick Wellness Actions</h2>
+                            </div>
+                        </header>
+                        <div class="card-body">
+                            <div class="quick-actions-grid">
+                                <button class="btn-action" data-action="breathing"><span class="btn-action-icon">&#x1FAC1;</span><span class="btn-action-label">Breathe</span></button>
+                                <button class="btn-action" data-action="stretch"><span class="btn-action-icon">&#x1F9D8;</span><span class="btn-action-label">Stretch</span></button>
+                                <button class="btn-action" data-action="journal"><span class="btn-action-icon">&#x1F4DD;</span><span class="btn-action-label">Journal</span></button>
+                                <button class="btn-action" data-action="music"><span class="btn-action-icon">&#x1F3B5;</span><span class="btn-action-label">Music</span></button>
+                            </div>
+                        </div>
+                    </section>
+
                 </div> <!-- END TAB WELLNESS -->
 
                 <!-- TAB: ANALYTICS -->
@@ -1471,28 +1488,6 @@
                     </div>
                 </div>
 
-                <div class="form-section">
-                    <label class="form-label">
-                        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2" fill="none"
-                            stroke="currentColor">
-                            <path
-                                d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                        </svg>
-                        Attachments (Optional)
-                    </label>
-                    <div class="file-upload">
-                        <input type="file" id="attachmentInput" class="file-input"
-                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
-                        <label for="attachmentInput" class="file-label">
-                            <svg class="icon" viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-                            </svg>
-                            <span>Choose files or drag here</span>
-                            <span class="file-types">JPG, PNG, PDF, DOC up to 10MB</span>
-                        </label>
-                    </div>
-                </div>
-
                 <div class="form-footer">
                     <button type="button" class="btn btn-secondary" id="cancelBtn">
                         <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2" fill="none"
@@ -1583,7 +1578,7 @@
                         <option value="crisis">Crisis Follow-up</option>
                     </select>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-grid">
                     <div>
                         <label
                             style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Date</label>

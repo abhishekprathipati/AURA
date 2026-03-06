@@ -1004,3 +1004,16 @@ body {
     .pd-card, .pd-stat { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
     body { background: white; }
 }
+
+/* ── Enhanced Mobile ── */
+@media (max-width: 480px) {
+    .pd-header { flex-direction: column; gap: 8px; padding: 12px 16px; }
+    .pd-header-actions { width: 100%; justify-content: center; }
+    .pd-grid { grid-template-columns: 1fr !important; }
+    .pd-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .pd-tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .pd-card-body { max-height: 320px; }
+}
+@media (max-width: 360px) {
+    .pd-stat-grid { grid-template-columns: 1fr !important; }
+}

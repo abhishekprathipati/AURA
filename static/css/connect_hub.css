@@ -1535,14 +1535,17 @@ kbd {
     grid-template-rows: auto 1fr;
   }
   .hub-sidebar {
-    grid-row: 1;
-    height: auto; max-height: 50vh;
-    border-right: none; border-bottom: 1px solid var(--h-border);
+    position: fixed; left: -100%; top: 56px; bottom: 0; z-index: 1000;
+    width: 300px; transition: left 0.3s ease;
+    border-right: 1px solid var(--h-border); border-bottom: none;
+    height: auto; max-height: none;
   }
+  .hub-sidebar.open { left: 0 !important; }
   .hub-main { grid-row: 2; }
   .hub-user-info { display: none; }
   .hub-search-wrap { max-width: 200px; }
   .card-grid { grid-template-columns: 1fr; }
+  .mobile-sidebar-toggle { display: flex !important; align-items:center;justify-content:center;background:var(--hub-accent,#6366f1);color:white;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:1.2rem; }
 }
 
 @media (max-width: 480px) {

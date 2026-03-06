@@ -281,16 +281,14 @@
     }
 
     // ═══ SHOW ERROR STATE ═══
-    function showErrorState(containerSel, message) {
-        const el = $(containerSel);
+    function showErrorState(selector, message) {
+        const el = $(selector);
         if (!el) return;
-        el.innerHTML = `
-            <div class="pd-error-state">
-                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
-                <p>${esc(message || 'Failed to load data')}</p>
-                <button type="button" onclick="window.__pdRefresh()">Retry</button>
-            </div>
-        `;
+        if (el.tagName === 'TBODY') {
+            el.innerHTML = `<tr><td colspan="99" style="text-align:center;padding:32px;color:var(--p-gray-500)">${esc(message || 'Failed to load data')}</td></tr>`;
+        } else {
+            el.innerHTML = `<div style="text-align:center;padding:32px;color:var(--p-gray-500)">${esc(message || 'Failed to load data')}</div>`;
+        }
     }
 
     // ═══ MAIN DATA LOADER ═══

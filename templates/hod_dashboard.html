@@ -652,6 +652,16 @@
             .main { padding: 16px 16px 32px; }
             .stat-card { padding: 16px; }
             .stat-number { font-size: 1.75rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr !important; }
+            .header-brand h1 { font-size: 1.2rem; }
+            .header-actions { gap: 4px; }
+            .header-actions .btn span { display: none; }
+            .card { margin-bottom: 12px; }
+            .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -880,10 +890,9 @@
 
     async function loadDashboard() {
         try {
-            const [stats, risk, trends, escalations, proctors] = await Promise.all([
+            const [stats, risk, escalations, proctors] = await Promise.all([
                 fetch('/proctor/api/hod/dashboard-stats').then(r => r.json()),
                 fetch('/proctor/api/hod/risk-distribution').then(r => r.json()),
-                fetch('/proctor/api/hod/wellness-trends').then(r => r.json()),
                 fetch('/proctor/api/hod/recent-escalations').then(r => r.json()),
                 fetch('/proctor/api/hod/proctor-performance').then(r => r.json())
             ]);
@@ -941,6 +950,11 @@
             isFirstLoad = false;
         } catch (err) {
             console.error('HOD Dashboard error:', err);
+            document.querySelectorAll('.skeleton').forEach(s => {
+                s.classList.remove('skeleton');
+                s.textContent = '--';
+            });
+            showToast('Failed to load dashboard data. Retrying...', 'error');
         }
     }
 
@@ -1064,7 +1078,7 @@
     function exportReport() {
         showToast('Generating report...', 'info');
         window.location.href = '/proctor/api/audit/export/csv?days=30';
-        setTimeout(() => showToast('Report downloaded!', 'success'), 2000);
+        // Success is indicated by the browser downloading the file
     }
 
     async function refreshData() {

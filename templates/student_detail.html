@@ -728,6 +728,16 @@
     </div>
 
     <script>
+        // === TOAST NOTIFICATION ===
+        function showToast(msg, type='info') {
+            const t = document.createElement('div');
+            t.style.cssText = `position:fixed;top:24px;right:24px;padding:14px 24px;border-radius:12px;color:white;font-weight:600;z-index:9999;animation:slideIn .3s ease;max-width:360px;font-size:0.9rem;box-shadow:0 8px 32px rgba(0,0,0,0.2);`;
+            t.style.background = type==='success'?'#10b981':type==='error'?'#ef4444':'#6366f1';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300)},3000);
+        }
+
         // === GLOBAL STATE ===
         const AID = "{{ anonymous_id }}";
         let studentData = {};
@@ -741,7 +751,15 @@
                 
                 const data = await res.json();
                 studentData = data.data;
-                
+
+                // Update recent activity badge
+                const badge = document.getElementById('recentActivityBadge');
+                if (badge && studentData.last_active) {
+                    badge.textContent = 'Last active: ' + new Date(studentData.last_active).toLocaleDateString();
+                } else if (badge && studentData.incidents?.length) {
+                    badge.textContent = studentData.incidents.length + ' incident(s)';
+                }
+
                 renderProfile();
                 renderIncidents();
                 renderNotes();
@@ -749,7 +767,7 @@
                 renderTriggerChart();
             } catch (error) {
                 console.error('Load error:', error);
-                alert('Failed to load student data');
+                showToast('Failed to load student data', 'error');
             }
         }
 
@@ -763,12 +781,19 @@
             document.getElementById('statAuto').textContent = incidents.filter(i => i.auto_triggered).length;
 
             // Case status
-            document.getElementById('caseStatusLabel').textContent = case_status.toUpperCase();
+            const statusLabel = document.getElementById('caseStatusLabel');
+            statusLabel.innerHTML = '<i class="fas fa-tag" style="margin-right:6px"></i>' + case_status.toUpperCase();
 
             // Primary trigger
             if (trigger_breakdown && Object.keys(trigger_breakdown).length > 0) {
                 const primary = Object.entries(trigger_breakdown).sort((a,b) => b[1] - a[1])[0];
                 document.getElementById('triggerBadge').textContent = `Primary: ${primary[0].replace(/_/g,' ')} (${primary[1]})`;
+            }
+
+            // Avatar
+            const avatar = document.getElementById('profileAvatar');
+            if (avatar && studentData.anonymous_student_id) {
+                avatar.textContent = studentData.anonymous_student_id.replace('STU_','').charAt(0).toUpperCase();
             }
         }
 
@@ -857,8 +882,24 @@
             if (triggerChart) triggerChart.destroy();
 
             if (!Object.keys(trigger_breakdown).length) {
-                canvas.parentElement.innerHTML = '<div class="empty-state"><i class="fas fa-chart-pie"></i><p>No trigger data</p></div>';
+                const canvas = document.getElementById('triggerChart');
+                if (canvas) canvas.style.display = 'none';
+                const parent = canvas?.parentElement;
+                if (parent) {
+                    let emptyDiv = parent.querySelector('.empty-state');
+                    if (!emptyDiv) {
+                        emptyDiv = document.createElement('div');
+                        emptyDiv.className = 'empty-state';
+                        emptyDiv.innerHTML = '<p>No trigger data available yet</p>';
+                        parent.appendChild(emptyDiv);
+                    }
+                }
                 return;
+            } else {
+                const canvas = document.getElementById('triggerChart');
+                if (canvas) canvas.style.display = '';
+                const emptyDiv = canvas?.parentElement?.querySelector('.empty-state');
+                if (emptyDiv) emptyDiv.remove();
             }
 
             const labels = Object.keys(trigger_breakdown).map(k => k.replace(/_/g,' '));
@@ -895,14 +936,14 @@
 
         async function caseAction(action) {
             const caseStatus = ACTION_STATUS_MAP[action];
-            if (!caseStatus) { alert('Unknown action: ' + action); return; }
+            if (!caseStatus) { showToast('Unknown action: ' + action, 'error'); return; }
             if (!confirm(`Mark case as "${caseStatus}"?`)) return;
 
             // Use the most recent incident's ID
             const incidents = studentData.incidents || [];
-            if (!incidents.length) { alert('No incidents found for this student.'); return; }
+            if (!incidents.length) { showToast('No incidents found for this student.', 'error'); return; }
             const incidentId = incidents[0].incident_id;
-            if (!incidentId) { alert('Incident ID missing — cannot update.'); return; }
+            if (!incidentId) { showToast('Incident ID missing — cannot update.', 'error'); return; }
 
             try {
                 const res = await fetch(`/proctor/api/case/${incidentId}/status`, {
@@ -912,14 +953,14 @@
                 });
 
                 if (res.ok) {
-                    alert('Action recorded successfully');
+                    showToast('Action recorded successfully', 'success');
                     loadStudentData();
                 } else {
                     const err = await res.json().catch(() => ({}));
-                    alert('Failed to record action: ' + (err.error || res.statusText));
+                    showToast('Failed to record action: ' + (err.error || res.statusText), 'error');
                 }
             } catch (error) {
-                alert('Error: ' + error.message);
+                showToast('Error: ' + error.message, 'error');
             }
         }
 
@@ -928,17 +969,24 @@
             if (!counselor) return;
 
             const incidents = studentData.incidents || [];
-            if (!incidents.length) { alert('No incidents found for this student.'); return; }
+            if (!incidents.length) { showToast('No incidents found for this student.', 'error'); return; }
             const incidentId = incidents[0].incident_id;
-            if (!incidentId) { alert('Incident ID missing — cannot assign.'); return; }
+            if (!incidentId) { showToast('Incident ID missing — cannot assign.', 'error'); return; }
 
             fetch(`/proctor/api/case/${incidentId}/assign`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ counselor, notes: '' })
             })
-            .then(res => res.ok ? alert('Assigned successfully') : alert('Failed'))
-            .catch(err => alert('Error: ' + err.message));
+            .then(res => {
+                if (res.ok) {
+                    showToast('Assigned successfully', 'success');
+                    loadStudentData();
+                } else {
+                    showToast('Failed to assign', 'error');
+                }
+            })
+            .catch(err => showToast('Error: ' + err.message, 'error'));
         }
 
         // === ADD NOTE ===
@@ -963,10 +1011,10 @@
                     document.getElementById('noteForm').reset();
                     loadStudentData();
                 } else {
-                    alert('Failed to add note');
+                    showToast('Failed to add note', 'error');
                 }
             } catch (error) {
-                alert('Error: ' + error.message);
+                showToast('Error: ' + error.message, 'error');
             }
         }
 

@@ -444,6 +444,16 @@ class AdvancedDashboard {
             this.updateStressDisplay(stressPayload);
             this.updateActivityDisplay(activityData);
             this.updateActivityTimeline();
+
+            // Update hub stats with real-ish data
+            const hubStatsEls = {
+                activeUsers: document.getElementById('activeUsers'),
+                totalGroups: document.getElementById('totalGroups'),
+                upcomingEvents: document.getElementById('upcomingEvents')
+            };
+            if (hubStatsEls.activeUsers) hubStatsEls.activeUsers.textContent = '--';
+            if (hubStatsEls.totalGroups) hubStatsEls.totalGroups.textContent = '--';
+            if (hubStatsEls.upcomingEvents) hubStatsEls.upcomingEvents.textContent = '--';
         } catch (error) {
             this.showErrorState();
         } finally { this.showLoading(false); }
@@ -710,34 +720,21 @@ class AdvancedDashboard {
     }
 
     updateActivityTimeline() {
-        const now = luxon.DateTime.now();
-        // SVG icons instead of Font Awesome
-        const iconSvgs = {
-            heartbeat: '<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M22 12h-4l-3 9L9 3l-3 9H2\"/></svg>',
-            brain: '<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 16v-4M12 8h.01\"/></svg>',
-            wind: '<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2\"/></svg>',
-            book: '<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"/><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"/></svg>',
-            check: '<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><polyline points=\"22 4 12 14.01 9 11.01\"/></svg>'
-        };
-        const activities = this.currentStress > 0 ? [
-            { icon: iconSvgs.heartbeat, title: 'Stress Check-in', time: now.minus({ minutes: 15 }).toFormat('HH:mm'), detail: `Stress: ${this.currentStress}` },
-            { icon: iconSvgs.brain, title: 'Mood Assessment', time: now.minus({ hours: 2 }).toFormat('HH:mm'), detail: 'Logged today' },
-        ] : [];
         const timeline = document.getElementById('activityTimeline');
         if (!timeline) return;
-        if (!activities.length) {
+        const checkIcon = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+        if (this.currentStress > 0) {
+            timeline.innerHTML = `
+                <div class="activity-item">
+                    <div class="activity-icon">${checkIcon}</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Last Check-in</div>
+                        <div class="activity-time">Current stress level: ${this.currentStress}/100</div>
+                    </div>
+                </div>`;
+        } else {
             timeline.innerHTML = '<div class="activity-item"><div class="activity-content"><div class="activity-title" style="opacity:0.5">No activity yet — try a check-in!</div></div></div>';
-            return;
         }
-        timeline.innerHTML = activities.map(a => `
-            <div class="activity-item">
-                <div class="activity-icon">${a.icon}</div>
-                <div class="activity-content">
-                    <div class="activity-title">${a.title}</div>
-                    <div class="activity-time">${a.time} • ${a.detail}</div>
-                </div>
-            </div>
-        `).join('');
     }
 
     setupEventListeners() {
@@ -995,7 +992,12 @@ class AdvancedDashboard {
     }
 
     showLoading(show) { this.isLoading = show; }
-    showErrorState() { /* no-op */ }
+    showErrorState() {
+        const stressEl = document.getElementById('stressValue');
+        if (stressEl) stressEl.textContent = '--';
+        const statusEl = document.querySelector('.stress-status-label');
+        if (statusEl) statusEl.textContent = 'Unable to load data';
+    }
 
     setupServiceWorker() {
         if ('serviceWorker' in navigator) {

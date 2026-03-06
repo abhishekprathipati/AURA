@@ -30,6 +30,13 @@
             flex-shrink: 0;
             z-index: 100;
         }
+        /* Flash message styles */
+        .flash { padding: 12px 20px; border-radius: 8px; margin: 8px 0; font-weight: 500; }
+        .flash.success { background: #d1fae5; color: #065f46; }
+        .flash.danger { background: #fee2e2; color: #991b1b; }
+        .flash.error { background: #fee2e2; color: #991b1b; }
+        .flash.warning { background: #fef3c7; color: #92400e; }
+        .flash.info { background: #dbeafe; color: #1e40af; }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -40,7 +47,13 @@
     <header>
         <nav class="dashboard-nav" role="navigation">
             <div class="logo">AURA</div>
-            <a href="/student/dashboard" class="{% if request.path.startswith('/student/dashboard') %}active{% endif %}">📊 Dashboard</a>
+            {% if session.get('user_role') == 'proctor' %}
+                <a href="/proctor/dashboard" class="{% if request.path.startswith('/proctor/dashboard') %}active{% endif %}">📊 Dashboard</a>
+            {% elif session.get('user_role') == 'hod' %}
+                <a href="/proctor/hod" class="{% if request.path.startswith('/proctor/hod') %}active{% endif %}">📊 Dashboard</a>
+            {% else %}
+                <a href="/student/dashboard" class="{% if request.path.startswith('/student/dashboard') %}active{% endif %}">📊 Dashboard</a>
+            {% endif %}
             <div class="spacer"></div>
             {% if session.get('user_email') %}
                 <div class="user">

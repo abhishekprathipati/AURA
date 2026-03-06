@@ -22,6 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
     loadActivityLog();
     loadNotifications();
     bindForms();
+
+    // Auto-refresh every 5 minutes
+    setInterval(() => {
+        loadWellnessSummary();
+        loadActivityLog();
+        loadNotifications();
+    }, 300000);
 });
 
 // Logout function
@@ -29,19 +36,6 @@ window.logout = function logout() {
     if (confirm('Are you sure you want to logout?')) {
         window.location.href = '/parent/logout';
     }
-};
-
-// Switch performance tabs
-window.switchTab = function switchTab(tab, evt) {
-    const tabs = document.querySelectorAll('.tabs .tab');
-    const contents = document.querySelectorAll('.tab-content');
-
-    tabs.forEach(t => t.classList.remove('active'));
-    contents.forEach(c => c.classList.remove('active'));
-
-    if (evt && evt.target) evt.target.classList.add('active');
-    const pane = document.getElementById(`${tab}-content`);
-    if (pane) pane.classList.add('active');
 };
 
 // Load academic performance data
@@ -83,6 +77,14 @@ async function loadAcademicPerformance() {
         
     } catch (error) {
         console.error('Error loading academic performance:', error);
+        const cgpaEl = document.getElementById('metricCgpa');
+        if (cgpaEl) cgpaEl.textContent = 'Error';
+        const sgpaEl = document.getElementById('metricSgpa');
+        if (sgpaEl) sgpaEl.textContent = 'Error';
+        const attEl = document.getElementById('metricAttendance');
+        if (attEl) attEl.textContent = 'Error';
+        const creditsEl = document.getElementById('metricCredits');
+        if (creditsEl) creditsEl.textContent = 'Error';
     }
 }
 
@@ -291,6 +293,12 @@ async function loadWellnessSummary() {
 
     } catch (error) {
         console.error('Error loading wellness summary:', error);
+        const stressEl = document.getElementById('avgStress');
+        if (stressEl) stressEl.textContent = 'Unable to load';
+        const moodEl = document.getElementById('avgMood');
+        if (moodEl) moodEl.textContent = 'Unable to load';
+        const statusEl = document.getElementById('wellnessStatus');
+        if (statusEl) statusEl.textContent = 'Error loading data';
     }
 }
 
@@ -322,6 +330,8 @@ async function loadActivityLog() {
         
     } catch (error) {
         console.error('Error loading activity log:', error);
+        const listEl = document.getElementById('activityLog');
+        if (listEl) listEl.innerHTML = '<div class="empty-state">Failed to load activity</div>';
     }
 }
 
@@ -358,6 +368,8 @@ async function loadNotifications() {
         
     } catch (error) {
         console.error('Error loading notifications:', error);
+        const listEl = document.getElementById('notificationsList');
+        if (listEl) listEl.innerHTML = '<div class="empty-state">Failed to load notifications</div>';
     }
 }
 
@@ -562,6 +574,8 @@ async function loadComplaints() {
 
     } catch (error) {
         console.error('Error loading complaints:', error);
+        const listEl = document.getElementById('complaintList');
+        if (listEl) listEl.innerHTML = '<div class="empty-state">Failed to load complaints</div>';
     }
 }
 

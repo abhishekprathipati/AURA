@@ -1137,7 +1137,13 @@ html, body {
 
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .sc-sidebar { display: none; }
+  .sc-sidebar {
+    position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000;
+    width: 280px; transition: left 0.3s ease;
+  }
+  .sc-sidebar.open { left: 0; }
+  .sc-main { width: 100%; }
+  .mobile-toggle { display: flex !important; }
   .sc-msg { padding: 6px 12px; }
   .sc-header { padding: 0 12px; }
   .sc-input-shell { padding: 10px 12px 14px; }
@@ -1809,6 +1815,8 @@ html, body {
 
 <!-- ═══════════════ LAYOUT ═══════════════ -->
 <div class="sc-layout study-container" id="scLayout">
+
+  <button class="mobile-toggle" onclick="document.querySelector('.sc-sidebar').classList.toggle('open')" style="display:none;position:fixed;top:12px;left:12px;z-index:1001;background:var(--sc-primary,#6366f1);color:white;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:1.2rem;">&#9776;</button>
 
   <!-- ── SIDEBAR ── -->
   <aside class="sc-sidebar">
