@@ -862,6 +862,40 @@ def get_student_profile():
         return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
+@student_bp.route('/api/student/change-password', methods=['POST'])
+@login_required
+@demo_restricted
+def change_password():
+    """Allow a logged-in student to update their password."""
+    try:
+        from utils.auth_helpers import verify_password, hash_password
+        data = request.get_json() or {}
+        current_pw = data.get('current_password', '')
+        new_pw = data.get('new_password', '')
+
+        if not current_pw or not new_pw:
+            return jsonify({'success': False, 'error': 'Both current and new password are required.'}), 400
+        if len(new_pw) < 6:
+            return jsonify({'success': False, 'error': 'New password must be at least 6 characters.'}), 400
+
+        db = get_db()
+        user_email = session.get('user_email')
+        user = db['users'].find_one({'email': user_email})
+        if not user:
+            return jsonify({'success': False, 'error': 'User not found.'}), 404
+
+        if not verify_password(user['hashed_password'], current_pw):
+            return jsonify({'success': False, 'error': 'Current password is incorrect.'}), 403
+
+        db['users'].update_one(
+            {'email': user_email},
+            {'$set': {'hashed_password': hash_password(new_pw)}}
+        )
+        return jsonify({'success': True, 'message': 'Password updated successfully.'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'change_password')}), 500
+
+
 @student_bp.route('/api/activities/count', methods=['GET'])
 @login_required
 def activities_count():

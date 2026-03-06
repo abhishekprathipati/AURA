@@ -204,7 +204,7 @@ def add_student():
 
         # â”€â”€ Build student record â”€â”€
         from utils.auth_helpers import hash_password
-        default_password = hash_password(roll_number.lower())  # default pwd = roll number
+        default_password = hash_password('Aura@123')  # default pwd for all students
         # Use centralized anonymous ID helper (single source of truth)
         anonymous_id = create_anonymous_id(email)
 
