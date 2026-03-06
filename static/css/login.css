@@ -35,12 +35,13 @@ body {
     background: var(--lg);
     min-height: 100vh;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     -webkit-font-smoothing: antialiased;
     padding: 20px;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 /* Animated background mesh */
@@ -74,8 +75,9 @@ body::before {
     max-width: 1080px;
     width: 100%;
     min-height: 640px;
-    overflow: hidden;
+    overflow: visible;
     animation: containerReveal .6s var(--ease) both;
+    margin: auto 0;
 }
 
 @keyframes containerReveal {
@@ -294,6 +296,7 @@ form { margin-top: 8px; }
     justify-content: center;
     position: relative;
     overflow: hidden;
+    border-radius: 0 var(--r-xl) var(--r-xl) 0;
 }
 
 /* ── Floating Orbs ────────────────────────────────────────── */
@@ -551,30 +554,84 @@ form { margin-top: 8px; }
 .badge-icon { font-size: 13px; }
 
 /* ══════════════════════════════════════════════════════════════
-   RESPONSIVE
+   RESPONSIVE — Full mobile support with scrolling
    ══════════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
+    body {
+        align-items: flex-start;
+        padding: 16px;
+    }
     .login-container {
         flex-direction: column;
         max-width: 520px;
         border-radius: var(--r-lg);
+        min-height: unset;
+        margin: 0 auto;
     }
-    .login-left { padding: 40px 36px 32px; }
-    .login-right { flex: none; }
-    .right-content { padding: 32px 28px; }
+    .login-left {
+        padding: 40px 36px 32px;
+        border-radius: var(--r-lg) var(--r-lg) 0 0;
+    }
+    .login-right {
+        flex: none;
+        border-radius: 0 0 var(--r-lg) var(--r-lg);
+    }
+    .right-content { padding: 32px 28px 36px; }
     .demo-grid { gap: 8px; }
     .brand-header h2 { font-size: 22px; }
 }
 
 @media (max-width: 520px) {
-    body { padding: 12px; }
-    .login-container { border-radius: 20px; }
-    .login-left { padding: 32px 24px 24px; }
-    .right-content { padding: 28px 20px; }
-    .logo { font-size: 38px; }
-    .demo-grid { grid-template-columns: 1fr; }
-    .feature-pills { gap: 6px; }
-    .pill { font-size: 11px; padding: 5px 11px; }
+    body { padding: 0; background: var(--lg2); align-items: flex-start; }
+    .login-container {
+        border-radius: 0;
+        box-shadow: none;
+        min-height: 100vh;
+        flex-direction: column;
+        max-width: 100%;
+    }
+    .login-left {
+        padding: 48px 24px 28px;
+        border-radius: 0;
+        background: #fff;
+    }
+    .login-right {
+        flex: 1;
+        border-radius: 0;
+        min-height: auto;
+    }
+    .right-content {
+        padding: 32px 20px 40px;
+    }
+    .logo { font-size: 42px; }
+    .subtitle { font-size: 14px; margin-bottom: 28px; }
+    .demo-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .demo-card {
+        padding: 16px;
+        gap: 14px;
+    }
+    .card-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 26px;
+        border-radius: 14px;
+    }
+    .card-role { font-size: 15px; }
+    .card-email { font-size: 12px; }
+    .feature-pills { gap: 6px; margin-bottom: 20px; }
+    .pill { font-size: 11px; padding: 5px 12px; }
+    .trust-badges { gap: 12px; }
+    .trust-badge { font-size: 11px; }
+    .brand-header { margin-bottom: 20px; }
+    .brand-header h2 { font-size: 24px; }
+    .brand-icon { font-size: 40px; }
+    .demo-title { font-size: 10px; letter-spacing: .14em; margin-bottom: 12px; }
+    .demo-pass-hint { font-size: 12px; margin-bottom: 18px; }
+    .btn-login { padding: 15px 24px; font-size: 14px; }
+    .form-group input { padding: 14px 16px; font-size: 16px; }
 }
 
 /* ══════════════════════════════════════════════════════════════
