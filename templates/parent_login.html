@@ -79,17 +79,36 @@
         .alert-error { background: #fee2e2; border: 1px solid #fca5a5; color: #dc2626; }
         .alert-success { background: #d1fae5; border: 1px solid #6ee7b7; color: #059669; }
 
-        /* Demo Banner */
-        .demo-banner {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            border: 1px solid #f59e0b; border-radius: 12px;
-            padding: 12px 16px; font-size: 13px; font-weight: 600;
-            color: #92400e; text-align: center; margin-bottom: 20px;
-            animation: slideIn 0.3s ease;
+        /* Demo OTP Banner — fixed at bottom */
+        .demo-otp-bottom {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            padding: 14px 20px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+            animation: slideUp 0.4s ease;
         }
-        .demo-banner .otp-display {
-            font-size: 22px; font-weight: 800; color: #d97706;
-            letter-spacing: 6px; margin-top: 4px;
+        .demo-otp-inner {
+            max-width: 500px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; flex-wrap: wrap;
+        }
+        .demo-otp-label {
+            color: #fbbf24; font-weight: 700; font-size: 14px;
+        }
+        .demo-otp-code {
+            font-size: 28px; font-weight: 900; letter-spacing: 8px;
+            color: #fff; background: rgba(102,126,234,0.3);
+            padding: 6px 20px; border-radius: 10px;
+            border: 2px dashed #667eea;
+            font-family: 'Courier New', monospace;
+        }
+        .demo-otp-hint {
+            color: #94a3b8; font-size: 12px; font-weight: 500;
+            width: 100%; text-align: center;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         /* Steps Content */
@@ -258,12 +277,7 @@
 
         <div class="alert-box" id="alertBox"></div>
 
-        <!-- Demo OTP Banner (only shown when SMS is not configured) -->
-        <div class="demo-banner" id="demoBanner" style="display: none;">
-            <div>🔑 Demo Mode — Your OTP</div>
-            <div class="otp-display" id="demoOtpValue"></div>
-            <div style="font-size: 0.75rem; margin-top: 4px; opacity: 0.8;">SMS not configured. OTP is shown here for testing.</div>
-        </div>
+
 
         <!-- ===== STEP 1: Phone Number ===== -->
         <div id="step1" class="step-content active">
@@ -344,6 +358,15 @@
         </div>
     </div>
 
+    <!-- Persistent Demo OTP Banner at bottom of screen -->
+    <div class="demo-otp-bottom" id="demoBanner" style="display: none;">
+        <div class="demo-otp-inner">
+            <span class="demo-otp-label">🔑 Demo OTP:</span>
+            <span class="demo-otp-code" id="demoOtpValue"></span>
+            <span class="demo-otp-hint">Enter this code above to verify</span>
+        </div>
+    </div>
+
     <script>
         let currentPhone = '';
         let studentRoll = '';
@@ -367,7 +390,7 @@
 
         function goToStep(step) {
             clearAlert();
-            if (step < 3) document.getElementById('demoBanner').style.display = 'none';
+            if (step !== 2) document.getElementById('demoBanner').style.display = 'none';
             document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
             document.getElementById(step === 4 ? 'successScreen' : `step${step}`).classList.add('active');
 
