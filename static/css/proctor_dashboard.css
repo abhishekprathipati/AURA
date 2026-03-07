@@ -313,6 +313,14 @@ body {
 .pd-stat.is-danger.has-critical {
     animation: criticalPulse 2s ease-in-out infinite;
 }
+
+/* Hard fallback: never hide the critical stat card in demo/proctor dashboards. */
+.pd-stats-grid > .pd-stat.is-danger {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+}
 @keyframes criticalPulse {
     0%, 100% { box-shadow: var(--p-shadow-sm); }
     50%      { box-shadow: 0 0 0 4px rgba(239,68,68,.15), 0 4px 12px rgba(239,68,68,.1); }

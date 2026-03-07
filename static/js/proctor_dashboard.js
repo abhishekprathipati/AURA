@@ -91,6 +91,42 @@
         return new Date(dateStr).toLocaleDateString();
     }
 
+    // Ensure legacy/cached templates still show the critical stat card.
+    function ensureCriticalStatCard() {
+        if ($('#pd-criticalCount')) return;
+
+        const grid = $('.pd-stats-grid');
+        if (!grid) return;
+
+        const card = document.createElement('div');
+        card.className = 'pd-stat is-danger pd-fade-up';
+        card.innerHTML = `
+            <div class="pd-stat-top">
+                <div class="pd-stat-icon" aria-hidden="true"><i class="fas fa-exclamation-circle"></i></div>
+            </div>
+            <div class="pd-stat-num" id="pd-criticalCount" aria-live="polite">0</div>
+            <div class="pd-stat-label">Needs Immediate Action</div>
+        `;
+
+        grid.insertBefore(card, grid.firstChild);
+    }
+
+    function forceShowCriticalStatCard() {
+        const card = $('.pd-stats-grid .pd-stat.is-danger');
+        const count = $('#pd-criticalCount');
+        if (!card || !count) return;
+
+        card.classList.remove('pd-fade-up');
+        card.style.display = 'block';
+        card.style.visibility = 'visible';
+        card.style.opacity = '1';
+        card.style.transform = 'none';
+
+        count.style.display = 'flex';
+        count.style.visibility = 'visible';
+        count.style.opacity = '1';
+    }
+
     // ═══ RENDER: Alerts Table ═══
     function renderAlerts(students) {
         const body = $('#pd-alertsBody');
@@ -297,6 +333,9 @@
         isRefreshing = true;
 
         try {
+            ensureCriticalStatCard();
+            forceShowCriticalStatCard();
+
             const results = await Promise.allSettled([
                 fetch(CONFIG.ENDPOINTS.summary).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
                 fetch(CONFIG.ENDPOINTS.students).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
@@ -497,6 +536,9 @@
 
     // ═══ INIT ═══
     function init() {
+        ensureCriticalStatCard();
+        forceShowCriticalStatCard();
+
         // Event listeners (delegation)
         document.addEventListener('click', handleClick);
         document.addEventListener('click', handleOverlayClick);

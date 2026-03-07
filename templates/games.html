@@ -1582,7 +1582,7 @@
             <div class="c-desc">Turn-based 4-digit guessing duel against AURA — crack positions to win</div>
             <div class="c-footer">
                 <span class="c-tag tag-hard">Strategic</span>
-                <span class="c-tag tag-xp">+25 XP</span>
+                <span class="c-tag tag-xp">+30 XP</span>
                 <button class="c-play" onclick="event.stopPropagation();openGame('numberGame')">Play ▶</button>
             </div>
         </div>
@@ -1593,7 +1593,7 @@
             <div class="c-desc">Race against time solving arithmetic puzzles</div>
             <div class="c-footer">
                 <span class="c-tag tag-easy">Easy–Hard</span>
-                <span class="c-tag tag-xp">+15 XP</span>
+                <span class="c-tag tag-xp">+20 XP</span>
                 <button class="c-play" onclick="event.stopPropagation();openGame('mathGame')">Play ▶</button>
             </div>
         </div>
@@ -1604,7 +1604,7 @@
             <div class="c-desc">Crack the hidden pattern in number sequences</div>
             <div class="c-footer">
                 <span class="c-tag tag-hard">Hard</span>
-                <span class="c-tag tag-xp">+20 XP</span>
+                <span class="c-tag tag-xp">+25 XP</span>
                 <button class="c-play" onclick="event.stopPropagation();openGame('puzzleGame')">Play ▶</button>
             </div>
         </div>
@@ -1615,7 +1615,7 @@
             <div class="c-desc">Flip cards & find matching pairs in fewest moves</div>
             <div class="c-footer">
                 <span class="c-tag tag-medium">Medium</span>
-                <span class="c-tag tag-xp">+30 XP</span>
+                <span class="c-tag tag-xp">+35 XP</span>
                 <button class="c-play" onclick="event.stopPropagation();openGame('memoryGame')">Play ▶</button>
             </div>
         </div>
@@ -1626,7 +1626,7 @@
             <div class="c-desc">Unscramble jumbled letters to find the word</div>
             <div class="c-footer">
                 <span class="c-tag tag-medium">Medium</span>
-                <span class="c-tag tag-xp">+20 XP</span>
+                <span class="c-tag tag-xp">+25 XP</span>
                 <button class="c-play" onclick="event.stopPropagation();openGame('wordGame')">Play ▶</button>
             </div>
         </div>
@@ -1637,7 +1637,7 @@
             <div class="c-desc">Test your reflexes — click the moment it turns green</div>
             <div class="c-footer">
                 <span class="c-tag tag-easy">Easy</span>
-                <span class="c-tag tag-xp">+10 XP</span>
+                <span class="c-tag tag-xp">+15 XP</span>
                 <button class="c-play" onclick="event.stopPropagation();openGame('reactionGame')">Play ▶</button>
             </div>
         </div>
@@ -1648,7 +1648,7 @@
             <div class="c-desc">Stroop test — name the ink color, not the word</div>
             <div class="c-footer">
                 <span class="c-tag tag-hard">Hard</span>
-                <span class="c-tag tag-xp">+20 XP</span>
+                <span class="c-tag tag-xp">+25 XP</span>
                 <button class="c-play" onclick="event.stopPropagation();openGame('colorGame')">Play ▶</button>
             </div>
         </div>
@@ -1659,7 +1659,7 @@
             <div class="c-desc">Remember & repeat the growing color sequence</div>
             <div class="c-footer">
                 <span class="c-tag tag-hard">Hard</span>
-                <span class="c-tag tag-xp">+25 XP</span>
+                <span class="c-tag tag-xp">+30 XP</span>
                 <button class="c-play" onclick="event.stopPropagation();openGame('simonGame')">Play ▶</button>
             </div>
         </div>
@@ -1670,7 +1670,7 @@
             <div class="c-desc">Type words at top speed — track your WPM & accuracy</div>
             <div class="c-footer">
                 <span class="c-tag tag-medium">Medium</span>
-                <span class="c-tag tag-xp">+15 XP</span>
+                <span class="c-tag tag-xp">+20 XP</span>
                 <button class="c-play" onclick="event.stopPropagation();openGame('typingGame')">Play ▶</button>
             </div>
         </div>
@@ -1681,7 +1681,7 @@
             <div class="c-desc">Slide & merge tiles to reach the legendary 2048 tile</div>
             <div class="c-footer">
                 <span class="c-tag tag-hard">Hard</span>
-                <span class="c-tag tag-xp">+30 XP</span>
+                <span class="c-tag tag-xp">+35 XP</span>
                 <button class="c-play" onclick="event.stopPropagation();openGame('game2048')">Play ▶</button>
             </div>
         </div>
@@ -1692,7 +1692,7 @@
             <div class="c-desc">Bonk the moles before they escape — 30s of chaos!</div>
             <div class="c-footer">
                 <span class="c-tag tag-medium">Medium</span>
-                <span class="c-tag tag-xp">+20 XP</span>
+                <span class="c-tag tag-xp">+25 XP</span>
                 <button class="c-play" onclick="event.stopPropagation();openGame('moleGame')">Play ▶</button>
             </div>
         </div>
@@ -1703,7 +1703,7 @@
             <div class="c-desc">Hit 30 targets — test your speed & precision</div>
             <div class="c-footer">
                 <span class="c-tag tag-medium">Medium</span>
-                <span class="c-tag tag-xp">+20 XP</span>
+                <span class="c-tag tag-xp">+25 XP</span>
                 <button class="c-play" onclick="event.stopPropagation();openGame('aimGame')">Play ▶</button>
             </div>
         </div>
@@ -2171,6 +2171,7 @@
 
 // ── XP System ──
 const XP_NEXT = 100;
+const XP_BONUS = 5;
 let PD = JSON.parse(localStorage.getItem('aura_gm')||'{}');
 if(!PD.xp) PD={xp:0,level:1,total:0,streak:0,combo:0,bestReact:null,bestMem:null,simonHi:0};
 
@@ -2178,7 +2179,7 @@ function save(){ localStorage.setItem('aura_gm',JSON.stringify(PD)); }
 
 function addXP(amt){
     const m = Math.min(1+(PD.combo-1)*0.25,3);
-    const g = Math.round(amt*(PD.combo>1?m:1));
+    const g = Math.round(amt*(PD.combo>1?m:1)) + XP_BONUS;
     PD.xp += g; PD.total += g;
     while(PD.xp>=XP_NEXT){ PD.xp-=XP_NEXT; PD.level++; showLvlUp(PD.level); fireConfetti(80); }
     refreshXP(); showFloat(g); save();
@@ -2827,7 +2828,7 @@ function tpFinish(){
     }
     PD.tpRaces=(PD.tpRaces||0)+1; save();
     document.getElementById('tpRaces').textContent=PD.tpRaces;
-    showMsg('tpResult','🏁 '+wpm+' WPM | '+acc+'% accuracy | +'+xpEarn+' XP');
+    showMsg('tpResult','🏁 '+wpm+' WPM | '+acc+'% accuracy | +'+(xpEarn+XP_BONUS)+' XP');
 }
 
 document.getElementById('tpInput').addEventListener('input',function(e){
@@ -2912,7 +2913,7 @@ function g48Slide(row){
             g48.score+=val;
             if(val===2048 && !g48.won){
                 g48.won=true;
-                showMsg('g48Result','🎉 You reached 2048! +50 XP');
+                showMsg('g48Result','🎉 You reached 2048! +'+(50+XP_BONUS)+' XP');
                 addXP(50); fireConfetti(40); doCombo(true);
             }
             i++;
@@ -3117,7 +3118,7 @@ function wmStop(){
     if(!PD.wmBestStrk||wm.bestStrk>PD.wmBestStrk){PD.wmBestStrk=wm.bestStrk;save();}
     document.getElementById('wmBest').textContent=PD.wmBest||0;
     document.getElementById('wmBestStreak').textContent=PD.wmBestStrk||0;
-    showMsg('wmResult','🏁 Score: '+wm.score+' | Streak: '+wm.bestStrk+' | +'+xpEarn+' XP');
+    showMsg('wmResult','🏁 Score: '+wm.score+' | Streak: '+wm.bestStrk+' | +'+(xpEarn+XP_BONUS)+' XP');
 }
 
 /* ════════════════════════════════════════════════
@@ -3230,7 +3231,7 @@ function atFinish(){
     save();
     document.getElementById('atBestAvg').textContent=(PD.atBestAvg||avg)+'ms';
     document.getElementById('atSessions').textContent=PD.atSessions;
-    showMsg('atResult','🏁 Avg: '+avg+'ms | Best: '+best+'ms | Accuracy: '+acc+'% | +'+xpEarn+' XP');
+    showMsg('atResult','🏁 Avg: '+avg+'ms | Best: '+best+'ms | Accuracy: '+acc+'% | +'+(xpEarn+XP_BONUS)+' XP');
 }
 
 function atStop(){

@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/proctor_dashboard.css') }}?v=20260305">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/proctor_dashboard.css') }}?v=20260307b">
     <!-- Screen-reader only utility -->
     <style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
 </head>
@@ -290,7 +290,27 @@
     <!-- Toast -->
     <div class="pd-toast" id="pd-toast" role="status" aria-live="polite"></div>
 
-    <!-- Dashboard Logic (external, no inline scripts) -->
-    <script src="{{ url_for('static', filename='js/proctor_dashboard.js') }}?v=20260305"></script>
+    <!-- Fallback for stale cached bundles: ensure critical stat card exists -->
+    <script>
+        (function () {
+            var grid = document.querySelector('.pd-stats-grid');
+            var critical = document.getElementById('pd-criticalCount');
+            if (!grid || critical) return;
+
+            var card = document.createElement('div');
+            card.className = 'pd-stat is-danger pd-fade-up';
+            card.innerHTML =
+                '<div class="pd-stat-top">' +
+                    '<div class="pd-stat-icon" aria-hidden="true"><i class="fas fa-exclamation-circle"></i></div>' +
+                '</div>' +
+                '<div class="pd-stat-num" id="pd-criticalCount" aria-live="polite">0</div>' +
+                '<div class="pd-stat-label">Needs Immediate Action</div>';
+
+            grid.insertBefore(card, grid.firstChild);
+        })();
+    </script>
+
+    <!-- Dashboard Logic -->
+    <script src="{{ url_for('static', filename='js/proctor_dashboard.js') }}?v=20260307b"></script>
 </body>
 </html>
