@@ -8,7 +8,7 @@
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}?v=20260308-fullscreen">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}?v=20260308-neural">
 </head>
 
 <body>
@@ -53,10 +53,8 @@
         </div>
 
         <div class="login-right">
-            <!-- Floating orbs -->
-            <div class="orb orb-1"></div>
-            <div class="orb orb-2"></div>
-            <div class="orb orb-3"></div>
+            <!-- Neural Network Canvas Animation -->
+            <canvas id="neuralCanvas"></canvas>
 
             <div class="right-content">
                 <div class="brand-header">
@@ -126,12 +124,197 @@
         function fillAndSubmit(email, password) {
             document.getElementById('email').value = email;
             document.getElementById('password').value = password;
-            // Brief visual feedback then submit
             document.getElementById('email').focus();
             setTimeout(() => {
                 document.querySelector('form').submit();
             }, 300);
         }
+
+        // ═══════════════════════════════════════════════════════
+        // AURA Neural Network Particle Animation
+        // ═══════════════════════════════════════════════════════
+        (function () {
+            const canvas = document.getElementById('neuralCanvas');
+            const ctx = canvas.getContext('2d');
+            const panel = document.querySelector('.login-right');
+            let particles = [];
+            let pulses = [];
+            let mouse = { x: -1000, y: -1000 };
+            const PARTICLE_COUNT = 70;
+            const CONNECTION_DIST = 120;
+            const MOUSE_RADIUS = 150;
+
+            function resize() {
+                canvas.width = panel.offsetWidth;
+                canvas.height = panel.offsetHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            panel.addEventListener('mousemove', (e) => {
+                const rect = panel.getBoundingClientRect();
+                mouse.x = e.clientX - rect.left;
+                mouse.y = e.clientY - rect.top;
+            });
+            panel.addEventListener('mouseleave', () => {
+                mouse.x = -1000;
+                mouse.y = -1000;
+            });
+
+            // Particle class
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.6;
+                    this.vy = (Math.random() - 0.5) * 0.6;
+                    this.radius = Math.random() * 2.5 + 1;
+                    this.baseAlpha = Math.random() * 0.5 + 0.3;
+                    this.alpha = this.baseAlpha;
+                    // Color: mix of purple, blue, cyan for AURA vibe
+                    const colors = [
+                        [168, 85, 247],  // purple
+                        [139, 92, 246],  // violet
+                        [99, 102, 241],  // indigo
+                        [59, 130, 246],  // blue
+                        [56, 189, 248],  // cyan
+                        [255, 255, 255], // white
+                    ];
+                    this.color = colors[Math.floor(Math.random() * colors.length)];
+                    this.pulsePhase = Math.random() * Math.PI * 2;
+                    this.pulseSpeed = 0.02 + Math.random() * 0.02;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // Mouse interaction — glow brighter near cursor
+                    const dx = this.x - mouse.x;
+                    const dy = this.y - mouse.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < MOUSE_RADIUS) {
+                        const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
+                        this.vx += dx / dist * force * 0.15;
+                        this.vy += dy / dist * force * 0.15;
+                        this.alpha = Math.min(1, this.baseAlpha + force * 0.6);
+                    } else {
+                        this.alpha += (this.baseAlpha - this.alpha) * 0.05;
+                    }
+
+                    // Breathing pulse
+                    this.pulsePhase += this.pulseSpeed;
+                    const pulse = Math.sin(this.pulsePhase) * 0.15;
+                    this.alpha = Math.max(0.1, this.alpha + pulse);
+
+                    // Speed damping
+                    this.vx *= 0.99;
+                    this.vy *= 0.99;
+
+                    // Wrap edges
+                    if (this.x < -10) this.x = canvas.width + 10;
+                    if (this.x > canvas.width + 10) this.x = -10;
+                    if (this.y < -10) this.y = canvas.height + 10;
+                    if (this.y > canvas.height + 10) this.y = -10;
+                }
+                draw() {
+                    const [r, g, b] = this.color;
+                    // Outer glow
+                    ctx.beginPath();
+                    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius * 4);
+                    gradient.addColorStop(0, `rgba(${r},${g},${b},${this.alpha * 0.4})`);
+                    gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
+                    ctx.fillStyle = gradient;
+                    ctx.arc(this.x, this.y, this.radius * 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Core dot
+                    ctx.beginPath();
+                    ctx.fillStyle = `rgba(${r},${g},${b},${this.alpha})`;
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Pulse class — traveling energy along connections
+            class Pulse {
+                constructor(p1, p2) {
+                    this.p1 = p1;
+                    this.p2 = p2;
+                    this.t = 0;
+                    this.speed = 0.02 + Math.random() * 0.02;
+                    this.alive = true;
+                }
+                update() {
+                    this.t += this.speed;
+                    if (this.t > 1) this.alive = false;
+                }
+                draw() {
+                    const x = this.p1.x + (this.p2.x - this.p1.x) * this.t;
+                    const y = this.p1.y + (this.p2.y - this.p1.y) * this.t;
+                    const alpha = 1 - this.t;
+                    ctx.beginPath();
+                    const grad = ctx.createRadialGradient(x, y, 0, x, y, 6);
+                    grad.addColorStop(0, `rgba(168,130,255,${alpha * 0.9})`);
+                    grad.addColorStop(1, `rgba(168,130,255,0)`);
+                    ctx.fillStyle = grad;
+                    ctx.arc(x, y, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Init particles
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Particle());
+            }
+
+            let frame = 0;
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw connections
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < CONNECTION_DIST) {
+                            const alpha = (1 - dist / CONNECTION_DIST) * 0.25;
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(168, 130, 255, ${alpha})`;
+                            ctx.lineWidth = 0.8;
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+
+                            // Spawn occasional pulses
+                            if (frame % 120 === 0 && Math.random() < 0.03) {
+                                pulses.push(new Pulse(particles[i], particles[j]));
+                            }
+                        }
+                    }
+                }
+
+                // Update & draw pulses
+                pulses = pulses.filter(p => p.alive);
+                pulses.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+
+                // Update & draw particles
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+
+                frame++;
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
     </script>
 </body>
 

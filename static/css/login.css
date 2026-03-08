@@ -366,6 +366,17 @@ form {
     border-radius: 0 var(--r-xl) var(--r-xl) 0;
 }
 
+/* ── Neural Canvas Animation ─────────────────────────────── */
+#neuralCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
 /* ── Floating Orbs ────────────────────────────────────────── */
 .orb {
     position: absolute;
