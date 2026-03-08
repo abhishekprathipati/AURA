@@ -78,6 +78,30 @@ body::before {
     }
 }
 
+/* ── Global Video Background ───────────────────────────────── */
+.global-video-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -2;
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.global-video-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.55), rgba(118, 75, 162, 0.55));
+    z-index: -1;
+    pointer-events: none;
+}
+
 /* ── Main Container ────────────────────────────────────────── */
 .login-container {
     position: relative;
