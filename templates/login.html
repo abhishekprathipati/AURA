@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AURA - Login</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}?v=20260306">
 </head>
 
@@ -46,6 +47,12 @@
         </div>
 
         <div class="login-right">
+            <!-- Video Background -->
+            <video autoplay loop muted playsinline class="video-bg">
+                <source src="https://cdn.pixabay.com/video/2023/10/22/186008-876935100_large.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay"></div>
+
             <!-- Floating orbs -->
             <div class="orb orb-1"></div>
             <div class="orb orb-2"></div>
