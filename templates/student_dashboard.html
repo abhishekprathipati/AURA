@@ -248,20 +248,25 @@
                 <!-- TABS NAVIGATION -->
                 <div class="dashboard-tabs" id="dashboardTabs">
                     <button class="dash-tab active" data-target="tab-wellness">
-                        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
                         </svg>
                         <span>Overview</span>
                     </button>
                     <button class="dash-tab" data-target="tab-analytics">
-                        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 21H4.6C4.03995 21 3.75992 21 3.54601 20.891C3.35785 20.7951 3.20487 20.6422 3.10899 20.454C3 20.2401 3 19.9601 3 19.4V3M7 10.5V17.5M11.5 7.5V17.5M16 13.5V17.5M20.5 10.5V17.5"/>
+                        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M21 21H4.6C4.03995 21 3.75992 21 3.54601 20.891C3.35785 20.7951 3.20487 20.6422 3.10899 20.454C3 20.2401 3 19.9601 3 19.4V3M7 10.5V17.5M11.5 7.5V17.5M16 13.5V17.5M20.5 10.5V17.5" />
                         </svg>
                         <span>History & Analytics</span>
                     </button>
                     <button class="dash-tab" data-target="tab-academics">
-                        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                            <path d="M6 12v5c3 3 9 3 12 0v-5" />
                         </svg>
                         <span>Academics</span>
                     </button>
@@ -438,23 +443,6 @@
                                     <div class="chat-title">Study Chat</div>
                                     <div class="chat-description">Academic support</div>
                                 </a>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Quick Wellness Actions -->
-                    <section class="card" aria-labelledby="quick-wellness-heading">
-                        <header class="card-header">
-                            <div class="card-header-main">
-                                <h2 id="quick-wellness-heading" class="card-title">Quick Wellness Actions</h2>
-                            </div>
-                        </header>
-                        <div class="card-body">
-                            <div class="quick-actions-grid">
-                                <button class="btn-action" data-action="breathing"><span class="btn-action-icon">&#x1FAC1;</span><span class="btn-action-label">Breathe</span></button>
-                                <button class="btn-action" data-action="stretch"><span class="btn-action-icon">&#x1F9D8;</span><span class="btn-action-label">Stretch</span></button>
-                                <button class="btn-action" data-action="journal"><span class="btn-action-icon">&#x1F4DD;</span><span class="btn-action-label">Journal</span></button>
-                                <button class="btn-action" data-action="music"><span class="btn-action-icon">&#x1F3B5;</span><span class="btn-action-label">Music</span></button>
                             </div>
                         </div>
                     </section>
@@ -702,113 +690,533 @@
 
                 <!-- ══ QUICK ACTIONS — PREMIUM PANEL ══ -->
                 <style>
-                /* ── QA Panel Tabs ── */
-                .qa-tabs-row{display:flex;gap:4px;background:var(--surface-muted,#f3f4f6);border-radius:10px;padding:3px;margin-bottom:14px;}
-                .qa-tab-btn{flex:1;padding:6px 4px;border:none;background:transparent;border-radius:8px;font-size:11px;font-weight:700;color:var(--muted,#9ca3af);cursor:pointer;transition:all .18s;white-space:nowrap;}
-                .qa-tab-btn.active{background:var(--surface,#fff);color:var(--text,#1f2937);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
-                [data-theme="dark"] .qa-tabs-row{background:rgba(255,255,255,0.06);}
-                [data-theme="dark"] .qa-tab-btn.active{background:rgba(255,255,255,0.12);color:#f1f5f9;}
-                .qa-pane{display:none;}.qa-pane.active{display:block;}
-                /* ── 3×2 action cards ── */
-                .qa-grid-v2{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-                .qa-card-v2{
-                    display:flex;flex-direction:column;align-items:center;gap:5px;
-                    padding:12px 6px 10px;border-radius:14px;border:none;
-                    background:var(--surface-muted,#f9fafb);
-                    text-decoration:none;cursor:pointer;
-                    transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s,background .15s;
-                    border:1px solid transparent;
-                    position:relative;overflow:hidden;
-                }
-                .qa-card-v2::before{content:'';position:absolute;inset:0;background:var(--qa-glow,rgba(99,102,241,0.08));opacity:0;border-radius:inherit;transition:opacity .2s;}
-                .qa-card-v2:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 8px 24px rgba(0,0,0,0.09);border-color:rgba(0,0,0,0.06);}
-                .qa-card-v2:hover::before{opacity:1;}
-                .qa-card-v2:active{transform:scale(.97);}
-                [data-theme="dark"] .qa-card-v2{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.07);}
-                [data-theme="dark"] .qa-card-v2:hover{background:rgba(255,255,255,0.1);}
-                .qa-v2-ico{
-                    width:38px;height:38px;border-radius:11px;
-                    display:flex;align-items:center;justify-content:center;
-                    font-size:18px;flex-shrink:0;
-                    transition:transform .2s;
-                }
-                .qa-card-v2:hover .qa-v2-ico{transform:scale(1.12) rotate(-4deg);}
-                .qa-v2-label{font-size:11px;font-weight:700;color:var(--text,#1f2937);text-align:center;line-height:1.2;margin:0;}
-                .qa-v2-sub{font-size:10px;color:var(--muted,#9ca3af);text-align:center;margin:0;line-height:1.2;}
-                [data-theme="dark"] .qa-v2-label{color:#f1f5f9;}
-                /* icon colours */
-                .ico-purple{background:linear-gradient(135deg,#8b5cf6,#6d28d9);box-shadow:0 4px 12px rgba(139,92,246,.3);}
-                .ico-teal  {background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 12px rgba(16,185,129,.3);}
-                .ico-indigo{background:linear-gradient(135deg,#6366f1,#4338ca);box-shadow:0 4px 12px rgba(99,102,241,.3);}
-                .ico-blue  {background:linear-gradient(135deg,#3b82f6,#2563eb);box-shadow:0 4px 12px rgba(59,130,246,.3);}
-                .ico-orange{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 12px rgba(245,158,11,.3);}
-                .ico-rose  {background:linear-gradient(135deg,#f43f5e,#e11d48);box-shadow:0 4px 12px rgba(244,63,94,.3);}
-                /* ── Feedback bar ── */
-                .qa-feedback{min-height:20px;padding:0 2px;font-size:12px;font-weight:600;margin-bottom:8px;transition:all .2s;border-radius:6px;}
-                /* ── Insights tab ── */
-                .qa-insights-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
-                .qa-ins-card{
-                    background:var(--surface-muted,#f9fafb);
-                    border:1px solid var(--border,#e5e7eb);
-                    border-radius:12px;padding:12px 10px;text-align:center;
-                }
-                [data-theme="dark"] .qa-ins-card{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.08);}
-                .qa-ins-val{font-size:22px;font-weight:900;color:var(--text,#1f2937);line-height:1;}
-                [data-theme="dark"] .qa-ins-val{color:#f8fafc;}
-                .qa-ins-lbl{font-size:10px;font-weight:700;color:var(--muted,#9ca3af);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}
-                .qa-ins-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;margin-top:4px;}
-                .badge-good{background:#d1fae5;color:#065f46;} .badge-warn{background:#fef3c7;color:#92400e;} .badge-bad{background:#fee2e2;color:#991b1b;}
-                [data-theme="dark"] .badge-good{background:rgba(16,185,129,.2);color:#6ee7b7;}
-                [data-theme="dark"] .badge-warn{background:rgba(245,158,11,.2);color:#fcd34d;}
-                [data-theme="dark"] .badge-bad {background:rgba(239,68,68,.2);color:#fca5a5;}
-                .qa-ins-refresh{width:100%;padding:8px;border:1px solid var(--border,#e5e7eb);border-radius:10px;background:transparent;font-size:12px;font-weight:600;color:var(--muted,#6b7280);cursor:pointer;transition:all .15s;margin-top:4px;}
-                .qa-ins-refresh:hover{background:var(--primary,#6366f1);color:white;border-color:var(--primary,#6366f1);}
-                /* ── Feed tab ── */
-                .qa-feed-empty{text-align:center;padding:20px 0;color:var(--muted,#9ca3af);font-size:13px;}
-                /* ── Inline Breathe Panel ── */
-                .qa-inline-panel{
-                    background:var(--surface-muted,#f9fafb);border:1px solid var(--border,#e5e7eb);
-                    border-radius:14px;padding:16px;margin-top:10px;
-                    animation:slideDown .25s cubic-bezier(.34,1.56,.64,1);
-                }
-                [data-theme="dark"] .qa-inline-panel{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);}
-                @keyframes slideDown{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
-                .qa-breathe-circle{
-                    width:90px;height:90px;border-radius:50%;
-                    background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(251,146,60,.2));
-                    border:2px solid rgba(245,158,11,.3);
-                    display:flex;flex-direction:column;align-items:center;justify-content:center;
-                    margin:0 auto 12px;
-                    transition:all 4s ease-in-out;
-                    font-size:12px;font-weight:700;color:var(--text,#1f2937);gap:2px;
-                }
-                [data-theme="dark"] .qa-breathe-circle{color:#f1f5f9;}
-                .qa-breathe-circle.grow{transform:scale(1.45);background:linear-gradient(135deg,rgba(16,185,129,.22),rgba(52,211,153,.22));border-color:rgba(16,185,129,.4);}
-                .qa-breathe-circle.shrink{transform:scale(1);background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(99,102,241,.2));border-color:rgba(99,102,241,.3);}
-                .qa-breathe-count{font-size:20px;font-weight:900;line-height:1;}
-                .qa-breathe-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.7;}
-                .qa-panel-close{float:right;background:none;border:none;font-size:16px;color:var(--muted,#9ca3af);cursor:pointer;line-height:1;padding:0;}
-                .qa-panel-title{font-size:13px;font-weight:800;color:var(--text,#1f2937);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
-                [data-theme="dark"] .qa-panel-title{color:#f1f5f9;}
-                .qa-breathe-btns{display:flex;gap:8px;justify-content:center;}
-                .qa-breathe-btn{padding:8px 18px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
-                .qa-breathe-start{background:linear-gradient(135deg,#f59e0b,#d97706);color:white;}
-                .qa-breathe-stop{background:var(--border,#e5e7eb);color:var(--text,#374151);}
-                [data-theme="dark"] .qa-breathe-stop{background:rgba(255,255,255,0.1);color:#e2e8f0;}
-                .qa-breathe-progress{display:flex;justify-content:center;gap:5px;margin-bottom:10px;}
-                .qa-bp-dot{width:7px;height:7px;border-radius:50%;background:var(--border,#e5e7eb);transition:background .3s;}
-                .qa-bp-dot.active{background:#f59e0b;} .qa-bp-dot.done{background:#10b981;}
-                /* ── Mood panel ── */
-                .qa-mood-emojis{display:flex;gap:6px;justify-content:center;margin:10px 0;}
-                .qa-mood-btn{font-size:24px;background:none;border:2.5px solid transparent;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;}
-                .qa-mood-btn:hover{transform:scale(1.2);}
-                .qa-mood-btn.selected{border-color:var(--primary,#6366f1);background:rgba(99,102,241,.08);transform:scale(1.15);}
-                .qa-mood-note{width:100%;padding:8px 10px;border-radius:9px;border:1px solid var(--border,#e5e7eb);background:var(--surface,#fff);color:var(--text,#1f2937);font-size:12px;resize:none;outline:none;font-family:inherit;transition:border-color .15s;}
-                [data-theme="dark"] .qa-mood-note{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);color:#f1f5f9;}
-                .qa-mood-note:focus{border-color:var(--primary,#6366f1);}
-                .qa-mood-submit{width:100%;padding:9px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#f43f5e,#e11d48);color:white;margin-top:8px;transition:opacity .15s;}
-                .qa-mood-submit:hover{opacity:.88;}
-                .qa-mood-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted,#9ca3af);font-weight:600;padding:0 4px;}
+                    /* ── QA Panel Tabs ── */
+                    .qa-tabs-row {
+                        display: flex;
+                        gap: 4px;
+                        background: var(--surface-muted, #f3f4f6);
+                        border-radius: 10px;
+                        padding: 3px;
+                        margin-bottom: 14px;
+                    }
+
+                    .qa-tab-btn {
+                        flex: 1;
+                        padding: 6px 4px;
+                        border: none;
+                        background: transparent;
+                        border-radius: 8px;
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: var(--muted, #9ca3af);
+                        cursor: pointer;
+                        transition: all .18s;
+                        white-space: nowrap;
+                    }
+
+                    .qa-tab-btn.active {
+                        background: var(--surface, #fff);
+                        color: var(--text, #1f2937);
+                        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+                    }
+
+                    [data-theme="dark"] .qa-tabs-row {
+                        background: rgba(255, 255, 255, 0.06);
+                    }
+
+                    [data-theme="dark"] .qa-tab-btn.active {
+                        background: rgba(255, 255, 255, 0.12);
+                        color: #f1f5f9;
+                    }
+
+                    .qa-pane {
+                        display: none;
+                    }
+
+                    .qa-pane.active {
+                        display: block;
+                    }
+
+                    /* ── 3×2 action cards ── */
+                    .qa-grid-v2 {
+                        display: grid;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 8px;
+                    }
+
+                    .qa-card-v2 {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 5px;
+                        padding: 12px 6px 10px;
+                        border-radius: 14px;
+                        border: none;
+                        background: var(--surface-muted, #f9fafb);
+                        text-decoration: none;
+                        cursor: pointer;
+                        transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s, background .15s;
+                        border: 1px solid transparent;
+                        position: relative;
+                        overflow: hidden;
+                    }
+
+                    .qa-card-v2::before {
+                        content: '';
+                        position: absolute;
+                        inset: 0;
+                        background: var(--qa-glow, rgba(99, 102, 241, 0.08));
+                        opacity: 0;
+                        border-radius: inherit;
+                        transition: opacity .2s;
+                    }
+
+                    .qa-card-v2:hover {
+                        transform: translateY(-3px) scale(1.03);
+                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09);
+                        border-color: rgba(0, 0, 0, 0.06);
+                    }
+
+                    .qa-card-v2:hover::before {
+                        opacity: 1;
+                    }
+
+                    .qa-card-v2:active {
+                        transform: scale(.97);
+                    }
+
+                    [data-theme="dark"] .qa-card-v2 {
+                        background: rgba(255, 255, 255, 0.06);
+                        border-color: rgba(255, 255, 255, 0.07);
+                    }
+
+                    [data-theme="dark"] .qa-card-v2:hover {
+                        background: rgba(255, 255, 255, 0.1);
+                    }
+
+                    .qa-v2-ico {
+                        width: 38px;
+                        height: 38px;
+                        border-radius: 11px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 18px;
+                        flex-shrink: 0;
+                        transition: transform .2s;
+                    }
+
+                    .qa-card-v2:hover .qa-v2-ico {
+                        transform: scale(1.12) rotate(-4deg);
+                    }
+
+                    .qa-v2-label {
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: var(--text, #1f2937);
+                        text-align: center;
+                        line-height: 1.2;
+                        margin: 0;
+                    }
+
+                    .qa-v2-sub {
+                        font-size: 10px;
+                        color: var(--muted, #9ca3af);
+                        text-align: center;
+                        margin: 0;
+                        line-height: 1.2;
+                    }
+
+                    [data-theme="dark"] .qa-v2-label {
+                        color: #f1f5f9;
+                    }
+
+                    /* icon colours */
+                    .ico-purple {
+                        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+                        box-shadow: 0 4px 12px rgba(139, 92, 246, .3);
+                    }
+
+                    .ico-teal {
+                        background: linear-gradient(135deg, #10b981, #059669);
+                        box-shadow: 0 4px 12px rgba(16, 185, 129, .3);
+                    }
+
+                    .ico-indigo {
+                        background: linear-gradient(135deg, #6366f1, #4338ca);
+                        box-shadow: 0 4px 12px rgba(99, 102, 241, .3);
+                    }
+
+                    .ico-blue {
+                        background: linear-gradient(135deg, #3b82f6, #2563eb);
+                        box-shadow: 0 4px 12px rgba(59, 130, 246, .3);
+                    }
+
+                    .ico-orange {
+                        background: linear-gradient(135deg, #f59e0b, #d97706);
+                        box-shadow: 0 4px 12px rgba(245, 158, 11, .3);
+                    }
+
+                    .ico-rose {
+                        background: linear-gradient(135deg, #f43f5e, #e11d48);
+                        box-shadow: 0 4px 12px rgba(244, 63, 94, .3);
+                    }
+
+                    /* ── Feedback bar ── */
+                    .qa-feedback {
+                        min-height: 20px;
+                        padding: 0 2px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        margin-bottom: 8px;
+                        transition: all .2s;
+                        border-radius: 6px;
+                    }
+
+                    /* ── Insights tab ── */
+                    .qa-insights-grid {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 8px;
+                        margin-bottom: 8px;
+                    }
+
+                    .qa-ins-card {
+                        background: var(--surface-muted, #f9fafb);
+                        border: 1px solid var(--border, #e5e7eb);
+                        border-radius: 12px;
+                        padding: 12px 10px;
+                        text-align: center;
+                    }
+
+                    [data-theme="dark"] .qa-ins-card {
+                        background: rgba(255, 255, 255, 0.05);
+                        border-color: rgba(255, 255, 255, 0.08);
+                    }
+
+                    .qa-ins-val {
+                        font-size: 22px;
+                        font-weight: 900;
+                        color: var(--text, #1f2937);
+                        line-height: 1;
+                    }
+
+                    [data-theme="dark"] .qa-ins-val {
+                        color: #f8fafc;
+                    }
+
+                    .qa-ins-lbl {
+                        font-size: 10px;
+                        font-weight: 700;
+                        color: var(--muted, #9ca3af);
+                        text-transform: uppercase;
+                        letter-spacing: .5px;
+                        margin-top: 3px;
+                    }
+
+                    .qa-ins-badge {
+                        display: inline-block;
+                        font-size: 10px;
+                        font-weight: 700;
+                        padding: 2px 8px;
+                        border-radius: 6px;
+                        margin-top: 4px;
+                    }
+
+                    .badge-good {
+                        background: #d1fae5;
+                        color: #065f46;
+                    }
+
+                    .badge-warn {
+                        background: #fef3c7;
+                        color: #92400e;
+                    }
+
+                    .badge-bad {
+                        background: #fee2e2;
+                        color: #991b1b;
+                    }
+
+                    [data-theme="dark"] .badge-good {
+                        background: rgba(16, 185, 129, .2);
+                        color: #6ee7b7;
+                    }
+
+                    [data-theme="dark"] .badge-warn {
+                        background: rgba(245, 158, 11, .2);
+                        color: #fcd34d;
+                    }
+
+                    [data-theme="dark"] .badge-bad {
+                        background: rgba(239, 68, 68, .2);
+                        color: #fca5a5;
+                    }
+
+                    .qa-ins-refresh {
+                        width: 100%;
+                        padding: 8px;
+                        border: 1px solid var(--border, #e5e7eb);
+                        border-radius: 10px;
+                        background: transparent;
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: var(--muted, #6b7280);
+                        cursor: pointer;
+                        transition: all .15s;
+                        margin-top: 4px;
+                    }
+
+                    .qa-ins-refresh:hover {
+                        background: var(--primary, #6366f1);
+                        color: white;
+                        border-color: var(--primary, #6366f1);
+                    }
+
+                    /* ── Feed tab ── */
+                    .qa-feed-empty {
+                        text-align: center;
+                        padding: 20px 0;
+                        color: var(--muted, #9ca3af);
+                        font-size: 13px;
+                    }
+
+                    /* ── Inline Breathe Panel ── */
+                    .qa-inline-panel {
+                        background: var(--surface-muted, #f9fafb);
+                        border: 1px solid var(--border, #e5e7eb);
+                        border-radius: 14px;
+                        padding: 16px;
+                        margin-top: 10px;
+                        animation: slideDown .25s cubic-bezier(.34, 1.56, .64, 1);
+                    }
+
+                    [data-theme="dark"] .qa-inline-panel {
+                        background: rgba(255, 255, 255, 0.06);
+                        border-color: rgba(255, 255, 255, 0.1);
+                    }
+
+                    @keyframes slideDown {
+                        from {
+                            opacity: 0;
+                            transform: translateY(-10px);
+                        }
+
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+
+                    .qa-breathe-circle {
+                        width: 90px;
+                        height: 90px;
+                        border-radius: 50%;
+                        background: linear-gradient(135deg, rgba(245, 158, 11, .2), rgba(251, 146, 60, .2));
+                        border: 2px solid rgba(245, 158, 11, .3);
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 0 auto 12px;
+                        transition: all 4s ease-in-out;
+                        font-size: 12px;
+                        font-weight: 700;
+                        color: var(--text, #1f2937);
+                        gap: 2px;
+                    }
+
+                    [data-theme="dark"] .qa-breathe-circle {
+                        color: #f1f5f9;
+                    }
+
+                    .qa-breathe-circle.grow {
+                        transform: scale(1.45);
+                        background: linear-gradient(135deg, rgba(16, 185, 129, .22), rgba(52, 211, 153, .22));
+                        border-color: rgba(16, 185, 129, .4);
+                    }
+
+                    .qa-breathe-circle.shrink {
+                        transform: scale(1);
+                        background: linear-gradient(135deg, rgba(59, 130, 246, .2), rgba(99, 102, 241, .2));
+                        border-color: rgba(99, 102, 241, .3);
+                    }
+
+                    .qa-breathe-count {
+                        font-size: 20px;
+                        font-weight: 900;
+                        line-height: 1;
+                    }
+
+                    .qa-breathe-label {
+                        font-size: 10px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: .5px;
+                        opacity: .7;
+                    }
+
+                    .qa-panel-close {
+                        float: right;
+                        background: none;
+                        border: none;
+                        font-size: 16px;
+                        color: var(--muted, #9ca3af);
+                        cursor: pointer;
+                        line-height: 1;
+                        padding: 0;
+                    }
+
+                    .qa-panel-title {
+                        font-size: 13px;
+                        font-weight: 800;
+                        color: var(--text, #1f2937);
+                        margin-bottom: 10px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+
+                    [data-theme="dark"] .qa-panel-title {
+                        color: #f1f5f9;
+                    }
+
+                    .qa-breathe-btns {
+                        display: flex;
+                        gap: 8px;
+                        justify-content: center;
+                    }
+
+                    .qa-breathe-btn {
+                        padding: 8px 18px;
+                        border: none;
+                        border-radius: 10px;
+                        font-size: 12px;
+                        font-weight: 700;
+                        cursor: pointer;
+                        transition: all .15s;
+                    }
+
+                    .qa-breathe-start {
+                        background: linear-gradient(135deg, #f59e0b, #d97706);
+                        color: white;
+                    }
+
+                    .qa-breathe-stop {
+                        background: var(--border, #e5e7eb);
+                        color: var(--text, #374151);
+                    }
+
+                    [data-theme="dark"] .qa-breathe-stop {
+                        background: rgba(255, 255, 255, 0.1);
+                        color: #e2e8f0;
+                    }
+
+                    .qa-breathe-progress {
+                        display: flex;
+                        justify-content: center;
+                        gap: 5px;
+                        margin-bottom: 10px;
+                    }
+
+                    .qa-bp-dot {
+                        width: 7px;
+                        height: 7px;
+                        border-radius: 50%;
+                        background: var(--border, #e5e7eb);
+                        transition: background .3s;
+                    }
+
+                    .qa-bp-dot.active {
+                        background: #f59e0b;
+                    }
+
+                    .qa-bp-dot.done {
+                        background: #10b981;
+                    }
+
+                    /* ── Mood panel ── */
+                    .qa-mood-emojis {
+                        display: flex;
+                        gap: 6px;
+                        justify-content: center;
+                        margin: 10px 0;
+                    }
+
+                    .qa-mood-btn {
+                        font-size: 24px;
+                        background: none;
+                        border: 2.5px solid transparent;
+                        border-radius: 50%;
+                        width: 44px;
+                        height: 44px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        cursor: pointer;
+                        transition: all .2s;
+                    }
+
+                    .qa-mood-btn:hover {
+                        transform: scale(1.2);
+                    }
+
+                    .qa-mood-btn.selected {
+                        border-color: var(--primary, #6366f1);
+                        background: rgba(99, 102, 241, .08);
+                        transform: scale(1.15);
+                    }
+
+                    .qa-mood-note {
+                        width: 100%;
+                        padding: 8px 10px;
+                        border-radius: 9px;
+                        border: 1px solid var(--border, #e5e7eb);
+                        background: var(--surface, #fff);
+                        color: var(--text, #1f2937);
+                        font-size: 12px;
+                        resize: none;
+                        outline: none;
+                        font-family: inherit;
+                        transition: border-color .15s;
+                    }
+
+                    [data-theme="dark"] .qa-mood-note {
+                        background: rgba(255, 255, 255, 0.06);
+                        border-color: rgba(255, 255, 255, 0.12);
+                        color: #f1f5f9;
+                    }
+
+                    .qa-mood-note:focus {
+                        border-color: var(--primary, #6366f1);
+                    }
+
+                    .qa-mood-submit {
+                        width: 100%;
+                        padding: 9px;
+                        border: none;
+                        border-radius: 10px;
+                        font-size: 13px;
+                        font-weight: 700;
+                        cursor: pointer;
+                        background: linear-gradient(135deg, #f43f5e, #e11d48);
+                        color: white;
+                        margin-top: 8px;
+                        transition: opacity .15s;
+                    }
+
+                    .qa-mood-submit:hover {
+                        opacity: .88;
+                    }
+
+                    .qa-mood-labels {
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 10px;
+                        color: var(--muted, #9ca3af);
+                        font-weight: 600;
+                        padding: 0 4px;
+                    }
                 </style>
 
                 <div class="quick-actions-right" id="qaPanel">
@@ -822,9 +1230,12 @@
 
                     <!-- Tabs -->
                     <div class="qa-tabs-row" role="tablist">
-                        <button class="qa-tab-btn active" data-tab="actions"  onclick="qaSwitch('actions',this)"  role="tab">⚡ Actions</button>
-                        <button class="qa-tab-btn"        data-tab="feed"     onclick="qaSwitch('feed',this)"     role="tab">📋 Feed</button>
-                        <button class="qa-tab-btn"        data-tab="insights" onclick="qaSwitch('insights',this)" role="tab">📊 Insights</button>
+                        <button class="qa-tab-btn active" data-tab="actions" onclick="qaSwitch('actions',this)"
+                            role="tab">⚡ Actions</button>
+                        <button class="qa-tab-btn" data-tab="feed" onclick="qaSwitch('feed',this)" role="tab">📋
+                            Feed</button>
+                        <button class="qa-tab-btn" data-tab="insights" onclick="qaSwitch('insights',this)" role="tab">📊
+                            Insights</button>
                     </div>
 
                     <!-- Feedback -->
@@ -834,37 +1245,43 @@
                     <div class="qa-pane active" id="qa-pane-actions">
                         <div class="qa-grid-v2">
                             <!-- 1. Activities -->
-                            <a href="{{ url_for('student.activities') }}" class="qa-card-v2" style="--qa-glow:rgba(139,92,246,0.1);">
+                            <a href="{{ url_for('student.activities') }}" class="qa-card-v2"
+                                style="--qa-glow:rgba(139,92,246,0.1);">
                                 <div class="qa-v2-ico ico-purple">🎯</div>
                                 <p class="qa-v2-label">Activities</p>
                                 <p class="qa-v2-sub">Wellness tools</p>
                             </a>
                             <!-- 2. Relax Zone -->
-                            <a href="{{ url_for('student.relax') }}" class="qa-card-v2" style="--qa-glow:rgba(16,185,129,0.1);">
+                            <a href="{{ url_for('student.relax') }}" class="qa-card-v2"
+                                style="--qa-glow:rgba(16,185,129,0.1);">
                                 <div class="qa-v2-ico ico-teal">🧘</div>
                                 <p class="qa-v2-label">Relax Zone</p>
                                 <p class="qa-v2-sub">Calm & meditate</p>
                             </a>
                             <!-- 3. Games -->
-                            <a href="{{ url_for('student.games') }}" class="qa-card-v2" style="--qa-glow:rgba(99,102,241,0.1);">
+                            <a href="{{ url_for('student.games') }}" class="qa-card-v2"
+                                style="--qa-glow:rgba(99,102,241,0.1);">
                                 <div class="qa-v2-ico ico-indigo">🎮</div>
                                 <p class="qa-v2-label">Games</p>
                                 <p class="qa-v2-sub">Stress relief</p>
                             </a>
                             <!-- 4. AI Chat — FIXED: was pointing to activities, now correct -->
-                            <a href="{{ url_for('student.mental_chatbot') }}" class="qa-card-v2" style="--qa-glow:rgba(59,130,246,0.1);">
+                            <a href="{{ url_for('student.mental_chatbot') }}" class="qa-card-v2"
+                                style="--qa-glow:rgba(59,130,246,0.1);">
                                 <div class="qa-v2-ico ico-blue">🤖</div>
                                 <p class="qa-v2-label">AI Insights</p>
                                 <p class="qa-v2-sub">Chat & analyse</p>
                             </a>
                             <!-- 5. Quick Breathe (inline) -->
-                            <button type="button" class="qa-card-v2" style="--qa-glow:rgba(245,158,11,0.1);" onclick="qaToggleBreath()">
+                            <button type="button" class="qa-card-v2" style="--qa-glow:rgba(245,158,11,0.1);"
+                                onclick="qaToggleBreath()">
                                 <div class="qa-v2-ico ico-orange">🫁</div>
                                 <p class="qa-v2-label">Breathe</p>
                                 <p class="qa-v2-sub">Quick reset</p>
                             </button>
                             <!-- 6. Log Mood (inline) -->
-                            <button type="button" class="qa-card-v2" style="--qa-glow:rgba(244,63,94,0.1);" onclick="qaToggleMood()">
+                            <button type="button" class="qa-card-v2" style="--qa-glow:rgba(244,63,94,0.1);"
+                                onclick="qaToggleMood()">
                                 <div class="qa-v2-ico ico-rose">😊</div>
                                 <p class="qa-v2-label">Log Mood</p>
                                 <p class="qa-v2-sub">How are you?</p>
@@ -888,7 +1305,8 @@
                                 <span class="qa-breathe-label" id="qaBreathLabel">Ready</span>
                             </div>
                             <div class="qa-breathe-btns">
-                                <button class="qa-breathe-btn qa-breathe-start" id="qaBreathStartBtn" onclick="qaBreathToggle()">▶ Start</button>
+                                <button class="qa-breathe-btn qa-breathe-start" id="qaBreathStartBtn"
+                                    onclick="qaBreathToggle()">▶ Start</button>
                                 <button class="qa-breathe-btn qa-breathe-stop" onclick="qaToggleBreath()">Close</button>
                             </div>
                         </div>
@@ -900,15 +1318,22 @@
                                 <button class="qa-panel-close" onclick="qaToggleMood()">✕</button>
                             </div>
                             <div class="qa-mood-emojis" id="qaMoodEmojis">
-                                <button class="qa-mood-btn" data-mood="1" data-label="Terrible"   onclick="qaSelectMood(1,this)" title="Terrible">😢</button>
-                                <button class="qa-mood-btn" data-mood="2" data-label="Bad"        onclick="qaSelectMood(2,this)" title="Bad">😟</button>
-                                <button class="qa-mood-btn" data-mood="3" data-label="Neutral"    onclick="qaSelectMood(3,this)" title="Neutral">😐</button>
-                                <button class="qa-mood-btn" data-mood="4" data-label="Good"       onclick="qaSelectMood(4,this)" title="Good">😊</button>
-                                <button class="qa-mood-btn" data-mood="5" data-label="Great"      onclick="qaSelectMood(5,this)" title="Great">😄</button>
+                                <button class="qa-mood-btn" data-mood="1" data-label="Terrible"
+                                    onclick="qaSelectMood(1,this)" title="Terrible">😢</button>
+                                <button class="qa-mood-btn" data-mood="2" data-label="Bad"
+                                    onclick="qaSelectMood(2,this)" title="Bad">😟</button>
+                                <button class="qa-mood-btn" data-mood="3" data-label="Neutral"
+                                    onclick="qaSelectMood(3,this)" title="Neutral">😐</button>
+                                <button class="qa-mood-btn" data-mood="4" data-label="Good"
+                                    onclick="qaSelectMood(4,this)" title="Good">😊</button>
+                                <button class="qa-mood-btn" data-mood="5" data-label="Great"
+                                    onclick="qaSelectMood(5,this)" title="Great">😄</button>
                             </div>
                             <div class="qa-mood-labels"><span>Terrible</span><span>Great</span></div>
-                            <textarea class="qa-mood-note" id="qaMoodNote" placeholder="Add a note (optional)…" rows="2"></textarea>
-                            <button class="qa-mood-submit" id="qaMoodSubmitBtn" onclick="qaSubmitMood()" disabled>Save Mood</button>
+                            <textarea class="qa-mood-note" id="qaMoodNote" placeholder="Add a note (optional)…"
+                                rows="2"></textarea>
+                            <button class="qa-mood-submit" id="qaMoodSubmitBtn" onclick="qaSubmitMood()" disabled>Save
+                                Mood</button>
                         </div>
                     </div>
 
@@ -922,14 +1347,33 @@
                     <!-- ── TAB: INSIGHTS ── -->
                     <div class="qa-pane" id="qa-pane-insights">
                         <div class="qa-insights-grid" id="qaInsightsGrid">
-                            <div class="qa-ins-card"><div class="qa-ins-val" id="qiStress">—</div><div class="qa-ins-lbl">Stress Score</div><div class="qa-ins-badge" id="qiStressBadge"></div></div>
-                            <div class="qa-ins-card"><div class="qa-ins-val" id="qiMood">—</div><div class="qa-ins-lbl">Today's Mood</div><div class="qa-ins-badge" id="qiMoodBadge"></div></div>
-                            <div class="qa-ins-card"><div class="qa-ins-val" id="qiStreak">—</div><div class="qa-ins-lbl">🔥 Streak</div><div style="font-size:10px;color:var(--muted);margin-top:3px;">days</div></div>
-                            <div class="qa-ins-card"><div class="qa-ins-val" id="qiActs">—</div><div class="qa-ins-lbl">Activities</div><div style="font-size:10px;color:var(--muted);margin-top:3px;">this week</div></div>
+                            <div class="qa-ins-card">
+                                <div class="qa-ins-val" id="qiStress">—</div>
+                                <div class="qa-ins-lbl">Stress Score</div>
+                                <div class="qa-ins-badge" id="qiStressBadge"></div>
+                            </div>
+                            <div class="qa-ins-card">
+                                <div class="qa-ins-val" id="qiMood">—</div>
+                                <div class="qa-ins-lbl">Today's Mood</div>
+                                <div class="qa-ins-badge" id="qiMoodBadge"></div>
+                            </div>
+                            <div class="qa-ins-card">
+                                <div class="qa-ins-val" id="qiStreak">—</div>
+                                <div class="qa-ins-lbl">🔥 Streak</div>
+                                <div style="font-size:10px;color:var(--muted);margin-top:3px;">days</div>
+                            </div>
+                            <div class="qa-ins-card">
+                                <div class="qa-ins-val" id="qiActs">—</div>
+                                <div class="qa-ins-lbl">Activities</div>
+                                <div style="font-size:10px;color:var(--muted);margin-top:3px;">this week</div>
+                            </div>
                         </div>
                         <div class="qa-ins-card" style="margin-bottom:8px;text-align:left;padding:10px 12px;">
-                            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">💡 AI Insight</div>
-                            <div id="qiInsight" style="font-size:12px;color:var(--text);line-height:1.55;">Loading…</div>
+                            <div
+                                style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">
+                                💡 AI Insight</div>
+                            <div id="qiInsight" style="font-size:12px;color:var(--text);line-height:1.55;">Loading…
+                            </div>
                         </div>
                         <button class="qa-ins-refresh" onclick="qaLoadInsights()">↻ Refresh Insights</button>
                     </div>
@@ -937,240 +1381,276 @@
 
                 <!-- ── QA Panel JS ── -->
                 <script>
-                (function(){
-                /* ── Tab switch ── */
-                window.qaSwitch = function(tab, btn) {
-                    document.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
-                    document.querySelectorAll('.qa-tab-btn').forEach(b => b.classList.remove('active'));
-                    const pane = document.getElementById('qa-pane-' + tab);
-                    if (pane) pane.classList.add('active');
-                    if (btn) btn.classList.add('active');
-                    if (tab === 'insights') qaLoadInsights();
-                };
+                    (function () {
+                        /* ── Tab switch ── */
+                        window.qaSwitch = function (tab, btn) {
+                            document.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
+                            document.querySelectorAll('.qa-tab-btn').forEach(b => b.classList.remove('active'));
+                            const pane = document.getElementById('qa-pane-' + tab);
+                            if (pane) pane.classList.add('active');
+                            if (btn) btn.classList.add('active');
+                            if (tab === 'insights') qaLoadInsights();
+                        };
 
-                /* ── Inline Breathe ── */
-                let breathTimer = null, breathPhase = 0, breathSec = 4, breathRunning = false;
-                const PHASES = [{lbl:'Inhale',sec:4},{lbl:'Hold',sec:4},{lbl:'Exhale',sec:4},{lbl:'Hold',sec:4}];
+                        /* ── Inline Breathe ── */
+                        let breathTimer = null, breathPhase = 0, breathSec = 4, breathRunning = false;
+                        const PHASES = [{ lbl: 'Inhale', sec: 4 }, { lbl: 'Hold', sec: 4 }, { lbl: 'Exhale', sec: 4 }, { lbl: 'Hold', sec: 4 }];
 
-                window.qaToggleBreath = function() {
-                    const p = document.getElementById('qaBreathPanel');
-                    const m = document.getElementById('qaMoodPanel');
-                    if (m) m.style.display = 'none';
-                    if (!p) return;
-                    const showing = p.style.display !== 'none';
-                    p.style.display = showing ? 'none' : 'block';
-                    if (showing) qaBreathStop();
-                };
+                        window.qaToggleBreath = function () {
+                            const p = document.getElementById('qaBreathPanel');
+                            const m = document.getElementById('qaMoodPanel');
+                            if (m) m.style.display = 'none';
+                            if (!p) return;
+                            const showing = p.style.display !== 'none';
+                            p.style.display = showing ? 'none' : 'block';
+                            if (showing) qaBreathStop();
+                        };
 
-                window.qaBreathToggle = function() {
-                    breathRunning ? qaBreathStop() : qaBreathStart();
-                };
+                        window.qaBreathToggle = function () {
+                            breathRunning ? qaBreathStop() : qaBreathStart();
+                        };
 
-                function qaBreathStart() {
-                    breathRunning = true; breathPhase = 0; breathSec = PHASES[0].sec;
-                    document.getElementById('qaBreathStartBtn').textContent = '⏸ Pause';
-                    renderBreath();
-                    breathTimer = setInterval(function() {
-                        breathSec--;
-                        if (breathSec <= 0) {
-                            breathPhase = (breathPhase + 1) % 4;
-                            breathSec = PHASES[breathPhase].sec;
+                        function qaBreathStart() {
+                            breathRunning = true; breathPhase = 0; breathSec = PHASES[0].sec;
+                            document.getElementById('qaBreathStartBtn').textContent = '⏸ Pause';
+                            renderBreath();
+                            breathTimer = setInterval(function () {
+                                breathSec--;
+                                if (breathSec <= 0) {
+                                    breathPhase = (breathPhase + 1) % 4;
+                                    breathSec = PHASES[breathPhase].sec;
+                                }
+                                renderBreath();
+                            }, 1000);
                         }
-                        renderBreath();
-                    }, 1000);
-                }
 
-                function qaBreathStop() {
-                    clearInterval(breathTimer); breathRunning = false;
-                    const btn = document.getElementById('qaBreathStartBtn');
-                    if (btn) btn.textContent = '▶ Start';
-                    const c = document.getElementById('qaBreathCircle');
-                    if (c) { c.className = 'qa-breathe-circle'; }
-                    const lbl = document.getElementById('qaBreathLabel');
-                    const cnt = document.getElementById('qaBreathCount');
-                    if (lbl) lbl.textContent = 'Ready';
-                    if (cnt) cnt.textContent = '4';
-                }
-
-                function renderBreath() {
-                    const ph = PHASES[breathPhase];
-                    const c = document.getElementById('qaBreathCircle');
-                    const lbl = document.getElementById('qaBreathLabel');
-                    const cnt = document.getElementById('qaBreathCount');
-                    if (cnt) cnt.textContent = breathSec;
-                    if (lbl) lbl.textContent = ph.lbl;
-                    if (c) {
-                        c.className = 'qa-breathe-circle' + (breathPhase === 0 ? ' grow' : breathPhase === 2 ? ' shrink' : '');
-                    }
-                    for (let i = 0; i < 4; i++) {
-                        const d = document.getElementById('qbd' + i);
-                        if (d) d.className = 'qa-bp-dot' + (i < breathPhase ? ' done' : i === breathPhase ? ' active' : '');
-                    }
-                }
-
-                /* ── Inline Mood ── */
-                let selectedMood = null;
-
-                window.qaToggleMood = function() {
-                    const m = document.getElementById('qaMoodPanel');
-                    const p = document.getElementById('qaBreathPanel');
-                    if (p) { p.style.display = 'none'; qaBreathStop(); }
-                    if (!m) return;
-                    const showing = m.style.display !== 'none';
-                    m.style.display = showing ? 'none' : 'block';
-                    if (!showing) { resetMoodPanel(); }
-                };
-
-                function resetMoodPanel() {
-                    selectedMood = null;
-                    document.querySelectorAll('.qa-mood-btn').forEach(b => b.classList.remove('selected'));
-                    const note = document.getElementById('qaMoodNote');
-                    if (note) note.value = '';
-                    const sub = document.getElementById('qaMoodSubmitBtn');
-                    if (sub) { sub.disabled = true; sub.textContent = 'Save Mood'; }
-                }
-
-                window.qaSelectMood = function(level, btn) {
-                    selectedMood = level;
-                    document.querySelectorAll('.qa-mood-btn').forEach(b => b.classList.remove('selected'));
-                    if (btn) btn.classList.add('selected');
-                    const sub = document.getElementById('qaMoodSubmitBtn');
-                    if (sub) sub.disabled = false;
-                };
-
-                window.qaSubmitMood = async function() {
-                    if (!selectedMood) return;
-                    const moodMap = {1:'stressed', 2:'sad', 3:'normal', 4:'calm', 5:'happy'};
-                    const moodStr = moodMap[selectedMood] || 'normal';
-                    const note = (document.getElementById('qaMoodNote') || {}).value || '';
-                    const btn = document.getElementById('qaMoodSubmitBtn');
-                    if (btn) btn.textContent = 'Saving…';
-                    try {
-                        const r = await fetch('/student/api/mood', {
-                            method: 'POST',
-                            headers: {'Content-Type':'application/json'},
-                            body: JSON.stringify({mood: moodStr})
-                        });
-                        const fb = document.getElementById('actionFeedback');
-                        if (r.ok) {
-                            if (fb) { fb.textContent = '✅ Mood logged!'; fb.style.color = '#10b981'; }
-                            if (btn) btn.textContent = '✅ Saved!';
-                            setTimeout(() => { qaToggleMood(); if(fb)fb.textContent=''; }, 1600);
-                        } else {
-                            if (fb) { fb.textContent = '⚠ Could not save mood.'; fb.style.color = '#f59e0b'; }
-                            if (btn) btn.textContent = 'Save Mood';
+                        function qaBreathStop() {
+                            clearInterval(breathTimer); breathRunning = false;
+                            const btn = document.getElementById('qaBreathStartBtn');
+                            if (btn) btn.textContent = '▶ Start';
+                            const c = document.getElementById('qaBreathCircle');
+                            if (c) { c.className = 'qa-breathe-circle'; }
+                            const lbl = document.getElementById('qaBreathLabel');
+                            const cnt = document.getElementById('qaBreathCount');
+                            if (lbl) lbl.textContent = 'Ready';
+                            if (cnt) cnt.textContent = '4';
                         }
-                    } catch(e) {
-                        const fb = document.getElementById('actionFeedback');
-                        if (fb) { fb.textContent = '⚠ Network error.'; fb.style.color = '#ef4444'; }
-                        if (btn) btn.textContent = 'Save Mood';
-                    }
-                };
 
-                /* ── Insights Tab ── */
-                window.qaLoadInsights = async function() {
-                    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-                    setEl('qiInsight', 'Loading…');
-                    try {
-                        const [wRes, aRes, dRes] = await Promise.all([
-                            fetch('/student/api/wellness/current'),
-                            fetch('/student/api/wellness/activities'),
-                            fetch('/student/api/student/dashboard-data')
-                        ]);
-                        const w = wRes.ok ? await wRes.json() : {};
-                        const a = aRes.ok ? await aRes.json() : {};
-                        const d = dRes.ok ? await dRes.json() : {};
-
-                        // Correct field paths from actual API responses
-                        const stress  = w.stress?.value ?? '—';
-                        const mood    = w.mood?.label ?? (typeof d.mood === 'string' ? d.mood : '—');
-                        const streak  = d.streak ?? '—';
-                        const acts    = a.week ?? a.today ?? '—';
-                        const insight = w.stress?.insight || w.stress?.explanation || d.ai_insight || 'Keep up your wellness routine — consistency is key!';
-
-                        setEl('qiStress', typeof stress === 'number' ? stress + '/100' : stress);
-                        setEl('qiMood',   mood);
-                        setEl('qiStreak', streak);
-                        setEl('qiActs',   acts);
-                        setEl('qiInsight', insight);
-
-                        // Stress badge (0-100 scale)
-                        const sb = document.getElementById('qiStressBadge');
-                        if (sb && typeof stress === 'number') {
-                            sb.textContent = stress <= 35 ? '✅ Low' : stress <= 65 ? '⚠ Moderate' : '🔴 High';
-                            sb.className   = 'qa-ins-badge ' + (stress <= 35 ? 'badge-good' : stress <= 65 ? 'badge-warn' : 'badge-bad');
+                        function renderBreath() {
+                            const ph = PHASES[breathPhase];
+                            const c = document.getElementById('qaBreathCircle');
+                            const lbl = document.getElementById('qaBreathLabel');
+                            const cnt = document.getElementById('qaBreathCount');
+                            if (cnt) cnt.textContent = breathSec;
+                            if (lbl) lbl.textContent = ph.lbl;
+                            if (c) {
+                                c.className = 'qa-breathe-circle' + (breathPhase === 0 ? ' grow' : breathPhase === 2 ? ' shrink' : '');
+                            }
+                            for (let i = 0; i < 4; i++) {
+                                const d = document.getElementById('qbd' + i);
+                                if (d) d.className = 'qa-bp-dot' + (i < breathPhase ? ' done' : i === breathPhase ? ' active' : '');
+                            }
                         }
-                        // Mood badge
-                        const mb = document.getElementById('qiMoodBadge');
-                        if (mb && mood && mood !== '—') {
-                            const ml = mood.toLowerCase();
-                            const isGood    = ['excellent','great','good','happy'].some(k => ml.includes(k));
-                            const isNeutral = ['neutral','calm','ok'].some(k => ml.includes(k));
-                            mb.textContent = isGood ? '😊 Great' : isNeutral ? '😐 OK' : '😟 Low';
-                            mb.className   = 'qa-ins-badge ' + (isGood ? 'badge-good' : isNeutral ? 'badge-warn' : 'badge-bad');
+
+                        /* ── Inline Mood ── */
+                        let selectedMood = null;
+
+                        window.qaToggleMood = function () {
+                            const m = document.getElementById('qaMoodPanel');
+                            const p = document.getElementById('qaBreathPanel');
+                            if (p) { p.style.display = 'none'; qaBreathStop(); }
+                            if (!m) return;
+                            const showing = m.style.display !== 'none';
+                            m.style.display = showing ? 'none' : 'block';
+                            if (!showing) { resetMoodPanel(); }
+                        };
+
+                        function resetMoodPanel() {
+                            selectedMood = null;
+                            document.querySelectorAll('.qa-mood-btn').forEach(b => b.classList.remove('selected'));
+                            const note = document.getElementById('qaMoodNote');
+                            if (note) note.value = '';
+                            const sub = document.getElementById('qaMoodSubmitBtn');
+                            if (sub) { sub.disabled = true; sub.textContent = 'Save Mood'; }
                         }
-                    } catch(e) {
-                        const el = document.getElementById('qiInsight');
-                        if (el) el.textContent = 'Could not load insights. Try again.';
-                    }
-                };
-                })();
+
+                        window.qaSelectMood = function (level, btn) {
+                            selectedMood = level;
+                            document.querySelectorAll('.qa-mood-btn').forEach(b => b.classList.remove('selected'));
+                            if (btn) btn.classList.add('selected');
+                            const sub = document.getElementById('qaMoodSubmitBtn');
+                            if (sub) sub.disabled = false;
+                        };
+
+                        window.qaSubmitMood = async function () {
+                            if (!selectedMood) return;
+                            const moodMap = { 1: 'stressed', 2: 'sad', 3: 'normal', 4: 'calm', 5: 'happy' };
+                            const moodStr = moodMap[selectedMood] || 'normal';
+                            const note = (document.getElementById('qaMoodNote') || {}).value || '';
+                            const btn = document.getElementById('qaMoodSubmitBtn');
+                            if (btn) btn.textContent = 'Saving…';
+                            try {
+                                const r = await fetch('/student/api/mood', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ mood: moodStr })
+                                });
+                                const fb = document.getElementById('actionFeedback');
+                                if (r.ok) {
+                                    if (fb) { fb.textContent = '✅ Mood logged!'; fb.style.color = '#10b981'; }
+                                    if (btn) btn.textContent = '✅ Saved!';
+                                    setTimeout(() => { qaToggleMood(); if (fb) fb.textContent = ''; }, 1600);
+                                } else {
+                                    if (fb) { fb.textContent = '⚠ Could not save mood.'; fb.style.color = '#f59e0b'; }
+                                    if (btn) btn.textContent = 'Save Mood';
+                                }
+                            } catch (e) {
+                                const fb = document.getElementById('actionFeedback');
+                                if (fb) { fb.textContent = '⚠ Network error.'; fb.style.color = '#ef4444'; }
+                                if (btn) btn.textContent = 'Save Mood';
+                            }
+                        };
+
+                        /* ── Insights Tab ── */
+                        window.qaLoadInsights = async function () {
+                            const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+                            setEl('qiInsight', 'Loading…');
+                            try {
+                                const [wRes, aRes, dRes] = await Promise.all([
+                                    fetch('/student/api/wellness/current'),
+                                    fetch('/student/api/wellness/activities'),
+                                    fetch('/student/api/student/dashboard-data')
+                                ]);
+                                const w = wRes.ok ? await wRes.json() : {};
+                                const a = aRes.ok ? await aRes.json() : {};
+                                const d = dRes.ok ? await dRes.json() : {};
+
+                                // Correct field paths from actual API responses
+                                const stress = w.stress?.value ?? '—';
+                                const mood = w.mood?.label ?? (typeof d.mood === 'string' ? d.mood : '—');
+                                const streak = d.streak ?? '—';
+                                const acts = a.week ?? a.today ?? '—';
+                                const insight = w.stress?.insight || w.stress?.explanation || d.ai_insight || 'Keep up your wellness routine — consistency is key!';
+
+                                setEl('qiStress', typeof stress === 'number' ? stress + '/100' : stress);
+                                setEl('qiMood', mood);
+                                setEl('qiStreak', streak);
+                                setEl('qiActs', acts);
+                                setEl('qiInsight', insight);
+
+                                // Stress badge (0-100 scale)
+                                const sb = document.getElementById('qiStressBadge');
+                                if (sb && typeof stress === 'number') {
+                                    sb.textContent = stress <= 35 ? '✅ Low' : stress <= 65 ? '⚠ Moderate' : '🔴 High';
+                                    sb.className = 'qa-ins-badge ' + (stress <= 35 ? 'badge-good' : stress <= 65 ? 'badge-warn' : 'badge-bad');
+                                }
+                                // Mood badge
+                                const mb = document.getElementById('qiMoodBadge');
+                                if (mb && mood && mood !== '—') {
+                                    const ml = mood.toLowerCase();
+                                    const isGood = ['excellent', 'great', 'good', 'happy'].some(k => ml.includes(k));
+                                    const isNeutral = ['neutral', 'calm', 'ok'].some(k => ml.includes(k));
+                                    mb.textContent = isGood ? '😊 Great' : isNeutral ? '😐 OK' : '😟 Low';
+                                    mb.className = 'qa-ins-badge ' + (isGood ? 'badge-good' : isNeutral ? 'badge-warn' : 'badge-bad');
+                                }
+                            } catch (e) {
+                                const el = document.getElementById('qiInsight');
+                                if (el) el.textContent = 'Could not load insights. Try again.';
+                            }
+                        };
+                    })();
                 </script>
 
                 <!-- CONNECT HUB -->
                 <button class="sidebar-btn" data-panel="panel-hub" type="button">
                     <span class="sidebar-btn-icon icon-green">
-                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                            <path
+                                d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                        </svg>
                     </span>
                     <span class="sidebar-btn-label">Connect Hub</span>
                     <span class="sidebar-btn-badge green">Connected</span>
-                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
                 </button>
 
                 <!-- SUPPORT -->
                 <button class="sidebar-btn" data-panel="panel-support" type="button">
                     <span class="sidebar-btn-icon icon-red">
-                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                            <path
+                                d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z" />
+                        </svg>
                     </span>
                     <span class="sidebar-btn-label">Support Center</span>
                     <span class="sidebar-btn-badge red">24/7</span>
-                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
                 </button>
 
                 <!-- PROFILE -->
                 <button class="sidebar-btn" data-panel="panel-profile" type="button">
                     <span class="sidebar-btn-icon icon-blue">
-                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                            <path
+                                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                        </svg>
                     </span>
                     <span class="sidebar-btn-label">My Profile</span>
-                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
                 </button>
 
                 <!-- WELLNESS GOALS -->
                 <button class="sidebar-btn" data-panel="panel-goals" type="button">
                     <span class="sidebar-btn-icon icon-green">
-                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                            <path
+                                d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                        </svg>
                     </span>
                     <span class="sidebar-btn-label">Wellness Goals</span>
-                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
                 </button>
 
                 <!-- DAILY REFLECTION -->
                 <button class="sidebar-btn" data-panel="panel-journal" type="button">
                     <span class="sidebar-btn-icon icon-orange">
-                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                            <path
+                                d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z" />
+                        </svg>
                     </span>
                     <span class="sidebar-btn-label">Daily Reflection</span>
-                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
                 </button>
 
                 <!-- GRIEVANCE -->
                 <button class="sidebar-btn" data-panel="panel-grievance" type="button">
                     <span class="sidebar-btn-icon icon-red">
-                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                            <path
+                                d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z" />
+                        </svg>
                     </span>
                     <span class="sidebar-btn-label">Submit Grievance</span>
-                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg class="sidebar-btn-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
                 </button>
 
             </div>
@@ -1178,7 +1658,8 @@
 
         <!-- Wellness Disclaimer -->
         <div class="wellness-disclaimer" role="contentinfo">
-            <p>AURA provides wellness estimation support only and does not constitute medical or psychological diagnosis. If
+            <p>AURA provides wellness estimation support only and does not constitute medical or psychological
+                diagnosis. If
                 you are in crisis, please contact a professional counselor or emergency services.</p>
         </div>
     </div>
@@ -1191,7 +1672,10 @@
         <div class="slide-panel-header">
             <div class="slide-panel-title">
                 <span class="sidebar-btn-icon icon-green" style="width:32px;height:32px;">
-                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                        <path
+                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                    </svg>
                 </span>
                 <h3>Connect Hub</h3>
             </div>
@@ -1202,20 +1686,54 @@
                 <span class="status-indicator"></span>
                 <span class="status-text" id="connectionStatus">Connected</span>
             </div>
-            <div class="hub-description"><p>Connect with peers, join group activities, and share experiences in a supportive community.</p></div>
+            <div class="hub-description">
+                <p>Connect with peers, join group activities, and share experiences in a supportive community.</p>
+            </div>
             <div class="hub-features">
-                <a href="/student/hub#peers" class="hub-feature"><div class="feature-icon"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg></div><span class="feature-label">Peer Network</span></a>
-                <a href="/student/hub#groups" class="hub-feature"><div class="feature-icon"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg></div><span class="feature-label">Group Sessions</span></a>
-                <a href="/student/hub#events" class="hub-feature"><div class="feature-icon"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><span class="feature-label">Events</span></a>
-                <a href="/student/hub#resources" class="hub-feature"><div class="feature-icon"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20m0-2V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10"/></svg></div><span class="feature-label">Resources</span></a>
+                <a href="/student/hub#peers" class="hub-feature">
+                    <div class="feature-icon"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2">
+                            <path
+                                d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
+                        </svg></div><span class="feature-label">Peer Network</span>
+                </a>
+                <a href="/student/hub#groups" class="hub-feature">
+                    <div class="feature-icon"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2">
+                            <path
+                                d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
+                        </svg></div><span class="feature-label">Group Sessions</span>
+                </a>
+                <a href="/student/hub#events" class="hub-feature">
+                    <div class="feature-icon"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg></div><span class="feature-label">Events</span>
+                </a>
+                <a href="/student/hub#resources" class="hub-feature">
+                    <div class="feature-icon"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20m0-2V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10" />
+                        </svg></div><span class="feature-label">Resources</span>
+                </a>
             </div>
             <div class="hub-stats">
-                <div class="hub-stat"><div class="hub-stat-value" id="activeUsers">24</div><div class="hub-stat-label">Active Now</div></div>
-                <div class="hub-stat"><div class="hub-stat-value" id="totalGroups">12</div><div class="hub-stat-label">Groups</div></div>
-                <div class="hub-stat"><div class="hub-stat-value" id="upcomingEvents">5</div><div class="hub-stat-label">Events</div></div>
+                <div class="hub-stat">
+                    <div class="hub-stat-value" id="activeUsers">24</div>
+                    <div class="hub-stat-label">Active Now</div>
+                </div>
+                <div class="hub-stat">
+                    <div class="hub-stat-value" id="totalGroups">12</div>
+                    <div class="hub-stat-label">Groups</div>
+                </div>
+                <div class="hub-stat">
+                    <div class="hub-stat-value" id="upcomingEvents">5</div>
+                    <div class="hub-stat-label">Events</div>
+                </div>
             </div>
             <a href="/student/hub" class="btn-hub-join" id="joinHubBtn">
-                <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5m0 0l-5-5m5 5H9"/></svg>
+                <svg class="icon" viewBox="0 0 24 24" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5m0 0l-5-5m5 5H9" />
+                </svg>
                 Open Connect Hub
             </a>
         </div>
@@ -1226,7 +1744,10 @@
         <div class="slide-panel-header">
             <div class="slide-panel-title">
                 <span class="sidebar-btn-icon icon-red" style="width:32px;height:32px;">
-                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                        <path
+                            d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z" />
+                    </svg>
                 </span>
                 <h3>Support Center</h3>
             </div>
@@ -1234,27 +1755,51 @@
         </div>
         <div class="slide-panel-body">
             <div class="support-badge" style="margin-bottom:12px;">
-                <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5"/><path d="M12 12l4 2.5"/></svg>
+                <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 7v5" />
+                    <path d="M12 12l4 2.5" />
+                </svg>
                 <span>24/7 Available</span>
             </div>
-            <div class="support-description"><p>Our wellness team is here to help. Reach out anytime for confidential support.</p></div>
+            <div class="support-description">
+                <p>Our wellness team is here to help. Reach out anytime for confidential support.</p>
+            </div>
             <div class="support-options">
                 <button type="button" class="support-option urgent" id="urgentHelpBtn">
-                    <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    <div class="option-content"><div class="option-title">Urgent Help</div><div class="option-desc">Immediate assistance</div></div>
+                    <svg class="icon" viewBox="0 0 24 24" stroke-width="2">
+                        <path
+                            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                    <div class="option-content">
+                        <div class="option-title">Urgent Help</div>
+                        <div class="option-desc">Immediate assistance</div>
+                    </div>
                 </button>
                 <button type="button" class="support-option" id="scheduleSessionBtn">
-                    <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    <div class="option-content"><div class="option-title">Schedule Session</div><div class="option-desc">Book 1-on-1</div></div>
+                    <svg class="icon" viewBox="0 0 24 24" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    <div class="option-content">
+                        <div class="option-title">Schedule Session</div>
+                        <div class="option-desc">Book 1-on-1</div>
+                    </div>
                 </button>
             </div>
             <button class="btn-support" id="requestSupportBtn">
-                <svg class="icon" viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 6l10 7 10-7"/></svg>
+                <svg class="icon" viewBox="0 0 24 24" stroke-width="2">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="M2 6l10 7 10-7" />
+                </svg>
                 Request Support
             </button>
             <div class="support-hotline">
                 <div class="hotline-label">Wellness Hotline</div>
-                <a href="tel:18002738255" class="hotline-number" style="text-decoration:none;color:inherit;">1-800-273-8255</a>
+                <a href="tel:18002738255" class="hotline-number"
+                    style="text-decoration:none;color:inherit;">1-800-273-8255</a>
                 <div class="hotline-note">Available 24/7 · Tap to call</div>
             </div>
         </div>
@@ -1265,7 +1810,10 @@
         <div class="slide-panel-header">
             <div class="slide-panel-title">
                 <span class="sidebar-btn-icon icon-blue" style="width:32px;height:32px;">
-                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                        <path
+                            d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                    </svg>
                 </span>
                 <h3>My Profile</h3>
             </div>
@@ -1275,8 +1823,10 @@
             <div class="profile-info-grid">
                 <div class="profile-avatar-section">
                     <div class="profile-avatar" id="profileAvatar">
-                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <path d="M12 12c2.5 0 4.5-2 4.5-4.5S14.5 3 12 3 7.5 5 7.5 7.5 9.5 12 12 12zm0 1.5c-3 0-9 1.5-9 4.5V21h18v-3c0-3-6-4.5-9-4.5z"/>
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor"
+                            stroke-width="1.5">
+                            <path
+                                d="M12 12c2.5 0 4.5-2 4.5-4.5S14.5 3 12 3 7.5 5 7.5 7.5 9.5 12 12 12zm0 1.5c-3 0-9 1.5-9 4.5V21h18v-3c0-3-6-4.5-9-4.5z" />
                         </svg>
                     </div>
                     <div class="profile-name-section">
@@ -1286,11 +1836,18 @@
                 </div>
                 <div class="profile-details">
                     <div class="profile-detail-row">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 6l10 7 10-7"/></svg>
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="2" y="4" width="20" height="16" rx="2" />
+                            <path d="M2 6l10 7 10-7" />
+                        </svg>
                         <span id="profileEmail">loading...</span>
                     </div>
                     <div class="profile-detail-row">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M4 7V4h16v3M9 20h6M12 4v16" />
+                        </svg>
                         <span id="profileRoll">loading...</span>
                     </div>
                 </div>
@@ -1305,12 +1862,16 @@
                 <!-- Change Password Section -->
                 <div style="margin-top:24px; padding-top:18px; border-top:1px solid var(--border-color, #e5e7eb);">
                     <h4 style="margin:0 0 12px; font-size:15px; font-weight:600; color:var(--text-primary);">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px;">
-                            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                            stroke-width="2" style="vertical-align:middle;margin-right:6px;">
+                            <rect x="3" y="11" width="18" height="11" rx="2" />
+                            <path d="M7 11V7a5 5 0 0110 0v4" />
                         </svg>
                         Change Password
                     </h4>
-                    <div id="pwdChangeMsg" style="display:none; padding:8px 12px; border-radius:8px; font-size:13px; margin-bottom:10px;"></div>
+                    <div id="pwdChangeMsg"
+                        style="display:none; padding:8px 12px; border-radius:8px; font-size:13px; margin-bottom:10px;">
+                    </div>
                     <div style="display:flex; flex-direction:column; gap:10px;">
                         <input type="password" id="currentPassword" placeholder="Current Password"
                             style="padding:10px 12px; border:1px solid var(--border-color,#d1d5db); border-radius:8px; font-size:14px; background:var(--surface-muted,#f9fafb); color:var(--text-primary);">
@@ -1334,7 +1895,10 @@
         <div class="slide-panel-header">
             <div class="slide-panel-title">
                 <span class="sidebar-btn-icon icon-green" style="width:32px;height:32px;">
-                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                        <path
+                            d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                    </svg>
                 </span>
                 <h3>Wellness Goals</h3>
             </div>
@@ -1343,24 +1907,50 @@
         <div class="slide-panel-body">
             <div class="goals-list" id="goalsList">
                 <div class="goal-item" data-goal="checkin">
-                    <div class="goal-checkbox" id="goalCheckin"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
-                    <div class="goal-content"><div class="goal-title">Daily Check-in</div><div class="goal-desc">Log your mood today</div></div>
+                    <div class="goal-checkbox" id="goalCheckin"><svg viewBox="0 0 24 24" width="16" height="16"
+                            fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg></div>
+                    <div class="goal-content">
+                        <div class="goal-title">Daily Check-in</div>
+                        <div class="goal-desc">Log your mood today</div>
+                    </div>
                 </div>
                 <div class="goal-item" data-goal="breathing">
-                    <div class="goal-checkbox" id="goalBreathing"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
-                    <div class="goal-content"><div class="goal-title">Breathing Exercise</div><div class="goal-desc">Complete 1 session</div></div>
+                    <div class="goal-checkbox" id="goalBreathing"><svg viewBox="0 0 24 24" width="16" height="16"
+                            fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg></div>
+                    <div class="goal-content">
+                        <div class="goal-title">Breathing Exercise</div>
+                        <div class="goal-desc">Complete 1 session</div>
+                    </div>
                 </div>
                 <div class="goal-item" data-goal="study">
-                    <div class="goal-checkbox" id="goalStudy"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
-                    <div class="goal-content"><div class="goal-title">Study Session</div><div class="goal-desc">Use Study Chat once</div></div>
+                    <div class="goal-checkbox" id="goalStudy"><svg viewBox="0 0 24 24" width="16" height="16"
+                            fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg></div>
+                    <div class="goal-content">
+                        <div class="goal-title">Study Session</div>
+                        <div class="goal-desc">Use Study Chat once</div>
+                    </div>
                 </div>
                 <div class="goal-item" data-goal="relax">
-                    <div class="goal-checkbox" id="goalRelax"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
-                    <div class="goal-content"><div class="goal-title">Relaxation</div><div class="goal-desc">Play a game or meditate</div></div>
+                    <div class="goal-checkbox" id="goalRelax"><svg viewBox="0 0 24 24" width="16" height="16"
+                            fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg></div>
+                    <div class="goal-content">
+                        <div class="goal-title">Relaxation</div>
+                        <div class="goal-desc">Play a game or meditate</div>
+                    </div>
                 </div>
             </div>
             <div class="goals-progress">
-                <div class="goals-progress-bar"><div class="goals-progress-fill" id="goalsProgressFill" style="width:0%"></div></div>
+                <div class="goals-progress-bar">
+                    <div class="goals-progress-fill" id="goalsProgressFill" style="width:0%"></div>
+                </div>
                 <div class="goals-progress-text"><span id="goalsCompleted">0</span>/4 completed</div>
             </div>
         </div>
@@ -1371,7 +1961,10 @@
         <div class="slide-panel-header">
             <div class="slide-panel-title">
                 <span class="sidebar-btn-icon icon-orange" style="width:32px;height:32px;">
-                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                        <path
+                            d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z" />
+                    </svg>
                 </span>
                 <h3>Daily Reflection</h3>
             </div>
@@ -1387,11 +1980,17 @@
             </div>
             <div class="journal-section">
                 <label class="journal-label" for="journalEntry">How was your day?</label>
-                <textarea id="journalEntry" class="journal-textarea" rows="4" maxlength="500" placeholder="Write a few lines about your day, feelings, or thoughts..."></textarea>
+                <textarea id="journalEntry" class="journal-textarea" rows="4" maxlength="500"
+                    placeholder="Write a few lines about your day, feelings, or thoughts..."></textarea>
                 <div class="journal-footer">
                     <span class="journal-char-count"><span id="journalCharCount">0</span>/500</span>
                     <button class="btn-journal-save" id="saveJournalBtn">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                            <polyline points="7 3 7 8 15 8" />
+                        </svg>
                         Save Entry
                     </button>
                 </div>
@@ -1404,7 +2003,10 @@
         <div class="slide-panel-header">
             <div class="slide-panel-title">
                 <span class="sidebar-btn-icon icon-red" style="width:32px;height:32px;">
-                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                        <path
+                            d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z" />
+                    </svg>
                 </span>
                 <h3>Submit Grievance</h3>
             </div>
@@ -1413,10 +2015,15 @@
         <div class="slide-panel-body">
             <p class="grievance-desc">Have a concern? Submit it confidentially. Your identity is protected.</p>
             <form id="grievanceForm" class="grievance-form">
-                <input type="text" id="grievanceSubject" class="grievance-input" placeholder="Subject" maxlength="200" required>
-                <textarea id="grievanceDescription" class="grievance-textarea" rows="4" placeholder="Describe your concern..." maxlength="2000" required></textarea>
+                <input type="text" id="grievanceSubject" class="grievance-input" placeholder="Subject" maxlength="200"
+                    required>
+                <textarea id="grievanceDescription" class="grievance-textarea" rows="4"
+                    placeholder="Describe your concern..." maxlength="2000" required></textarea>
                 <button type="submit" class="btn-grievance-submit" id="submitGrievanceBtn">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
                     Submit Grievance
                 </button>
             </form>
@@ -2175,28 +2782,28 @@
 
     <!-- ═══ ULTRA-PREMIUM VISUAL EFFECTS ═══ -->
     <script>
-        (function() {
+        (function () {
             'use strict';
 
             // ──────── 3D Card Tilt Effect ──────────
             function init3DTilt() {
                 const tiltElements = document.querySelectorAll('.card-3d-tilt');
-                
+
                 tiltElements.forEach(el => {
                     el.addEventListener('mousemove', (e) => {
                         const rect = el.getBoundingClientRect();
                         const x = e.clientX - rect.left;
                         const y = e.clientY - rect.top;
-                        
+
                         const centerX = rect.width / 2;
                         const centerY = rect.height / 2;
-                        
+
                         const rotateX = (y - centerY) / 10;
                         const rotateY = (centerX - x) / 10;
-                        
+
                         el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
                     });
-                    
+
                     el.addEventListener('mouseleave', () => {
                         el.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
                     });
@@ -2206,19 +2813,19 @@
             // ──────── Magnetic Button Effect ──────────
             function initMagneticButtons() {
                 const magneticBtns = document.querySelectorAll('.magnetic-btn');
-                
+
                 magneticBtns.forEach(btn => {
                     btn.addEventListener('mousemove', (e) => {
                         const rect = btn.getBoundingClientRect();
                         const x = e.clientX - rect.left - rect.width / 2;
                         const y = e.clientY - rect.top - rect.height / 2;
-                        
+
                         const moveX = x * 0.3;
                         const moveY = y * 0.3;
-                        
+
                         btn.style.transform = `translate(${moveX}px, ${moveY}px)`;
                     });
-                    
+
                     btn.addEventListener('mouseleave', () => {
                         btn.style.transform = 'translate(0, 0)';
                     });
@@ -2228,11 +2835,11 @@
             // ──────── Animated Number Counter ──────────
             function animateNumber(element, start, end, duration) {
                 if (!element) return;
-                
+
                 const range = end - start;
                 const increment = range / (duration / 16);
                 let current = start;
-                
+
                 const timer = setInterval(() => {
                     current += increment;
                     if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
@@ -2247,24 +2854,24 @@
             function createRipple(e, container) {
                 const ripple = document.createElement('span');
                 ripple.classList.add('ripple');
-                
+
                 const rect = container.getBoundingClientRect();
                 const size = Math.max(rect.width, rect.height);
                 const x = e.clientX - rect.left - size / 2;
                 const y = e.clientY - rect.top - size / 2;
-                
+
                 ripple.style.width = ripple.style.height = size + 'px';
                 ripple.style.left = x + 'px';
                 ripple.style.top = y + 'px';
-                
+
                 container.appendChild(ripple);
-                
+
                 setTimeout(() => ripple.remove(), 600);
             }
 
             function initRippleEffects() {
                 const rippleContainers = document.querySelectorAll('.ripple-container');
-                
+
                 rippleContainers.forEach(container => {
                     container.addEventListener('click', (e) => {
                         createRipple(e, container);
@@ -2276,7 +2883,7 @@
             function createParticles() {
                 const dashboard = document.querySelector('.dashboard');
                 if (!dashboard) return;
-                
+
                 for (let i = 0; i < 12; i++) {
                     const particle = document.createElement('div');
                     particle.classList.add('particle-bg');
@@ -2294,7 +2901,7 @@
                     threshold: 0.1,
                     rootMargin: '0px 0px -50px 0px'
                 };
-                
+
                 const observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
@@ -2303,13 +2910,13 @@
                         }
                     });
                 }, observerOptions);
-                
+
                 // Observe sidebar buttons
                 document.querySelectorAll('.sidebar-btn').forEach((btn, idx) => {
                     btn.classList.add(`stagger-${idx + 1}`);
                     observer.observe(btn);
                 });
-                
+
                 // Observe QA cards
                 document.querySelectorAll('.qa-card').forEach((card, idx) => {
                     card.classList.add('scale-in', `stagger-${idx + 1}`);
@@ -2322,27 +2929,27 @@
                 document.querySelectorAll('.stress-card, .chat-bot-card, .wellness-card').forEach(card => {
                     card.classList.add('card-3d-tilt', 'glass-effect', 'shimmer-effect');
                 });
-                
+
                 // Add magnetic effect to buttons
                 document.querySelectorAll('.sidebar-btn, .dash-tab').forEach(btn => {
                     btn.classList.add('magnetic-btn');
                 });
-                
+
                 // Add premium card class to various cards
                 document.querySelectorAll('.wellness-card, .mood-card').forEach(card => {
                     card.classList.add('premium-card');
                 });
-                
+
                 // Add ripple to QA cards
                 document.querySelectorAll('.qa-card').forEach(card => {
                     card.classList.add('ripple-container');
                 });
-                
+
                 // Add glow effect to active elements
                 document.querySelectorAll('.dash-tab.active').forEach(tab => {
                     tab.classList.add('glow-effect');
                 });
-                
+
                 // Add glassmorphism to summary card
                 const summaryCard = document.querySelector('.sidebar-summary-card');
                 if (summaryCard) {
@@ -2353,9 +2960,9 @@
             // ──────── Enhanced Tab Transitions ──────────
             function enhanceTabTransitions() {
                 const tabs = document.querySelectorAll('.dash-tab');
-                
+
                 tabs.forEach(tab => {
-                    tab.addEventListener('click', function() {
+                    tab.addEventListener('click', function () {
                         tabs.forEach(t => t.classList.remove('glow-effect'));
                         this.classList.add('glow-effect');
                     });
@@ -2371,7 +2978,7 @@
                 createParticles();
                 initEntranceAnimations();
                 enhanceTabTransitions();
-                
+
                 console.log('✨ Ultra-Premium Effects Activated');
             }
 
@@ -2385,43 +2992,43 @@
     </script>
 
     <script>
-    async function changePassword() {
-        const msgEl = document.getElementById('pwdChangeMsg');
-        const curPw = document.getElementById('currentPassword').value;
-        const newPw = document.getElementById('newPassword').value;
-        const confirmPw = document.getElementById('confirmNewPassword').value;
+        async function changePassword() {
+            const msgEl = document.getElementById('pwdChangeMsg');
+            const curPw = document.getElementById('currentPassword').value;
+            const newPw = document.getElementById('newPassword').value;
+            const confirmPw = document.getElementById('confirmNewPassword').value;
 
-        msgEl.style.display = 'none';
-        function showMsg(text, ok) {
-            msgEl.textContent = text;
-            msgEl.style.display = 'block';
-            msgEl.style.background = ok ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)';
-            msgEl.style.color = ok ? '#16a34a' : '#dc2626';
-        }
-
-        if (!curPw || !newPw || !confirmPw) return showMsg('Please fill all fields.', false);
-        if (newPw.length < 6) return showMsg('New password must be at least 6 characters.', false);
-        if (newPw !== confirmPw) return showMsg('New passwords do not match.', false);
-
-        try {
-            const res = await fetch('/student/api/student/change-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ current_password: curPw, new_password: newPw })
-            });
-            const data = await res.json();
-            if (data.success) {
-                showMsg(data.message || 'Password updated!', true);
-                document.getElementById('currentPassword').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmNewPassword').value = '';
-            } else {
-                showMsg(data.error || 'Failed to update password.', false);
+            msgEl.style.display = 'none';
+            function showMsg(text, ok) {
+                msgEl.textContent = text;
+                msgEl.style.display = 'block';
+                msgEl.style.background = ok ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)';
+                msgEl.style.color = ok ? '#16a34a' : '#dc2626';
             }
-        } catch (e) {
-            showMsg('Network error. Please try again.', false);
+
+            if (!curPw || !newPw || !confirmPw) return showMsg('Please fill all fields.', false);
+            if (newPw.length < 6) return showMsg('New password must be at least 6 characters.', false);
+            if (newPw !== confirmPw) return showMsg('New passwords do not match.', false);
+
+            try {
+                const res = await fetch('/student/api/student/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current_password: curPw, new_password: newPw })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showMsg(data.message || 'Password updated!', true);
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmNewPassword').value = '';
+                } else {
+                    showMsg(data.error || 'Failed to update password.', false);
+                }
+            } catch (e) {
+                showMsg('Network error. Please try again.', false);
+            }
         }
-    }
     </script>
 
 </body>

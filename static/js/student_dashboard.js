@@ -73,17 +73,17 @@ class AdvancedDashboard {
         this.initTheme();
         this.initNavigation();
         this.initModals();
-        
+
         // Load data BEFORE initializing charts to prevent rendering with zeros
         await this.loadDashboardData();
-        
+
         // Charts only initialize after data is ready
         this.initCharts();
-        
+
         this.setupEventListeners();
         this.startRealTimeUpdates();
         this.setupServiceWorker();
-        
+
         // New sections
         this.loadProfile();
         this.initWellnessGoals();
@@ -94,37 +94,37 @@ class AdvancedDashboard {
 
     initDate() {
         try {
-        const now = luxon.DateTime.now();
-        const dateElement = document.getElementById('currentDate');
-        if (dateElement) {
-            dateElement.textContent = now.toLocaleString({
-                weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
-            });
-        }
-        // Update timestamp once immediately, then via interval (guarded to run only once)
-        if (!this._dateTimerSet) {
-            this._dateTimerSet = true;
-            this._dateTimer = setInterval(() => {
-                const now = luxon.DateTime.now();
-                const timeString = now.toLocaleString(luxon.DateTime.TIME_SIMPLE);
-                const relativeTime = now.toRelative();
-                const tsEl = document.getElementById('stressTimestamp');
-                if (tsEl) {
-                    const span = tsEl.querySelector('span');
-                    if (span) span.textContent = `${timeString} • ${relativeTime}`;
-                }
-            }, 60000);
-        }
-        } catch(e) { console.warn('initDate error:', e); }
+            const now = luxon.DateTime.now();
+            const dateElement = document.getElementById('currentDate');
+            if (dateElement) {
+                dateElement.textContent = now.toLocaleString({
+                    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+                });
+            }
+            // Update timestamp once immediately, then via interval (guarded to run only once)
+            if (!this._dateTimerSet) {
+                this._dateTimerSet = true;
+                this._dateTimer = setInterval(() => {
+                    const now = luxon.DateTime.now();
+                    const timeString = now.toLocaleString(luxon.DateTime.TIME_SIMPLE);
+                    const relativeTime = now.toRelative();
+                    const tsEl = document.getElementById('stressTimestamp');
+                    if (tsEl) {
+                        const span = tsEl.querySelector('span');
+                        if (span) span.textContent = `${timeString} • ${relativeTime}`;
+                    }
+                }, 60000);
+            }
+        } catch (e) { console.warn('initDate error:', e); }
     }
 
     initTheme() {
         const themeToggle = document.getElementById('themeToggle');
         const savedTheme = localStorage.getItem('aura-ui-theme') || 'light';
-        
+
         // Set initial theme
         this.setTheme(savedTheme);
-        
+
         if (themeToggle) {
             themeToggle.addEventListener('click', () => {
                 const current = document.documentElement.getAttribute('data-theme');
@@ -138,14 +138,14 @@ class AdvancedDashboard {
     setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('aura-ui-theme', theme);
-        
+
         // Clear any inline body background so CSS variables take effect immediately
         document.body.style.removeProperty('background');
         document.body.style.removeProperty('background-attachment');
-        
+
         // Emit themechange event so color theme engine can re-apply
         window.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
-        
+
         const icon = document.getElementById('themeIcon');
         if (!icon) return;
 
@@ -188,20 +188,20 @@ class AdvancedDashboard {
             grid: { show: true, borderColor: gridColor, strokeDashArray: 3, xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } }, padding: { left: 8, right: 8 } },
             xaxis: { labels: { show: true, style: { colors: foreColor, fontSize: '11px', fontFamily: 'Inter, sans-serif' } }, axisBorder: { show: false }, axisTicks: { show: false }, categories: [] },
             yaxis: { min: 0, max: 100, tickAmount: 5, labels: { show: true, style: { colors: foreColor, fontSize: '11px', fontFamily: 'Inter, sans-serif' }, formatter: v => Math.round(v) } },
-            tooltip: { 
+            tooltip: {
                 enabled: true,
                 theme: tooltipTheme,
                 style: { fontSize: '13px', fontFamily: 'Inter, sans-serif' },
                 x: { show: true },
-                y: { 
+                y: {
                     formatter: (v) => {
                         if (v < 30) return `${v} – Low stress`;
                         if (v < 60) return `${v} – Moderate stress`;
                         if (v < 85) return `${v} – High stress`;
                         return `${v} – Critical`;
                     },
-                    title: { formatter: () => 'Stress:' } 
-                } 
+                    title: { formatter: () => 'Stress:' }
+                }
             },
             annotations: {
                 yaxis: [
@@ -323,7 +323,7 @@ class AdvancedDashboard {
         // Populate charts with already-loaded data (no async wait needed)
         this.populateCharts();
     }
-    
+
     populateCharts() {
         // This runs AFTER data is loaded, so charts render with real data immediately
         if (this.stressHistory && this.stressHistory.length > 0) {
@@ -332,7 +332,7 @@ class AdvancedDashboard {
         // Load detailed history for 7D by default
         this.loadDetailedHistory(7);
     }
-    
+
     updateChartsWithHistory(historyData) {
         // Normalize and process stress data
         const rawScores = historyData.map(h => Number(h.score ?? 50));
@@ -340,15 +340,15 @@ class AdvancedDashboard {
         const stressData = maxScore > 0 && maxScore <= 1
             ? rawScores.map(s => Math.round(s * 100))
             : rawScores.map(s => Math.round(s));
-        
+
         const dates = historyData.map(h => {
             const d = new Date(h.timestamp);
             return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
         });
-        
+
         const stressedScores = injectStressVariance(stressData);
         const averages = rollingAverage(stressedScores, Math.min(7, stressedScores.length));
-        
+
         // Update stress chart with real data
         const _fc = document.documentElement.getAttribute('data-theme') === 'dark' ? '#cbd5e1' : '#64748b';
         this.charts.stress.updateOptions({
@@ -359,7 +359,7 @@ class AdvancedDashboard {
             { name: 'Stress Level', data: stressedScores },
             { name: '7-Day Average', data: averages }
         ]);
-        
+
         // Update analytics chart
         this.charts.analytics.updateOptions({
             xaxis: { categories: dates }
@@ -564,12 +564,12 @@ class AdvancedDashboard {
 
     updateSignalBars(signals) {
         const signalMap = {
-            'mood':       { bar: 'signalMood',       val: 'signalMoodVal' },
-            'sentiment':  { bar: 'signalSentiment',  val: 'signalSentimentVal' },
-            'activity':   { bar: 'signalActivity',   val: 'signalActivityVal' },
+            'mood': { bar: 'signalMood', val: 'signalMoodVal' },
+            'sentiment': { bar: 'signalSentiment', val: 'signalSentimentVal' },
+            'activity': { bar: 'signalActivity', val: 'signalActivityVal' },
             'volatility': { bar: 'signalVolatility', val: 'signalVolatilityVal' },
-            'time_bias':  { bar: 'signalTime',       val: 'signalTimeVal' },
-            'trend':      { bar: 'signalTrend',      val: 'signalTrendVal' },
+            'time_bias': { bar: 'signalTime', val: 'signalTimeVal' },
+            'trend': { bar: 'signalTrend', val: 'signalTrendVal' },
         };
         for (const [key, ids] of Object.entries(signalMap)) {
             const bar = document.getElementById(ids.bar);
@@ -606,21 +606,21 @@ class AdvancedDashboard {
         const avgEl = document.getElementById('weeklyAverage');
         const trendEl = document.getElementById('weeklyTrend');
         const trendIcon = document.getElementById('trendIcon');
-        
+
         if (todayEl) todayEl.textContent = data.today ?? 0;
         if (weekEl) weekEl.textContent = data.week ?? 0;
         if (avgEl) avgEl.textContent = data.weekly_average ?? 0;
-        
+
         // Parse trend percentage
         const trendStr = data.weekly_change ?? '0%';
         const trendValue = parseInt(trendStr.replace('%', ''));
-        
+
         if (trendEl) {
             trendEl.textContent = trendStr;
             // Color code: positive = green, negative = red
             trendEl.style.color = trendValue >= 0 ? '#10b981' : '#ef4444';
         }
-        
+
         // Update trend icon direction
         if (trendIcon) {
             if (trendValue >= 0) {
@@ -661,10 +661,10 @@ class AdvancedDashboard {
                 x: p.x,
                 y: stressedValues[i]
             }));
-            
+
             // Compute dynamic Y-axis bounds from data
             const bounds = computeYAxisBounds(stressedValues);
-            
+
             this.charts.analytics.updateOptions({
                 yaxis: {
                     min: bounds.min,
@@ -681,7 +681,7 @@ class AdvancedDashboard {
                     }]
                 }
             });
-            
+
             this.charts.analytics.updateSeries([
                 {
                     name: 'Stress Level',
@@ -738,17 +738,9 @@ class AdvancedDashboard {
     }
 
     setupEventListeners() {
-        document.querySelectorAll('.btn-action').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const action = e.currentTarget.dataset.action;
-                this.handleAction(action);
-            });
-        });
         document.addEventListener('keydown', (e) => {
             if (e.altKey) {
                 switch (e.key) {
-                    case 'b': this.handleAction('breathing'); break;
-                    case 's': this.handleAction('stretch'); break;
                     case 'h': this.openModal('support'); break;
                 }
             }
@@ -788,41 +780,7 @@ class AdvancedDashboard {
         }
     }
 
-    async handleAction(action) {
-        const feedback = document.getElementById('actionFeedback');
-        if (feedback) { feedback.textContent = 'Processing...'; feedback.className = 'text-sm text-info'; }
-        try {
-            const response = await fetch('/student/api/quick_actions', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                const newStress = data.stress_score ?? this.currentStress;
-                const label = data.label || this.getStressDescriptor(newStress);
-                if (feedback) {
-                    feedback.textContent = data.message || `Stress: ${newStress} — ${label}`;
-                    feedback.className = 'text-sm text-success';
-                }
-                this.animateValueChange('stressValue', this.currentStress, newStress, 500);
-                this.currentStress = newStress;
-                document.getElementById('stressDescriptor').textContent = label;
-                // Update bar fill
-                const fill = document.getElementById('stressIndicatorFill');
-                if (fill) fill.style.width = `${Math.min(Math.max(newStress, 0), 100)}%`;
-                // Update insight
-                const insightEl = document.getElementById('stressInsight');
-                if (insightEl && data.insight) insightEl.textContent = data.insight;
 
-                this.addToActivityTimeline(action, newStress);
-                setTimeout(() => { if (feedback) feedback.textContent = ''; }, 4000);
-            } else {
-                throw new Error(data.error || 'Action failed');
-            }
-        } catch (error) {
-            if (feedback) { feedback.textContent = 'Action failed. Please try again.'; feedback.className = 'text-sm text-error'; }
-            setTimeout(() => { if (feedback) feedback.textContent = ''; }, 3000);
-        }
-    }
 
     animateValueChange(elementId, start, end, duration) {
         const el = document.getElementById(elementId);
@@ -840,7 +798,7 @@ class AdvancedDashboard {
 
     addToActivityTimeline(action, newStress) {
         const now = luxon.DateTime.now();
-        const actionNames = { breathing: 'Breathing Exercise', stretch: 'Stretch Session' };
+        const actionNames = { checkin: 'Mood Check-in' }; // Simplified action map
         const timeline = document.getElementById('activityTimeline');
         if (!timeline) return;
         const div = document.createElement('div');
@@ -1019,19 +977,19 @@ class AdvancedDashboard {
             const emailEl = document.getElementById('profileEmail');
             const rollEl = document.getElementById('profileRoll');
             const userNameEl = document.getElementById('userName');
-            
+
             if (nameEl) nameEl.textContent = data.name || 'Student';
             if (emailEl) emailEl.textContent = data.email || '—';
             if (rollEl) rollEl.textContent = data.roll_number || '—';
             if (userNameEl) userNameEl.textContent = (data.name || 'Student').split(' ')[0];
-            
+
             // Load streak
             try {
                 const dashData = await this.fetchData('/student/api/student/dashboard-data');
                 const streakEl = document.getElementById('streakValue');
                 if (streakEl) streakEl.textContent = dashData.streak || 0;
-            } catch(e) { /* streak not critical */ }
-        } catch(e) {
+            } catch (e) { /* streak not critical */ }
+        } catch (e) {
             console.warn('Profile load failed:', e);
         }
     }
@@ -1044,17 +1002,17 @@ class AdvancedDashboard {
         const savedGoals = JSON.parse(localStorage.getItem('aura-goals-' + this.getTodayKey()) || '{}');
         const goalItems = document.querySelectorAll('.goal-item');
         let completedCount = 0;
-        
+
         goalItems.forEach(item => {
             const goalId = item.dataset.goal;
             const checkbox = item.querySelector('.goal-checkbox');
-            
+
             if (savedGoals[goalId]) {
                 checkbox.classList.add('checked');
                 item.classList.add('completed');
                 completedCount++;
             }
-            
+
             item.addEventListener('click', () => {
                 const isChecked = checkbox.classList.toggle('checked');
                 item.classList.toggle('completed', isChecked);
@@ -1062,14 +1020,14 @@ class AdvancedDashboard {
                 this.updateGoalsProgress();
             });
         });
-        
+
         this.updateGoalsProgress();
     }
-    
+
     getTodayKey() {
         return new Date().toISOString().split('T')[0];
     }
-    
+
     saveGoalState() {
         const goals = {};
         document.querySelectorAll('.goal-item').forEach(item => {
@@ -1079,13 +1037,13 @@ class AdvancedDashboard {
         });
         localStorage.setItem('aura-goals-' + this.getTodayKey(), JSON.stringify(goals));
     }
-    
+
     updateGoalsProgress() {
         const total = document.querySelectorAll('.goal-item').length;
         const completed = document.querySelectorAll('.goal-checkbox.checked').length;
         const fill = document.getElementById('goalsProgressFill');
         const text = document.getElementById('goalsCompleted');
-        
+
         if (fill) fill.style.width = `${(completed / total) * 100}%`;
         if (text) text.textContent = completed;
     }
@@ -1121,11 +1079,11 @@ class AdvancedDashboard {
             "Spend time in nature — even looking at trees reduces stress hormones.",
             "End your day by noting one thing that went well today."
         ];
-        
+
         // Use day-of-year as index for consistent daily tip
         const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
         const tipIndex = dayOfYear % tips.length;
-        
+
         const tipEl = document.getElementById('tipText');
         if (tipEl) tipEl.textContent = tips[tipIndex];
     }
@@ -1137,9 +1095,9 @@ class AdvancedDashboard {
         const textarea = document.getElementById('journalEntry');
         const charCount = document.getElementById('journalCharCount');
         const saveBtn = document.getElementById('saveJournalBtn');
-        
+
         if (!textarea || !saveBtn) return;
-        
+
         // Load today's journal from server first, fall back to localStorage
         try {
             const res = await fetch('/student/api/journal/today');
@@ -1158,18 +1116,18 @@ class AdvancedDashboard {
                 if (charCount) charCount.textContent = savedJournal.length;
             }
         }
-        
+
         textarea.addEventListener('input', () => {
             if (charCount) charCount.textContent = textarea.value.length;
         });
-        
+
         saveBtn.addEventListener('click', async () => {
             const entry = textarea.value.trim();
             if (!entry) return;
-            
+
             saveBtn.disabled = true;
             saveBtn.textContent = 'Saving...';
-            
+
             // Save to server via journal API
             try {
                 const res = await fetch('/student/api/journal', {
@@ -1183,7 +1141,7 @@ class AdvancedDashboard {
                 } else {
                     throw new Error(data.error || 'Save failed');
                 }
-            } catch(err) {
+            } catch (err) {
                 // Fallback: save to localStorage
                 localStorage.setItem('aura-journal-' + this.getTodayKey(), entry);
                 this.showToast('Saved locally (offline)', 'warning');
@@ -1191,7 +1149,7 @@ class AdvancedDashboard {
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Entry';
             }
-            
+
             // Mark journal goal as done
             const goalItem = document.querySelector('.goal-item[data-goal="checkin"]');
             if (goalItem) {
@@ -1212,19 +1170,19 @@ class AdvancedDashboard {
     initGrievanceForm() {
         const form = document.getElementById('grievanceForm');
         if (!form) return;
-        
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const subject = document.getElementById('grievanceSubject').value.trim();
             const description = document.getElementById('grievanceDescription').value.trim();
             const btn = document.getElementById('submitGrievanceBtn');
             const feedback = document.getElementById('grievanceFeedback');
-            
+
             if (!subject || !description) return;
-            
+
             if (btn) { btn.disabled = true; btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Submitting...'; }
-            
+
             try {
                 const res = await fetch('/student/api/grievance', {
                     method: 'POST',
@@ -1232,7 +1190,7 @@ class AdvancedDashboard {
                     body: JSON.stringify({ subject, description })
                 });
                 const data = await res.json();
-                
+
                 if (res.ok && data.success) {
                     if (feedback) {
                         feedback.className = 'grievance-feedback success';
@@ -1245,7 +1203,7 @@ class AdvancedDashboard {
                 } else {
                     throw new Error(data.error || 'Submission failed');
                 }
-            } catch(err) {
+            } catch (err) {
                 if (feedback) {
                     feedback.className = 'grievance-feedback error';
                     feedback.textContent = err.message || 'Failed to submit. Please try again.';
