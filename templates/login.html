@@ -12,6 +12,12 @@
 </head>
 
 <body>
+    <!-- Full Screen Video Background -->
+    <video autoplay loop muted playsinline class="global-video-bg">
+        <source src="{{ url_for('static', filename='videos/ai_bg.mp4') }}" type="video/mp4">
+    </video>
+    <div class="global-video-overlay"></div>
+
     <div class="login-container">
         <div class="login-left">
             <div class="logo">AURA</div>
@@ -47,12 +53,6 @@
         </div>
 
         <div class="login-right">
-            <!-- Video Background -->
-            <video autoplay loop muted playsinline class="video-bg">
-                <source src="{{ url_for('static', filename='videos/ai_bg.mp4') }}" type="video/mp4">
-            </video>
-            <div class="video-overlay"></div>
-
             <!-- Floating orbs -->
             <div class="orb orb-1"></div>
             <div class="orb orb-2"></div>
