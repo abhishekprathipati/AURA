@@ -44,6 +44,7 @@ class AuditAction:
     # Student management
     ADD_STUDENT       = 'ADD_STUDENT'
     REMOVE_STUDENT    = 'REMOVE_STUDENT'
+    ADD_PROCTOR       = 'ADD_PROCTOR'
 
     # Incident workflow
     REVIEW_INCIDENT   = 'REVIEW_INCIDENT'

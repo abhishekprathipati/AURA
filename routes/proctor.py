@@ -1,10 +1,11 @@
 ﻿from flask import Blueprint, jsonify, request, render_template, session, Response, current_app
+from bson import ObjectId
 from functools import wraps
 from datetime import datetime, timedelta
 import uuid
 import io
 import csv
-from utils.auth_helpers import login_required, demo_restricted
+from utils.auth_helpers import login_required, demo_restricted, role_required
 from utils.database import get_db
 from utils.audit_logger import log_activity, AuditAction
 from utils.rate_limit import apply_rate_limit, Limits
@@ -34,6 +35,17 @@ def proctor_only(f):
         role = session.get('user_role')
         if role not in ['proctor', 'hod']:
             return jsonify({'error': 'Unauthorized access'}), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def hod_only(f):
+    """Ensure the current user is HOD."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        role = session.get('user_role')
+        if role != 'hod':
+            return jsonify({'error': 'Unauthorized - HOD access only'}), 403
         return f(*args, **kwargs)
     return decorated_function
 
@@ -172,6 +184,7 @@ def student_detail(anonymous_id):
 @proctor_bp.route('/api/student/add', methods=['POST'])
 @login_required
 @proctor_only
+@demo_restricted
 @apply_rate_limit(Limits.MODERATE)
 def add_student():
     """Add a new student under this proctor's ward."""
@@ -286,6 +299,239 @@ def add_student():
     except Exception as exc:
         current_app.logger.error('add_student error: %s', exc, exc_info=True)
         return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+# ---------------------------------------------
+# HOD: Add Proctor (can be used by HOD to onboard proctors)
+# ---------------------------------------------
+
+
+@proctor_bp.route('/api/proctor/add', methods=['POST'])
+@login_required
+@role_required('hod')
+@demo_restricted
+@apply_rate_limit(Limits.MODERATE)
+def add_proctor():
+    """HOD-only endpoint to add a proctor. Similar to add_student but
+    only requires proctor name, email, phone, and department. Parent details
+    are NOT required for proctors.
+    """
+    try:
+        data = request.get_json() or {}
+        name = (data.get('name') or '').strip()
+        email = (data.get('email') or '').strip().lower()
+        phone = (data.get('phone') or '').strip()
+        department = (data.get('department') or '').strip()
+
+        if not all([name, email, phone, department]):
+            return jsonify({'success': False, 'error': 'Please fill name, email, phone and department.'}), 400
+
+        VALID_DEPTS = {'AIML', 'CSE', 'ECE', 'CIVIL', 'MECH'}
+        if department not in VALID_DEPTS:
+            return jsonify({'success': False, 'error': 'Invalid department. Must be one of: AIML, CSE, ECE, CIVIL, MECH.'}), 400
+
+        db = get_db()
+        hod_id = session.get('user_email', 'UNKNOWN')
+
+        # Prevent duplicate proctors by email
+        existing = db['users'].find_one({'email': email})
+        if existing and existing.get('role') == 'proctor':
+            return jsonify({'success': False, 'error': f'Proctor with email {email} already exists.'}), 409
+
+        from utils.auth_helpers import hash_password
+        default_password = hash_password('Aura@123')
+
+        proctor_record = {
+            'email': email,
+            'hashed_password': default_password,
+            'name': name,
+            'role': 'proctor',
+            'department': department,
+            'phone': phone,
+            'created_at': datetime.utcnow(),
+            'created_by': hod_id,
+            'status': 'active',
+        }
+
+        # Upsert into users collection
+        db['users'].update_one({'email': email}, {'$set': proctor_record}, upsert=True)
+
+        # Also ensure proctor profile collection exists for assignments
+        db['proctors'].update_one({'email': email}, {'$setOnInsert': {
+            'email': email,
+            'name': name,
+            'department': department,
+            'phone': phone,
+            'assigned_students': [],
+            'created_at': datetime.utcnow(),
+        }}, upsert=True)
+
+        log_activity(
+            action=AuditAction.ADD_PROCTOR,
+            target_type='proctor',
+            target_id=email,
+            metadata={'added_by': hod_id, 'email': email, 'name': name, 'department': department}
+        )
+
+        return jsonify({'success': True, 'message': f'Proctor {name} <{email}> added successfully.'}), 200
+
+    except Exception as exc:
+        current_app.logger.error('add_proctor error: %s', exc, exc_info=True)
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+@proctor_bp.route('/api/hod/parent-suggestions', methods=['GET'])
+@login_required
+@hod_only
+def hod_parent_suggestions():
+    """Read-only department-scoped parent suggestions for the HOD dashboard."""
+    try:
+        db = get_db()
+        department = session.get('user_department', '')
+
+        dept_students = list(db['users'].find(
+            {'role': 'student', 'department': department},
+            {'roll_number': 1, 'name': 1, '_id': 0}
+        )) if department else []
+
+        roll_numbers = [student.get('roll_number') for student in dept_students if student.get('roll_number')]
+        student_lookup = {
+            student.get('roll_number'): student.get('name', 'Student')
+            for student in dept_students
+            if student.get('roll_number')
+        }
+
+        if not roll_numbers:
+            return jsonify({'success': True, 'data': [], 'count': 0}), 200
+
+        suggestions = list(db['parent_suggestions'].find(
+            {'student_roll': {'$in': roll_numbers}},
+            sort=[('created_at', -1)],
+            limit=25
+        ))
+
+        formatted = []
+        for suggestion in suggestions:
+            roll_number = suggestion.get('student_roll')
+            formatted.append({
+                'id': str(suggestion.get('_id')),
+                'student_roll': roll_number,
+                'student_name': student_lookup.get(roll_number, 'Student'),
+                'parent_name': suggestion.get('parent_name', 'Parent'),
+                'title': suggestion.get('title', ''),
+                'description': suggestion.get('description', ''),
+                'category': suggestion.get('category', 'general'),
+                'status': suggestion.get('status', 'pending'),
+                'upvotes': suggestion.get('upvotes', 0),
+                'created_at': suggestion.get('created_at').isoformat() if suggestion.get('created_at') else None,
+                'reviewed_at': suggestion.get('reviewed_at').isoformat() if suggestion.get('reviewed_at') else None,
+                'reviewed_by': suggestion.get('reviewed_by', ''),
+                'review_note': suggestion.get('review_note', ''),
+                'implemented_at': suggestion.get('implemented_at').isoformat() if suggestion.get('implemented_at') else None,
+                'implemented_by': suggestion.get('implemented_by', ''),
+                'implementation_note': suggestion.get('implementation_note', ''),
+            })
+
+        return jsonify({'success': True, 'data': formatted, 'count': len(formatted)}), 200
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
+
+
+@proctor_bp.route('/api/hod/parent-suggestions/<suggestion_id>/status', methods=['PATCH'])
+@login_required
+@hod_only
+@demo_restricted
+@apply_rate_limit(Limits.MODERATE)
+def update_parent_suggestion_status(suggestion_id):
+    """Update a department parent suggestion to reviewed or implemented."""
+    try:
+        data = request.get_json() or {}
+        new_status = (data.get('status') or '').strip().lower()
+        note = (data.get('note') or '').strip()
+        if new_status not in {'reviewed', 'implemented'}:
+            return jsonify({'success': False, 'error': 'Status must be reviewed or implemented.'}), 400
+
+        db = get_db()
+        suggestion = db['parent_suggestions'].find_one({'_id': ObjectId(suggestion_id)})
+        if not suggestion:
+            return jsonify({'success': False, 'error': 'Suggestion not found.'}), 404
+
+        department = session.get('user_department', '')
+        student = db['users'].find_one(
+            {'role': 'student', 'roll_number': suggestion.get('student_roll'), 'department': department},
+            {'roll_number': 1}
+        )
+        if not student:
+            return jsonify({'success': False, 'error': 'Access denied.'}), 403
+
+        update_fields = {
+            'status': new_status,
+            'updated_at': datetime.utcnow(),
+            'updated_by': session.get('user_email', ''),
+        }
+        if new_status == 'reviewed':
+            update_fields['reviewed_at'] = datetime.utcnow()
+            update_fields['reviewed_by'] = session.get('user_email', '')
+            if note:
+                update_fields['review_note'] = note
+        if new_status == 'implemented':
+            update_fields['implemented_at'] = datetime.utcnow()
+            update_fields['implemented_by'] = session.get('user_email', '')
+            if note:
+                update_fields['implementation_note'] = note
+
+        db['parent_suggestions'].update_one({'_id': ObjectId(suggestion_id)}, {'$set': update_fields})
+
+        log_activity(
+            action=AuditAction.UPDATE_TICKET,
+            target_type='parent_suggestion',
+            target_id=suggestion_id,
+            metadata={'status': new_status, 'student_roll': suggestion.get('student_roll'), 'note': note}
+        )
+
+        return jsonify({'success': True, 'message': f'Suggestion marked as {new_status}.'}), 200
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
+
+
+@proctor_bp.route('/api/hod/proctors', methods=['GET'])
+@login_required
+@hod_only
+def hod_manage_proctors():
+    """List department proctors for HOD management view."""
+    try:
+        db = get_db()
+        department = session.get('user_department', '')
+        proctors = list(db['users'].find(
+            {'role': 'proctor', 'department': department},
+            {'name': 1, 'email': 1, 'phone': 1, 'department': 1, 'status': 1, 'created_at': 1, '_id': 0}
+        ).sort('created_at', -1)) if department else []
+
+        data = []
+        for proctor in proctors:
+            email = proctor.get('email', '')
+            assigned_students = db['proctor_students'].count_documents({'proctor_id': email, 'status': 'active'})
+            recent_actions = db['proctor_actions'].count_documents({
+                'proctor_id': email,
+                'timestamp': {'$gte': datetime.utcnow() - timedelta(days=7)}
+            })
+            data.append({
+                'name': proctor.get('name', 'Proctor'),
+                'email': email,
+                'phone': proctor.get('phone', ''),
+                'department': proctor.get('department', department),
+                'status': proctor.get('status', 'active'),
+                'created_at': proctor.get('created_at').isoformat() if proctor.get('created_at') else None,
+                'assigned_students': assigned_students,
+                'recent_actions': recent_actions,
+            })
+
+        return jsonify({'success': True, 'data': data, 'count': len(data)}), 200
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
 
 
 @proctor_bp.route('/api/student/<anonymous_id>/details', methods=['GET'])
@@ -895,17 +1141,6 @@ def hod_dashboard():
     hod_name = session.get('user_name', 'HOD')
     hod_email = session.get('user_email', 'hod@aura.edu')
     return render_template('hod_dashboard.html', hod_name=hod_name, hod_email=hod_email)
-
-
-def hod_only(f):
-    """Ensure the current user is HOD."""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        role = session.get('user_role')
-        if role != 'hod':
-            return jsonify({'error': 'Unauthorized - HOD access only'}), 403
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 # ---------------------------------------------

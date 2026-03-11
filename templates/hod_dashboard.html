@@ -163,6 +163,12 @@
             transform: translateY(-1px);
         }
 
+        .h-btn[disabled] {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .h-btn.danger {
             background: rgba(239, 68, 68, 0.2);
             border-color: rgba(239, 68, 68, 0.3);
@@ -319,6 +325,7 @@
         .icon-warning { background: var(--warning-light); color: var(--warning); }
         .icon-success { background: var(--success-light); color: var(--success); }
         .icon-primary { background: var(--primary-light); color: var(--primary); }
+        .icon-accent { background: #f5f3ff; color: #7c3aed; }
 
         .count-pill {
             background: var(--gray-100);
@@ -462,6 +469,212 @@
         .badge.high { background: #fef2f2; color: #dc2626; }
         .badge.medium { background: #fffbeb; color: #d97706; }
         .badge.low { background: #ecfdf5; color: #059669; }
+        .badge.info { background: #eff6ff; color: #2563eb; }
+
+        .suggestion-copy {
+            margin-top: 6px;
+            font-size: 0.82rem;
+            color: var(--gray-600);
+            line-height: 1.55;
+        }
+
+        .mini-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .mini-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: var(--gray-100);
+            color: var(--gray-600);
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .suggestion-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .btn-mini {
+            border: 0;
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-mini.review {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .btn-mini.implement {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .btn-mini[disabled] {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .meta-line {
+            margin-top: 8px;
+            font-size: 0.76rem;
+            color: var(--gray-500);
+        }
+
+        .status-active {
+            color: #059669;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .status-review {
+            color: #2563eb;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .status-implemented {
+            color: #7c3aed;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .quick-actions {
+            display: grid;
+            gap: 16px;
+        }
+
+        .quick-panel {
+            border: 1px solid var(--gray-200);
+            border-radius: 14px;
+            padding: 18px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        .quick-panel h4 {
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+            color: var(--gray-800);
+        }
+
+        .quick-panel p {
+            font-size: 0.82rem;
+            color: var(--gray-600);
+            margin-bottom: 14px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--gray-700);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            border: 1px solid var(--gray-300);
+            border-radius: 10px;
+            padding: 11px 12px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: #fff;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+        }
+
+        .btn-primary {
+            border: 0;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #4338ca, #6d28d9);
+            color: white;
+            padding: 11px 14px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-primary[disabled] {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .helper-note {
+            font-size: 0.78rem;
+            color: var(--gray-500);
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 16px 20px 0;
+        }
+
+        .toolbar input,
+        .toolbar select {
+            border: 1px solid var(--gray-300);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.84rem;
+            background: #fff;
+            color: var(--gray-700);
+            min-height: 40px;
+        }
+
+        .toolbar input {
+            flex: 1 1 220px;
+        }
+
+        .toolbar select {
+            flex: 0 0 170px;
+        }
+
+        .toolbar input:focus,
+        .toolbar select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+        }
+
+        .stack-list {
+            display: grid;
+        }
 
         /* ═══ PROCTOR TABLE ═══ */
         .tbl { width: 100%; border-collapse: collapse; }
@@ -653,6 +866,7 @@
             .stat-card { padding: 16px; }
             .stat-number { font-size: 1.75rem; }
             .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            .form-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 480px) {
@@ -803,12 +1017,135 @@
                 </div>
             </div>
         </div>
+
+        <div class="grid-2">
+            <div class="card fade-up">
+                <div class="card-head">
+                    <div class="card-title">
+                        <span class="icon-wrap icon-accent"><i class="fas fa-lightbulb"></i></span>
+                        Parent Suggestions
+                    </div>
+                    <span class="count-pill" id="suggestionBadge">0</span>
+                </div>
+                <div class="toolbar">
+                    <input id="suggestionSearch" type="search" placeholder="Search suggestion, parent, student...">
+                    <select id="suggestionStatusFilter">
+                        <option value="all">All statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="reviewed">Reviewed</option>
+                        <option value="implemented">Implemented</option>
+                    </select>
+                </div>
+                <div class="card-body no-pad scrollable" id="suggestionsList">
+                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-lg"></div><div class="skeleton skel-line skel-line-md" style="margin-top:6px"></div></div></div>
+                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-md"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
+                </div>
+            </div>
+
+            <div class="card fade-up">
+                <div class="card-head">
+                    <div class="card-title">
+                        <span class="icon-wrap icon-info"><i class="fas fa-user-plus"></i></span>
+                        Add Proctor
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="quick-actions">
+                        <div class="quick-panel">
+                            <h4>Department Proctor Onboarding</h4>
+                            <p>Only real HOD accounts can create proctor logins. Demo accounts stay view-only.</p>
+                            {% if session.get('is_demo') %}
+                            <div class="helper-note">Demo mode is read-only. You can inspect the HOD portal, but add/edit actions are blocked.</div>
+                            {% endif %}
+                            <form id="addProctorForm">
+                                <div class="form-grid">
+                                    <div class="form-group full">
+                                        <label for="proctorName">Proctor Name</label>
+                                        <input id="proctorName" name="name" type="text" required placeholder="Enter proctor name" {% if session.get('is_demo') %}disabled{% endif %}>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="proctorEmail">Proctor Email</label>
+                                        <input id="proctorEmail" name="email" type="email" required placeholder="proctor@aura.edu" {% if session.get('is_demo') %}disabled{% endif %}>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="proctorPhone">Proctor Phone</label>
+                                        <input id="proctorPhone" name="phone" type="tel" required placeholder="10-digit mobile number" {% if session.get('is_demo') %}disabled{% endif %}>
+                                    </div>
+                                    <div class="form-group full">
+                                        <label for="proctorDepartment">Department</label>
+                                        <select id="proctorDepartment" name="department" required {% if session.get('is_demo') %}disabled{% endif %}>
+                                            <option value="{{ session.get('user_department', '') }}">{{ session.get('user_department', 'Select Department') }}</option>
+                                            <option value="AIML">AIML</option>
+                                            <option value="CSE">CSE</option>
+                                            <option value="ECE">ECE</option>
+                                            <option value="CIVIL">CIVIL</option>
+                                            <option value="MECH">MECH</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                                    <div class="helper-note">Default password is generated server-side for first login.</div>
+                                    <button class="btn-primary" type="submit" id="addProctorSubmit" {% if session.get('is_demo') %}disabled{% endif %}>Create Proctor</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card fade-up">
+            <div class="card-head">
+                <div class="card-title">
+                    <span class="icon-wrap icon-primary"><i class="fas fa-users-gear"></i></span>
+                    Manage Proctors
+                </div>
+                <span class="count-pill" id="manageProctorsBadge">0</span>
+            </div>
+            <div class="toolbar">
+                <input id="proctorSearch" type="search" placeholder="Search proctor by name, email, phone...">
+                <select id="proctorFilter">
+                    <option value="all">All proctors</option>
+                    <option value="active">Active only</option>
+                    <option value="overloaded">Assigned 10+ students</option>
+                    <option value="low_activity">Low 7d actions</option>
+                </select>
+            </div>
+            <div class="card-body no-pad scrollable" id="manageProctorsTable">
+                <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-lg"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
+                <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-md"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
+            </div>
+        </div>
+
+        <div class="card fade-up">
+            <div class="card-head">
+                <div class="card-title">
+                    <span class="icon-wrap icon-success"><i class="fas fa-list-check"></i></span>
+                    Implementation History
+                </div>
+                <span class="count-pill" id="implementationBadge">0</span>
+            </div>
+            <div class="card-body no-pad scrollable stack-list" id="implementationHistoryList">
+                <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-lg"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
+                <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-md"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
+            </div>
+        </div>
     </div>
 
     <div class="toast" id="toast"></div>
 
     <script>
     // ═══ UTILITIES ═══
+    const IS_DEMO = {{ 'true' if session.get('is_demo') else 'false' }};
+    const DASHBOARD_STATE = {
+        suggestions: [],
+        managedProctors: [],
+        suggestionSearch: '',
+        suggestionStatus: 'all',
+        proctorSearch: '',
+        proctorFilter: 'all'
+    };
+
     function esc(s) {
         if (s == null) return '';
         const d = document.createElement('div');
@@ -890,11 +1227,13 @@
 
     async function loadDashboard() {
         try {
-            const [stats, risk, escalations, proctors] = await Promise.all([
+            const [stats, risk, escalations, proctors, suggestions, managedProctors] = await Promise.all([
                 fetch('/proctor/api/hod/dashboard-stats').then(r => r.json()),
                 fetch('/proctor/api/hod/risk-distribution').then(r => r.json()),
                 fetch('/proctor/api/hod/recent-escalations').then(r => r.json()),
-                fetch('/proctor/api/hod/proctor-performance').then(r => r.json())
+                fetch('/proctor/api/hod/proctor-performance').then(r => r.json()),
+                fetch('/proctor/api/hod/parent-suggestions').then(r => r.json()),
+                fetch('/proctor/api/hod/proctors').then(r => r.json())
             ]);
 
             // ─── KPI Stats ───
@@ -945,6 +1284,17 @@
             // ─── Proctor Performance ───
             if (proctors.success) {
                 renderProctors(proctors.data || []);
+            }
+
+            if (suggestions.success) {
+                DASHBOARD_STATE.suggestions = suggestions.data || [];
+                renderSuggestions();
+                renderImplementationHistory();
+            }
+
+            if (managedProctors.success) {
+                DASHBOARD_STATE.managedProctors = managedProctors.data || [];
+                renderManageProctors();
             }
 
             isFirstLoad = false;
@@ -1074,6 +1424,238 @@
         applyRowDelays(el);
     }
 
+    function renderSuggestions() {
+        const el = document.getElementById('suggestionsList');
+        const badge = document.getElementById('suggestionBadge');
+        const query = DASHBOARD_STATE.suggestionSearch.trim().toLowerCase();
+        const status = DASHBOARD_STATE.suggestionStatus;
+        const data = (DASHBOARD_STATE.suggestions || []).filter(item => {
+            const matchesQuery = !query || [
+                item.title,
+                item.description,
+                item.parent_name,
+                item.student_name,
+                item.student_roll,
+                item.category
+            ].some(value => String(value || '').toLowerCase().includes(query));
+            const matchesStatus = status === 'all' || String(item.status || 'pending').toLowerCase() === status;
+            return matchesQuery && matchesStatus;
+        });
+
+        if (badge) {
+            const total = DASHBOARD_STATE.suggestions.length;
+            badge.textContent = `${data.length}/${total}`;
+            badge.classList.toggle('has-items', total > 0);
+        }
+
+        if (!data.length) {
+            el.innerHTML = '<div class="empty"><i class="fas fa-lightbulb"></i><p>No parent suggestions for this department yet</p></div>';
+            return;
+        }
+
+        el.innerHTML = data.map(item => `
+            <div class="list-item">
+                <div class="list-icon" style="background:#f5f3ff;color:#7c3aed;">
+                    <i class="fas fa-comment-dots"></i>
+                </div>
+                <div class="list-content">
+                    <div class="list-title">${esc(item.title || 'Suggestion')}</div>
+                    <div class="list-sub">${esc(item.parent_name || 'Parent')} for ${esc(item.student_name || 'Student')} (${esc(item.student_roll || 'N/A')})</div>
+                    <div class="suggestion-copy">${esc(item.description || '')}</div>
+                    <div class="mini-meta">
+                        <span class="mini-chip"><i class="fas fa-tag"></i>${esc(item.category || 'general')}</span>
+                        <span class="mini-chip"><i class="fas fa-circle-check"></i>${esc(item.status || 'pending')}</span>
+                        <span class="mini-chip"><i class="fas fa-thumbs-up"></i>${Number(item.upvotes || 0)}</span>
+                    </div>
+                    <div class="meta-line">
+                        ${item.reviewed_at ? `Reviewed ${new Date(item.reviewed_at).toLocaleDateString()} by ${esc(item.reviewed_by || 'HOD')}` : 'Awaiting review'}
+                        ${item.implemented_at ? ` · Implemented ${new Date(item.implemented_at).toLocaleDateString()}` : ''}
+                    </div>
+                    ${(item.review_note || item.implementation_note) ? `<div class="meta-line">Note: ${esc(item.implementation_note || item.review_note)}</div>` : ''}
+                    <div class="suggestion-actions">
+                        <button class="btn-mini review" data-suggestion-id="${esc(item.id)}" data-status="reviewed" ${(IS_DEMO || item.status === 'reviewed' || item.status === 'implemented') ? 'disabled' : ''}>Mark Reviewed</button>
+                        <button class="btn-mini implement" data-suggestion-id="${esc(item.id)}" data-status="implemented" ${(IS_DEMO || item.status === 'implemented') ? 'disabled' : ''}>Mark Implemented</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        applyRowDelays(el);
+    }
+
+    function renderImplementationHistory() {
+        const el = document.getElementById('implementationHistoryList');
+        const badge = document.getElementById('implementationBadge');
+        const implemented = (DASHBOARD_STATE.suggestions || []).filter(item => String(item.status || '').toLowerCase() === 'implemented');
+
+        if (badge) {
+            badge.textContent = implemented.length;
+            badge.classList.toggle('has-items', implemented.length > 0);
+        }
+
+        if (!implemented.length) {
+            el.innerHTML = '<div class="empty"><i class="fas fa-list-check"></i><p>No implemented parent improvements yet</p></div>';
+            return;
+        }
+
+        el.innerHTML = implemented.map(item => `
+            <div class="list-item">
+                <div class="list-icon" style="background:var(--success-light);color:var(--success);">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <div class="list-content">
+                    <div class="list-title">${esc(item.title || 'Implemented suggestion')}</div>
+                    <div class="list-sub">${esc(item.parent_name || 'Parent')} · ${esc(item.student_name || 'Student')} (${esc(item.student_roll || 'N/A')})</div>
+                    <div class="suggestion-copy">${esc(item.implementation_note || item.review_note || item.description || '')}</div>
+                    <div class="mini-meta">
+                        <span class="mini-chip"><i class="fas fa-calendar-check"></i>${item.implemented_at ? new Date(item.implemented_at).toLocaleDateString() : 'Implemented'}</span>
+                        <span class="mini-chip"><i class="fas fa-user-check"></i>${esc(item.implemented_by || 'HOD')}</span>
+                        <span class="mini-chip"><i class="fas fa-tag"></i>${esc(item.category || 'general')}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        applyRowDelays(el);
+    }
+
+    function renderManageProctors() {
+        const el = document.getElementById('manageProctorsTable');
+        const badge = document.getElementById('manageProctorsBadge');
+        const query = DASHBOARD_STATE.proctorSearch.trim().toLowerCase();
+        const filter = DASHBOARD_STATE.proctorFilter;
+        const data = (DASHBOARD_STATE.managedProctors || []).filter(item => {
+            const matchesQuery = !query || [item.name, item.email, item.phone, item.department].some(value => String(value || '').toLowerCase().includes(query));
+            const status = String(item.status || 'active').toLowerCase();
+            if (!matchesQuery) return false;
+            if (filter === 'active') return status === 'active';
+            if (filter === 'overloaded') return Number(item.assigned_students || 0) >= 10;
+            if (filter === 'low_activity') return Number(item.recent_actions || 0) <= 2;
+            return true;
+        });
+
+        if (badge) {
+            const total = DASHBOARD_STATE.managedProctors.length;
+            badge.textContent = `${data.length}/${total}`;
+            badge.classList.toggle('has-items', total > 0);
+        }
+
+        if (!data.length) {
+            el.innerHTML = '<div class="empty"><i class="fas fa-user-shield"></i><p>No department proctors found</p></div>';
+            return;
+        }
+
+        el.innerHTML = `
+            <table class="tbl">
+                <thead><tr><th>Proctor</th><th>Contact</th><th>Assigned Students</th><th>7d Actions</th><th>Status</th></tr></thead>
+                <tbody>
+                    ${data.map(p => {
+                        const initial = (p.name || 'P').charAt(0).toUpperCase();
+                        const statusClass = (p.status || 'active') === 'active' ? 'status-active' : 'status-review';
+                        return `
+                            <tr>
+                                <td>
+                                    <div class="proctor-cell">
+                                        <div class="proctor-avatar">${esc(initial)}</div>
+                                        <div>
+                                            <div style="font-weight:700;">${esc(p.name || 'Proctor')}</div>
+                                            <div class="list-sub">${esc(p.department || '')}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>${esc(p.email || '')}</div>
+                                    <div class="list-sub">${esc(p.phone || 'No phone')}</div>
+                                </td>
+                                <td>${Number(p.assigned_students || 0)}</td>
+                                <td>${Number(p.recent_actions || 0)}</td>
+                                <td><span class="${statusClass}">${esc(p.status || 'active')}</span></td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+        applyRowDelays(el);
+    }
+
+    async function updateSuggestionStatus(suggestionId, status) {
+        if (IS_DEMO) {
+            showToast('Demo mode is read-only', 'info');
+            return;
+        }
+
+        let note = '';
+        if (status === 'reviewed') {
+            note = window.prompt('Optional review note:', '') || '';
+        } else if (status === 'implemented') {
+            note = window.prompt('Optional implementation note:', '') || '';
+        }
+
+        try {
+            const res = await fetch(`/proctor/api/hod/parent-suggestions/${encodeURIComponent(suggestionId)}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status, note })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || data.message || 'Failed to update suggestion');
+            showToast(data.message || 'Suggestion updated', 'success');
+            await loadDashboard();
+        } catch (err) {
+            showToast(err.message || 'Failed to update suggestion', 'error');
+        }
+    }
+
+    async function handleAddProctor(e) {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('addProctorSubmit');
+        const phone = document.getElementById('proctorPhone')?.value.trim() || '';
+        if (!/^\d{10}$/.test(phone)) {
+            showToast('Proctor phone must be 10 digits', 'error');
+            return;
+        }
+
+        const payload = {
+            name: document.getElementById('proctorName')?.value.trim() || '',
+            email: document.getElementById('proctorEmail')?.value.trim() || '',
+            phone,
+            department: document.getElementById('proctorDepartment')?.value.trim() || ''
+        };
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating...';
+        }
+
+        try {
+            const res = await fetch('/proctor/api/proctor/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                throw new Error(data.message || data.error || 'Failed to create proctor');
+            }
+
+            showToast(data.message || 'Proctor created successfully', 'success');
+            document.getElementById('addProctorForm')?.reset();
+            const deptSelect = document.getElementById('proctorDepartment');
+            if (deptSelect) deptSelect.value = '{{ session.get('user_department', '') }}';
+            await loadDashboard();
+        } catch (err) {
+            showToast(err.message || 'Failed to create proctor', 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = {{ 'true' if session.get('is_demo') else 'false' }};
+                submitBtn.textContent = 'Create Proctor';
+            }
+        }
+    }
+
     // ═══ ACTIONS ═══
     function exportReport() {
         showToast('Generating report...', 'info');
@@ -1094,6 +1676,28 @@
     document.addEventListener('DOMContentLoaded', () => {
         initHealthChart();
         loadDashboard();
+        document.getElementById('addProctorForm')?.addEventListener('submit', handleAddProctor);
+        document.getElementById('suggestionSearch')?.addEventListener('input', (event) => {
+            DASHBOARD_STATE.suggestionSearch = event.target.value || '';
+            renderSuggestions();
+        });
+        document.getElementById('suggestionStatusFilter')?.addEventListener('change', (event) => {
+            DASHBOARD_STATE.suggestionStatus = event.target.value || 'all';
+            renderSuggestions();
+        });
+        document.getElementById('proctorSearch')?.addEventListener('input', (event) => {
+            DASHBOARD_STATE.proctorSearch = event.target.value || '';
+            renderManageProctors();
+        });
+        document.getElementById('proctorFilter')?.addEventListener('change', (event) => {
+            DASHBOARD_STATE.proctorFilter = event.target.value || 'all';
+            renderManageProctors();
+        });
+        document.getElementById('suggestionsList')?.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-suggestion-id][data-status]');
+            if (!button) return;
+            updateSuggestionStatus(button.dataset.suggestionId, button.dataset.status);
+        });
     });
 
     setInterval(loadDashboard, 60000);
