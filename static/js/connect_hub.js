@@ -65,7 +65,7 @@
     function bind(id, evt, fn) { const e = el(id); if (e) e.addEventListener(evt, fn); }
 
     function isMobileViewport() {
-        return window.matchMedia('(max-width: 768px)').matches;
+        return window.matchMedia('(max-width: 1024px)').matches;
     }
 
     function openSidebar() {

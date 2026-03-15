@@ -1583,7 +1583,7 @@ kbd {
 .search-result-sub  { font-size: 11px; color: var(--h-muted); }
 
 /* ── RESPONSIVE ───────────────────────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   body { font-size: 15px; }
   body.sidebar-open { overflow: hidden; }
   body.sidebar-open .hub-main { filter: blur(1px); }
@@ -1638,7 +1638,7 @@ kbd {
   .mobile-sidebar-toggle { display: inline-flex; }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .hub-topbar { padding: 0 10px; gap: 8px; }
   .hub-brand-text { display: none; }
   .hub-divider { display: none; }
