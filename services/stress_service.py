@@ -201,15 +201,28 @@ def _signal_sentiment(user_email: str, db) -> Tuple[float, bool]:
         
         text = (chat.get('message') or '') + ' ' + (chat.get('response') or '')
         
-        stored_sentiment = chat.get('sentiment', '')
-        if stored_sentiment == 'anxious':
-            score = 80.0
-        elif stored_sentiment == 'negative':
-            score = 70.0
-        elif stored_sentiment == 'positive':
-            score = 25.0
+        # Fast-track: if the chat already contains an AI-predicted stress score, use it directly (AI Therapist Architecture)
+        if 'stress_score' in chat:
+            score = chat['stress_score']
+            # Map predicted mood directly to amplify
+            stored_sentiment = chat.get('sentiment', 'neutral').lower()
+            if stored_sentiment in ['anxious', 'panic', 'fear']: 
+                score = max(score, 80.0)
+            elif stored_sentiment in ['sad', 'depressed', 'frustrated']:
+                score = max(score, 70.0)
+            elif stored_sentiment in ['happy', 'calm', 'joy']:
+                score = min(score, 25.0)
         else:
-            score = _score_text_sentiment(text)
+            # Fallback for old chats
+            stored_sentiment = chat.get('sentiment', '').lower()
+            if stored_sentiment == 'anxious':
+                score = 80.0
+            elif stored_sentiment == 'negative':
+                score = 70.0
+            elif stored_sentiment == 'positive':
+                score = 25.0
+            else:
+                score = _score_text_sentiment(text)
         
         weighted_sum += score * weight
         total_weight += weight

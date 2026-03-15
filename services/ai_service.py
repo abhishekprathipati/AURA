@@ -1,5 +1,6 @@
 import os
 import logging
+import json
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 
@@ -9,6 +10,23 @@ try:
 except ImportError:
     Client = None
     types = None
+
+# Advanced Local Emotion Model using HuggingFace Transformers
+try:
+    from transformers import pipeline
+    # Load model lazily to avoid blocking boot time
+    _emotion_model = None
+    def get_emotion_model():
+        global _emotion_model
+        if _emotion_model is None:
+            logger.info("Loading go_emotions model into memory...")
+            _emotion_model = pipeline("text-classification", model="SamLowe/roberta-base-go_emotions", top_k=None)
+        return _emotion_model
+except ImportError:
+    pipeline = None
+    _emotion_model = None
+    def get_emotion_model():
+        return None
 
 # Optional OpenAI fallback
 try:
@@ -242,94 +260,135 @@ def _classify_request(user_message: str, chat_history: Optional[List[Dict[str, s
         return 'concise'
 
 
-def generate_mental_response(user_message: str, chat_history: List[Dict[str, str]] = None, kind: str = 'mental', conversation_id: str = '') -> str:
+def predict_emotion_and_stress(user_message: str) -> tuple:
+    """Run the local GoEmotions model and compute probability-weighted stress."""
+    emotion_pipeline = get_emotion_model() if 'pipeline' in globals() and pipeline else None
+    
+    if not emotion_pipeline:
+        return "Unknown", 50
+        
+    try:
+        scores = emotion_pipeline(user_message)[0]
+        best_emotion = max(scores, key=lambda x: x['score'])
+        emo_name = best_emotion['label']
+        
+        stress_map = {
+            "admiration": 10, "amusement": 10, "anger": 85, "annoyance": 65,
+            "approval": 20, "caring": 20, "confusion": 60, "curiosity": 30,
+            "desire": 40, "disappointment": 70, "disapproval": 60, "disgust": 75,
+            "embarrassment": 65, "excitement": 15, "fear": 90, "gratitude": 10,
+            "grief": 95, "joy": 10, "love": 10, "nervousness": 80,
+            "optimism": 15, "pride": 15, "realization": 40, "relief": 20,
+            "remorse": 75, "sadness": 85, "surprise": 50, "neutral": 35
+        }
+        mood_map = {
+            "admiration": "Inspired", "amusement": "Happy", "anger": "Angry",
+            "annoyance": "Frustrated", "approval": "Satisfied", "caring": "Compassionate",
+            "confusion": "Confused", "curiosity": "Curious", "desire": "Motivated",
+            "disappointment": "Disappointed", "disapproval": "Critical", "disgust": "Disgusted",
+            "embarrassment": "Embarrassed", "excitement": "Excited", "fear": "Anxious",
+            "gratitude": "Grateful", "grief": "Devastated", "joy": "Happy", "love": "Affectionate",
+            "nervousness": "Nervous", "optimism": "Hopeful", "pride": "Proud",
+            "realization": "Enlightened", "relief": "Relieved", "remorse": "Guilty",
+            "sadness": "Sad", "surprise": "Surprised", "neutral": "Neutral"
+        }
+        
+        predicted_mood = mood_map.get(emo_name, "Neutral")
+        
+        weighted_stress = 0.0
+        for emo in scores:
+            weighted_stress += emo['score'] * stress_map.get(emo['label'], 50)
+            
+        return predicted_mood, min(100, max(0, int(round(weighted_stress))))
+    except Exception as e:
+        logger.error(f"Failed to run local emotion model: {e}")
+        return "Unknown", 50
+
+
+def generate_mental_response(
+    user_message: str, 
+    chat_history: List[Dict[str, str]] = None, 
+    kind: str = 'mental', 
+    conversation_id: str = '',
+    predicted_mood: str = "Unknown",
+    calculated_stress: int = 50,
+    risk_level: str = "LOW_RISK",
+    memory_context: dict = None
+) -> str:
     """Generate a structured, compassionate response using Gemini AI via google.genai SDK.
 
-    Returns Markdown with sections: Thought, Main Response, Quick Actions, Next Step.
+    Returns JSON containing the therapist response and metadata.
     """
     
     style = _classify_request(user_message, chat_history, kind)
 
     # Crisis Interceptor: Prevent safety filters from abruptly terminating the connection on high-risk keywords
     msg_lower = user_message.lower()
-    crisis_keywords = ['suicide', 'kill myself', 'kill u', 'kill you', 'want to die', 'end my life', 'hurt myself']
-    if any(k in msg_lower for k in crisis_keywords):
-        return (
-            "### Thought\n"
-            "- The user is expressing severe distress or thoughts of harm.\n"
-            "### Main Response\n"
-            "- **You are not alone.** There is support available right now.\n"
-            "- **Please reach out** to a professional, a counselor, or a free crisis helpline immediately.\n"
-            "### Quick Actions\n"
-            "- Call emergency services if you are in immediate danger.\n"
-            "- Contact a trusted friend or family member.\n"
-            "- Take a deep breath and step away from this screen if you need to.\n"
-            "### Next Step\n"
-            "Would you like me to provide some grounding exercises to help you breathe through this moment?"
-        ) if style == 'structured' else (
-            "I hear how incredibly difficult things are right now. Your life has value. Please reach out to a professional or a crisis helpline immediately. You don't have to carry this alone."
-        )
+    crisis_keywords = ['suicide', 'kill myself', 'kill u', 'kill you', 'want to die', 'end my life', 'hurt myself', 'hopeless', 'nothing matters', 'want to give up']
+    if any(k in msg_lower for k in crisis_keywords) or risk_level == "CRITICAL_RISK":
+        return json.dumps({
+            "mood": "Depressed",
+            "stress_score": 95,
+            "risk_level": "CRITICAL_RISK",
+            "mental_indicators": ["High Mental Risk: Crisis/Severe Distress"],
+            "aura_response": "I hear how incredibly difficult things are right now. Your life has value. Please reach out to a professional, a counselor, or a free crisis helpline immediately. You do not have to carry this alone. Please talk to someone."
+        })
 
     if not client:
-        logger.warning("Gemini client not available - trying fallback providers")
-        return _generate_with_fallback(user_message, chat_history, style)
+        logger.warning("Gemini client not available - using basic response")
+        return json.dumps({
+            "mood": predicted_mood,
+            "stress_score": calculated_stress,
+            "risk_level": risk_level,
+            "mental_indicators": ["System degraded"],
+            "aura_response": _generate_with_fallback(user_message, chat_history, style)
+        })
 
     try:
         history_block = _format_history(chat_history or [])
-        persona = 'Mental wellness coach for students' if kind == 'mental' else 'Study coach for students'
-        if style == 'ultra_brief':
-            prompt = f"""
-    You are AURA — a warm, empathetic {persona}. Keep it extremely brief.
+        mem_text = ""
+        if memory_context:
+            mem_text = f"\nUser's Emotional Memory (Last 20 messages):\n- Average Stress: {memory_context.get('average_stress')}\n- Dominant Feeling: {memory_context.get('dominant_emotion')}\n"
+        
+        # AURA AI Therapist Architecture System Prompt
+        system_prompt = f"""You are AURA, an advanced emotional intelligence AI designed to support students by understanding their emotional and mental state during conversation.
 
-    Conversation ID: {conversation_id or 'local'}
-    Recent conversation (last turns):
-    {history_block}
+Your primary responsibility is to analyze the user's message and determine their emotional condition using natural language understanding.
 
-    Student: "{user_message}"
+For every message, perform the following tasks:
+1. Detect possible mental state indicators (e.g. Academic stress, Burnout, Loneliness, Low motivation, Exam anxiety)
+2. Respond with empathetic and supportive conversation tailored to their psychological state.
 
-    Respond in 1–2 short sentences, empathetic and human. End with ONE gentle question if appropriate. No headings.
-    """
-        elif style == 'concise' or not STRUCTURED_RESPONSES:
-            prompt = f"""
-    You are AURA — an empathetic, expert {persona}. Keep continuity to prior messages and reply clearly.
+Response rules:
+- Be supportive and calm. Never sound robotic. Never judge the user.
+- LOW_RISK: Provide a normal, friendly conversation.
+- MODERATE_RISK: Encourage short breaks and self-care.
+- HIGH_RISK: Suggest active relaxation strategies (e.g. breathing, grounding techniques).
+- CRITICAL_RISK: Provide a strong supportive message emphasizing that they are not alone.
+- If mood is positive, reinforce motivation and encouragement.
 
-    Conversation ID: {conversation_id or 'local'}
-    Recent conversation:
-    {history_block}
+Context from local model inference & memory:
+Suggested Mood: {predicted_mood}
+Base Stress: {calculated_stress}
+Risk Level: {risk_level}{mem_text}
 
-    Student: "{user_message}"
+Output must ALWAYS follow this exact JSON structure (only output valid JSON, no markdown blocks, no other text):
+{{
+  "mood": "{predicted_mood}",
+  "stress_score": {calculated_stress},
+  "risk_level": "{risk_level}",
+  "mental_indicators": ["<detected factor 1>", "<detected factor 2>"],
+  "aura_response": "<empathetic and supportive message>"
+}}"""
 
-    Reply in a single concise paragraph (60–120 words), include 1–2 practical tips inline.
-    End with one short follow-up question. Use plain Markdown, avoid headings.
-    """
-        else:
-            prompt = f"""
-    You are AURA — an empathetic, expert {persona}. Maintain continuity by linking to prior messages.
+        prompt = f"""{system_prompt}
 
-    Conversation ID: {conversation_id or 'local'}
-    Conversation so far (last turns):
-    {history_block}
+Conversation ID: {conversation_id or 'local'}
+Recent conversation (last turns):
+{history_block}
 
-    Student now says: "{user_message}"
-
-    Respond ONLY in Markdown using this exact structure:
-
-    ### Thought
-    - Briefly acknowledge their situation and reference prior context.
-    - One short paragraph (2–3 sentences), no sensitive or private data.
-
-    ### Main Response
-    - 2–3 concise, practical suggestions with brief explanations.
-    - Use bullet points. Bold the key action at the start of each bullet.
-
-    ### Quick Actions
-    - Provide 2–4 short action items as a bulleted list (imperative tone).
-
-    ### Next Step
-    - End with ONE clear question or a suggested action to move forward.
-
-    Style: warm, supportive, professional. Scale depth to how much the student shares — brief validation for simple check-ins, deeper support for complex emotions. Never truncate mid-sentence.
-    """
+Student: "{user_message}"
+"""
 
         response = client.models.generate_content(
             model='models/gemini-2.5-flash',
@@ -339,21 +398,34 @@ def generate_mental_response(user_message: str, chat_history: List[Dict[str, str
                 top_p=0.95,
                 top_k=32,
                 max_output_tokens=2048,
+                response_mime_type="application/json"
             )
         )
 
         if response and hasattr(response, 'text') and response.text:
             text = response.text.strip()
-            logger.info(f"✓ Generated response ({len(text)} chars)")
+            logger.info(f"✓ Generated therapist response ({len(text)} chars)")
             return text
         else:
             logger.warning("Empty response from Gemini")
-            return _generate_with_fallback(user_message, chat_history, style)
+            return json.dumps({
+                "mood": predicted_mood,
+                "stress_score": calculated_stress,
+                "risk_level": risk_level,
+                "mental_indicators": ["System degraded"],
+                "aura_response": _generate_with_fallback(user_message, chat_history, style)
+            })
             
     except Exception as e:
         logger.error(f"Gemini API error: {str(e)[:300]}")
         logger.exception("Full traceback:")
-        return _generate_with_fallback(user_message, chat_history, style)
+        return json.dumps({
+            "mood": predicted_mood,
+            "stress_score": calculated_stress,
+            "risk_level": risk_level,
+            "mental_indicators": ["API Error"],
+            "aura_response": _generate_with_fallback(user_message, chat_history, style)
+        })
 
 
 def _generate_with_fallback(user_message: str, chat_history: List[Dict[str, str]] = None, style: str = 'concise', persona: str = 'mental') -> str:

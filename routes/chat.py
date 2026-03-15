@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 import json
 import mimetypes
 import os
@@ -9,8 +9,10 @@ from flask import send_from_directory
 from werkzeug.utils import secure_filename
 from utils.database import get_db
 from models.chat import ChatModel
-from services.ai_service import generate_mental_response, generate_study_response, extract_sentiment, analyze_study_material
+from services.ai_service import generate_mental_response, generate_study_response, extract_sentiment, analyze_study_material, predict_emotion_and_stress
 from services.stress_service import calculate_dynamic_stress
+from services.risk_service import predict_risk_level
+from services.memory_service import update_emotion_memory, get_emotion_memory
 from utils.auth_helpers import demo_restricted, demo_chat_limited
 from utils.helpers import safe_error
 
@@ -148,26 +150,65 @@ def api_chat_mental():
             except Exception as _:
                 pass
 
-        # Generate AI response
-        log.info("â†’ Calling generate_mental_response...")
-        ai_response = generate_mental_response(user_message, history, kind=kind, conversation_id=conversation_id)
-        log.info(f"âœ“ Got response ({len(ai_response)} chars)")
+        # Phase 3 Orchestration
+        log.info("→ Running ML analysis...")
+        predicted_mood, calculated_stress = predict_emotion_and_stress(user_message)
+        risk_level = predict_risk_level(calculated_stress, user_message)
+        memory_context = get_emotion_memory(user_email)
+        
+        # Log stress event
+        if db is not None:
+            db['stress_logs'].insert_one({
+                'user_email': user_email,
+                'timestamp': datetime.utcnow(),
+                'mood': predicted_mood,
+                'stress_score': calculated_stress,
+                'risk_level': risk_level
+            })
+
+        # Generate AI response (which is now a JSON string)
+        log.info("→ Calling generate_mental_response...")
+        raw_ai_response = generate_mental_response(
+            user_message, history, kind=kind, conversation_id=conversation_id,
+            predicted_mood=predicted_mood, calculated_stress=calculated_stress,
+            risk_level=risk_level, memory_context=memory_context
+        )
+        
+        # Parse the structured response
+        try:
+            parsed_resp = json.loads(raw_ai_response)
+            ai_response_text = parsed_resp.get("aura_response", raw_ai_response)
+            mental_indicators = parsed_resp.get("mental_indicators", ["None"])
+            if isinstance(mental_indicators, list):
+                mental_indicators = ", ".join(mental_indicators)
+        except Exception as json_err:
+            log.warning(f"Could not parse AI response as JSON: {json_err}. Using as raw text.")
+            ai_response_text = raw_ai_response
+            mental_indicators = "None"
+
+        log.info(f"✓ Got response ({len(ai_response_text)} chars). Mood: {predicted_mood}, Stress: {calculated_stress}")
 
         # Save to database
         chat_doc = {
             'user_email': user_email,
             'message': user_message,
-            'response': ai_response,
+            'response': ai_response_text,
             'type': kind or 'mental',
-            'sentiment': extract_sentiment(user_message),
+            'sentiment': predicted_mood, # Using advanced mood prediction instead of basic sentiment
+            'stress_score': calculated_stress, # New field
+            'mental_indicators': mental_indicators, # New field
+            'risk_level': risk_level, # New field
             'created_at': datetime.utcnow(),
             'conversation_id': conversation_id or None,
         }
         if chats_coll is not None:
             chats_coll.insert_one(chat_doc)
-            log.info("âœ“ Saved to database")
+            log.info("✓ Saved to database")
+            
+            # Update memory asynchronously or after save
+            update_emotion_memory(user_email)
         else:
-            log.info("âŠ˜ Not saving to DB (unavailable)")
+            log.info("⊘ Not saving to DB (unavailable)")
 
         # Trigger stress recalculation for mental chats (non-blocking)
         stress_update = None
@@ -185,8 +226,11 @@ def api_chat_mental():
         log.info("=== Chat request complete ===")
         resp = {
             'user_message': user_message,
-            'ai_response': ai_response,
-            'sentiment': extract_sentiment(user_message),
+            'ai_response': ai_response_text,
+            'sentiment': predicted_mood,
+            'stress_score': calculated_stress,
+            'mental_indicators': mental_indicators,
+            'risk_level': risk_level,
             'timestamp': chat_doc['created_at'].isoformat(),
         }
         if stress_update:
@@ -194,7 +238,7 @@ def api_chat_mental():
         return jsonify(resp)
     
     except Exception as e:
-        log.error(f"âŒ Chat error: {safe_error(e, 'chat')}")
+        log.error(f"✗ Chat error: {safe_error(e, 'chat')}")
         log.exception("Full traceback:")
         return jsonify({
             'error': 'AI service error. Please try again.',
@@ -220,7 +264,7 @@ def api_chat_history():
         db = _get_db()
         chats_coll = db[ChatModel.collection_name]
         
-        # Fetch mental chats (paginated â€” max 200)
+        # Fetch mental chats (paginated — max 200)
         cursor = chats_coll.find({
             'user_email': user_email,
             'type': 'mental',
@@ -242,6 +286,45 @@ def api_chat_history():
     except Exception as e:
         log.error(f"Chat history error: {e}")
         return jsonify({'error': 'Could not load history'}), 500
+
+@chat_bp.route('/api/stress-trend', methods=['GET'])
+def api_stress_trend():
+    """Returns the last 7 days of stress data for chart rendering."""
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not logged in'}), 401
+            
+        db = get_db()
+        if db is None:
+            return jsonify({'dates': [], 'stress_scores': []})
+            
+        # Group by day and average
+        import collections
+        
+        cutoff = datetime.utcnow() - timedelta(days=7)
+        logs = db['stress_logs'].find({
+            'user_email': user_email,
+            'timestamp': {'$gte': cutoff}
+        }).sort('timestamp', 1)
+        
+        daily_stress = collections.defaultdict(list)
+        for log_entry in logs:
+            day_str = log_entry['timestamp'].strftime('%Y-%m-%d')
+            daily_stress[day_str].append(log_entry.get('stress_score', 50))
+            
+        dates = []
+        scores = []
+        for d in sorted(daily_stress.keys()):
+            dates.append(d)
+            avg = int(sum(daily_stress[d]) / len(daily_stress[d]))
+            scores.append(avg)
+            
+        return jsonify({'dates': dates, 'stress_scores': scores})
+        
+    except Exception as e:
+        log.error(f"Stress trend error: {e}")
+        return jsonify({'dates': [], 'stress_scores': []})
 
 
 @chat_bp.route('/api/chat/clear', methods=['POST'])
