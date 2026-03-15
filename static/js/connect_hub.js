@@ -65,7 +65,20 @@
     function bind(id, evt, fn) { const e = el(id); if (e) e.addEventListener(evt, fn); }
 
     function isMobileViewport() {
-        return window.matchMedia('(max-width: 1024px)').matches;
+        return window.innerWidth <= 1280;
+    }
+
+    function syncResponsiveLayout() {
+        const body = document.body;
+        if (!body) return;
+
+        const compact = isMobileViewport();
+        body.classList.toggle('compact-layout', compact);
+        body.classList.toggle('compact-xs', window.innerWidth <= 640);
+
+        if (!compact) {
+            closeSidebar();
+        }
     }
 
     function openSidebar() {
@@ -1115,6 +1128,8 @@
         if (S._ready) return; S._ready = true;
         console.log('[Connect Hub v4.0] Initializing...');
 
+        syncResponsiveLayout();
+
         const shell = el('hubShell');
         if (shell) {
             S.user.email = shell.dataset.userEmail || '';
@@ -1137,9 +1152,7 @@
         });
         bind('sidebarCloseBtn', 'click', closeSidebar);
         bind('hubSidebarBackdrop', 'click', closeSidebar);
-        window.addEventListener('resize', () => {
-            if (!isMobileViewport()) closeSidebar();
-        });
+        window.addEventListener('resize', syncResponsiveLayout);
 
         // Context back button
         bind('contextBack', 'click', goBack);
