@@ -70,6 +70,13 @@ def login():
         
         flash(f'Welcome back, {user["name"]}!', 'success')
         
+        # Prompt users with a temporary password to change it immediately
+        if user.get('must_change_password'):
+            flash(
+                'You are using a temporary password. Please change it now for account security.',
+                'warning'
+            )
+
         # Redirect based on role
         if user['role'] == 'student':
             return redirect('/student/dashboard')

@@ -96,12 +96,18 @@ def api_chat_mental():
     """Process user message and return AI-generated response."""
     try:
         log.info("=== Chat request received ===")
-        data = request.get_json(force=True)
-        user_message = (data or {}).get('message', '').strip()
+        from utils.schemas import ChatMessageRequest, ValidationError
+        try:
+            req = ChatMessageRequest.model_validate(request.get_json(force=True) or {})
+        except ValidationError as exc:
+            return jsonify({'error': exc.errors()[0]['msg']}), 400
+
+        user_message = req.message
         # Optional metadata from client
-        conversation_id = (data or {}).get('conversation_id', '').strip()
-        kind = (data or {}).get('kind', 'mental').strip() or 'mental'
-        client_history = (data or {}).get('context') or (data or {}).get('conversation_history') or []
+        data = request.get_json(force=True) or {}
+        conversation_id = (data).get('conversation_id', '').strip()
+        kind = (data).get('kind', 'mental').strip() or 'mental'
+        client_history = (data).get('context') or (data).get('conversation_history') or []
         user_email = session.get('user_email')
         
         log.info(f"Message received | User: {(user_email or '')[:3]}***")

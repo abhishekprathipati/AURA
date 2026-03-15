@@ -1,4 +1,6 @@
 import bcrypt
+import secrets
+import string
 from functools import wraps
 from flask import session, redirect, url_for, flash, jsonify, request
 from typing import Callable
@@ -25,6 +27,24 @@ def verify_password(hashed_password: str, password: str) -> bool:
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt."""
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def generate_temp_password(length: int = 12) -> str:
+    """
+    Generate a cryptographically secure random temporary password.
+    Contains letters, digits, and special chars to meet common complexity rules.
+    The caller is responsible for communicating it to the user exactly once.
+    """
+    alphabet = string.ascii_letters + string.digits + "!@#$%"
+    # Guarantee at least one of each character class
+    pwd = [
+        secrets.choice(string.ascii_uppercase),
+        secrets.choice(string.ascii_lowercase),
+        secrets.choice(string.digits),
+        secrets.choice("!@#$%"),
+    ]
+    pwd += [secrets.choice(alphabet) for _ in range(length - 4)]
+    secrets.SystemRandom().shuffle(pwd)
+    return "".join(pwd)
 
 def login_required(f: Callable) -> Callable:
     """Decorator to protect routes that require authentication."""

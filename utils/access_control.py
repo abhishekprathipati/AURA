@@ -19,17 +19,43 @@ Roles:
 ═══════════════════════════════════════════════════════════════
 """
 import hashlib
+import uuid
 from flask import session
 from utils.database import get_db
 
 
+def generate_anonymous_id() -> str:
+    """
+    Generate a new cryptographically random anonymous student ID.
+    Format: STU_ + 8 upper-case hex chars  (e.g. STU_A3F7C291)
+    Use this for every NEW student created via the registration flow.
+    """
+    return f"STU_{uuid.uuid4().hex[:8].upper()}"
+
+
 def create_anonymous_id(email: str) -> str:
     """
-    Canonical anonymous ID generation.
-    Formula: STU_{MD5(email.lower().strip()) % 100000 : 05d}
-    This is the SINGLE source of truth — all other code must call this.
+    Return the stored anonymous ID for this email address.
+
+    Look-up order:
+      1. proctor_students collection (preferred — may be UUID-based)
+      2. MD5-based legacy formula (backward compatibility for old records)
+
+    New students created since the UUID migration will always hit path 1.
+    Older students whose records pre-date the migration fall back to path 2.
     """
     clean = email.lower().strip()
+    try:
+        db = get_db()
+        record = db['proctor_students'].find_one(
+            {'email': clean},
+            {'anonymous_id': 1}
+        )
+        if record and record.get('anonymous_id'):
+            return record['anonymous_id']
+    except Exception:
+        pass
+    # Legacy fallback: deterministic MD5 hash (existing pre-migration students)
     h = int(hashlib.md5(clean.encode()).hexdigest(), 16) % 100000
     return f"STU_{h:05d}"
 

@@ -868,14 +868,14 @@ def change_password():
     """Allow a logged-in student to update their password."""
     try:
         from utils.auth_helpers import verify_password, hash_password
-        data = request.get_json() or {}
-        current_pw = data.get('current_password', '')
-        new_pw = data.get('new_password', '')
+        from utils.schemas import ChangePasswordRequest, ValidationError as SchemaError
+        try:
+            req = ChangePasswordRequest.model_validate(request.get_json() or {})
+        except SchemaError as exc:
+            return jsonify({'success': False, 'error': exc.errors()[0]['msg']}), 400
 
-        if not current_pw or not new_pw:
-            return jsonify({'success': False, 'error': 'Both current and new password are required.'}), 400
-        if len(new_pw) < 6:
-            return jsonify({'success': False, 'error': 'New password must be at least 6 characters.'}), 400
+        current_pw = req.current_password
+        new_pw = req.new_password
 
         db = get_db()
         user_email = session.get('user_email')
@@ -888,7 +888,7 @@ def change_password():
 
         db['users'].update_one(
             {'email': user_email},
-            {'$set': {'hashed_password': hash_password(new_pw)}}
+            {'$set': {'hashed_password': hash_password(new_pw)}, '$unset': {'must_change_password': ''}}
         )
         return jsonify({'success': True, 'message': 'Password updated successfully.'})
     except Exception as e:

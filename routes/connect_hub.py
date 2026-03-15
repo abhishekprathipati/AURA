@@ -145,7 +145,6 @@ def _are_connected(db, a: str, b: str) -> bool:
 @connect_bp.route('/hub/<path:subpath>')
 @login_required
 def connect_hub_page(subpath=None):
-    _ensure_seed()
     return render_template('connect_hub.html')
 
 
