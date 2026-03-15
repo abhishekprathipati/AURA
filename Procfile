@@ -1,1 +1,1 @@
-web: gunicorn --bind 0.0.0.0:$PORT --worker-class gthread --workers 1 --threads 4 --timeout 120 app:app
+web: gunicorn --bind 0.0.0.0:$PORT --worker-class gthread --workers 1 --threads 2 --timeout 120 --max-requests 1000 --max-requests-jitter 100 app:app

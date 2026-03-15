@@ -10,7 +10,7 @@ services:
     name: aura
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --worker-class gthread --workers 1 --threads 4 --timeout 120 app:app
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --worker-class gthread --workers 1 --threads 2 --timeout 120 --max-requests 1000 --max-requests-jitter 100 app:app
     envVars:
       - key: MONGODB_URI
         sync: false
@@ -52,6 +52,10 @@ services:
         value: "true"
       - key: AURA_DYNAMIC_LENGTH
         value: "true"
+      - key: AURA_ENABLE_LOCAL_EMOTION_MODEL
+        value: "false"
+      - key: MAX_CONTENT_LENGTH
+        value: "8388608"
       - key: MAIL_USERNAME
         sync: false
       - key: MAIL_PASSWORD

@@ -4,6 +4,12 @@ import json
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 
+FLASK_ENV = os.getenv('FLASK_ENV', 'production').strip().lower()
+ENABLE_LOCAL_EMOTION_MODEL = os.getenv(
+    'AURA_ENABLE_LOCAL_EMOTION_MODEL',
+    'true' if FLASK_ENV != 'production' else 'false'
+).strip().lower() == 'true'
+
 # Use google.genai (new recommended SDK). Fallback to Groq/OpenAI if Gemini quota exhausted.
 try:
     from google.genai import Client, types
@@ -12,19 +18,28 @@ except ImportError:
     types = None
 
 # Advanced Local Emotion Model using HuggingFace Transformers
-try:
-    from transformers import pipeline
-    # Load model lazily to avoid blocking boot time
-    _emotion_model = None
-    def get_emotion_model():
-        global _emotion_model
-        if _emotion_model is None:
-            logger.info("Loading go_emotions model into memory...")
-            _emotion_model = pipeline("text-classification", model="SamLowe/roberta-base-go_emotions", top_k=None)
-        return _emotion_model
-except ImportError:
+if ENABLE_LOCAL_EMOTION_MODEL:
+    try:
+        from transformers import pipeline
+        # Load model lazily to avoid blocking boot time
+        _emotion_model = None
+
+        def get_emotion_model():
+            global _emotion_model
+            if _emotion_model is None:
+                logger.info("Loading go_emotions model into memory...")
+                _emotion_model = pipeline("text-classification", model="SamLowe/roberta-base-go_emotions", top_k=None)
+            return _emotion_model
+    except ImportError:
+        pipeline = None
+        _emotion_model = None
+
+        def get_emotion_model():
+            return None
+else:
     pipeline = None
     _emotion_model = None
+
     def get_emotion_model():
         return None
 
@@ -42,6 +57,8 @@ except ImportError:
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+if not ENABLE_LOCAL_EMOTION_MODEL:
+    logger.info("AURA local emotion model disabled (AURA_ENABLE_LOCAL_EMOTION_MODEL=false)")
 
 GEMINI_API_KEY   = os.getenv('GEMINI_API_KEY',   '').strip()
 OPENAI_API_KEY   = os.getenv('OPENAI_API_KEY',   '').strip()

@@ -104,7 +104,7 @@ def add_student():
         if not existing_user:
             db['users'].insert_one({
                 'email': email.lower(),
-                'hashed_password': default_password,
+                'hashed_password': hash_password(temp_password),
                 'name': name,
                 'role': 'student',
                 'department': department,
@@ -176,7 +176,6 @@ def add_proctor():
     are NOT required for proctors.
     """
     try:
-        data = request.get_json() or {}
         from utils.schemas import ProctorAddRequest, ValidationError as SchemaError
         try:
             req = ProctorAddRequest.model_validate(request.get_json() or {})
