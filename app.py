@@ -101,49 +101,63 @@ def add_security_headers(response):
 def ensure_production_indexes():
     """Create optimized indexes for production queries."""
     try:
+        from pymongo.errors import OperationFailure
         from utils.database import get_db
         db = get_db()
+
+        def _safe_create_index(collection, keys, **kwargs):
+            """Ignore index-name conflicts when equivalent indexes already exist."""
+            try:
+                collection.create_index(keys, **kwargs)
+            except OperationFailure as e:
+                if getattr(e, 'code', None) == 85:  # IndexOptionsConflict
+                    log.info('Index already exists with different name on %s (%s)', collection.name, kwargs.get('name', 'unnamed'))
+                    return
+                if getattr(e, 'code', None) == 11000:  # DuplicateKey
+                    log.warning('Skipped unique index on %s (%s) due to existing duplicate data', collection.name, kwargs.get('name', 'unnamed'))
+                    return
+                raise
         
         # Proctor-related indexes
-        db['risk_incidents'].create_index([('status', 1), ('risk_level', -1), ('timestamp', -1)], name='queue_view', background=True)
-        db['risk_incidents'].create_index([('timestamp', -1), ('status', 1)], name='time_filter', background=True)
-        db['risk_incidents'].create_index([('anonymous_student_id', 1)], name='student_lookup', background=True)
-        db['proctor_actions'].create_index([('timestamp', -1)], name='audit_timeline', background=True)
-        db['proctor_actions'].create_index([('incident_id', 1)], name='incident_actions', background=True)
-        db['proctor_actions'].create_index([('proctor_id', 1), ('timestamp', -1)], name='proctor_activity', background=True)
+        _safe_create_index(db['risk_incidents'], [('status', 1), ('risk_level', -1), ('timestamp', -1)], name='queue_view', background=True)
+        _safe_create_index(db['risk_incidents'], [('timestamp', -1), ('status', 1)], name='time_filter', background=True)
+        _safe_create_index(db['risk_incidents'], [('anonymous_student_id', 1)], name='student_lookup', background=True)
+        _safe_create_index(db['proctor_actions'], [('timestamp', -1)], name='audit_timeline', background=True)
+        _safe_create_index(db['proctor_actions'], [('incident_id', 1)], name='incident_actions', background=True)
+        _safe_create_index(db['proctor_actions'], [('proctor_id', 1), ('timestamp', -1)], name='proctor_activity', background=True)
         
         # Phase 4: Student wellness indexes
-        db['student_wellness'].create_index([('student_id', 1), ('timestamp', -1)], name='wellness_timeline', background=True)
-        db['student_wellness'].create_index([('student_id', 1), ('data_type', 1)], name='wellness_by_type', background=True)
-        db['support_requests'].create_index([('student_id', 1), ('timestamp', -1)], name='support_timeline', background=True)
+        _safe_create_index(db['student_wellness'], [('student_id', 1), ('timestamp', -1)], name='wellness_timeline', background=True)
+        _safe_create_index(db['student_wellness'], [('student_id', 1), ('data_type', 1)], name='wellness_by_type', background=True)
+        _safe_create_index(db['support_requests'], [('student_id', 1), ('timestamp', -1)], name='support_timeline', background=True)
         
         # Connect Hub indexes
-        db['connections'].create_index([('user_email', 1), ('connected_to', 1)], name='conn_pair', unique=True, background=True)
-        db['connections'].create_index([('connected_to', 1), ('status', 1)], name='conn_incoming', background=True)
-        db['connections'].create_index([('user_email', 1), ('status', 1)], name='conn_outgoing', background=True)
-        db['groups'].create_index([('group_id', 1)], name='group_id_uniq', unique=True, background=True)
-        db['groups'].create_index([('members', 1)], name='group_members', background=True)
-        db['groups'].create_index([('type', 1)], name='group_type', background=True)
-        db['events'].create_index([('event_id', 1)], name='event_id_uniq', unique=True, background=True)
-        db['events'].create_index([('date', 1)], name='event_date', background=True)
-        db['resources'].create_index([('resource_id', 1)], name='resource_id_uniq', unique=True, background=True)
-        db['resources'].create_index([('tags', 1)], name='resource_tags', background=True)
-        db['resources'].create_index([('created_at', -1)], name='resource_recent', background=True)
-        db['hub_activity'].create_index([('user_email', 1)], name='hub_act_user', unique=True, background=True)
-        db['hub_activity'].create_index([('last_active', 1)], name='hub_act_time', background=True)
+        _safe_create_index(db['connections'], [('user_email', 1), ('connected_to', 1)], name='conn_pair', unique=True, background=True)
+        _safe_create_index(db['connections'], [('connected_to', 1), ('status', 1)], name='conn_incoming', background=True)
+        _safe_create_index(db['connections'], [('user_email', 1), ('status', 1)], name='conn_outgoing', background=True)
+        _safe_create_index(db['groups'], [('group_id', 1)], name='group_id_uniq', unique=True, background=True)
+        _safe_create_index(db['groups'], [('members', 1)], name='group_members', background=True)
+        _safe_create_index(db['groups'], [('type', 1)], name='group_type', background=True)
+        _safe_create_index(db['events'], [('event_id', 1)], name='event_id_uniq', unique=True, background=True)
+        _safe_create_index(db['events'], [('date', 1)], name='event_date', background=True)
+        _safe_create_index(db['resources'], [('resource_id', 1)], name='resource_id_uniq', unique=True, background=True)
+        _safe_create_index(db['resources'], [('tags', 1)], name='resource_tags', background=True)
+        _safe_create_index(db['resources'], [('created_at', -1)], name='resource_recent', background=True)
+        _safe_create_index(db['hub_activity'], [('user_email', 1)], name='hub_act_user', unique=True, background=True)
+        _safe_create_index(db['hub_activity'], [('last_active', 1)], name='hub_act_time', background=True)
 
         # Connect Hub v2 — chat, feed, notifications
-        db['peer_messages'].create_index([('from_email', 1), ('to_email', 1), ('created_at', -1)], name='dm_pair', background=True)
-        db['peer_messages'].create_index([('to_email', 1), ('seen', 1)], name='dm_unread', background=True)
-        db['group_messages'].create_index([('group_id', 1), ('created_at', -1)], name='gchat_group', background=True)
-        db['hub_feed'].create_index([('created_at', -1)], name='feed_recent', background=True)
-        db['hub_notifications'].create_index([('user_email', 1), ('created_at', -1)], name='notif_user', background=True)
-        db['hub_notifications'].create_index([('user_email', 1), ('read', 1)], name='notif_unread', background=True)
+        _safe_create_index(db['peer_messages'], [('from_email', 1), ('to_email', 1), ('created_at', -1)], name='dm_pair', background=True)
+        _safe_create_index(db['peer_messages'], [('to_email', 1), ('seen', 1)], name='dm_unread', background=True)
+        _safe_create_index(db['group_messages'], [('group_id', 1), ('created_at', -1)], name='gchat_group', background=True)
+        _safe_create_index(db['hub_feed'], [('created_at', -1)], name='feed_recent', background=True)
+        _safe_create_index(db['hub_notifications'], [('user_email', 1), ('created_at', -1)], name='notif_user', background=True)
+        _safe_create_index(db['hub_notifications'], [('user_email', 1), ('read', 1)], name='notif_unread', background=True)
 
         # Audit logging indexes
-        db['proctor_activity_logs'].create_index([('timestamp', -1)], name='audit_log_time', background=True)
-        db['proctor_activity_logs'].create_index([('proctor_email', 1), ('timestamp', -1)], name='audit_log_proctor', background=True)
-        db['proctor_activity_logs'].create_index([('action', 1), ('timestamp', -1)], name='audit_log_action', background=True)
+        _safe_create_index(db['proctor_activity_logs'], [('timestamp', -1)], name='audit_log_time', background=True)
+        _safe_create_index(db['proctor_activity_logs'], [('proctor_email', 1), ('timestamp', -1)], name='audit_log_proctor', background=True)
+        _safe_create_index(db['proctor_activity_logs'], [('action', 1), ('timestamp', -1)], name='audit_log_action', background=True)
         
         log.info('Production indexes ensured')
     except Exception as e:
