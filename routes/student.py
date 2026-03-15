@@ -354,7 +354,6 @@ def urgent_support():
 
         db = get_db()
         anonymous_id = create_anonymous_student_id(user_email)
-        incident_id = str(uuid.uuid4())
 
         # Log support request
         db['support_requests'].insert_one({
@@ -1128,7 +1127,6 @@ def calculate_wellness_streak(user_email, stress_coll):
         
         # Count consecutive days from today
         streak = 1
-        today = datetime.utcnow().date()
         
         for i in range(len(days) - 1):
             current_date = datetime.strptime(days[i], '%Y-%m-%d').date()

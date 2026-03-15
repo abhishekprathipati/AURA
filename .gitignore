@@ -23,3 +23,13 @@ _api_keys_and_tokens_.txt
 
 # One-off scripts
 tmp_*.py
+
+# Generated outputs / local artifacts
+output*.txt
+test_*_out.txt
+.pytest_cache/
+.ruff_cache/
+
+# OS noise
+.DS_Store
+Thumbs.db

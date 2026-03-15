@@ -101,7 +101,6 @@ def _score_text_sentiment(text: str) -> float:
         return 50.0
 
     words = text.lower().split()
-    word_set = set(words)
     
     neg_hits = sum(1 for w in words if w in NEGATIVE_WORDS)
     pos_hits = sum(1 for w in words if w in POSITIVE_WORDS)

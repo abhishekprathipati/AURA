@@ -12,12 +12,13 @@ def _build_client() -> MongoClient:
         raise RuntimeError('MONGODB_URI is not set. Please configure your .env')
     tls = getattr(Config, 'MONGODB_TLS', False)
     allow_invalid = getattr(Config, 'MONGODB_TLS_ALLOW_INVALID_CERTIFICATES', False)
+    client_kwargs = {'serverSelectionTimeoutMS': 5000}
+    if tls:
+        client_kwargs['tls'] = True
+        if allow_invalid:
+            client_kwargs['tlsAllowInvalidCertificates'] = True
     try:
-        client = MongoClient(
-            Config.MONGODB_URI,
-            **({'tls': tls} if tls else {}),
-            serverSelectionTimeoutMS=5000,
-        )
+        client = MongoClient(Config.MONGODB_URI, **client_kwargs)
         # Trigger server selection to validate connection
         client.admin.command('ping')
         return client

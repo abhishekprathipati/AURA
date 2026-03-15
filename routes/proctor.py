@@ -570,12 +570,7 @@ def get_student_details(anonymous_id):
                 n['time_ago'] = _time_since(n['timestamp'])
                 n['timestamp'] = n['timestamp'].isoformat()
 
-        # â”€â”€ Support tickets for this student (match via anonymous_id on incidents) â”€â”€
-        support_tickets = list(db['support_requests'].find(
-            sort=[('timestamp', -1)]
-        ).limit(50))
-        # filter to those matching this anonymous student's incidents
-        # (support_requests use student_id=email, incidents use anonymous_id)
+        # â”€â”€ Support ticket signals inferred from incidents â”€â”€
         student_ticket_types = set()
         for inc in incidents:
             if inc.get('incident_type') in ('support_request', 'urgent_help', 'critical_stress_auto', 'session_booking'):

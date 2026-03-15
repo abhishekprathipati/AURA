@@ -171,7 +171,7 @@ def complete_registration():
             return jsonify({'error': 'Parent account already exists for this number'}), 409
 
         # Create parent account (no password needed — OTP auth)
-        parent_id = ParentModel.create_parent(
+        ParentModel.create_parent(
             db, student_roll, parent_name, phone, relationship
         )
 

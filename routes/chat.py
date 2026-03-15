@@ -3,7 +3,7 @@ import json
 import mimetypes
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify, session
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
@@ -484,12 +484,6 @@ def api_study_analyze():
         except Exception:
             history = []
         
-        debug_info = {
-            'files_present': list(request.files.keys()),
-            'form_prompt': prompt,
-            'file_id': file_id,
-        }
-
         # Check if user provided either a prompt or a file
         has_file = 'file' in request.files and request.files['file'].filename
         

@@ -174,7 +174,6 @@ def _ensure_seed():
         from werkzeug.security import generate_password_hash
         
         # ── 1. Create realistic peer users ──
-        departments = ['Computer Science', 'Electrical Engineering', 'Mechanical Engineering', 'Biology', 'Mathematics', 'Physics']
         seed_peers = [
             {'name': 'Arjun Kumar', 'email': 'arjun.kumar@student.edu', 'dept': 'Computer Science', 'year': 3, 'stress': 62, 'trend': 'stable'},
             {'name': 'Priya Sharma', 'email': 'priya.sharma@student.edu', 'dept': 'Computer Science', 'year': 2, 'stress': 45, 'trend': 'decreasing'},
@@ -563,7 +562,7 @@ def get_suggestions():
 
     my_stress = _user_stress(db, email)
     my_dept = user.get('department', '')
-    my_score, my_trend, my_conf = my_stress['score'], my_stress['trend'], my_stress['confidence']
+    my_score, my_trend = my_stress['score'], my_stress['trend']
 
     # Gather user's group memberships for interest overlap
     my_groups = set()
@@ -572,14 +571,6 @@ def get_suggestions():
     my_group_types = set()
     for g in db['groups'].find({'members': email}, {'type': 1}):
         my_group_types.add(g.get('type', ''))
-
-    # Recent mood (last 7 days)
-    week_ago = datetime.utcnow() - timedelta(days=7)
-    mood_coll = db['moods'] if 'moods' in db.list_collection_names() else None
-    my_moods = list(mood_coll.find(
-        {'user_email': email, 'created_at': {'$gte': week_ago}},
-        {'intensity': 1, 'mood_score': 1}).sort('created_at', -1).limit(10)) if mood_coll else []
-    my_avg_mood = sum(m.get('intensity', m.get('mood_score', 3)) for m in my_moods) / max(len(my_moods), 1) if my_moods else 3.0
 
     # Existing connections / pending
     existing = set()
