@@ -70,16 +70,20 @@
 
     function openSidebar() {
         const sidebar = el('hubSidebar');
+        const toggle = el('mobileSidebarToggle');
         if (!sidebar || !isMobileViewport()) return;
         sidebar.classList.add('open');
         document.body.classList.add('sidebar-open');
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
     }
 
     function closeSidebar() {
         const sidebar = el('hubSidebar');
+        const toggle = el('mobileSidebarToggle');
         if (!sidebar) return;
         sidebar.classList.remove('open');
         document.body.classList.remove('sidebar-open');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
     }
 
     const _escEl = document.createElement('div');
