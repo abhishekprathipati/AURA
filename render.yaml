@@ -9,6 +9,10 @@ services:
     envVars:
       - key: MONGODB_URI
         sync: false
+      - key: MONGODB_DB_NAME
+        value: aura_db
+      - key: MONGODB_TLS
+        value: "true"
       - key: SECRET_KEY
         generateValue: true
       - key: FLASK_ENV
@@ -19,6 +23,26 @@ services:
         value: "true"
       - key: PROXY_FIX_ENABLED
         value: "true"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: AURA_REQUIRE_AI
+        value: "false"
+      - key: AURA_STRUCTURED_RESPONSES
+        value: "true"
+      - key: AURA_DYNAMIC_LENGTH
+        value: "true"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_DEFAULT_SENDER
+        sync: false
       - key: FAST2SMS_API_KEY
         sync: false
       - key: SMS_ENABLED
