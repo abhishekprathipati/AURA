@@ -64,6 +64,24 @@
     const el = id => document.getElementById(id);
     function bind(id, evt, fn) { const e = el(id); if (e) e.addEventListener(evt, fn); }
 
+    function isMobileViewport() {
+        return window.matchMedia('(max-width: 768px)').matches;
+    }
+
+    function openSidebar() {
+        const sidebar = el('hubSidebar');
+        if (!sidebar || !isMobileViewport()) return;
+        sidebar.classList.add('open');
+        document.body.classList.add('sidebar-open');
+    }
+
+    function closeSidebar() {
+        const sidebar = el('hubSidebar');
+        if (!sidebar) return;
+        sidebar.classList.remove('open');
+        document.body.classList.remove('sidebar-open');
+    }
+
     const _escEl = document.createElement('div');
     function esc(s) {
         if (!s) return '';
@@ -1101,7 +1119,23 @@
         }
 
         // Tab clicks → navigate
-        $$('.nav-tab').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+        $$('.nav-tab').forEach(btn => btn.addEventListener('click', () => {
+            switchTab(btn.dataset.tab);
+            if (isMobileViewport()) closeSidebar();
+        }));
+
+        // Mobile sidebar controls
+        bind('mobileSidebarToggle', 'click', () => {
+            const sidebar = el('hubSidebar');
+            if (!sidebar) return;
+            if (sidebar.classList.contains('open')) closeSidebar();
+            else openSidebar();
+        });
+        bind('sidebarCloseBtn', 'click', closeSidebar);
+        bind('hubSidebarBackdrop', 'click', closeSidebar);
+        window.addEventListener('resize', () => {
+            if (!isMobileViewport()) closeSidebar();
+        });
 
         // Context back button
         bind('contextBack', 'click', goBack);
@@ -1168,6 +1202,7 @@
                 $$('.hub-modal-overlay.show').forEach(m => m.classList.remove('show')); 
                 const sr = el('searchResults'); 
                 if (sr) sr.style.display = 'none'; 
+                closeSidebar();
             }
             // Ctrl+K for search
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') {

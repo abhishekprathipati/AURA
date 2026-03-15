@@ -9,14 +9,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/connect_hub.css') }}?v=50">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/connect_hub.css') }}?v=51">
 </head>
 <body class="hub-body">
 
 <!-- ═══ TOPBAR ═══ -->
 <header class="hub-topbar glass-bar" id="hubTopbar">
   <div class="hub-left">
-    <button class="mobile-sidebar-toggle" onclick="document.querySelector('.hub-sidebar').classList.toggle('open')" style="display:none;">&#9776;</button>
+    <button class="mobile-sidebar-toggle" id="mobileSidebarToggle" type="button" aria-label="Open menu">&#9776;</button>
     <div class="hub-brand">
       <div class="hub-brand-icon"><i class="fas fa-network-wired"></i></div>
       <div class="hub-brand-text">
@@ -80,6 +80,7 @@
         <div class="sidebar-user-dept">{{ session.get('user_department','') }}</div>
       </div>
       <span class="sidebar-online-dot" title="Online"></span>
+      <button class="sidebar-close" id="sidebarCloseBtn" type="button" aria-label="Close menu">×</button>
     </div>
 
     <!-- Stats -->
@@ -185,6 +186,8 @@
     </div>
 
   </aside>
+
+  <div class="hub-sidebar-backdrop" id="hubSidebarBackdrop" aria-hidden="true"></div>
 
   <!-- ─── MAIN ─── -->
   <main class="hub-main" id="hubMain">
@@ -526,6 +529,6 @@
 <div class="hub-toast" id="hubToast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
-<script src="{{ url_for('static', filename='js/connect_hub.js') }}?v=50"></script>
+<script src="{{ url_for('static', filename='js/connect_hub.js') }}?v=51"></script>
 </body>
 </html>
