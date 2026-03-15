@@ -12,6 +12,34 @@ from utils.database import init_db
 from config import Config
 import os, logging
 
+
+def _is_production_env() -> bool:
+    return (Config.ENV or '').strip().lower() == 'production'
+
+
+def _runtime_readiness_checks() -> None:
+    """Log actionable configuration warnings without crashing startup."""
+    issues = []
+
+    if _is_production_env() and not os.getenv('SECRET_KEY'):
+        issues.append('SECRET_KEY is not set in environment; generated fallback will rotate on restart')
+
+    if _is_production_env() and Config.RATELIMIT_STORAGE_URI.startswith('memory://'):
+        issues.append('RATELIMIT_STORAGE_URI uses memory backend in production (set Redis for multi-instance consistency)')
+
+    ai_keys = ('GEMINI_API_KEY', 'OPENAI_API_KEY', 'GROQ_API_KEY', 'DEEPSEEK_API_KEY')
+    if not any(os.getenv(k, '').strip() for k in ai_keys):
+        issues.append('No AI provider key configured; chatbot will use local fallback responses')
+
+    if not os.getenv('MONGODB_URI', '').strip():
+        issues.append('MONGODB_URI is missing; database startup may fail')
+
+    if issues:
+        for issue in issues:
+            log.warning('Readiness: %s', issue)
+    else:
+        log.info('Readiness: all core runtime checks passed')
+
 # ═══════════════════════════════════════════════════════════════════════════════
 #  LOGGING
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -63,6 +91,7 @@ socketio = SocketIO(app, cors_allowed_origins=cors_allowed, async_mode='threadin
 init_db()
 init_models()
 init_routes(app)
+_runtime_readiness_checks()
 log.info('App initialised  (env=%s, debug=%s, limiter=%s)',
          Config.ENV, Config.DEBUG, Config.RATELIMIT_STORAGE_URI)
 
@@ -204,7 +233,17 @@ def dashboard_redirect():
 def health():
     """Production health-check endpoint (load-balancer / uptime monitor)."""
     from datetime import datetime
-    checks = {'app': 'ok'}
+    checks = {
+        'app': 'ok',
+        'env': Config.ENV,
+        'limiter_backend': (Config.RATELIMIT_STORAGE_URI or 'memory://').split(':', 1)[0],
+        'ai_configured': {
+            'gemini': bool(os.getenv('GEMINI_API_KEY', '').strip()),
+            'openai': bool(os.getenv('OPENAI_API_KEY', '').strip()),
+            'groq': bool(os.getenv('GROQ_API_KEY', '').strip()),
+            'deepseek': bool(os.getenv('DEEPSEEK_API_KEY', '').strip()),
+        },
+    }
     status = 200
     try:
         from utils.database import get_db
@@ -215,7 +254,6 @@ def health():
         checks['mongodb'] = f'error: {e}'
         status = 503
     checks['timestamp'] = datetime.utcnow().isoformat() + 'Z'
-    checks['env'] = Config.ENV
     return jsonify(checks), status
 
 # --- Error handlers ---
