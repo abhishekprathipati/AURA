@@ -1,6 +1,11 @@
 # render.yaml — Render Blueprint (Infrastructure as Code)
 # https://render.com/docs/blueprint-spec
 services:
+  - type: redis
+    name: aura-redis
+    ipAllowList: []
+    plan: free
+
   - type: web
     name: aura
     runtime: python
@@ -23,8 +28,16 @@ services:
         value: "true"
       - key: PROXY_FIX_ENABLED
         value: "true"
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: aura-redis
+          property: connectionString
       - key: RATELIMIT_STORAGE_URI
-        sync: false
+        fromService:
+          type: redis
+          name: aura-redis
+          property: connectionString
       - key: GEMINI_API_KEY
         sync: false
       - key: OPENAI_API_KEY

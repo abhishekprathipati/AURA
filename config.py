@@ -36,7 +36,7 @@ class Config:
     MONGODB_TLS_ALLOW_INVALID_CERTIFICATES = _bool('MONGODB_TLS_ALLOW_INVALID')
 
     # ── Rate-limit storage (memory for dev, Redis for prod) ─────────────
-    RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI', 'memory://')
+    RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI', os.getenv('REDIS_URL', 'memory://'))
     #   Production: redis://localhost:6379/0   or   redis://<host>:6379/0
 
     # ── Fast2SMS (parent OTP) ───────────────────────────────────────────
