@@ -1,9 +1,11 @@
 import bcrypt
+import hmac
 import secrets
 import string
 from functools import wraps
-from flask import session, redirect, url_for, flash, jsonify, request
-from typing import Callable
+from flask import session, redirect, url_for, flash, jsonify, request, abort
+from urllib.parse import urlparse
+from typing import Callable, Optional
 
 # Demo accounts that should have restricted (read-only) access
 DEMO_EMAILS = {
@@ -74,7 +76,11 @@ def demo_restricted(f: Callable) -> Callable:
                     'demo_restricted': True
                 }), 403
             flash('This action is not available in demo mode. Please register a real account.', 'warning')
-            return redirect(request.referrer or url_for('auth.login'))
+            # Validate referrer is same-origin to prevent open redirect
+            referrer = request.referrer or ''
+            parsed = urlparse(referrer)
+            safe_redirect = (not parsed.netloc or parsed.netloc == request.host)
+            return redirect(referrer if safe_redirect and referrer else url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -116,3 +122,24 @@ def role_required(role: str) -> Callable:
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+def generate_csrf_token() -> str:
+    """Generate and store a CSRF token in session if not present."""
+    if 'csrf_token' not in session:
+        session['csrf_token'] = secrets.token_hex(32)
+    return session['csrf_token']
+
+def csrf_protected(f: Callable) -> Callable:
+    """Decorator to require a valid CSRF token in the X-CSRF-Token header."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
+            # Double Submit Cookie pattern (custom header check)
+            token = request.headers.get('X-CSRF-Token')
+            expected = session.get('csrf_token')
+            if not token or not expected or not hmac.compare_digest(token, expected):
+                if request.is_json:
+                    return jsonify({'error': 'CSRF token missing or invalid'}), 403
+                abort(403)
+        return f(*args, **kwargs)
+    return decorated_function

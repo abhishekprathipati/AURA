@@ -104,7 +104,7 @@ if got_429:
             check("429 has 'retry_after_seconds'", 'retry_after_seconds' in body)
             check("Retry-After header present", 'Retry-After' in r_limited.headers,
                   f"Headers: {dict(r_limited.headers)}")
-        except:
+        except Exception:
             check("429 response is JSON", False, "Not JSON")
 
 
@@ -158,7 +158,7 @@ r_demo = s4.post(f'{BASE}/proctor/api/my-students/fake_student/remove')
 try:
     d = r_demo.json()
     is_demo_blocked = d.get('demo_restricted', False) or 'demo' in d.get('error', '').lower()
-except:
+except Exception:
     is_demo_blocked = False
 check("Demo accounts blocked before rate limit on write endpoints", 
       r_demo.status_code in (403, 200) and (is_demo_blocked or r_demo.status_code == 200),

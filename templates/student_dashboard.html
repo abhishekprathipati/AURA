@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!-- TEMPLATE: student_dashboard.html | EDITED: 2026-01-30 | MOOD POPUP ADDED -->
 <html lang="en" data-theme="light">
 
@@ -417,32 +417,43 @@
                                 </div>
                             </details>
 
-                            <!-- Quick Chatbot Access Cards -->
-                            <div class="metric-actions chat-cards">
-                                <a href="{{ url_for('student.mental_chatbot') }}" class="chat-card chat-card-mental">
-                                    <div class="chat-icon-wrapper">
-                                        <svg class="chat-icon" viewBox="0 0 24 24" fill="none"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <path
-                                                d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM18 14H6V12H18V14ZM18 11H6V9H18V11ZM18 8H6V6H18V8Z"
-                                                fill="white" />
-                                        </svg>
+                            <!-- Phase 5.1: Emotional Fingerprint (Radar Chart) -->
+                            <div class="emotional-radar-section" style="margin-top: 24px; padding-top: 20px; border-top: 1px border var(--border);">
+                                <h4 class="card-subtitle" style="margin-bottom: 12px; font-weight: 600; color: var(--text);">
+                                    <i class="fas fa-brain" style="margin-right: 6px; color: var(--primary);"></i>
+                                    Emotional Fingerprint
+                                </h4>
+                                <div id="emotionRadarChart" style="min-height: 250px;"></div>
+                                <div id="noEmotionsMessage" style="display:none; text-align:center; padding: 20px; color: var(--muted); font-size: 13px;">
+                                    Start a mental wellness chat to see your emotional breakdown.
+                                </div>
+                            </div>
+
+                            <!-- Phase 5.2: Stress Forecasting Card -->
+                            <div class="stress-forecast-section" style="margin-top: 24px;">
+                                <div class="card card-elevated" style="background: linear-gradient(135deg, var(--surface), rgba(var(--primary-rgb), 0.05)); border: 1px solid rgba(var(--primary-rgb), 0.1);">
+                                    <header class="card-header" style="border-bottom: none; padding-bottom: 5px;">
+                                        <h4 class="card-title" style="font-size: 15px;">
+                                            <i class="fas fa-crystal-ball" style="margin-right: 6px; color: var(--accent);"></i>
+                                            3-Day Stress Projection
+                                        </h4>
+                                        <div class="card-badge" id="forecastConfidence" style="font-size: 10px; padding: 2px 8px; background: rgba(var(--accent-rgb), 0.1); color: var(--accent); border-radius: 20px;">
+                                            AI Prediction
+                                        </div>
+                                    </header>
+                                    <div class="card-body" style="padding-top: 5px;">
+                                        <div id="stressForecastContainer" style="display: flex; justify-content: space-between; gap: 10px; margin-top: 10px;">
+                                            <!-- Forecast items will be injected here -->
+                                            <div style="flex: 1; text-align: center; padding: 12px; background: var(--surface); border-radius: 12px; border: 1px dashed var(--border);">
+                                                <div style="font-size: 11px; color: var(--muted);">Loading...</div>
+                                            </div>
+                                        </div>
+                                        <div id="forecastInsight" style="margin-top: 15px; font-size: 12px; color: var(--muted); line-height: 1.4; display: none;">
+                                            <i class="fas fa-info-circle"></i>
+                                            <span id="forecastInsightText"></span>
+                                        </div>
                                     </div>
-                                    <div class="chat-title">Mental Chat</div>
-                                    <div class="chat-description">Talk about feelings</div>
-                                </a>
-                                <a href="{{ url_for('student.study_chatbot') }}" class="chat-card chat-card-study">
-                                    <div class="chat-icon-wrapper">
-                                        <svg class="chat-icon" viewBox="0 0 24 24" fill="none"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <path
-                                                d="M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18ZM12 3L1 9L12 15L21 10.09V17H23V9L12 3Z"
-                                                fill="white" />
-                                        </svg>
-                                    </div>
-                                    <div class="chat-title">Study Chat</div>
-                                    <div class="chat-description">Academic support</div>
-                                </a>
+                                </div>
                             </div>
                         </div>
                     </section>

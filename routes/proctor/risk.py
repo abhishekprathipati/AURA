@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 import uuid
 import io
 import csv
-from utils.auth_helpers import login_required, demo_restricted, role_required
+import re
+from utils.auth_helpers import login_required, demo_restricted, role_required, csrf_protected
 from utils.database import get_db
 from utils.audit_logger import log_activity, AuditAction
 from utils.rate_limit import apply_rate_limit, Limits
@@ -31,15 +32,14 @@ def get_system_status():
         status = _default_status()
         status_coll.insert_one(status)
 
-    status['last_update'] = datetime.utcnow()
-    status_coll.update_one({}, {'$set': {'last_update': status['last_update']}}, upsert=True)
-
+    last_update = status.get('last_update') or datetime.utcnow()
+    
     return jsonify({'success': True, 'data': {
         'status': status.get('status', 'LIVE'),
         'active_students': status.get('active_students', 0),
         'active_alerts': status.get('active_alerts', 0),
         'connection_hub_state': status.get('connection_hub_state', 'CALM'),
-        'last_update': status['last_update'].isoformat(),
+        'last_update': last_update.isoformat(),
     }})
 
 # ---------------------------------------------
@@ -108,7 +108,7 @@ def _fetch_risk_queue(status_filter: str, risk_level: str, time_range: str, sort
             cutoff = datetime.utcnow() - time_map[time_range]
             query['timestamp'] = {'$gte': cutoff}
 
-    sort_field = 'timestamp' if sort_by in ['timestamp', 'risk_level'] else 'timestamp'
+    sort_field = sort_by if sort_by in ['timestamp', 'risk_level'] else 'timestamp'
     sort_dir = -1 if sort_order == 'desc' else 1
 
     return list(coll.find(query).sort(sort_field, sort_dir).limit(200))
@@ -167,11 +167,14 @@ def search_incidents():
     _ensure_indexes(db)
     coll = db['risk_incidents']
 
-    # â”€â”€ RBAC: scope search to visible students â”€â”€
+    # ── RBAC: scope search to visible students ──
     visible_ids = get_visible_student_ids()
-    search_query = {field_name: {'$regex': query_text, '$options': 'i'}}
-    if visible_ids:
-        search_query['anonymous_student_id'] = {'$in': visible_ids}
+    if not visible_ids:
+        return jsonify({'success': True, 'count': 0, 'data': []})
+    # Escape regex special characters to prevent ReDoS attacks
+    safe_query = re.escape(query_text)
+    search_query = {field_name: {'$regex': safe_query, '$options': 'i'}}
+    search_query['anonymous_student_id'] = {'$in': visible_ids}
 
     incidents = list(
         coll.find(search_query)
@@ -193,6 +196,7 @@ def search_incidents():
 @login_required
 @proctor_only
 @demo_restricted
+@csrf_protected
 @apply_rate_limit(Limits.MODERATE)
 def handle_action(action_type):
     valid_actions = ['dismiss', 'remove', 'escalate', 'contact', 'monitor', 'close', 'review']
@@ -305,6 +309,7 @@ def handle_action(action_type):
 @login_required
 @proctor_only
 @demo_restricted
+@csrf_protected
 @apply_rate_limit(Limits.BULK)
 def bulk_action():
     data = request.get_json() or {}
@@ -317,6 +322,8 @@ def bulk_action():
         return jsonify({'success': False, 'error': 'Invalid action'}), 400
     if not incident_ids:
         return jsonify({'success': False, 'error': 'No incident IDs provided'}), 400
+    if len(incident_ids) > 50:
+        return jsonify({'success': False, 'error': 'Maximum 50 incidents per bulk action'}), 400
 
     db = get_db()
     _ensure_indexes(db)
@@ -333,9 +340,14 @@ def bulk_action():
     }
     action_label, status_label, case_status = action_map[action_type]
 
-    incidents = list(coll.find({'incident_id': {'$in': incident_ids}}))
+    # RBAC: only process incidents the proctor has access to
+    visible_ids = get_visible_student_ids()
+    rbac_filter = {'incident_id': {'$in': incident_ids}}
+    if visible_ids:
+        rbac_filter['anonymous_student_id'] = {'$in': visible_ids}
+    incidents = list(coll.find(rbac_filter))
     if not incidents:
-        return jsonify({'success': False, 'error': 'No incidents found'}), 404
+        return jsonify({'success': False, 'error': 'No accessible incidents found'}), 404
 
     actions_to_insert = []
     updated_ids = []

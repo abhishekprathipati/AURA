@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import uuid
 import io
 import csv
-from utils.auth_helpers import login_required, demo_restricted, role_required
+from utils.auth_helpers import login_required, demo_restricted, role_required, csrf_protected
 from utils.database import get_db
 from utils.audit_logger import log_activity, AuditAction
 from utils.rate_limit import apply_rate_limit, Limits
@@ -43,6 +43,7 @@ def student_detail(anonymous_id):
 @login_required
 @proctor_only
 @demo_restricted
+@csrf_protected
 @apply_rate_limit(Limits.MODERATE)
 def add_student():
     """Add a new student under this proctor's ward."""
@@ -62,84 +63,31 @@ def add_student():
         parent_name = req.parent_name
         parent_phone = req.parent_phone
 
-        db = get_db()
         proctor_id = session.get('user_email', 'UNKNOWN')
 
-        # â”€â”€ Check duplicates â”€â”€
-        if db['proctor_students'].find_one({'roll_number': roll_number}):
-            return jsonify({'success': False, 'error': f'Student with roll number {roll_number} already exists.'}), 409
-        if db['proctor_students'].find_one({'email': email}):
-            return jsonify({'success': False, 'error': f'Student with email {email} already exists.'}), 409
-
-        # â”€â”€ Build student record â”€â”€
-        from utils.auth_helpers import hash_password, generate_temp_password
-        from utils.access_control import generate_anonymous_id
-        temp_password = generate_temp_password()
-        # New students get a cryptographically random anonymous ID (non-guessable)
-        anonymous_id = generate_anonymous_id()
-
-        student_record = {
-            'student_id': str(uuid.uuid4()),
-            'anonymous_id': anonymous_id,
+        from services.proctor_service import register_new_student
+        student_data = {
             'name': name,
-            'roll_number': roll_number.upper(),
-            'email': email.lower(),
+            'roll_number': roll_number,
+            'email': email,
             'department': department,
-            'semester': data.get('semester', '4'),
-            'section': data.get('section', 'A'),
-            'risk_level': (data.get('risk_level') or 'low').upper(),
-            'blood_group': data.get('blood_group', ''),
-            'notes': data.get('notes', ''),
-            'proctor_id': proctor_id,
-            'status': 'active',
-            'created_at': datetime.utcnow(),
-            'created_by': proctor_id,
-        }
-
-        # â”€â”€ Insert student â”€â”€
-        db['proctor_students'].insert_one(student_record)
-
-        # â”€â”€ Also create a user login for the student â”€â”€
-        existing_user = db['users'].find_one({'email': email.lower()})
-        if not existing_user:
-            db['users'].insert_one({
-                'email': email.lower(),
-                'hashed_password': hash_password(temp_password),
-                'name': name,
-                'role': 'student',
-                'department': department,
-                'roll_number': roll_number.upper(),
-                'parent_phone': parent_phone,
-                'created_at': datetime.utcnow(),
-                'must_change_password': True,
-            })
-        else:
-            # Patch missing fields if user already exists
-            update_fields = {}
-            if not existing_user.get('roll_number'):
-                update_fields['roll_number'] = roll_number.upper()
-            if not existing_user.get('parent_phone'):
-                update_fields['parent_phone'] = parent_phone
-            if update_fields:
-                db['users'].update_one({'email': email.lower()}, {'$set': update_fields})
-
-        # â”€â”€ Create parent record â”€â”€
-        parent_record = {
-            'student_roll': roll_number.upper(),
             'parent_name': parent_name,
             'parent_phone': parent_phone,
-            'parent_email': (data.get('parent_email') or '').strip(),
-            'relationship': data.get('parent_relationship', 'parent'),
-            'auth_type': 'otp',
-            'created_at': datetime.utcnow(),
-            'is_active': True,
-            'notifications_enabled': True,
+            'semester': data.get('semester', '4'),
+            'section': data.get('section', 'A'),
+            'risk_level': data.get('risk_level', 'low'),
+            'blood_group': data.get('blood_group', ''),
+            'notes': data.get('notes', ''),
+            'parent_email': data.get('parent_email', ''),
+            'parent_relationship': data.get('parent_relationship', 'parent')
         }
-        db['parents'].update_one(
-            {'student_roll': roll_number.upper()},
-            {'$set': parent_record},
-            upsert=True,
-        )
+
+        result = register_new_student(proctor_id, student_data)
+        if not result['success']:
+            return jsonify({'success': False, 'error': result['error']}), result.get('status_code', 400)
+            
+        temp_password = result['temp_password']
+        anonymous_id = result['anonymous_id']
 
         log_activity(
             action=AuditAction.ADD_STUDENT,
@@ -151,13 +99,13 @@ def add_student():
         return jsonify({
             'success': True,
             'message': f'Student {name} ({roll_number}) added successfully.',
-            'student_id': student_record['student_id'],
+            'student_id': result.get('student_id', anonymous_id),
             'anonymous_id': anonymous_id,
             'temp_password': temp_password,  # Shown once - share with student securely
         })
     except Exception as exc:
         current_app.logger.error('add_student error: %s', exc, exc_info=True)
-        return jsonify({'success': False, 'error': str(exc)}), 500
+        return jsonify({'success': False, 'error': safe_error(exc, 'proctor_api')}), 500
 
 
 # ---------------------------------------------
@@ -169,6 +117,7 @@ def add_student():
 @login_required
 @role_required('hod')
 @demo_restricted
+@csrf_protected
 @apply_rate_limit(Limits.MODERATE)
 def add_proctor():
     """HOD-only endpoint to add a proctor. Similar to add_student but
@@ -190,10 +139,10 @@ def add_proctor():
         db = get_db()
         hod_id = session.get('user_email', 'UNKNOWN')
 
-        # Prevent duplicate proctors by email
+        # Prevent duplicate or conflicting accounts by email
         existing = db['users'].find_one({'email': email})
-        if existing and existing.get('role') == 'proctor':
-            return jsonify({'success': False, 'error': f'Proctor with email {email} already exists.'}), 409
+        if existing:
+            return jsonify({'success': False, 'error': f'Account with email {email} already exists.'}), 409
 
         from utils.auth_helpers import hash_password, generate_temp_password
         temp_password = generate_temp_password()
@@ -235,7 +184,7 @@ def add_proctor():
 
     except Exception as exc:
         current_app.logger.error('add_proctor error: %s', exc, exc_info=True)
-        return jsonify({'success': False, 'error': str(exc)}), 500
+        return jsonify({'success': False, 'error': safe_error(exc, 'proctor_api')}), 500
 
 
 @proctor_bp.route('/api/hod/parent-suggestions', methods=['GET'])
@@ -300,6 +249,7 @@ def hod_parent_suggestions():
 @login_required
 @hod_only
 @demo_restricted
+@csrf_protected
 @apply_rate_limit(Limits.MODERATE)
 def update_parent_suggestion_status(suggestion_id):
     """Update a department parent suggestion to reviewed or implemented."""

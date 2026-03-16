@@ -44,3 +44,6 @@ gunicorn==23.0.0
 
 # Environment
 python-dotenv==1.0.1
+pytest
+ruff
+redis

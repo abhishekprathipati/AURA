@@ -18,11 +18,9 @@ Roles:
     admin    → everything
 ═══════════════════════════════════════════════════════════════
 """
-import hashlib
 import uuid
 from flask import session
 from utils.database import get_db
-
 
 def generate_anonymous_id() -> str:
     """
@@ -32,14 +30,13 @@ def generate_anonymous_id() -> str:
     """
     return f"STU_{uuid.uuid4().hex[:8].upper()}"
 
-
 def create_anonymous_id(email: str) -> str:
     """
     Return the stored anonymous ID for this email address.
 
     Look-up order:
       1. proctor_students collection (preferred — may be UUID-based)
-      2. MD5-based legacy formula (backward compatibility for old records)
+      2. student_anonymity mapping collection
 
     New students created since the UUID migration will always hit path 1.
     Older students whose records pre-date the migration fall back to path 2.
@@ -47,17 +44,38 @@ def create_anonymous_id(email: str) -> str:
     clean = email.lower().strip()
     try:
         db = get_db()
+        
+        # 1. Check proctor_students collection first for existing UUIDs
         record = db['proctor_students'].find_one(
             {'email': clean},
             {'anonymous_id': 1}
         )
         if record and record.get('anonymous_id'):
             return record['anonymous_id']
-    except Exception:
-        pass
-    # Legacy fallback: deterministic MD5 hash (existing pre-migration students)
-    h = int(hashlib.md5(clean.encode()).hexdigest(), 16) % 100000
-    return f"STU_{h:05d}"
+            
+        # 2. Check student_anonymity mapping collection
+        anon_mapping = db['student_anonymity'].find_one({'email': clean})
+        if anon_mapping and anon_mapping.get('anonymous_id'):
+            return anon_mapping['anonymous_id']
+            
+        # 3. If neither exists, generate completely secure random UUID
+        new_anonymous_id = generate_anonymous_id()
+
+        # Persist the mapping atomically (upsert) to prevent race-condition
+        # duplicates when two requests arrive simultaneously for the same email.
+        db['student_anonymity'].update_one(
+            {'email': clean},
+            {'$setOnInsert': {'email': clean, 'anonymous_id': new_anonymous_id}},
+            upsert=True,
+        )
+        # Re-read so we return whichever ID was actually stored
+        # (ours or the concurrent request's)
+        final = db['student_anonymity'].find_one({'email': clean})
+        return final['anonymous_id'] if final else new_anonymous_id
+        
+    except Exception as e:
+        # DB failure is now a terminal error for ID resolution to prevent data splitting
+        raise RuntimeError(f"Critical access control failure: Could not resolve anonymous ID for {email}: {e}")
 
 
 def get_current_user() -> dict:

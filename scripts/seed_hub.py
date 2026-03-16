@@ -7,9 +7,9 @@ demo data: peer users, connections, groups, events, resources, and feed.
 
 Usage
 ─────
-    python scripts/tools/seed_hub.py                       # dry-run check
-    python scripts/tools/seed_hub.py --seed                # actually seed
-    python scripts/tools/seed_hub.py --seed --force        # re-seed even if data exists
+    python scripts/seed_hub.py                       # dry-run check
+    python scripts/seed_hub.py --seed                # actually seed
+    python scripts/seed_hub.py --seed --force        # re-seed even if data exists
 
 This is intentionally a separate script rather than auto-run inside a route,
 because database seeding is a deployment/admin concern, not a request concern.
@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 # ── Bootstrap Flask app context so we can use get_db() ──────────────────────
-ROOT = Path(__file__).parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from app import create_app  # noqa: E402  (app-level import after sys.path fix)
@@ -141,7 +141,7 @@ def seed_hub(db, force: bool = False) -> dict[str, int]:
             db['users'].insert_one({
                 'email': peer['email'],
                 'name': peer['name'],
-                'password': generate_password_hash('demo123'),
+                'hashed_password': generate_password_hash('demo123'),
                 'role': 'student',
                 'department': peer['dept'],
                 'year': peer['year'],

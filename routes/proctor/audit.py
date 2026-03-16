@@ -33,8 +33,16 @@ def get_audit_logs():
     since_date = datetime.utcnow() - timedelta(days=days)
 
     query = {'timestamp': {'$gte': since_date}}
-    if proctor_id:
+
+    # RBAC: scope audit logs based on role
+    current_user = get_current_user()
+    user_role = current_user.get('role', 'proctor') if current_user else 'proctor'
+    if user_role != 'hod':
+        # Non-HOD proctors can only see their own actions
+        query['proctor_id'] = session.get('user_email', '')
+    elif proctor_id:
         query['proctor_id'] = proctor_id
+
     if action_type:
         query['action_type'] = action_type
 
@@ -405,11 +413,11 @@ def create_test_incidents():
         upsert=True
     )
     
-    print(f"âœ… Created {len(incidents)} test incidents")
-    print(f"   - HIGH risk: 5 (all unreviewed)")
-    print(f"   - MEDIUM risk: 12 (8 unreviewed, 4 reviewed)")
-    print(f"   - LOW risk: 13 (varied status)")
-    print(f"   - Active alerts: {unreviewed_count}")
+    current_app.logger.info("✅ Created %s test incidents", len(incidents))
+    current_app.logger.info("   - HIGH risk: 5 (all unreviewed)")
+    current_app.logger.info("   - MEDIUM risk: 12 (8 unreviewed, 4 reviewed)")
+    current_app.logger.info("   - LOW risk: 13 (varied status)")
+    current_app.logger.info("   - Active alerts: %s", unreviewed_count)
     
     return len(incidents)
 

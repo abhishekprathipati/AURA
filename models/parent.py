@@ -9,20 +9,29 @@ class ParentModel:
     @staticmethod
     def create_parent(db, student_roll, parent_name, parent_phone,
                       relationship='parent', parent_email=''):
-        """Create a new parent account (OTP-based, no password required)"""
+        """Create a new parent account (OTP-based, no password required).
+        Uses upsert on parent_phone to prevent duplicate accounts from
+        concurrent registration requests (race-condition safe)."""
         parent_data = {
             'student_roll': student_roll,
             'parent_name': parent_name,
             'parent_phone': parent_phone,
             'parent_email': parent_email,
-            'relationship': relationship,  # father, mother, guardian
+            'relationship': relationship,
             'auth_type': 'otp',
             'created_at': datetime.utcnow(),
             'is_active': True,
             'notifications_enabled': True
         }
-        result = db[ParentModel.collection_name].insert_one(parent_data)
-        return result.inserted_id
+        result = db[ParentModel.collection_name].update_one(
+            {'parent_phone': parent_phone},
+            {'$setOnInsert': parent_data},
+            upsert=True,
+        )
+        if result.upserted_id:
+            return result.upserted_id
+        existing = db[ParentModel.collection_name].find_one({'parent_phone': parent_phone})
+        return existing['_id'] if existing else None
 
     @staticmethod
     def find_by_student_roll(db, student_roll):

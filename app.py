@@ -2,8 +2,6 @@ from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env file FIRST
 
 from flask import Flask, redirect, session, render_template, request, jsonify
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from routes import init_routes
 from flask_mail import Mail
@@ -11,7 +9,7 @@ from models import init_models
 from utils.database import init_db
 from config import Config
 import os, logging
-
+from utils.auth_helpers import generate_csrf_token
 
 def _is_production_env() -> bool:
     return (Config.ENV or '').strip().lower() == 'production'
@@ -23,6 +21,9 @@ def _runtime_readiness_checks() -> None:
 
     if _is_production_env() and not os.getenv('SECRET_KEY'):
         issues.append('SECRET_KEY is not set in environment; generated fallback will rotate on restart')
+
+    if _is_production_env() and not Config.SESSION_COOKIE_SECURE:
+        issues.append('SESSION_COOKIE_SECURE is False in production; set SESSION_COOKIE_SECURE=true for HTTPS deployments')
 
     if _is_production_env() and Config.RATELIMIT_STORAGE_URI.startswith('memory://'):
         issues.append('RATELIMIT_STORAGE_URI uses memory backend in production (set Redis for multi-instance consistency)')
@@ -70,12 +71,15 @@ if Config.PROXY_FIX_ENABLED:
              Config.PROXY_FIX_X_FOR, Config.PROXY_FIX_X_PROTO, Config.PROXY_FIX_X_HOST)
 
 # ── Rate limiter (memory in dev, Redis in prod) ──
-limiter = Limiter(
-    app=app,
-    key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
-    storage_uri=Config.RATELIMIT_STORAGE_URI,
-)
+from utils.rate_limit import limiter
+# For older versions of flask_limiter, we might need to set storage options differently
+# Limiter(app=...) was deprecated, init_app is standard, but storage_uri cannot always be passed to init_app.
+# So we can set the app config directly before init.
+app.config['RATELIMIT_STORAGE_URL'] = Config.RATELIMIT_STORAGE_URI
+# Also support the newer configuration standard string:
+app.config['RATELIMIT_STORAGE_URI'] = Config.RATELIMIT_STORAGE_URI
+
+limiter.init_app(app)
 app.limiter = limiter
 
 # ── Email ──
@@ -83,7 +87,14 @@ mail = Mail(app)
 
 # ── SocketIO ──
 _cors_origins = os.getenv('CORS_ORIGINS', '').strip()
-cors_allowed = _cors_origins.split(',') if _cors_origins else '*'
+if _cors_origins:
+    cors_allowed = _cors_origins.split(',')
+elif _is_production_env():
+    # In production, don't allow wildcard CORS — require explicit config
+    cors_allowed = []
+    log.warning('CORS_ORIGINS not set in production; SocketIO will reject cross-origin requests')
+else:
+    cors_allowed = '*'  # Dev convenience
 socketio = SocketIO(app, cors_allowed_origins=cors_allowed, async_mode='threading',
                     logger=False, engineio_logger=False)
 
@@ -92,8 +103,15 @@ init_db()
 init_models()
 init_routes(app)
 _runtime_readiness_checks()
-log.info('App initialised  (env=%s, debug=%s, limiter=%s)',
-         Config.ENV, Config.DEBUG, Config.RATELIMIT_STORAGE_URI)
+
+@app.context_processor
+def inject_csrf_token():
+    return dict(csrf_token=generate_csrf_token)
+
+@app.before_request
+def ensure_csrf_token():
+    if 'csrf_token' not in session:
+        generate_csrf_token()
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  SECURITY HEADERS
@@ -383,7 +401,7 @@ def handle_send_dm(data):
     }
     db['peer_messages'].insert_one(msg_doc)
 
-    name = s.get('user_name', email.split('@')[0]).split()[0]
+    name = (s.get('user_name') or email.split('@')[0] or 'User').split()[0]
     payload = {
         'from': email, 'to': peer, 'message': text,
         'sender_name': name, 'mine': False, 'seen': False,
@@ -423,7 +441,7 @@ def handle_send_group_msg(data):
         return
 
     now = datetime.utcnow()
-    name = s.get('user_name', email.split('@')[0]).split()[0]
+    name = (s.get('user_name') or email.split('@')[0] or 'User').split()[0]
     db['group_messages'].insert_one({
         'group_id': gid, 'sender_email': email,
         'sender_name': name, 'message': text, 'created_at': now,

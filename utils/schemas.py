@@ -48,12 +48,37 @@ class ChatMessageRequest(BaseModel):
 
 # ── Wellness / mood ───────────────────────────────────────────────────────────
 
-class WellnessLogRequest(BaseModel):
+class WellnessCheckinRequest(BaseModel):
     """Mood / stress log submitted from the student dashboard."""
 
-    mood: str = Field(..., min_length=1, max_length=50, strip_whitespace=True)
-    stress_score: Optional[int] = Field(None, ge=0, le=100)
-    notes: Optional[str] = Field(None, max_length=500, strip_whitespace=True)
+    mood: int = Field(..., ge=1, le=5)
+    stress: int = Field(..., ge=0, le=100)
+    notes: str = Field("", max_length=500, strip_whitespace=True)
+
+class ScheduleSessionRequest(BaseModel):
+    """Booking a 1-on-1 counseling session."""
+    date: str = Field(..., min_length=1, max_length=20, strip_whitespace=True)
+    time: str = Field(..., min_length=1, max_length=20, strip_whitespace=True)
+    type: str = Field("general", max_length=50, strip_whitespace=True)
+    notes: str = Field("", max_length=500, strip_whitespace=True)
+
+class SupportRequestSchema(BaseModel):
+    """Requesting immediate support."""
+    notes: str = Field("", max_length=1000, strip_whitespace=True)
+
+class MoodUpdateRequest(BaseModel):
+    mood: str = Field("calm", max_length=50, strip_whitespace=True)
+
+class JournalEntryRequest(BaseModel):
+    entry: str = Field(..., min_length=1, max_length=2000, strip_whitespace=True)
+
+class QuickActionRequest(BaseModel):
+    action: str = Field(..., max_length=50, strip_whitespace=True)
+
+class GrievanceRequest(BaseModel):
+    subject: str = Field(..., min_length=1, max_length=200, strip_whitespace=True)
+    description: str = Field(..., min_length=1, max_length=2000, strip_whitespace=True)
+
 
 
 # ── Student registration ──────────────────────────────────────────────────────

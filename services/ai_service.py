@@ -66,7 +66,7 @@ GROQ_API_KEY     = os.getenv('GROQ_API_KEY',     '').strip()
 DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', '').strip()
 STRUCTURED_RESPONSES = os.getenv('AURA_STRUCTURED_RESPONSES', 'true').strip().lower() == 'true'
 REQUIRE_AI = os.getenv('AURA_REQUIRE_AI', 'false').strip().lower() == 'true'
-RESPOND_DYNAMically = os.getenv('AURA_DYNAMIC_LENGTH', 'true').strip().lower() == 'true'
+RESPOND_DYNAMICALLY = os.getenv('AURA_DYNAMIC_LENGTH', 'true').strip().lower() == 'true'
 
 # Initialize Gemini client
 client = None
@@ -116,6 +116,15 @@ if DEEPSEEK_API_KEY and OpenAIClient:
     except Exception as e:
         logger.error(f"Failed to configure DeepSeek: {e}")
         deepseek_client = None
+
+
+# Eager Load Model if configured (prevents first-request latency)
+if ENABLE_LOCAL_EMOTION_MODEL and os.getenv('AURA_EAGER_MODEL_LOAD', 'false').lower() == 'true':
+    try:
+        get_emotion_model()
+        logger.info("✓ Emotion model pre-loaded successfully (Eager Load)")
+    except Exception as e:
+        logger.warning(f"Failed to eager load emotion model: {e}")
 
 
 def _local_fallback(user_message: str, style: str = 'concise') -> str:
@@ -245,7 +254,7 @@ def _classify_request(user_message: str, chat_history: Optional[List[Dict[str, s
         word_count = len(words)
         greetings = {"hi", "hello", "hey", "yo", "hiya", "sup", "hi!", "hello!", "hey!"}
 
-        if not RESPOND_DYNAMically:
+        if not RESPOND_DYNAMICALLY:
             # Respect global toggle: fall back to configured STRUCTURED/concise behavior
             return 'structured' if STRUCTURED_RESPONSES else 'concise'
 
@@ -282,7 +291,7 @@ def predict_emotion_and_stress(user_message: str) -> tuple:
     emotion_pipeline = get_emotion_model() if 'pipeline' in globals() and pipeline else None
     
     if not emotion_pipeline:
-        return "Unknown", 50
+        return "Unknown", 50, {}
         
     try:
         scores = emotion_pipeline(user_message)[0]
@@ -313,13 +322,17 @@ def predict_emotion_and_stress(user_message: str) -> tuple:
         predicted_mood = mood_map.get(emo_name, "Neutral")
         
         weighted_stress = 0.0
+        # Sort scores by probability and take top 8 for the radar chart
+        sorted_scores = sorted(scores, key=lambda x: x['score'], reverse=True)
+        top_emotions = {s['label']: round(s['score'], 4) for s in sorted_scores[:8]}
+        
         for emo in scores:
             weighted_stress += emo['score'] * stress_map.get(emo['label'], 50)
             
-        return predicted_mood, min(100, max(0, int(round(weighted_stress))))
+        return predicted_mood, min(100, max(0, int(round(weighted_stress)))), top_emotions
     except Exception as e:
         logger.error(f"Failed to run local emotion model: {e}")
-        return "Unknown", 50
+        return "Unknown", 50, {}
 
 
 def generate_mental_response(

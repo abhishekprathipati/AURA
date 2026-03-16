@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, request, jsonify, session
+from flask import Blueprint, render_template, request, jsonify, session, current_app
 from utils.auth_helpers import login_required, demo_restricted, is_demo_account, DEMO_CHAT_LIMIT, DEMO_GAME_TIME_LIMIT
 from utils.database import get_db
 from utils.access_control import create_anonymous_id
 from utils.helpers import safe_error, contains_blocked_content
+from utils.rate_limit import apply_rate_limit, Limits
 from models.mood import MoodModel
 from models.stress import StressModel
 from models.grievance import GrievanceModel
@@ -34,8 +35,12 @@ def bucket_by_day(history):
     buckets = OrderedDict()
     
     for item in sorted(history, key=lambda x: x["timestamp"]):
-        # Extract date (ignoring time)
-        dt = datetime.fromisoformat(item["timestamp"].replace('Z', '+00:00'))
+        # Handle both string timestamps and datetime objects from MongoDB
+        ts = item["timestamp"]
+        if isinstance(ts, str):
+            dt = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+        else:
+            dt = ts  # Already a datetime object
         day = dt.date()
         buckets[day] = item  # Overwrite = keep latest
     
@@ -125,48 +130,25 @@ def get_current_wellness():
         if not user_email:
             return jsonify({'error': 'Not authenticated'}), 401
         
-        db = get_db()
-        
-        # Get latest mood entry
-        mood_coll = db['student_wellness']
-        latest_mood = mood_coll.find_one(
-            {'student_id': user_email, 'data_type': 'mood'},
-            sort=[('timestamp', -1)]
-        )
-        
-        # Calculate mood trend (no risk labels - just neutral descriptors)
-        mood_trends = list(mood_coll.find(
-            {'student_id': user_email, 'data_type': 'mood'},
-            sort=[('timestamp', -1)],
-            limit=5
-        ))
-        
-        mood_value = latest_mood.get('value', 3) if latest_mood else 3
-        mood_trend = 'stable'
-        if len(mood_trends) >= 2:
-            if mood_trends[0]['value'] > mood_trends[-1]['value']:
-                mood_trend = 'improving'
-            elif mood_trends[0]['value'] < mood_trends[-1]['value']:
-                mood_trend = 'declining'
-        
-        # Neutral mood labels (never alarming)
-        mood_labels = {1: 'Very Low', 2: 'Low', 3: 'Neutral', 4: 'Good', 5: 'Excellent'}
+        from services.student_service import get_current_wellness_summary
+        summary = get_current_wellness_summary(user_email)
         
         # Live-compute stress using the dynamic engine
         stress_result = calculate_dynamic_stress(user_email)
         
-        # Get check-in count for today
-        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-        checkins_today = mood_coll.count_documents({
-            'student_id': user_email,
-            'timestamp': {'$gte': today_start}
-        })
-        
+        # Fetch latest emotion distribution from the most recent mental chat
+        db = get_db()
+        latest_log = db['stress_logs'].find_one(
+            {'user_email': user_email},
+            sort=[('timestamp', -1)]
+        )
+        latest_emotions = latest_log.get('emotion_distribution', {}) if latest_log else {}
+
         return jsonify({
             'mood': {
-                'value': mood_value,
-                'trend': mood_trend,
-                'label': mood_labels.get(mood_value, 'Neutral')
+                'value': summary['mood_value'],
+                'trend': summary['mood_trend'],
+                'label': summary['mood_label']
             },
             'stress': {
                 'value': stress_result['score'],
@@ -179,12 +161,13 @@ def get_current_wellness():
                 'dominant_factor': stress_result.get('dominant_factor', ''),
                 'explanation': stress_result.get('explanation', ''),
             },
-            'checkins_today': checkins_today,
+            'latest_emotions': latest_emotions,
+            'checkins_today': summary['checkins_today'],
             'last_checkin': stress_result['updated_at']
         }), 200
         
     except Exception as e:
-        print(f"[ERROR] get_current_wellness: {str(e)}")
+        current_app.logger.error("get_current_wellness error: %s", e, exc_info=True)
         return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
@@ -199,57 +182,17 @@ def get_wellness_activities():
         if not user_email:
             return jsonify({'error': 'Not authenticated'}), 401
 
-        db = get_db()
-        coll = db['student_wellness']
-
-        now = datetime.utcnow()
-        start_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        start_week = now - timedelta(days=7)
-        start_prev_week = now - timedelta(days=14)
-        end_prev_week = now - timedelta(days=7)
-
-        # Counts (any wellness entry)
-        today_count = coll.count_documents({
-            'student_id': user_email,
-            'timestamp': {'$gte': start_today}
-        })
-
-        week_count = coll.count_documents({
-            'student_id': user_email,
-            'timestamp': {'$gte': start_week}
-        })
-
-        # Weekly average of stress values
-        week_stress = list(coll.find({
-            'student_id': user_email,
-            'data_type': 'stress',
-            'timestamp': {'$gte': start_week}
-        }))
-        weekly_avg_val = int(sum([d.get('value', 0) for d in week_stress]) / len(week_stress)) if week_stress else 0
-
-        prev_week_stress = list(coll.find({
-            'student_id': user_email,
-            'data_type': 'stress',
-            'timestamp': {'$gte': start_prev_week, '$lt': end_prev_week}
-        }))
-        prev_week_avg_val = int(sum([d.get('value', 0) for d in prev_week_stress]) / len(prev_week_stress)) if prev_week_stress else 0
-
-        # Percent change vs previous week
-        if prev_week_avg_val > 0:
-            change_ratio = (weekly_avg_val - prev_week_avg_val) / prev_week_avg_val
-            pct = int(change_ratio * 100)
-            weekly_change = f"+{pct}%" if pct > 0 else f"{pct}%"
-        else:
-            weekly_change = "0%"
+        from services.student_service import get_wellness_activities_summary
+        summary = get_wellness_activities_summary(user_email)
 
         return jsonify({
-            'today': today_count,
-            'week': week_count,
-            'weekly_average': weekly_avg_val,
-            'weekly_change': weekly_change
+            'today': summary['today_count'],
+            'week': summary['week_count'],
+            'weekly_average': summary['weekly_avg_val'],
+            'weekly_change': summary['weekly_change']
         }), 200
     except Exception as e:
-        print(f"[ERROR] get_wellness_activities: {str(e)}")
+        current_app.logger.error("get_wellness_activities error: %s", e, exc_info=True)
         return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
@@ -268,58 +211,21 @@ def submit_wellness_checkin():
         if not user_email:
             return jsonify({'error': 'Not authenticated'}), 401
         
-        data = request.get_json() or {}
-        mood = int(data.get('mood', 3))
-        stress = int(data.get('stress', 50))
-        notes = data.get('notes', '').strip()
+        from utils.schemas import WellnessCheckinRequest, ValidationError
+        try:
+            req = WellnessCheckinRequest.model_validate(request.get_json() or {})
+        except ValidationError as exc:
+            return jsonify({'error': exc.errors()[0]['msg']}), 400
+            
+        mood = req.mood
+        stress = req.stress
+        notes = req.notes
         
-        # Validation
-        if not (1 <= mood <= 5):
-            return jsonify({'error': 'Mood must be 1-5'}), 400
-        if not (0 <= stress <= 100):
-            return jsonify({'error': 'Stress must be 0-100'}), 400
-        
-        db = get_db()
-        
-        # Store wellness entries for BOTH mood and stress (separate docs)
-        now_ts = datetime.utcnow()
-        mood_entry = {
-            'student_id': user_email,
-            'data_type': 'mood',
-            'value': mood,
-            'notes': notes,
-            'timestamp': now_ts,
-            'source': 'student_checkin'
-        }
-        stress_entry = {
-            'student_id': user_email,
-            'data_type': 'stress',
-            'value': stress,
-            'notes': notes,
-            'timestamp': now_ts,
-            'source': 'student_checkin'
-        }
-        db['student_wellness'].insert_many([mood_entry, stress_entry])
-
-        # Bridge write: also update moods + stress collections so the
-        # stress engine (which reads from moods/stress, not student_wellness) picks this up
-        mood_labels = {1: 'very_low', 2: 'low', 3: 'neutral', 4: 'happy', 5: 'excited'}
-        db['moods'].insert_one({
-            'user_email': user_email,
-            'mood': mood_labels.get(mood, 'neutral'),
-            'intensity': mood * 2,   # convert 1-5 scale to 2-10 scale
-            'source': 'wellness_checkin',
-            'created_at': now_ts
-        })
-        db['stress'].insert_one({
-            'user_email': user_email,
-            'score': stress,
-            'source': 'wellness_checkin',
-            'created_at': now_ts
-        })
+        from services.student_service import record_wellness_checkin
+        record_wellness_checkin(user_email, mood, stress, notes)
         
         # TRIGGER: Hidden signal pipeline (student never sees this)
-        print(f"[SIGNAL PIPELINE] New check-in from {user_email}: mood={mood}, stress={stress}")
+        current_app.logger.info("[SIGNAL PIPELINE] New check-in from %s: mood=%s, stress=%s", user_email, mood, stress)
         evaluate_risk_signals(user_email, {'mood': mood, 'stress': stress, 'notes': notes})
         
         # RESPONSE: Positive, non-threatening confirmation
@@ -331,7 +237,7 @@ def submit_wellness_checkin():
         }), 200
         
     except Exception as e:
-        print(f"[ERROR] submit_wellness_checkin: {str(e)}")
+        current_app.logger.error("submit_wellness_checkin error: %s", e, exc_info=True)
         return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
@@ -341,6 +247,7 @@ def submit_wellness_checkin():
 
 @student_bp.route('/api/support/urgent', methods=['POST'])
 @login_required
+@apply_rate_limit(Limits.STRICT)
 @demo_restricted
 def urgent_support():
     """
@@ -373,7 +280,7 @@ def urgent_support():
             'Student pressed Urgent Help — immediate assistance needed'
         )
 
-        print(f"[URGENT HELP] Crisis request from {anonymous_id}")
+        current_app.logger.warning("[URGENT HELP] Crisis request from %s", anonymous_id)
 
         return jsonify({
             'success': True,
@@ -381,7 +288,7 @@ def urgent_support():
         }), 200
 
     except Exception as e:
-        print(f"[ERROR] urgent_support: {str(e)}")
+        current_app.logger.error("urgent_support error: %s", e, exc_info=True)
         return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
@@ -398,14 +305,16 @@ def schedule_session():
         if not user_email:
             return jsonify({'error': 'Not authenticated'}), 401
 
-        data = request.get_json() or {}
-        session_date = data.get('date', '')
-        session_time = data.get('time', '')
-        session_type = data.get('type', 'general')
-        session_notes = data.get('notes', '').strip()
-
-        if not session_date or not session_time:
-            return jsonify({'error': 'Date and time are required'}), 400
+        from utils.schemas import ScheduleSessionRequest, ValidationError
+        try:
+            req = ScheduleSessionRequest.model_validate(request.get_json() or {})
+        except ValidationError as exc:
+            return jsonify({'error': exc.errors()[0]['msg']}), 400
+            
+        session_date = req.date
+        session_time = req.time
+        session_type = req.type
+        session_notes = req.notes
 
         db = get_db()
         anonymous_id = create_anonymous_student_id(user_email)
@@ -430,7 +339,7 @@ def schedule_session():
             f'Session booked: {session_date} at {session_time} ({session_type})'
         )
 
-        print(f"[SESSION BOOKED] {anonymous_id} → {session_date} {session_time}")
+        current_app.logger.info("[SESSION BOOKED] %s → %s %s", anonymous_id, session_date, session_time)
 
         return jsonify({
             'success': True,
@@ -439,7 +348,49 @@ def schedule_session():
         }), 200
 
     except Exception as e:
-        print(f"[ERROR] schedule_session: {str(e)}")
+        current_app.logger.error("schedule_session error: %s", e, exc_info=True)
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
+
+
+@student_bp.route('/api/stress/forecast', methods=['GET'])
+@login_required
+def get_stress_forecast():
+    """
+    STUDENT-FACING: Get a 3-day stress forecast.
+    """
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not authenticated'}), 401
+
+        from services.prediction_service import forecast_stress
+        forecast_data = forecast_stress(user_email)
+
+        return jsonify({'success': True, 'data': forecast_data}), 200
+
+    except Exception as e:
+        current_app.logger.error("get_stress_forecast error: %s", e, exc_info=True)
+        return jsonify({'error': safe_error(e, 'student_api')}), 500
+
+
+@student_bp.route('/api/wellness/burnout', methods=['GET'])
+@login_required
+def get_burnout_analysis():
+    """
+    STUDENT-FACING: Get burnout risk assessment.
+    """
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not authenticated'}), 401
+
+        from services.burnout_service import analyze_burnout_risk
+        burnout_data = analyze_burnout_risk(user_email)
+
+        return jsonify({'success': True, 'data': burnout_data}), 200
+
+    except Exception as e:
+        current_app.logger.error("get_burnout_analysis error: %s", e, exc_info=True)
         return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
@@ -469,6 +420,7 @@ def get_my_sessions():
 
 @student_bp.route('/api/support/request', methods=['POST'])
 @login_required
+@apply_rate_limit(Limits.MODERATE)
 @demo_restricted
 def request_support():
     """
@@ -482,8 +434,13 @@ def request_support():
         if not user_email:
             return jsonify({'error': 'Not authenticated'}), 401
         
-        data = request.get_json() or {}
-        notes = data.get('notes', '').strip()
+        from utils.schemas import SupportRequestSchema, ValidationError
+        try:
+            req = SupportRequestSchema.model_validate(request.get_json() or {})
+        except ValidationError as exc:
+            return jsonify({'error': exc.errors()[0]['msg']}), 400
+            
+        notes = req.notes
         
         db = get_db()
         
@@ -499,7 +456,7 @@ def request_support():
         
         # TRIGGER: Create immediate incident (student knows about this)
         anonymous_id = create_anonymous_student_id(user_email)
-        print(f"[SUPPORT REQUEST] From {anonymous_id}: {notes}")
+        current_app.logger.info("[SUPPORT REQUEST] From %s: %s", anonymous_id, notes)
 
         result_id = create_proctor_incident(
             user_email,
@@ -515,7 +472,7 @@ def request_support():
         }), 200
         
     except Exception as e:
-        print(f"[ERROR] request_support: {str(e)}")
+        current_app.logger.error("request_support error: %s", e, exc_info=True)
         return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
@@ -540,7 +497,7 @@ def evaluate_risk_signals(student_id, wellness_entry):
         # Signal 1: Stress spike (>30 pts in 48h = HIGH risk)
         stress_spike = check_stress_spike(student_id, wellness_entry.get('stress', 0))
         if stress_spike:
-            print(f"[SIGNAL PIPELINE] STRESS SPIKE detected for {student_id}")
+            current_app.logger.warning("[SIGNAL PIPELINE] STRESS SPIKE detected for %s", student_id)
             create_proctor_incident(
                 student_id,
                 'stress_spike',
@@ -551,7 +508,7 @@ def evaluate_risk_signals(student_id, wellness_entry):
         # Signal 2: Sustained low mood (3+ entries ≤2 = MEDIUM risk)
         low_mood_pattern = check_low_mood_pattern(student_id)
         if low_mood_pattern:
-            print(f"[SIGNAL PIPELINE] LOW MOOD PATTERN detected for {student_id}")
+            current_app.logger.info("[SIGNAL PIPELINE] LOW MOOD PATTERN detected for %s", student_id)
             create_proctor_incident(
                 student_id,
                 'low_mood_pattern',
@@ -562,7 +519,7 @@ def evaluate_risk_signals(student_id, wellness_entry):
         # Signal 3: Distress language (stress ≥85 + keywords = HIGH risk)
         distress_language = check_distress_language(student_id, wellness_entry.get('stress', 0), wellness_entry.get('notes', ''))
         if distress_language:
-            print(f"[SIGNAL PIPELINE] DISTRESS LANGUAGE detected for {student_id}")
+            current_app.logger.warning("[SIGNAL PIPELINE] DISTRESS LANGUAGE detected for %s", student_id)
             create_proctor_incident(
                 student_id,
                 'distress_language',
@@ -575,10 +532,10 @@ def evaluate_risk_signals(student_id, wellness_entry):
         if current_stress > 85:
             auto_escalated = auto_escalate_critical_stress(student_id, current_stress, db)
             if auto_escalated:
-                print(f"[SIGNAL PIPELINE] AUTO-ESCALATION triggered for {student_id} (stress={current_stress})")
+                current_app.logger.warning("[SIGNAL PIPELINE] AUTO-ESCALATION triggered for %s (stress=%s)", student_id, current_stress)
         
     except Exception as e:
-        print(f"[ERROR] evaluate_risk_signals: {str(e)}")
+        current_app.logger.error("evaluate_risk_signals error: %s", e, exc_info=True)
 
 
 def check_stress_spike(student_id, current_stress):
@@ -601,7 +558,7 @@ def check_stress_spike(student_id, current_stress):
         return delta > 30
         
     except Exception as e:
-        print(f"[ERROR] check_stress_spike: {str(e)}")
+        current_app.logger.error(f"check_stress_spike error: {e}")
         return False
 
 
@@ -622,7 +579,7 @@ def check_low_mood_pattern(student_id):
         return low_count >= 3
         
     except Exception as e:
-        print(f"[ERROR] check_low_mood_pattern: {str(e)}")
+        current_app.logger.error(f"check_low_mood_pattern error: {e}")
         return False
 
 
@@ -646,7 +603,7 @@ def check_distress_language(student_id, stress_level, notes):
         return any(keyword in notes_lower for keyword in distress_keywords)
         
     except Exception as e:
-        print(f"[ERROR] check_distress_language: {str(e)}")
+        current_app.logger.error(f"check_distress_language error: {e}")
         return False
 
 
@@ -680,7 +637,7 @@ def auto_escalate_critical_stress(student_id, stress_value, db):
             'timestamp': {'$gte': six_hours_ago}
         })
         if recent_escalation:
-            print(f"[AUTO-ESCALATION] Cooldown active for {anonymous_id}, skipping (last: {recent_escalation['timestamp']})")
+            current_app.logger.info(f"Auto-escalation cooldown active for {anonymous_id}")
             return False
 
         # ── 1. Create urgent support ticket (visible to proctor) ──
@@ -717,7 +674,7 @@ def auto_escalate_critical_stress(student_id, stress_value, db):
             'auto_triggered': True
         })
 
-        print(f"[AUTO-ESCALATION] Created urgent ticket + incident for {anonymous_id} | stress={stress_value}")
+        current_app.logger.info(f"Created urgent ticket + incident for {anonymous_id} | stress={stress_value}")
 
         # ── 3. Push real-time alert to proctor dashboard ──
         try:
@@ -732,12 +689,12 @@ def auto_escalate_critical_stress(student_id, stress_value, db):
                 'timestamp': datetime.utcnow().isoformat(),
             })
         except Exception as se:
-            print(f"[SOCKET] Proctor alert emit failed: {se}")
+            current_app.logger.warning(f"Proctor alert emit failed: {se}")
 
         return True
 
     except Exception as e:
-        print(f"[ERROR] auto_escalate_critical_stress: {str(e)}")
+        current_app.logger.error(f"auto_escalate_critical_stress error: {e}")
         return False
 
 
@@ -774,13 +731,14 @@ def create_proctor_incident(student_id, trigger_type, priority, details):
         
         result = db['risk_incidents'].insert_one(incident)
         
-        print(f"[SIGNAL PIPELINE] Created {priority} incident | ID: {incident_id} | Type: {trigger_type} | Student: {anonymous_id}")
+        current_app.logger.info(f"Created {priority} incident | ID: {incident_id} | Type: {trigger_type} | Student: {anonymous_id}")
+
         
         return result.inserted_id
         
     except Exception as e:
-        print(f"[ERROR] create_proctor_incident: {str(e)}")
-        return None
+        current_app.logger.error(f"create_proctor_incident error: {e}")
+        return False
 
 
 # ==========================================
@@ -814,13 +772,19 @@ def mood_today():
 
 @student_bp.route('/api/mood', methods=['POST'])
 @login_required
+@apply_rate_limit(Limits.MODERATE)
 @demo_restricted
 def update_mood():
     """Update user's mood and trigger stress recalculation."""
     try:
         user_email = session.get('user_email')
-        data = request.get_json() or {}
-        mood = data.get('mood', 'calm').lower()
+        from utils.schemas import MoodUpdateRequest, ValidationError
+        try:
+            req = MoodUpdateRequest.model_validate(request.get_json() or {})
+        except ValidationError as exc:
+            return jsonify({'error': exc.errors()[0]['msg']}), 400
+            
+        mood = req.mood.lower()
         
         db = get_db()
         db[MoodModel.collection_name].insert_one({
@@ -924,11 +888,13 @@ def save_journal():
         if not user_email:
             return jsonify({'error': 'Not authenticated'}), 401
 
-        data = request.get_json() or {}
-        entry = (data.get('entry') or '').strip()
+        from utils.schemas import JournalEntryRequest, ValidationError
+        try:
+            req = JournalEntryRequest.model_validate(request.get_json() or {})
+        except ValidationError as exc:
+            return jsonify({'error': exc.errors()[0]['msg']}), 400
 
-        if not entry:
-            return jsonify({'error': 'Entry cannot be empty'}), 400
+        entry = req.entry
 
         db = get_db()
         today = datetime.utcnow().strftime('%Y-%m-%d')
@@ -1035,7 +1001,7 @@ def stress_today():
             'updated_at': result['updated_at'],
         })
     except Exception as e:
-        print(f'[ERROR] stress_today: {e}')
+        current_app.logger.error("stress_today error: %s", e, exc_info=True)
         return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
@@ -1067,7 +1033,7 @@ def get_stress_level():
             'updated_at': result['updated_at'],
         })
     except Exception as e:
-        print(f'[ERROR] get_stress_level: {e}')
+        current_app.logger.error("get_stress_level error: %s", e, exc_info=True)
         return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
@@ -1138,7 +1104,7 @@ def calculate_wellness_streak(user_email, stress_coll):
                 break
         
         return streak
-    except:
+    except Exception:
         return 1
 
 
@@ -1171,17 +1137,20 @@ def generate_ai_insight(user_email, stress_coll, mood):
 
 @student_bp.route('/api/grievance', methods=['POST'])
 @login_required
+@apply_rate_limit(Limits.MODERATE)
 @demo_restricted
 def submit_grievance():
     """Submit a student grievance to the proctor queue."""
     try:
         user_email = session.get('user_email')
-        data = request.get_json(force=True) or {}
-        subject = (data.get('subject') or '').strip()
-        description = (data.get('description') or '').strip()
-
-        if not subject or not description:
-            return jsonify({'error': 'Subject and description are required'}), 400
+        from utils.schemas import GrievanceRequest, ValidationError
+        try:
+            req = GrievanceRequest.model_validate(request.get_json(force=True) or {})
+        except ValidationError as exc:
+            return jsonify({'error': exc.errors()[0]['msg']}), 400
+            
+        subject = req.subject
+        description = req.description
 
         db = get_db()
         db[GrievanceModel.collection_name].insert_one({
@@ -1215,7 +1184,7 @@ def stress_history():
             'stats': stats,
         })
     except Exception as e:
-        print(f'[ERROR] stress_history: {e}')
+        current_app.logger.error("stress_history error: %s", e, exc_info=True)
         return jsonify({'error': safe_error(e, 'student_api')}), 500
 
 
@@ -1227,8 +1196,13 @@ def quick_actions():
     Logs the action and returns appropriate message with stress reduction.
     """
     try:
-        data = request.get_json() or {}
-        action = (data.get('action') or '').lower()
+        from utils.schemas import QuickActionRequest, ValidationError
+        try:
+            req = QuickActionRequest.model_validate(request.get_json() or {})
+        except ValidationError as exc:
+            return jsonify({'error': exc.errors()[0]['msg']}), 400
+            
+        action = req.action.lower()
         messages = {
             'breathing': 'Great! Try a 1-minute box breathing now. In 4, hold 4, out 4.',
             'mood_check': 'Mood check logged. Remember to be kind to yourself!',
@@ -1315,6 +1289,9 @@ PREDEFINED_ROOMS = [
     {'_id': 'late_night', 'title': 'Late Night Chat'},
 ]
 
+# Set of valid room IDs for quick lookup
+_VALID_ROOM_IDS = {r['_id'] for r in PREDEFINED_ROOMS}
+
 # Profanity filter — delegates to shared utility in utils.helpers
 def contains_profanity(message):
     return contains_blocked_content(message)
@@ -1333,7 +1310,7 @@ def rate_limit_check(user_id):
         if time_diff.total_seconds() < 3:
             return False
         return True
-    except:
+    except Exception:
         return True
 
 @student_bp.route('/api/connection/rooms', methods=['GET'])
@@ -1352,6 +1329,8 @@ def get_connection_rooms():
 @login_required
 def get_room_messages(room_id):
     """Get messages from a specific room (last 50 messages)"""
+    if room_id not in _VALID_ROOM_IDS:
+        return jsonify({'error': 'Invalid room'}), 404
     try:
         db = get_db()
         coll = db['room_messages']
@@ -1385,6 +1364,8 @@ def get_room_messages(room_id):
 @demo_restricted
 def send_room_message(room_id):
     """Send a message to a room"""
+    if room_id not in _VALID_ROOM_IDS:
+        return jsonify({'error': 'Invalid room'}), 404
     try:
         user_id = session.get('user_email', 'unknown')
         message_text = request.json.get('message', '').strip()
@@ -1448,7 +1429,7 @@ def report_message(message_id):
         # Validate message_id format
         try:
             obj_id = ObjectId(message_id)
-        except:
+        except Exception:
             return jsonify({'error': 'Invalid message ID'}), 400
         
         # Mark message as reported
@@ -1603,5 +1584,5 @@ def get_my_academics():
         })
 
     except Exception as e:
-        print(f'[ERROR] get_my_academics: {e}')
+        current_app.logger.error("get_my_academics error: %s", e, exc_info=True)
         return jsonify({'error': safe_error(e, 'student_api')}), 500

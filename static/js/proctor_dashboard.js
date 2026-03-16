@@ -219,7 +219,7 @@
                     </div>
                     <div class="pd-list-content">
                         <div class="pd-list-title">${esc(inc.anonymous_student_id || inc.incident_type || 'Incident')}</div>
-                        <div class="pd-list-sub">${esc((inc.status || 'UNREVIEWED').replace(/_/g, ' '))} &bull; ${inc.time_since_trigger || timeAgo(inc.timestamp)}</div>
+                        <div class="pd-list-sub">${esc((inc.status || 'UNREVIEWED').replace(/_/g, ' '))} &bull; ${esc(inc.time_since_trigger || '') || timeAgo(inc.timestamp)}</div>
                     </div>
                     <div class="pd-list-right"><span class="pd-risk-pill is-${esc(level)}">${esc(level.toUpperCase())}</span></div>
                 </div>
@@ -236,7 +236,7 @@
 
         const data = tickets || [];
         const pending = data.filter(t => (t.status || 'pending') === 'pending').length;
-        badge.textContent = pending || data.length;
+        badge.textContent = pending > 0 ? pending : data.length;
 
         if (!data.length) {
             el.innerHTML = `<div class="pd-empty"><i class="fas fa-check-circle" aria-hidden="true"></i><p>No grievances submitted</p></div>`;
@@ -258,9 +258,9 @@
                     </div>
                     <div class="pd-list-content">
                         <div class="pd-list-title">${esc(subject)}</div>
-                        <div class="pd-list-sub">${esc(anon)} &bull; ${t.time_ago || timeAgo(t.created_at)}</div>
+                        <div class="pd-list-sub">${esc(anon)} &bull; ${esc(t.time_ago || '') || timeAgo(t.created_at)}</div>
                     </div>
-                    <div class="pd-list-right"><span class="pd-risk-pill is-${esc(st)}">${esc(st.replace('_', ' ').toUpperCase())}</span></div>
+                    <div class="pd-list-right"><span class="pd-risk-pill is-${esc(st)}">${esc(st.replace(/_/g, ' ').toUpperCase())}</span></div>
                 </div>
             `;
         }).join('');
@@ -329,8 +329,9 @@
 
     // ═══ MAIN DATA LOADER ═══
     async function loadDashboard() {
-        if (isRefreshing) return;
+        if (isRefreshing) return false;
         isRefreshing = true;
+        let success = false;
 
         try {
             ensureCriticalStatCard();
@@ -395,11 +396,13 @@
             }
 
             isFirstLoad = false;
+            success = true;
         } catch (err) {
             showToast('Network error — retrying in 60s', 'error');
         } finally {
             isRefreshing = false;
         }
+        return success;
     }
 
     // ═══ NAVIGATION ═══
@@ -445,10 +448,10 @@
             return;
         }
 
-        // Client-side validation
+        // Client-side validation (matches server: 10-15 digits, optional spaces/dashes)
         const phone = parentPhoneInput.value.trim();
-        if (phone && !/^\d{10}$/.test(phone)) {
-            showToast('Parent phone must be 10 digits', 'error');
+        if (phone && !/^[\d\s\-]{10,15}$/.test(phone)) {
+            showToast('Parent phone must be 10-15 digits (spaces/dashes allowed)', 'error');
             parentPhoneInput.focus();
             return;
         }
@@ -456,9 +459,18 @@
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...'; }
 
         try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            if (!csrfToken) {
+                showToast('Security token missing — please reload the page', 'error');
+                if (btn) { btn.disabled = false; btn.innerHTML = 'Add Student'; }
+                return;
+            }
             const res = await fetch(CONFIG.ENDPOINTS.addStudent, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
                 body: JSON.stringify({
                     email:               emailInput.value.trim(),
                     roll_number:         rollInput.value.trim(),
@@ -492,9 +504,9 @@
         const btn = $('[data-action="refresh"]');
         if (btn) btn.classList.add('is-spinning');
         showToast('Refreshing…', 'info');
-        await loadDashboard();
+        const ok = await loadDashboard();
         if (btn) btn.classList.remove('is-spinning');
-        showToast('Dashboard updated', 'success');
+        if (ok) showToast('Dashboard updated', 'success');
     }
 
     // ═══ KEYBOARD HANDLERS ═══

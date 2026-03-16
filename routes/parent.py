@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, session, redirec
 from utils.auth_helpers import login_required
 from utils.database import get_db
 from utils.helpers import safe_error
+from utils.rate_limit import apply_rate_limit, Limits
 from models.parent import ParentModel
 from models.user import UserModel
 from services.otp_service import OTPService
@@ -28,6 +29,7 @@ def login():
 
 
 @parent_bp.route('/api/send-otp', methods=['POST'])
+@apply_rate_limit(Limits.STRICT)
 def send_otp():
     """Step 1: Validate phone against student records and send OTP"""
     try:
@@ -71,9 +73,11 @@ def send_otp():
             'sms_sent': sms_sent
         }
 
-        # Include demo_otp whenever SMS was not actually delivered
+        # Include demo mode indicator but NEVER the raw OTP
         if not sms_sent:
-            response_data['demo_otp'] = otp
+            response_data['demo_mode'] = True
+            message = "SMS service is unavailable. Please check server logs for the security code (Demo Mode)."
+            response_data['message'] = message
 
         return jsonify(response_data), 200
 
@@ -82,6 +86,7 @@ def send_otp():
 
 
 @parent_bp.route('/api/verify-otp', methods=['POST'])
+@apply_rate_limit(Limits.STRICT)
 def verify_otp():
     """Step 2: Verify OTP and auto-login or prompt registration"""
     try:
@@ -138,6 +143,7 @@ def verify_otp():
 
 
 @parent_bp.route('/api/complete-registration', methods=['POST'])
+@apply_rate_limit(Limits.STRICT)
 def complete_registration():
     """Step 3: Complete new parent registration after OTP verification"""
     try:
@@ -176,7 +182,7 @@ def complete_registration():
         )
 
         # Set last_login on first registration
-        ParentModel.update_last_login(db, phone)
+        ParentModel.update_last_login(db, student_roll)
 
         # Auto-login the new parent
         session['parent_logged_in'] = True
@@ -398,9 +404,19 @@ def submit_complaint():
         subject = data.get('subject', '')
         description = data.get('description', '')
         priority = data.get('priority', 'medium')
-        
+
         if not subject or not description:
             return jsonify({'error': 'Subject and description required'}), 400
+
+        # Validate enum fields
+        if category not in ('general', 'academic', 'welfare', 'administrative', 'other'):
+            category = 'general'
+        if priority not in ('low', 'medium', 'high'):
+            priority = 'medium'
+
+        # Enforce length limits
+        subject = subject[:200]
+        description = description[:5000]
         
         db = get_db()
         
@@ -471,9 +487,15 @@ def submit_suggestion():
         title = data.get('title', '')
         description = data.get('description', '')
         category = data.get('category', 'general')
-        
+
         if not title or not description:
             return jsonify({'error': 'Title and description required'}), 400
+
+        # Validate enum and enforce length limits
+        if category not in ('general', 'academic', 'welfare', 'infrastructure', 'other'):
+            category = 'general'
+        title = title[:200]
+        description = description[:5000]
         
         db = get_db()
         

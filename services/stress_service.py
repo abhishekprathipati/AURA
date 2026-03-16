@@ -31,6 +31,9 @@ from models.stress import StressModel
 from models.chat import ChatModel
 from utils.alerts import send_institutional_alert
 import math
+import logging
+
+log = logging.getLogger(__name__)
 
 # ── Logistic Stabilization ───────────────────────────────────────────────────
 LOGISTIC_K = 0.08     # compression sensitivity
@@ -629,8 +632,8 @@ def calculate_dynamic_stress(user_email: str) -> Dict:
             'timestamp': now,
             'source': 'dynamic_engine_v3.1',
         })
-    except Exception:
-        pass
+    except Exception as e:
+        log.warning(f"Failed to insert student_wellness record: {e}")
 
     # ── 7. Multi-condition institutional alert ───────────────────────────
     # Trigger only when: score > 75 AND rising trend AND high volatility
@@ -640,14 +643,14 @@ def calculate_dynamic_stress(user_email: str) -> Dict:
             and signals.get('volatility', 0) > 55):
         try:
             send_institutional_alert(user_email, final_score)
-        except Exception:
-            pass
+        except Exception as e:
+            log.error(f"Failed to send institutional alert for {user_email}: {e}")
     # Also alert on critical regardless (safety net)
     elif final_score > 90:
         try:
             send_institutional_alert(user_email, final_score)
-        except Exception:
-            pass
+        except Exception as e:
+            log.error(f"Failed to send critical alert for {user_email}: {e}")
 
     return {
         'score': final_score,

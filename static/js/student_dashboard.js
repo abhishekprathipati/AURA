@@ -1,3 +1,16 @@
+// HTML escape helper to prevent XSS
+function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s ?? '';
+    return d.innerHTML;
+}
+
+// CSRF token for POST requests
+const _csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+function secureHeaders(extra = {}) {
+    return { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfToken, ...extra };
+}
+
 // Rolling average calculation for trend analysis
 function rollingAverage(values, window = 7) {
     return values.map((_, i) => {
@@ -32,8 +45,8 @@ function computeTrend(avgSeries) {
 function computeYAxisBounds(values) {
     if (!values.length) return { min: 0, max: 10 };
 
-    const min = Math.min(...values);
-    const max = Math.max(...values);
+    const min = values.reduce((a, b) => Math.min(a, b), Infinity);
+    const max = values.reduce((a, b) => Math.max(a, b), -Infinity);
 
     if (min === max) {
         return {
@@ -90,6 +103,12 @@ class AdvancedDashboard {
         this.loadDailyTip();
         this.initJournal();
         this.initGrievanceForm();
+        
+        // Phase 5.2: Stress Forecasting
+        this.loadStressForecast();
+
+        // Phase 5.3: Burnout Analysis
+        this.loadBurnoutAnalysis();
     }
 
     initDate() {
@@ -319,9 +338,51 @@ class AdvancedDashboard {
             }
         });
         this.charts.analytics.render();
+        
+        // Phase 5.1: Emotional Radar Chart
+        this.initEmotionRadarChart(foreColor, tooltipTheme);
 
         // Populate charts with already-loaded data (no async wait needed)
         this.populateCharts();
+    }
+
+    initEmotionRadarChart(foreColor, tooltipTheme) {
+        const chartEl = document.getElementById('emotionRadarChart');
+        if (!chartEl) return;
+
+        this.charts.emotions = new ApexCharts(chartEl, {
+            series: [{ name: 'Sentiment Intensity', data: [] }],
+            chart: {
+                type: 'radar',
+                height: 250,
+                toolbar: { show: false },
+                animations: { enabled: true, speed: 800 },
+                foreColor: foreColor
+            },
+            dataLabels: { enabled: true, style: { colors: [foreColor] } },
+            plotOptions: {
+                radar: {
+                    size: 80,
+                    polygons: {
+                        strokeColors: '#e8e8e8',
+                        fill: { colors: ['#f8f8f8', '#fff'] }
+                    }
+                }
+            },
+            colors: ['#6366f1'],
+            markers: { size: 4, colors: ['#fff'], strokeColor: '#6366f1', strokeWidth: 2 },
+            tooltip: { theme: tooltipTheme, y: { formatter: v => (v * 100).toFixed(1) + '%' } },
+            xaxis: {
+                categories: [],
+                labels: {
+                    show: true,
+                    style: { colors: foreColor, fontSize: '11px', fontWeight: 500 }
+                }
+            },
+            yaxis: { show: false, min: 0, max: 1 },
+            legend: { show: false }
+        });
+        this.charts.emotions.render();
     }
 
     populateCharts() {
@@ -560,6 +621,36 @@ class AdvancedDashboard {
             const span = tsEl.querySelector('span');
             if (span) span.textContent = 'Updated just now';
         }
+
+        // Update Emotional Radar
+        if (data.latest_emotions && Object.keys(data.latest_emotions).length > 0) {
+            this.updateEmotionRadar(data.latest_emotions);
+        } else {
+            const radarSection = document.getElementById('emotionRadarChart');
+            const noMsg = document.getElementById('noEmotionsMessage');
+            if (radarSection) radarSection.style.display = 'none';
+            if (noMsg) noMsg.style.display = 'block';
+        }
+    }
+
+    updateEmotionRadar(emotions) {
+        if (!this.charts.emotions) return;
+        
+        const radarSection = document.getElementById('emotionRadarChart');
+        const noMsg = document.getElementById('noEmotionsMessage');
+        if (radarSection) radarSection.style.display = 'block';
+        if (noMsg) noMsg.style.display = 'none';
+
+        const labels = Object.keys(emotions).map(e => e.charAt(0).toUpperCase() + e.slice(1));
+        const values = Object.values(emotions);
+
+        this.charts.emotions.updateOptions({
+            xaxis: { categories: labels }
+        });
+        this.charts.emotions.updateSeries([{
+            name: 'Sentiment Intensity',
+            data: values
+        }]);
     }
 
     updateSignalBars(signals) {
@@ -611,14 +702,14 @@ class AdvancedDashboard {
         if (weekEl) weekEl.textContent = data.week ?? 0;
         if (avgEl) avgEl.textContent = data.weekly_average ?? 0;
 
-        // Parse trend percentage
+        // Parse trend percentage (handle NaN for non-numeric values like "N/A")
         const trendStr = data.weekly_change ?? '0%';
-        const trendValue = parseInt(trendStr.replace('%', ''));
+        const trendValue = parseInt(trendStr.replace('%', '')) || 0;
 
         if (trendEl) {
             trendEl.textContent = trendStr;
-            // Color code: positive = green, negative = red
-            trendEl.style.color = trendValue >= 0 ? '#10b981' : '#ef4444';
+            // Color code: positive = green, negative = red, neutral = muted
+            trendEl.style.color = trendValue > 0 ? '#ef4444' : trendValue < 0 ? '#10b981' : '#64748b';
         }
 
         // Update trend icon direction
@@ -747,9 +838,11 @@ class AdvancedDashboard {
         });
         document.querySelectorAll('.btn-control').forEach(btn => {
             btn.addEventListener('click', () => {
+                const period = btn.dataset.period;
+                if (!period) return;
                 document.querySelectorAll('.btn-control').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                const days = btn.dataset.period.replace('d', '');
+                const days = period.replace('d', '');
                 this.loadDetailedHistory(days);
             });
         });
@@ -832,7 +925,7 @@ class AdvancedDashboard {
         submitBtn.disabled = true; submitBtn.innerHTML = '<svg viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" style=\"animation:spin 1s linear infinite\"><path d=\"M21 12a9 9 0 1 1-6.219-8.56\"/></svg> Submitting...';
         try {
             const response = await fetch('/student/api/support/request', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: `[${formData.category.toUpperCase()}:${formData.priority.toUpperCase()}] ${formData.subject}: ${formData.description}`, metadata: formData })
+                method: 'POST', headers: secureHeaders(), body: JSON.stringify({ notes: `[${formData.category.toUpperCase()}:${formData.priority.toUpperCase()}] ${formData.subject}: ${formData.description}`, metadata: formData })
             });
             const data = await response.json();
             if (response.ok && data.success) {
@@ -890,7 +983,7 @@ class AdvancedDashboard {
         try {
             const res = await fetch('/student/api/support/schedule', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: secureHeaders(),
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
@@ -917,8 +1010,8 @@ class AdvancedDashboard {
                 section.style.display = 'block';
                 container.innerHTML = data.sessions.slice(0, 5).map(s =>
                     `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface-muted);border-radius:8px;font-size:13px;">
-                        <span style="font-weight:500;color:var(--text);">${s.date} at ${s.time}</span>
-                        <span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:${s.status === 'scheduled' ? 'rgba(34,197,94,.15)' : 'rgba(100,116,139,.15)'};color:${s.status === 'scheduled' ? '#22c55e' : '#64748b'};">${s.status}</span>
+                        <span style="font-weight:500;color:var(--text);">${esc(s.date)} at ${esc(s.time)}</span>
+                        <span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:${s.status === 'scheduled' ? 'rgba(34,197,94,.15)' : 'rgba(100,116,139,.15)'};color:${s.status === 'scheduled' ? '#22c55e' : '#64748b'};">${esc(s.status)}</span>
                     </div>`
                 ).join('');
             } else {
@@ -998,8 +1091,14 @@ class AdvancedDashboard {
     // WELLNESS GOALS
     // ==============================
     initWellnessGoals() {
-        // Load saved goals from localStorage
-        const savedGoals = JSON.parse(localStorage.getItem('aura-goals-' + this.getTodayKey()) || '{}');
+        // Load saved goals from localStorage (with error handling for corrupted data)
+        let savedGoals = {};
+        try {
+            savedGoals = JSON.parse(localStorage.getItem('aura-goals-' + this.getTodayKey()) || '{}');
+        } catch (e) {
+            // Corrupted localStorage data, start fresh
+            savedGoals = {};
+        }
         const goalItems = document.querySelectorAll('.goal-item');
         let completedCount = 0;
 
@@ -1044,7 +1143,7 @@ class AdvancedDashboard {
         const fill = document.getElementById('goalsProgressFill');
         const text = document.getElementById('goalsCompleted');
 
-        if (fill) fill.style.width = `${(completed / total) * 100}%`;
+        if (fill) fill.style.width = total > 0 ? `${(completed / total) * 100}%` : '0%';
         if (text) text.textContent = completed;
     }
 
@@ -1132,7 +1231,7 @@ class AdvancedDashboard {
             try {
                 const res = await fetch('/student/api/journal', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: secureHeaders(),
                     body: JSON.stringify({ entry })
                 });
                 const data = await res.json();
@@ -1186,7 +1285,7 @@ class AdvancedDashboard {
             try {
                 const res = await fetch('/student/api/grievance', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: secureHeaders(),
                     body: JSON.stringify({ subject, description })
                 });
                 const data = await res.json();
@@ -1217,6 +1316,127 @@ class AdvancedDashboard {
                 }
             }
         });
+    }
+
+    // ==============================
+    // STRESS FORECASTING
+    // ==============================
+    async loadStressForecast() {
+        const container = document.getElementById('stressForecastContainer');
+        const insightEl = document.getElementById('forecastInsight');
+        const insightText = document.getElementById('forecastInsightText');
+        const confEl = document.getElementById('forecastConfidence');
+
+        if (!container) return;
+
+        try {
+            const res = await fetch('/student/api/stress/forecast');
+            const result = await res.json();
+
+            if (res.ok && result.success && result.data.forecast.length > 0) {
+                const data = result.data;
+                
+                // Update Confidence
+                if (confEl) confEl.textContent = `AI Confidence: ${data.confidence}%`;
+
+                // Render Forecast Items
+                container.innerHTML = data.forecast.map(item => {
+                    let color = '#22c55e'; // relax
+                    if (item.score > 75) color = '#ef4444'; // critical
+                    else if (item.score > 55) color = '#f97316'; // high
+                    else if (item.score > 35) color = '#eab308'; // moderate
+
+                    return `
+                        <div style="flex: 1; text-align: center; padding: 10px; background: var(--surface); border-radius: 12px; border: 1px solid var(--border); transition: transform 0.2s;">
+                            <div style="font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 600;">${esc(item.day)}</div>
+                            <div style="font-size: 20px; font-weight: 800; color: ${color}; margin: 4px 0;">${parseInt(item.score) || 0}</div>
+                            <div style="font-size: 9px; color: var(--muted);">Projected</div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Render Insight
+                if (insightEl && insightText) {
+                    let msg = "";
+                    if (data.trend === 'rising') {
+                        msg = "Stress levels are trending upward. Consider scheduling a break or talking to someone.";
+                    } else if (data.trend === 'declining') {
+                        msg = "Great news! Your stress levels are projected to decrease over the next few days.";
+                    } else {
+                        msg = "Your emotional state appears stable. Keep up your current wellness routine.";
+                    }
+                    insightText.textContent = msg;
+                    insightEl.style.display = 'block';
+                }
+            } else {
+                container.innerHTML = `
+                    <div style="flex: 1; text-align: center; padding: 20px; color: var(--muted); font-size: 12px;">
+                        ${esc(result.data?.reason || "Not enough data for a forecast yet. Keep checking in!")}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Forecast error:', error);
+            container.innerHTML = '<div style="flex: 1; text-align: center; padding: 10px; color: #ef4444; font-size: 12px;">Failed to load forecast.</div>';
+        }
+    }
+
+    // ==============================
+    // BURNOUT ANALYSIS
+    // ==============================
+    async loadBurnoutAnalysis() {
+        const badge = document.getElementById('burnoutRiskBadge');
+        const indicator = document.getElementById('burnoutRiskIndicator');
+        const label = document.getElementById('burnoutRiskLabel');
+        const factorsContainer = document.getElementById('burnoutFactors');
+        const interventionEl = document.getElementById('burnoutIntervention');
+        const interventionText = document.getElementById('burnoutInterventionText');
+
+        if (!badge) return;
+
+        try {
+            const res = await fetch('/student/api/wellness/burnout');
+            const result = await res.json();
+
+            if (res.ok && result.success) {
+                const data = result.data;
+                
+                // Update Risk Level
+                const levels = {
+                    'low': { color: '#22c55e', text: 'Low Risk', badge: 'Stable' },
+                    'moderate': { color: '#f97316', text: 'Moderate Risk', badge: 'Watchful' },
+                    'high': { color: '#ef4444', text: 'High Risk', badge: 'Critical' }
+                };
+                const config = levels[data.risk_level] || { color: '#64748b', text: 'Unknown', badge: 'Scanning' };
+                
+                if (badge) {
+                    badge.textContent = config.badge;
+                    badge.style.background = `${config.color}1a`;
+                    badge.style.color = config.color;
+                }
+                if (indicator) indicator.style.background = config.color;
+                if (label) label.textContent = config.text;
+
+                // Render Factors
+                if (factorsContainer && data.factors) {
+                    factorsContainer.innerHTML = data.factors.map(f => `
+                        <span style="font-size: 10px; padding: 4px 10px; background: var(--surface-muted); border-radius: 12px; color: var(--text-muted); font-weight: 500; border: 1px solid var(--border);">
+                            ${esc(f)}
+                        </span>
+                    `).join('');
+                }
+
+                // Render Recommendation
+                if (interventionEl && interventionText && data.intervention) {
+                    interventionText.textContent = data.intervention;
+                    interventionEl.style.display = 'block';
+                    interventionEl.style.borderColor = config.color;
+                    interventionEl.style.background = `${config.color}08`;
+                }
+            }
+        } catch (error) {
+            console.error('Burnout analysis error:', error);
+        }
     }
 }
 

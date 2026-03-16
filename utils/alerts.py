@@ -11,8 +11,21 @@ def send_institutional_alert(student_email: str, score: int) -> None:
     alerts = db['alerts']
 
     student = users.find_one({'email': student_email}) or {}
-    # Pick first proctor as fallback
-    proctor = users.find_one({'role': 'proctor'}) or {}
+
+    # Look up the student's assigned proctor from proctor_students, not a
+    # random first proctor — ensures the right person is notified.
+    proctor_record = db['proctor_students'].find_one({'email': student_email, 'status': 'active'})
+    proctor_email = proctor_record.get('proctor_id') if proctor_record else None
+    proctor = {}
+    if proctor_email:
+        proctor = users.find_one({'email': proctor_email, 'role': 'proctor'}) or {}
+    # Fallback: any active proctor in the student's department
+    if not proctor:
+        dept = student.get('department') or ''
+        if dept:
+            proctor = users.find_one({'role': 'proctor', 'department': dept}) or {}
+        if not proctor:
+            proctor = users.find_one({'role': 'proctor'}) or {}
 
     recipients = []
     if proctor.get('email'):

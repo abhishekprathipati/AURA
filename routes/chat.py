@@ -15,6 +15,7 @@ from services.risk_service import predict_risk_level
 from services.memory_service import update_emotion_memory, get_emotion_memory
 from utils.auth_helpers import demo_restricted, demo_chat_limited
 from utils.helpers import safe_error
+from utils.rate_limit import apply_rate_limit, Limits
 
 chat_bp = Blueprint('chat', __name__)
 log = logging.getLogger(__name__)
@@ -91,6 +92,7 @@ def _get_db():
 
 
 @chat_bp.route('/api/chat/mental', methods=['POST'])
+@apply_rate_limit(Limits.MODERATE)
 @demo_chat_limited
 def api_chat_mental():
     """Process user message and return AI-generated response."""
@@ -131,10 +133,14 @@ def api_chat_mental():
                 'type': 'mental',
             }).sort('created_at', -1).limit(20))
             recent.reverse()  # Chronological order
-            db_history = [
-                {'role': 'user' if msg.get('is_user') else 'assistant', 'content': msg.get('message' if msg.get('is_user') else 'response', '')}
-                for msg in recent
-            ]
+            db_history = []
+            for msg in recent:
+                user_msg = (msg.get('message') or '').strip()
+                asst_msg = (msg.get('response') or '').strip()
+                if user_msg:
+                    db_history.append({'role': 'user', 'content': user_msg})
+                if asst_msg:
+                    db_history.append({'role': 'assistant', 'content': asst_msg})
             history = db_history
             log.info(f"âœ“ Loaded {len(history)} history items")
         else:
@@ -158,8 +164,8 @@ def api_chat_mental():
 
         # Phase 3 Orchestration
         log.info("→ Running ML analysis...")
-        predicted_mood, calculated_stress = predict_emotion_and_stress(user_message)
-        risk_level = predict_risk_level(calculated_stress, user_message)
+        predicted_mood, calculated_stress, emotion_distribution = predict_emotion_and_stress(user_message)
+        risk_level = predict_risk_level(calculated_stress, user_message, user_email=user_email)
         memory_context = get_emotion_memory(user_email)
         
         # Log stress event
@@ -169,7 +175,8 @@ def api_chat_mental():
                 'timestamp': datetime.utcnow(),
                 'mood': predicted_mood,
                 'stress_score': calculated_stress,
-                'risk_level': risk_level
+                'risk_level': risk_level,
+                'emotion_distribution': emotion_distribution
             })
 
         # Generate AI response (which is now a JSON string)
@@ -204,6 +211,7 @@ def api_chat_mental():
             'stress_score': calculated_stress, # New field
             'mental_indicators': mental_indicators, # New field
             'risk_level': risk_level, # New field
+            'emotion_distribution': emotion_distribution, # New field for Radar Chart
             'created_at': datetime.utcnow(),
             'conversation_id': conversation_id or None,
         }
@@ -237,6 +245,7 @@ def api_chat_mental():
             'stress_score': calculated_stress,
             'mental_indicators': mental_indicators,
             'risk_level': risk_level,
+            'emotion_distribution': emotion_distribution,
             'timestamp': chat_doc['created_at'].isoformat(),
         }
         if stress_update:
@@ -252,6 +261,7 @@ def api_chat_mental():
 
 
 @chat_bp.route('/api/chat', methods=['POST'])
+@apply_rate_limit(Limits.MODERATE)
 @demo_chat_limited
 def api_chat_unified():
     """Unified chat endpoint for single-bot applications. Proxies to mental handler with kind support."""
@@ -260,14 +270,17 @@ def api_chat_unified():
 
 
 @chat_bp.route('/api/chat/history', methods=['GET'])
+@apply_rate_limit(Limits.STANDARD)
 def api_chat_history():
     """Get chat history for current user."""
     try:
         user_email = session.get('user_email')
         if not user_email:
             return jsonify({'error': 'Not logged in'}), 401
-        
+
         db = _get_db()
+        if db is None:
+            return jsonify({'history': []})
         chats_coll = db[ChatModel.collection_name]
         
         # Fetch mental chats (paginated — max 200)
@@ -294,6 +307,7 @@ def api_chat_history():
         return jsonify({'error': 'Could not load history'}), 500
 
 @chat_bp.route('/api/stress-trend', methods=['GET'])
+@apply_rate_limit(Limits.STANDARD)
 def api_stress_trend():
     """Returns the last 7 days of stress data for chart rendering."""
     try:
@@ -301,30 +315,35 @@ def api_stress_trend():
         if not user_email:
             return jsonify({'error': 'Not logged in'}), 401
             
-        db = get_db()
+        db = _get_db()
         if db is None:
             return jsonify({'dates': [], 'stress_scores': []})
             
         # Group by day and average
         import collections
-        
+
         cutoff = datetime.utcnow() - timedelta(days=7)
-        logs = db['stress_logs'].find({
+        logs = db['stress'].find({
             'user_email': user_email,
-            'timestamp': {'$gte': cutoff}
-        }).sort('timestamp', 1)
-        
+            'created_at': {'$gte': cutoff}
+        }).sort('created_at', 1)
+
         daily_stress = collections.defaultdict(list)
         for log_entry in logs:
-            day_str = log_entry['timestamp'].strftime('%Y-%m-%d')
-            daily_stress[day_str].append(log_entry.get('stress_score', 50))
+            ts = log_entry.get('created_at')
+            if not ts:
+                continue
+            day_str = ts.strftime('%Y-%m-%d')
+            daily_stress[day_str].append(log_entry.get('score', 50))
             
         dates = []
         scores = []
         for d in sorted(daily_stress.keys()):
-            dates.append(d)
-            avg = int(sum(daily_stress[d]) / len(daily_stress[d]))
-            scores.append(avg)
+            vals = daily_stress[d]
+            if vals:
+                dates.append(d)
+                avg = int(sum(vals) / len(vals))
+                scores.append(avg)
             
         return jsonify({'dates': dates, 'stress_scores': scores})
         
@@ -334,6 +353,7 @@ def api_stress_trend():
 
 
 @chat_bp.route('/api/chat/clear', methods=['POST'])
+@apply_rate_limit(Limits.STRICT)
 @demo_restricted
 def api_chat_clear():
     """Clear chat history for current user."""
@@ -341,8 +361,10 @@ def api_chat_clear():
         user_email = session.get('user_email')
         if not user_email:
             return jsonify({'error': 'Not logged in'}), 401
-        
+
         db = _get_db()
+        if db is None:
+            return jsonify({'error': 'Database unavailable'}), 503
         chats_coll = db[ChatModel.collection_name]
         
         result = chats_coll.delete_many({
@@ -357,6 +379,7 @@ def api_chat_clear():
 
 
 @chat_bp.route('/upload_study_file', methods=['POST'])
+@apply_rate_limit(Limits.MODERATE)
 @demo_restricted
 def upload_study_file():
     """Handle file upload for study assistant with validation."""
@@ -389,6 +412,7 @@ def upload_study_file():
 
 
 @chat_bp.route('/study/upload', methods=['POST'])
+@apply_rate_limit(Limits.MODERATE)
 @demo_restricted
 def study_upload():
     """Preferred upload route for Study Assistant UI."""
@@ -414,6 +438,7 @@ def study_upload():
 
 
 @chat_bp.route('/study/summarize', methods=['POST'])
+@apply_rate_limit(Limits.MODERATE)
 @demo_chat_limited
 def study_summarize():
     """Summarize the most recent uploaded study file."""
@@ -439,6 +464,7 @@ def study_summarize():
 
 
 @chat_bp.route('/study/quiz', methods=['POST'])
+@apply_rate_limit(Limits.MODERATE)
 @demo_chat_limited
 def study_quiz():
     """Generate a quiz from the most recent uploaded study file."""
@@ -464,6 +490,7 @@ def study_quiz():
 
 
 @chat_bp.route('/api/study/analyze', methods=['POST'])
+@apply_rate_limit(Limits.MODERATE)
 @demo_chat_limited
 def api_study_analyze():
     """Analyze study query with optional file upload."""
@@ -523,6 +550,7 @@ def api_study_analyze():
 
 
 @chat_bp.route('/api/chat/feedback', methods=['POST'])
+@apply_rate_limit(Limits.STANDARD)
 def api_chat_feedback():
     """Capture thumbs/copy feedback; lightweight log for telemetry."""
     try:

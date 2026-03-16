@@ -76,9 +76,10 @@ def _stress_label(score) -> str:
 
 def _user_display_name(db, email: str) -> str:
     u = db['users'].find_one({'email': email}, {'name': 1})
-    if u and u.get('name'):
-        return u['name'].split()[0]
-    return email.split('@')[0]
+    if u and u.get('name', '').strip():
+        parts = u['name'].split()
+        return parts[0] if parts else email.split('@')[0]
+    return email.split('@')[0] or 'User'
 
 
 def _full_name(db, email: str) -> str:
@@ -145,6 +146,7 @@ def _are_connected(db, a: str, b: str) -> bool:
 @connect_bp.route('/hub/<path:subpath>')
 @login_required
 def connect_hub_page(subpath=None):
+    _ensure_seed()
     return render_template('connect_hub.html')
 
 
@@ -404,10 +406,10 @@ def _ensure_seed():
                         'created_at': now - timedelta(minutes=m['ago']),
                     })
         
-        print("✓ Connect Hub seed data created successfully")
+        current_app.logger.info("✓ Connect Hub seed data created successfully")
 
     except Exception as e:
-        print(f"⚠ Hub seed warning: {e}")
+        current_app.logger.warning("Hub seed warning: %s", e)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -703,6 +705,8 @@ def create_group():
 
     if not name or len(name) < 3: return jsonify({'error': 'Name min 3 chars'}), 400
     if len(name) > 60: return jsonify({'error': 'Name too long'}), 400
+    if _profanity_check(name) or _profanity_check(desc):
+        return jsonify({'error': 'Inappropriate content in name or description'}), 400
     if gtype not in ('study', 'relaxation', 'peer_support'):
         stress = _user_stress(db, email)
         gtype = 'relaxation' if stress['score'] > 75 else 'peer_support' if stress['score'] > 50 else 'study'
@@ -827,6 +831,8 @@ def create_event():
 
     if not title or len(title) < 3: return jsonify({'error': 'Title min 3 chars'}), 400
     if et not in ('webinar', 'meditation', 'workshop'): return jsonify({'error': 'Invalid type'}), 400
+    if _profanity_check(title) or _profanity_check(desc):
+        return jsonify({'error': 'Inappropriate content in title or description'}), 400
     try: event_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
     except Exception: return jsonify({'error': 'Invalid date'}), 400
     if event_date < datetime.utcnow(): return jsonify({'error': 'Must be future'}), 400
@@ -944,6 +950,8 @@ def share_resource():
     tags = data.get('tags', [])
     if not title or len(title) < 3: return jsonify({'error': 'Title min 3 chars'}), 400
     if not link: return jsonify({'error': 'Valid URL required'}), 400
+    if _profanity_check(title) or _profanity_check(desc):
+        return jsonify({'error': 'Inappropriate content in title or description'}), 400
     clean_tags = [t.strip().lower()[:30] for t in tags if t.strip()][:10]
     rid = str(uuid.uuid4())
     db['resources'].insert_one({
@@ -1158,8 +1166,10 @@ def mark_notifications_read():
     if nid == 'all':
         db['hub_notifications'].update_many({'user_email': email, 'read': False}, {'$set': {'read': True}})
     elif nid:
-        try: db['hub_notifications'].update_one({'_id': ObjectId(nid), 'user_email': email}, {'$set': {'read': True}})
-        except Exception: pass
+        try:
+            db['hub_notifications'].update_one({'_id': ObjectId(nid), 'user_email': email}, {'$set': {'read': True}})
+        except Exception as e:
+            current_app.logger.warning(f"Failed to mark notification as read: {e}")
     return jsonify({'message': 'OK'})
 
 
