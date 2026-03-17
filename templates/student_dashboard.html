@@ -1244,88 +1244,6 @@
                         background: #10b981;
                     }
 
-                    /* ── Mood panel ── */
-                    .qa-mood-emojis {
-                        display: flex;
-                        gap: 6px;
-                        justify-content: center;
-                        margin: 10px 0;
-                    }
-
-                    .qa-mood-btn {
-                        font-size: 24px;
-                        background: none;
-                        border: 2.5px solid transparent;
-                        border-radius: 50%;
-                        width: 44px;
-                        height: 44px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        cursor: pointer;
-                        transition: all .2s;
-                    }
-
-                    .qa-mood-btn:hover {
-                        transform: scale(1.2);
-                    }
-
-                    .qa-mood-btn.selected {
-                        border-color: var(--primary, #6366f1);
-                        background: rgba(99, 102, 241, .08);
-                        transform: scale(1.15);
-                    }
-
-                    .qa-mood-note {
-                        width: 100%;
-                        padding: 8px 10px;
-                        border-radius: 9px;
-                        border: 1px solid var(--border, #e5e7eb);
-                        background: var(--surface, #fff);
-                        color: var(--text, #1f2937);
-                        font-size: 12px;
-                        resize: none;
-                        outline: none;
-                        font-family: inherit;
-                        transition: border-color .15s;
-                    }
-
-                    [data-theme="dark"] .qa-mood-note {
-                        background: rgba(255, 255, 255, 0.06);
-                        border-color: rgba(255, 255, 255, 0.12);
-                        color: #f1f5f9;
-                    }
-
-                    .qa-mood-note:focus {
-                        border-color: var(--primary, #6366f1);
-                    }
-
-                    .qa-mood-submit {
-                        width: 100%;
-                        padding: 9px;
-                        border: none;
-                        border-radius: 10px;
-                        font-size: 13px;
-                        font-weight: 700;
-                        cursor: pointer;
-                        background: linear-gradient(135deg, #f43f5e, #e11d48);
-                        color: white;
-                        margin-top: 8px;
-                        transition: opacity .15s;
-                    }
-
-                    .qa-mood-submit:hover {
-                        opacity: .88;
-                    }
-
-                    .qa-mood-labels {
-                        display: flex;
-                        justify-content: space-between;
-                        font-size: 10px;
-                        color: var(--muted, #9ca3af);
-                        font-weight: 600;
-                        padding: 0 4px;
-                    }
                 </style>
 
                 <div class="quick-actions-right" id="qaPanel">
@@ -1374,26 +1292,12 @@
                                 <p class="qa-v2-label">Games</p>
                                 <p class="qa-v2-sub">Stress relief</p>
                             </a>
-                            <!-- 4. AI Insights — Opens AI Insights tab -->
-                            <button type="button" class="qa-card-v2" style="--qa-glow:rgba(124,58,237,0.1);"
-                                onclick="document.querySelector('.dash-tab[data-target=\'tab-ai-insights\']').click(); window.scrollTo({top:0,behavior:'smooth'});">
-                                <div class="qa-v2-ico ico-blue">🤖</div>
-                                <p class="qa-v2-label">AI Insights</p>
-                                <p class="qa-v2-sub">2 AI assistants</p>
-                            </button>
                             <!-- 5. Quick Breathe (inline) -->
                             <button type="button" class="qa-card-v2" style="--qa-glow:rgba(245,158,11,0.1);"
                                 onclick="qaToggleBreath()">
                                 <div class="qa-v2-ico ico-orange">🫁</div>
                                 <p class="qa-v2-label">Breathe</p>
                                 <p class="qa-v2-sub">Quick reset</p>
-                            </button>
-                            <!-- 6. Log Mood (inline) -->
-                            <button type="button" class="qa-card-v2" style="--qa-glow:rgba(244,63,94,0.1);"
-                                onclick="qaToggleMood()">
-                                <div class="qa-v2-ico ico-rose">😊</div>
-                                <p class="qa-v2-label">Log Mood</p>
-                                <p class="qa-v2-sub">How are you?</p>
                             </button>
                         </div>
 
@@ -1420,31 +1324,6 @@
                             </div>
                         </div>
 
-                        <!-- Inline Mood Panel -->
-                        <div class="qa-inline-panel" id="qaMoodPanel" style="display:none;">
-                            <div class="qa-panel-title">
-                                <span>😊 How are you feeling?</span>
-                                <button class="qa-panel-close" onclick="qaToggleMood()">✕</button>
-                            </div>
-                            <div class="qa-mood-emojis" id="qaMoodEmojis">
-                                <button class="qa-mood-btn" data-mood="1" data-label="Terrible"
-                                    onclick="qaSelectMood(1,this)" title="Terrible">😢</button>
-                                <button class="qa-mood-btn" data-mood="2" data-label="Bad"
-                                    onclick="qaSelectMood(2,this)" title="Bad">😟</button>
-                                <button class="qa-mood-btn" data-mood="3" data-label="Neutral"
-                                    onclick="qaSelectMood(3,this)" title="Neutral">😐</button>
-                                <button class="qa-mood-btn" data-mood="4" data-label="Good"
-                                    onclick="qaSelectMood(4,this)" title="Good">😊</button>
-                                <button class="qa-mood-btn" data-mood="5" data-label="Great"
-                                    onclick="qaSelectMood(5,this)" title="Great">😄</button>
-                            </div>
-                            <div class="qa-mood-labels"><span>Terrible</span><span>Great</span></div>
-                            <textarea class="qa-mood-note" id="qaMoodNote" placeholder="Add a note (optional)…"
-                                rows="2"></textarea>
-                            <button class="qa-mood-submit" id="qaMoodSubmitBtn" onclick="qaSubmitMood()" disabled>Save
-                                Mood</button>
-                        </div>
-                    </div>
 
                     <!-- ── TAB: FEED ── -->
                     <div class="qa-pane" id="qa-pane-feed">
@@ -1507,8 +1386,6 @@
 
                         window.qaToggleBreath = function () {
                             const p = document.getElementById('qaBreathPanel');
-                            const m = document.getElementById('qaMoodPanel');
-                            if (m) m.style.display = 'none';
                             if (!p) return;
                             const showing = p.style.display !== 'none';
                             p.style.display = showing ? 'none' : 'block';
@@ -1561,64 +1438,9 @@
                             }
                         }
 
-                        /* ── Inline Mood ── */
-                        let selectedMood = null;
 
-                        window.qaToggleMood = function () {
-                            const m = document.getElementById('qaMoodPanel');
-                            const p = document.getElementById('qaBreathPanel');
-                            if (p) { p.style.display = 'none'; qaBreathStop(); }
-                            if (!m) return;
-                            const showing = m.style.display !== 'none';
-                            m.style.display = showing ? 'none' : 'block';
-                            if (!showing) { resetMoodPanel(); }
-                        };
 
-                        function resetMoodPanel() {
-                            selectedMood = null;
-                            document.querySelectorAll('.qa-mood-btn').forEach(b => b.classList.remove('selected'));
-                            const note = document.getElementById('qaMoodNote');
-                            if (note) note.value = '';
-                            const sub = document.getElementById('qaMoodSubmitBtn');
-                            if (sub) { sub.disabled = true; sub.textContent = 'Save Mood'; }
-                        }
 
-                        window.qaSelectMood = function (level, btn) {
-                            selectedMood = level;
-                            document.querySelectorAll('.qa-mood-btn').forEach(b => b.classList.remove('selected'));
-                            if (btn) btn.classList.add('selected');
-                            const sub = document.getElementById('qaMoodSubmitBtn');
-                            if (sub) sub.disabled = false;
-                        };
-
-                        window.qaSubmitMood = async function () {
-                            if (!selectedMood) return;
-                            const moodMap = { 1: 'stressed', 2: 'sad', 3: 'normal', 4: 'calm', 5: 'happy' };
-                            const moodStr = moodMap[selectedMood] || 'normal';
-                            const note = (document.getElementById('qaMoodNote') || {}).value || '';
-                            const btn = document.getElementById('qaMoodSubmitBtn');
-                            if (btn) btn.textContent = 'Saving…';
-                            try {
-                                const r = await fetch('/student/api/mood', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ mood: moodStr })
-                                });
-                                const fb = document.getElementById('actionFeedback');
-                                if (r.ok) {
-                                    if (fb) { fb.textContent = '✅ Mood logged!'; fb.style.color = '#10b981'; }
-                                    if (btn) btn.textContent = '✅ Saved!';
-                                    setTimeout(() => { qaToggleMood(); if (fb) fb.textContent = ''; }, 1600);
-                                } else {
-                                    if (fb) { fb.textContent = '⚠ Could not save mood.'; fb.style.color = '#f59e0b'; }
-                                    if (btn) btn.textContent = 'Save Mood';
-                                }
-                            } catch (e) {
-                                const fb = document.getElementById('actionFeedback');
-                                if (fb) { fb.textContent = '⚠ Network error.'; fb.style.color = '#ef4444'; }
-                                if (btn) btn.textContent = 'Save Mood';
-                            }
-                        };
 
                         /* ── Insights Tab ── */
                         window.qaLoadInsights = async function () {
