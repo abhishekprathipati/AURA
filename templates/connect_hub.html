@@ -181,8 +181,11 @@
 
     <!-- AI Recs -->
     <div class="sidebar-recs" id="sidebarRecs">
-      <div class="recs-header"><i class="fas fa-robot"></i> Smart Picks</div>
-      <div id="recsList"></div>
+      <div class="recs-header">
+        <span><i class="fas fa-robot"></i> Smart Picks</span>
+        <button class="recs-close-btn" id="recsCloseBtn" type="button" title="Hide Smart Picks" aria-label="Hide Smart Picks"><i class="fas fa-times"></i></button>
+      </div>
+      <div id="recsList" class="recs-list-body"></div>
     </div>
 
   </aside>

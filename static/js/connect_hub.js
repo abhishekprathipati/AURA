@@ -1261,6 +1261,15 @@
         // Initial data loads
         loadStats(); loadPeers(); loadFeed(); loadNotifications(); loadRecs();
 
+        // Smart Picks close button
+        const recsCloseBtn = el('recsCloseBtn');
+        if (recsCloseBtn) {
+            recsCloseBtn.addEventListener('click', () => {
+                const recs = el('sidebarRecs');
+                if (recs) recs.style.display = 'none';
+            });
+        }
+
         // Socket.IO
         initSocket();
 

@@ -685,13 +685,52 @@ body.zen-mode #zenToggle i { transform: rotate(180deg); }
   border-top: 1px solid var(--h-border);
   padding: 10px;
   flex-shrink: 0;
+  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
+
+.recs-list-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+}
+
+.recs-list-body::-webkit-scrollbar { width: 3px; }
+.recs-list-body::-webkit-scrollbar-track { background: transparent; }
+.recs-list-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 99px; }
 
 .recs-header {
   font-size: 10px; font-weight: 700; text-transform: uppercase;
   letter-spacing: .06em; color: var(--h-muted);
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
   margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.recs-header span {
+  display: flex; align-items: center; gap: 6px;
+}
+
+.recs-close-btn {
+  background: none;
+  border: none;
+  color: var(--h-muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.2s, background 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.recs-close-btn:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.1);
 }
 
 .rec-item {
