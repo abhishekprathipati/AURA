@@ -73,9 +73,10 @@ def send_otp():
             'sms_sent': sms_sent
         }
 
-        # Include demo mode indicator but NEVER the raw OTP
+        # Include OTP for demo mode so frontend can display it
         if not sms_sent:
             response_data['demo_mode'] = True
+            response_data['demo_otp'] = otp
             message = "SMS service is unavailable. Please check server logs for the security code (Demo Mode)."
             response_data['message'] = message
 
