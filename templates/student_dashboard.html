@@ -2504,6 +2504,10 @@
                 panel.classList.add('active');
                 overlay.classList.add('active');
                 document.body.classList.add('panel-open');
+                // Refresh Connect Hub stats when panel opens
+                if (panelId === 'panel-hub' && window.dashboard) {
+                    window.dashboard.refreshHubStats();
+                }
             }
 
             function closePanel() {

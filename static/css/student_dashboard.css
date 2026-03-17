@@ -1645,6 +1645,7 @@ details[open] .signal-toggle::after {
     border-radius: var(--radius-full);
     background: var(--color-success);
     animation: pulse 2s infinite;
+    transition: background 0.4s ease, box-shadow 0.4s ease;
 }
 
 @keyframes pulse {

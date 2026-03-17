@@ -506,18 +506,63 @@ class AdvancedDashboard {
             this.updateActivityDisplay(activityData);
             this.updateActivityTimeline();
 
-            // Update hub stats with real-ish data
-            const hubStatsEls = {
-                activeUsers: document.getElementById('activeUsers'),
-                totalGroups: document.getElementById('totalGroups'),
-                upcomingEvents: document.getElementById('upcomingEvents')
-            };
-            if (hubStatsEls.activeUsers) hubStatsEls.activeUsers.textContent = '--';
-            if (hubStatsEls.totalGroups) hubStatsEls.totalGroups.textContent = '--';
-            if (hubStatsEls.upcomingEvents) hubStatsEls.upcomingEvents.textContent = '--';
+            // Fetch real hub stats from API
+            this.refreshHubStats();
         } catch (error) {
             this.showErrorState();
         } finally { this.showLoading(false); }
+    }
+
+    async refreshHubStats() {
+        try {
+            const data = await this.fetchData('/student/api/connect-hub/stats');
+            const activeUsersEl   = document.getElementById('activeUsers');
+            const totalGroupsEl   = document.getElementById('totalGroups');
+            const upcomingEventsEl = document.getElementById('upcomingEvents');
+            const statusEl        = document.getElementById('connectionStatus');
+            const dotEl           = document.querySelector('#panel-hub .status-indicator');
+
+            if (activeUsersEl)    this._animateCount(activeUsersEl, data.active_now ?? 0);
+            if (totalGroupsEl)    this._animateCount(totalGroupsEl, data.groups ?? 0);
+            if (upcomingEventsEl) this._animateCount(upcomingEventsEl, data.events ?? 0);
+
+            if (statusEl) {
+                statusEl.textContent = 'Connected';
+                statusEl.style.color = '';
+            }
+            if (dotEl) {
+                dotEl.style.background = '';
+                dotEl.style.boxShadow  = '';
+            }
+        } catch {
+            const statusEl = document.getElementById('connectionStatus');
+            const dotEl    = document.querySelector('#panel-hub .status-indicator');
+            if (statusEl) {
+                statusEl.textContent = 'Offline';
+                statusEl.style.color = '#f87171';
+            }
+            if (dotEl) {
+                dotEl.style.background = '#f87171';
+                dotEl.style.boxShadow  = '0 0 0 4px rgba(248,113,113,0.25)';
+            }
+            // Show placeholder dashes so UI is never stale from a previous value
+            ['activeUsers','totalGroups','upcomingEvents'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '--';
+            });
+        }
+    }
+
+    _animateCount(el, target) {
+        const start    = parseInt(el.textContent) || 0;
+        const duration = 600;
+        const startTs  = performance.now();
+        const step = (ts) => {
+            const progress = Math.min((ts - startTs) / duration, 1);
+            el.textContent = Math.round(start + (target - start) * progress);
+            if (progress < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
     }
 
     async fetchData(endpoint) {
