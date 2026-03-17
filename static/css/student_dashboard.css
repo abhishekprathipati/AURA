@@ -197,7 +197,7 @@ body {
 
 .dashboard {
     width: 100%;
-    max-width: 1600px;
+    max-width: 1920px;
     margin: 0 auto;
     padding: 20px;
     overflow-x: hidden;
@@ -341,7 +341,7 @@ body {
     flex-direction: column;
     gap: 20px;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .dashboard-right {
@@ -350,11 +350,10 @@ body {
     gap: 12px;
     min-width: 0;
     max-width: 100%;
-    overflow-x: hidden;
     overflow-y: auto;
     position: sticky;
-    top: 90px;
-    max-height: calc(100vh - 108px);
+    top: 16px;
+    max-height: calc(100vh - 32px);
     overscroll-behavior: contain;
     scrollbar-width: thin;
     padding-bottom: 16px;
@@ -4391,7 +4390,9 @@ body.mood-modal-open {
     box-shadow: -8px 0 30px rgba(0,0,0,0.12);
     z-index: 9999;
     transform: translateX(100%);
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -4399,6 +4400,8 @@ body.mood-modal-open {
 
 .slide-panel.active {
     transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
 }
 
 .slide-panel-header {
@@ -4615,7 +4618,7 @@ body.panel-open {
 /* ──────── Premium Dashboard Container ──────── */
 .dashboard {
     position: relative;
-    overflow: hidden;
+    overflow: clip;
 }
 
 .dashboard::before {
@@ -4630,11 +4633,6 @@ body.panel-open {
     animation: gradientShift 20s ease infinite;
     pointer-events: none;
     z-index: 0;
-}
-
-.dashboard > * {
-    position: relative;
-    z-index: 1;
 }
 
 /* ──────── 3D Card Tilt Effect ──────── */

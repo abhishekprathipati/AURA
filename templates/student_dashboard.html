@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student_dashboard.css') }}?v=20260305f">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student_dashboard.css') }}?v=20260317a">
     <style>
         /* SVG Icon System */
         .icon {
@@ -846,10 +846,10 @@
                         display: block;
                     }
 
-                    /* ── 3×2 action cards ── */
+                    /* ── 2×2 action cards ── */
                     .qa-grid-v2 {
                         display: grid;
-                        grid-template-columns: repeat(3, 1fr);
+                        grid-template-columns: repeat(2, 1fr);
                         gap: 8px;
                     }
 
@@ -857,8 +857,8 @@
                         display: flex;
                         flex-direction: column;
                         align-items: center;
-                        gap: 5px;
-                        padding: 12px 6px 10px;
+                        gap: 6px;
+                        padding: 14px 8px 12px;
                         border-radius: 14px;
                         border: none;
                         background: var(--surface-muted, #f9fafb);
@@ -904,13 +904,13 @@
                     }
 
                     .qa-v2-ico {
-                        width: 38px;
-                        height: 38px;
-                        border-radius: 11px;
+                        width: 42px;
+                        height: 42px;
+                        border-radius: 12px;
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        font-size: 18px;
+                        font-size: 20px;
                         flex-shrink: 0;
                         transition: transform .2s;
                     }
@@ -920,7 +920,7 @@
                     }
 
                     .qa-v2-label {
-                        font-size: 11px;
+                        font-size: 12px;
                         font-weight: 700;
                         color: var(--text, #1f2937);
                         text-align: center;
@@ -929,7 +929,7 @@
                     }
 
                     .qa-v2-sub {
-                        font-size: 10px;
+                        font-size: 11px;
                         color: var(--muted, #9ca3af);
                         text-align: center;
                         margin: 0;
