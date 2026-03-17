@@ -55,6 +55,11 @@
             color: #ef4444;
         }
 
+        .ai-launch-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
         .text-info {
             color: #3b82f6;
         }
@@ -269,6 +274,14 @@
                             <path d="M6 12v5c3 3 9 3 12 0v-5" />
                         </svg>
                         <span>Academics</span>
+                    </button>
+                    <button class="dash-tab" data-target="tab-ai-insights">
+                        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1.07A7.001 7.001 0 0 1 8 18H7a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 5-6.71V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
+                            <path d="M10 17v1a2 2 0 0 0 4 0v-1" />
+                        </svg>
+                        <span>AI Insights</span>
                     </button>
                 </div>
 
@@ -693,6 +706,91 @@
                     </section>
 
                 </div> <!-- END TAB ACADEMICS -->
+
+                <!-- TAB: AI INSIGHTS -->
+                <div id="tab-ai-insights" class="dash-tab-content">
+
+                    <section class="card card-elevated" aria-labelledby="ai-insights-heading">
+                        <header class="card-header">
+                            <h3 id="ai-insights-heading" class="card-title">
+                                <span class="card-title-icon icon-purple">
+                                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                                        <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1.07A7.001 7.001 0 0 1 8 18H7a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 5-6.71V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
+                                    </svg>
+                                </span>
+                                AI Insights
+                            </h3>
+                            <div class="card-badge" style="background: linear-gradient(135deg, #7c3aed, #2563eb); color: white; font-size: 11px; padding: 4px 10px; border-radius: 20px;">
+                                2 Assistants
+                            </div>
+                        </header>
+
+                        <div class="card-body" style="padding: 24px;">
+                            <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5;">
+                                Chat with AURA's AI assistants for personalized mental wellness support or study guidance.
+                            </p>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+
+                                <!-- Mental Wellness Chatbot Card -->
+                                <a href="{{ url_for('student.mental_chatbot') }}" class="ai-launch-card" style="
+                                    display: block; text-decoration: none;
+                                    background: linear-gradient(145deg, rgba(124,58,237,0.06), rgba(139,92,246,0.12));
+                                    border: 1px solid rgba(124,58,237,0.15);
+                                    border-radius: 16px; padding: 24px;
+                                    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+                                ">
+                                    <div style="width: 48px; height: 48px; border-radius: 14px;
+                                        background: linear-gradient(135deg, #7c3aed, #5b21b6);
+                                        display: flex; align-items: center; justify-content: center;
+                                        font-size: 24px; margin-bottom: 16px;">🧠</div>
+                                    <h4 style="font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 6px;">
+                                        Mental Wellness Chat
+                                    </h4>
+                                    <p style="font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px;">
+                                        Talk about stress, anxiety, or anything on your mind. Get coping strategies and emotional support.
+                                    </p>
+                                    <span style="display: inline-flex; align-items: center; gap: 6px;
+                                        font-size: 13px; font-weight: 600; color: #7c3aed;">
+                                        Start conversation
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                                        </svg>
+                                    </span>
+                                </a>
+
+                                <!-- Study Chatbot Card -->
+                                <a href="{{ url_for('student.study_chatbot') }}" class="ai-launch-card" style="
+                                    display: block; text-decoration: none;
+                                    background: linear-gradient(145deg, rgba(37,99,235,0.06), rgba(59,130,246,0.12));
+                                    border: 1px solid rgba(37,99,235,0.15);
+                                    border-radius: 16px; padding: 24px;
+                                    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+                                ">
+                                    <div style="width: 48px; height: 48px; border-radius: 14px;
+                                        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+                                        display: flex; align-items: center; justify-content: center;
+                                        font-size: 24px; margin-bottom: 16px;">📚</div>
+                                    <h4 style="font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 6px;">
+                                        Study Assistant
+                                    </h4>
+                                    <p style="font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px;">
+                                        Get help with study plans, exam prep, time management, and academic problem-solving.
+                                    </p>
+                                    <span style="display: inline-flex; align-items: center; gap: 6px;
+                                        font-size: 13px; font-weight: 600; color: #2563eb;">
+                                        Start conversation
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                                        </svg>
+                                    </span>
+                                </a>
+
+                            </div>
+                        </div>
+                    </section>
+
+                </div> <!-- END TAB AI INSIGHTS -->
 
             </div>
 
@@ -1276,13 +1374,13 @@
                                 <p class="qa-v2-label">Games</p>
                                 <p class="qa-v2-sub">Stress relief</p>
                             </a>
-                            <!-- 4. AI Chat — FIXED: was pointing to activities, now correct -->
-                            <a href="{{ url_for('student.mental_chatbot') }}" class="qa-card-v2"
-                                style="--qa-glow:rgba(59,130,246,0.1);">
+                            <!-- 4. AI Insights — Opens AI Insights tab -->
+                            <button type="button" class="qa-card-v2" style="--qa-glow:rgba(124,58,237,0.1);"
+                                onclick="document.querySelector('.dash-tab[data-target=\'tab-ai-insights\']').click(); window.scrollTo({top:0,behavior:'smooth'});">
                                 <div class="qa-v2-ico ico-blue">🤖</div>
                                 <p class="qa-v2-label">AI Insights</p>
-                                <p class="qa-v2-sub">Chat & analyse</p>
-                            </a>
+                                <p class="qa-v2-sub">2 AI assistants</p>
+                            </button>
                             <!-- 5. Quick Breathe (inline) -->
                             <button type="button" class="qa-card-v2" style="--qa-glow:rgba(245,158,11,0.1);"
                                 onclick="qaToggleBreath()">
