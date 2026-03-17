@@ -1,7 +1,11 @@
 from flask import current_app
-from flask_mail import Message
 from utils.database import get_db
 from datetime import datetime
+
+try:
+    from flask_mail import Message
+except ImportError:
+    Message = None
 
 
 def send_institutional_alert(student_email: str, score: int) -> None:
@@ -57,6 +61,9 @@ def send_institutional_alert(student_email: str, score: int) -> None:
         f"Stress score: {score}\n\n"
         f"Please reach out and provide guidance."
     )
+
+    if not Message:
+        return
 
     msg = Message(subject=subject, recipients=recipients, body=body)
     try:
