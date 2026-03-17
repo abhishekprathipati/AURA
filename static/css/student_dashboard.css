@@ -614,7 +614,7 @@ body::after {
 }
 
 .card:hover {
-    transform: translateY(-12px) rotateX(2deg);
+    transform: translateY(-6px);
     box-shadow: var(--depth-5), var(--glow-primary);
     border-color: rgba(var(--primary-rgb), 0.5);
 }

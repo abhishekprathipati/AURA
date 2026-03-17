@@ -1528,32 +1528,30 @@ function createRipple(event, element) {
     element.appendChild(circle);
 }
 
-// 3. 3D Card Tilt Effect
+// 3. 3D Card Tilt Effect — subtle only
 function initCardTilt() {
     const cards = document.querySelectorAll('.card[data-tilt="true"]');
 
     cards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.style.transition = 'transform 0.1s ease, box-shadow 0.5s cubic-bezier(0.34,1.56,0.64,1), border-color 0.5s cubic-bezier(0.34,1.56,0.64,1)';
+        });
+
         card.addEventListener('mousemove', (e) => {
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
 
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
+            // Max ±4° — gentle shimmer, not a jarring flip
+            const rotateX = Math.max(-4, Math.min(4, (y - rect.height / 2) / rect.height * 8));
+            const rotateY = Math.max(-4, Math.min(4, (rect.width / 2 - x) / rect.width * 8));
 
-            const rotateX = (y - centerY) / 10;
-            const rotateY = (centerX - x) / 10;
-
-            card.style.transform = `
-                perspective(1000px)
-                rotateX(${rotateX}deg)
-                rotateY(${rotateY}deg)
-                translateZ(10px)
-            `;
+            card.style.transform = `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(4px)`;
         });
 
         card.addEventListener('mouseleave', () => {
-            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
+            card.style.transition = 'transform 0.6s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.5s cubic-bezier(0.34,1.56,0.64,1), border-color 0.5s cubic-bezier(0.34,1.56,0.64,1)';
+            card.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0px)';
         });
     });
 }
