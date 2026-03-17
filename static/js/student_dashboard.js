@@ -1440,7 +1440,132 @@ class AdvancedDashboard {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => { window.dashboard = new AdvancedDashboard(); });
+// ============================================
+// EXTRAORDINARY UI ENHANCEMENTS
+// ============================================
+
+// 1. Magnetic Button Effect
+function initMagneticButtons() {
+    const magneticElements = document.querySelectorAll('.btn-magnetic, .qa-card');
+
+    magneticElements.forEach(el => {
+        el.addEventListener('mousemove', (e) => {
+            const rect = el.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+
+            const moveX = x * 0.15;
+            const moveY = y * 0.15;
+
+            el.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.05)`;
+        });
+
+        el.addEventListener('mouseleave', () => {
+            el.style.transform = 'translate(0, 0) scale(1)';
+        });
+    });
+}
+
+// 2. Ripple Effect on Click
+function createRipple(event, element) {
+    const circle = document.createElement('span');
+    const diameter = Math.max(element.clientWidth, element.clientHeight);
+    const radius = diameter / 2;
+
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${event.clientX - element.offsetLeft - radius}px`;
+    circle.style.top = `${event.clientY - element.offsetTop - radius}px`;
+    circle.classList.add('ripple');
+
+    const ripple = element.getElementsByClassName('ripple')[0];
+    if (ripple) ripple.remove();
+
+    element.appendChild(circle);
+}
+
+// 3. 3D Card Tilt Effect
+function initCardTilt() {
+    const cards = document.querySelectorAll('.card[data-tilt="true"]');
+
+    cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            const rotateX = (y - centerY) / 10;
+            const rotateY = (centerX - x) / 10;
+
+            card.style.transform = `
+                perspective(1000px)
+                rotateX(${rotateX}deg)
+                rotateY(${rotateY}deg)
+                translateZ(10px)
+            `;
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
+        });
+    });
+}
+
+// 4. Scroll Animations with Intersection Observer
+function initScrollAnimations() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('cascade-item');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+
+    document.querySelectorAll('.card, .qa-card').forEach(el => {
+        observer.observe(el);
+    });
+}
+
+// 5. Create Ambient Particles
+function createAmbientParticles() {
+    const container = document.createElement('div');
+    container.className = 'ambient-particles';
+
+    for (let i = 0; i < 5; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        container.appendChild(particle);
+    }
+
+    document.body.appendChild(container);
+}
+
+// Initialize all UI enhancements
+function initUIEnhancements() {
+    initMagneticButtons();
+    initCardTilt();
+    initScrollAnimations();
+    createAmbientParticles();
+
+    // Add ripple to buttons and interactive elements
+    document.querySelectorAll('button, .btn, .qa-card').forEach(el => {
+        if (!el.classList.contains('ripple-container')) {
+            el.classList.add('ripple-container');
+        }
+        el.addEventListener('click', (e) => createRipple(e, el));
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    window.dashboard = new AdvancedDashboard();
+    initUIEnhancements();
+});
 
 // Stop auto-refresh when leaving page
 window.addEventListener('beforeunload', () => {
