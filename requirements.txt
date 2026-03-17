@@ -17,29 +17,30 @@ Flask-Limiter==4.1.1
 limits==5.6.0
 redis==5.2.1
 
-# Email & Communication
-Flask-Mail==0.9.1
+# HTTP & Requests
 requests==2.32.5
 
-# AI Services (google-genai is the active SDK; old google-generativeai removed)
+# AI Services
 google-genai==1.56.0
 groq==1.0.0
 openai==2.14.0
 
-# AI Dependencies
+# AI Dependencies (lazy-loaded, behind feature flag)
+# NOTE: transformers + torch are large (1.2GB) but only used if ENABLE_LOCAL_EMOTION_MODEL=True
+# For production on memory-limited platforms (Render free tier), comment these out
+# transformers==4.48.3
+# torch==2.5.1+cpu
+
 pydantic==2.12.5
 httpx==0.28.1
 anyio==4.12.0
-transformers==4.48.3
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.5.1+cpu
 
-# Real-time
+# Real-time Communication
 Flask-SocketIO==5.3.7
 python-socketio==5.11.4
 python-engineio==4.9.1
 
-# Production server (gthread workers — compatible with Flask-SocketIO threading mode)
+# Production Server
 gunicorn==23.0.0
 
 # Environment
