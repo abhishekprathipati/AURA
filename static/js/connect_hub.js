@@ -106,17 +106,40 @@
         return _escEl.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    function timeAgo(iso) {
-        if (!iso) return '';
-        const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-        if (sec < 60)   return 'just now';
-        if (sec < 3600)  return Math.floor(sec / 60) + 'm ago';
-        if (sec < 86400) return Math.floor(sec / 3600) + 'h ago';
-        return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    function _parseUTC(iso) {
+        if (!iso) return null;
+        // Append Z if no timezone info so browsers always parse as UTC
+        return new Date(/Z|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z');
     }
+
+    function timeAgo(iso) {
+        const date = _parseUTC(iso);
+        if (!date) return '';
+        const sec = Math.floor((Date.now() - date.getTime()) / 1000);
+        if (sec < 0)      return 'just now';
+        if (sec < 60)     return 'just now';
+        if (sec < 3600)   return Math.floor(sec / 60) + 'm ago';
+        if (sec < 86400)  return Math.floor(sec / 3600) + 'h ago';
+        if (sec < 172800) return 'Yesterday';
+        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }
+
+    // For chat bubbles: shows clock time today, "Yesterday HH:MM", or "11 Mar HH:MM"
+    function msgTimeFmt(iso) {
+        const date = _parseUTC(iso);
+        if (!date) return '';
+        const timePart = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        const today     = new Date();
+        const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+        if (date.toDateString() === today.toDateString())     return timePart;
+        if (date.toDateString() === yesterday.toDateString()) return 'Yesterday ' + timePart;
+        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + timePart;
+    }
+
     function dateFmt(iso) {
-        if (!iso) return '';
-        return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const date = _parseUTC(iso);
+        if (!date) return '';
+        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     }
     function setTxt(id, v) { const e = el(id); if (e) e.textContent = v; }
     function val(id)  { const e = el(id); return e ? e.value.trim() : ''; }
@@ -681,7 +704,7 @@
         return `<div class="chat-bubble ${m.mine ? 'mine' : 'theirs'}">
             ${!m.mine && m.sender_name ? `<div class="bubble-sender">${esc(m.sender_name)}</div>` : ''}
             <div class="bubble-text">${esc(m.message)}</div>
-            <div class="bubble-time">${timeAgo(m.time)}${m.mine ? (m.seen ? ' ✓✓' : ' ✓') : ''}</div>
+            <div class="bubble-time">${msgTimeFmt(m.time)}${m.mine ? (m.seen ? ' ✓✓' : ' ✓') : ''}</div>
         </div>`;
     }
 
