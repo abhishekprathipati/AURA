@@ -275,14 +275,6 @@
                         </svg>
                         <span>Academics</span>
                     </button>
-                    <button class="dash-tab" data-target="tab-ai-insights">
-                        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none"
-                            stroke="currentColor" stroke-width="2">
-                            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1.07A7.001 7.001 0 0 1 8 18H7a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 5-6.71V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
-                            <path d="M10 17v1a2 2 0 0 0 4 0v-1" />
-                        </svg>
-                        <span>AI Insights</span>
-                    </button>
                 </div>
 
                 <!-- TAB: WELLNESS -->
@@ -708,89 +700,6 @@
                 </div> <!-- END TAB ACADEMICS -->
 
                 <!-- TAB: AI INSIGHTS -->
-                <div id="tab-ai-insights" class="dash-tab-content">
-
-                    <section class="card card-elevated" aria-labelledby="ai-insights-heading">
-                        <header class="card-header">
-                            <h3 id="ai-insights-heading" class="card-title">
-                                <span class="card-title-icon icon-purple">
-                                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
-                                        <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1.07A7.001 7.001 0 0 1 8 18H7a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 5-6.71V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
-                                    </svg>
-                                </span>
-                                AI Insights
-                            </h3>
-                            <div class="card-badge" style="background: linear-gradient(135deg, #7c3aed, #2563eb); color: white; font-size: 11px; padding: 4px 10px; border-radius: 20px;">
-                                2 Assistants
-                            </div>
-                        </header>
-
-                        <div class="card-body" style="padding: 24px;">
-                            <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5;">
-                                Chat with AURA's AI assistants for personalized mental wellness support or study guidance.
-                            </p>
-
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
-
-                                <!-- Mental Wellness Chatbot Card -->
-                                <a href="{{ url_for('student.mental_chatbot') }}" class="ai-launch-card" style="
-                                    display: block; text-decoration: none;
-                                    background: linear-gradient(145deg, rgba(124,58,237,0.06), rgba(139,92,246,0.12));
-                                    border: 1px solid rgba(124,58,237,0.15);
-                                    border-radius: 16px; padding: 24px;
-                                    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-                                ">
-                                    <div style="width: 48px; height: 48px; border-radius: 14px;
-                                        background: linear-gradient(135deg, #7c3aed, #5b21b6);
-                                        display: flex; align-items: center; justify-content: center;
-                                        font-size: 24px; margin-bottom: 16px;">🧠</div>
-                                    <h4 style="font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 6px;">
-                                        Mental Wellness Chat
-                                    </h4>
-                                    <p style="font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px;">
-                                        Talk about stress, anxiety, or anything on your mind. Get coping strategies and emotional support.
-                                    </p>
-                                    <span style="display: inline-flex; align-items: center; gap: 6px;
-                                        font-size: 13px; font-weight: 600; color: #7c3aed;">
-                                        Start conversation
-                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                                        </svg>
-                                    </span>
-                                </a>
-
-                                <!-- Study Chatbot Card -->
-                                <a href="{{ url_for('student.study_chatbot') }}" class="ai-launch-card" style="
-                                    display: block; text-decoration: none;
-                                    background: linear-gradient(145deg, rgba(37,99,235,0.06), rgba(59,130,246,0.12));
-                                    border: 1px solid rgba(37,99,235,0.15);
-                                    border-radius: 16px; padding: 24px;
-                                    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-                                ">
-                                    <div style="width: 48px; height: 48px; border-radius: 14px;
-                                        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-                                        display: flex; align-items: center; justify-content: center;
-                                        font-size: 24px; margin-bottom: 16px;">📚</div>
-                                    <h4 style="font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 6px;">
-                                        Study Assistant
-                                    </h4>
-                                    <p style="font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px;">
-                                        Get help with study plans, exam prep, time management, and academic problem-solving.
-                                    </p>
-                                    <span style="display: inline-flex; align-items: center; gap: 6px;
-                                        font-size: 13px; font-weight: 600; color: #2563eb;">
-                                        Start conversation
-                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                                        </svg>
-                                    </span>
-                                </a>
-
-                            </div>
-                        </div>
-                    </section>
-
-                </div> <!-- END TAB AI INSIGHTS -->
 
             </div>
 
@@ -1259,10 +1168,6 @@
                     <div class="qa-tabs-row" role="tablist">
                         <button class="qa-tab-btn active" data-tab="actions" onclick="qaSwitch('actions',this)"
                             role="tab">⚡ Actions</button>
-                        <button class="qa-tab-btn" data-tab="feed" onclick="qaSwitch('feed',this)" role="tab">📋
-                            Feed</button>
-                        <button class="qa-tab-btn" data-tab="insights" onclick="qaSwitch('insights',this)" role="tab">📊
-                            Insights</button>
                     </div>
 
                     <!-- Feedback -->
@@ -1323,48 +1228,6 @@
                                 <button class="qa-breathe-btn qa-breathe-stop" onclick="qaToggleBreath()">Close</button>
                             </div>
                         </div>
-
-
-                    <!-- ── TAB: FEED ── -->
-                    <div class="qa-pane" id="qa-pane-feed">
-                        <div id="activityTimeline">
-                            <div class="qa-feed-empty">Loading activity…</div>
-                        </div>
-                    </div>
-
-                    <!-- ── TAB: INSIGHTS ── -->
-                    <div class="qa-pane" id="qa-pane-insights">
-                        <div class="qa-insights-grid" id="qaInsightsGrid">
-                            <div class="qa-ins-card">
-                                <div class="qa-ins-val" id="qiStress">—</div>
-                                <div class="qa-ins-lbl">Stress Score</div>
-                                <div class="qa-ins-badge" id="qiStressBadge"></div>
-                            </div>
-                            <div class="qa-ins-card">
-                                <div class="qa-ins-val" id="qiMood">—</div>
-                                <div class="qa-ins-lbl">Today's Mood</div>
-                                <div class="qa-ins-badge" id="qiMoodBadge"></div>
-                            </div>
-                            <div class="qa-ins-card">
-                                <div class="qa-ins-val" id="qiStreak">—</div>
-                                <div class="qa-ins-lbl">🔥 Streak</div>
-                                <div style="font-size:10px;color:var(--muted);margin-top:3px;">days</div>
-                            </div>
-                            <div class="qa-ins-card">
-                                <div class="qa-ins-val" id="qiActs">—</div>
-                                <div class="qa-ins-lbl">Activities</div>
-                                <div style="font-size:10px;color:var(--muted);margin-top:3px;">this week</div>
-                            </div>
-                        </div>
-                        <div class="qa-ins-card" style="margin-bottom:8px;text-align:left;padding:10px 12px;">
-                            <div
-                                style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">
-                                💡 AI Insight</div>
-                            <div id="qiInsight" style="font-size:12px;color:var(--text);line-height:1.55;">Loading…
-                            </div>
-                        </div>
-                        <button class="qa-ins-refresh" onclick="qaLoadInsights()">↻ Refresh Insights</button>
-                    </div>
                 </div>
 
                 <!-- ── QA Panel JS ── -->
@@ -1377,7 +1240,6 @@
                             const pane = document.getElementById('qa-pane-' + tab);
                             if (pane) pane.classList.add('active');
                             if (btn) btn.classList.add('active');
-                            if (tab === 'insights') qaLoadInsights();
                         };
 
                         /* ── Inline Breathe ── */
@@ -1442,54 +1304,7 @@
 
 
 
-                        /* ── Insights Tab ── */
-                        window.qaLoadInsights = async function () {
-                            const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-                            setEl('qiInsight', 'Loading…');
-                            try {
-                                const [wRes, aRes, dRes] = await Promise.all([
-                                    fetch('/student/api/wellness/current'),
-                                    fetch('/student/api/wellness/activities'),
-                                    fetch('/student/api/student/dashboard-data')
-                                ]);
-                                const w = wRes.ok ? await wRes.json() : {};
-                                const a = aRes.ok ? await aRes.json() : {};
-                                const d = dRes.ok ? await dRes.json() : {};
-
-                                // Correct field paths from actual API responses
-                                const stress = w.stress?.value ?? '—';
-                                const mood = w.mood?.label ?? (typeof d.mood === 'string' ? d.mood : '—');
-                                const streak = d.streak ?? '—';
-                                const acts = a.week ?? a.today ?? '—';
-                                const insight = w.stress?.insight || w.stress?.explanation || d.ai_insight || 'Keep up your wellness routine — consistency is key!';
-
-                                setEl('qiStress', typeof stress === 'number' ? stress + '/100' : stress);
-                                setEl('qiMood', mood);
-                                setEl('qiStreak', streak);
-                                setEl('qiActs', acts);
-                                setEl('qiInsight', insight);
-
-                                // Stress badge (0-100 scale)
-                                const sb = document.getElementById('qiStressBadge');
-                                if (sb && typeof stress === 'number') {
-                                    sb.textContent = stress <= 35 ? '✅ Low' : stress <= 65 ? '⚠ Moderate' : '🔴 High';
-                                    sb.className = 'qa-ins-badge ' + (stress <= 35 ? 'badge-good' : stress <= 65 ? 'badge-warn' : 'badge-bad');
-                                }
-                                // Mood badge
-                                const mb = document.getElementById('qiMoodBadge');
-                                if (mb && mood && mood !== '—') {
-                                    const ml = mood.toLowerCase();
-                                    const isGood = ['excellent', 'great', 'good', 'happy'].some(k => ml.includes(k));
-                                    const isNeutral = ['neutral', 'calm', 'ok'].some(k => ml.includes(k));
-                                    mb.textContent = isGood ? '😊 Great' : isNeutral ? '😐 OK' : '😟 Low';
-                                    mb.className = 'qa-ins-badge ' + (isGood ? 'badge-good' : isNeutral ? 'badge-warn' : 'badge-bad');
-                                }
-                            } catch (e) {
-                                const el = document.getElementById('qiInsight');
-                                if (el) el.textContent = 'Could not load insights. Try again.';
-                            }
-                        };
-                    })();
+                        /* ── Insights Tab ── */                    })();
                 </script>
 
                 <!-- CONNECT HUB -->
