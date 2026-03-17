@@ -13,7 +13,7 @@ from services.ai_service import generate_mental_response, generate_study_respons
 from services.stress_service import calculate_dynamic_stress
 from services.risk_service import predict_risk_level
 from services.memory_service import update_emotion_memory, get_emotion_memory
-from utils.auth_helpers import demo_restricted, demo_chat_limited
+from utils.auth_helpers import demo_restricted, demo_chat_limited, login_required
 from utils.helpers import safe_error
 from utils.rate_limit import apply_rate_limit, Limits
 
@@ -92,6 +92,7 @@ def _get_db():
 
 
 @chat_bp.route('/api/chat/mental', methods=['POST'])
+@login_required
 @apply_rate_limit(Limits.MODERATE)
 @demo_chat_limited
 def api_chat_mental():
@@ -261,6 +262,7 @@ def api_chat_mental():
 
 
 @chat_bp.route('/api/chat', methods=['POST'])
+@login_required
 @apply_rate_limit(Limits.MODERATE)
 @demo_chat_limited
 def api_chat_unified():
@@ -270,6 +272,7 @@ def api_chat_unified():
 
 
 @chat_bp.route('/api/chat/history', methods=['GET'])
+@login_required
 @apply_rate_limit(Limits.STANDARD)
 def api_chat_history():
     """Get chat history for current user."""
@@ -307,6 +310,7 @@ def api_chat_history():
         return jsonify({'error': 'Could not load history'}), 500
 
 @chat_bp.route('/api/stress-trend', methods=['GET'])
+@login_required
 @apply_rate_limit(Limits.STANDARD)
 def api_stress_trend():
     """Returns the last 7 days of stress data for chart rendering."""
@@ -353,6 +357,7 @@ def api_stress_trend():
 
 
 @chat_bp.route('/api/chat/clear', methods=['POST'])
+@login_required
 @apply_rate_limit(Limits.STRICT)
 @demo_restricted
 def api_chat_clear():
@@ -379,6 +384,7 @@ def api_chat_clear():
 
 
 @chat_bp.route('/upload_study_file', methods=['POST'])
+@login_required
 @apply_rate_limit(Limits.MODERATE)
 @demo_restricted
 def upload_study_file():
@@ -412,6 +418,7 @@ def upload_study_file():
 
 
 @chat_bp.route('/study/upload', methods=['POST'])
+@login_required
 @apply_rate_limit(Limits.MODERATE)
 @demo_restricted
 def study_upload():
@@ -438,6 +445,7 @@ def study_upload():
 
 
 @chat_bp.route('/study/summarize', methods=['POST'])
+@login_required
 @apply_rate_limit(Limits.MODERATE)
 @demo_chat_limited
 def study_summarize():
@@ -464,6 +472,7 @@ def study_summarize():
 
 
 @chat_bp.route('/study/quiz', methods=['POST'])
+@login_required
 @apply_rate_limit(Limits.MODERATE)
 @demo_chat_limited
 def study_quiz():
@@ -490,6 +499,7 @@ def study_quiz():
 
 
 @chat_bp.route('/api/study/analyze', methods=['POST'])
+@login_required
 @apply_rate_limit(Limits.MODERATE)
 @demo_chat_limited
 def api_study_analyze():
@@ -550,6 +560,7 @@ def api_study_analyze():
 
 
 @chat_bp.route('/api/chat/feedback', methods=['POST'])
+@login_required
 @apply_rate_limit(Limits.STANDARD)
 def api_chat_feedback():
     """Capture thumbs/copy feedback; lightweight log for telemetry."""

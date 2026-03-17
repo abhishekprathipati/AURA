@@ -42,3 +42,54 @@
 /* Smooth scroll helper */
 .messages::-webkit-scrollbar{ width:8px; }
 .messages::-webkit-scrollbar-thumb{ background: var(--accent); border-radius: 6px; }
+
+/* Hover and focus states for accessibility */
+.file-btn:hover {
+  background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
+  border-color: var(--accent);
+  cursor: pointer;
+}
+
+.file-btn:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.send-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+  cursor: pointer;
+}
+
+.send-btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+.send-btn:active {
+  transform: translateY(0);
+}
+
+.chat-input input[type="text"]:focus {
+  outline: none;
+}
+
+/* Message hover feedback */
+.message:hover {
+  transform: translateX(2px);
+}
+
+.user:hover {
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
+}
+
+.aura:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* File card interactions */
+.file-attachment-card:hover {
+  background: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
