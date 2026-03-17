@@ -1142,6 +1142,17 @@
         try { await api('/api/resources', { method: 'POST', body: { title, link, description: desc, tags } }); toast('Shared!', 'success'); closeModal('shareResourceModal'); clr('newResTitle'); clr('newResLink'); clr('newResDesc'); clr('newResTags'); loadResources(); loadFeed(); } catch (e) { toast(e.message, 'error'); }
     }
 
+    async function deleteAllEvents() {
+        if (!confirm('⚠️ Delete ALL events? This cannot be undone.')) return;
+        try {
+            await api('/api/events/delete-all', { method: 'POST' });
+            toast('All events deleted', 'success');
+            S.events = [];
+            loadEvents();
+        } catch (e) {
+            toast(e.message, 'error');
+        }
+    }
 
 
     /* ═══════════════════════════════════════════════════════════════
@@ -1195,6 +1206,7 @@
         // Create/Share modal openers
         bind('createGroupBtn', 'click', () => openModal('createGroupModal'));
         bind('createEventBtn', 'click', () => openModal('createEventModal'));
+        bind('deleteAllEventsBtn', 'click', deleteAllEvents);
         bind('shareResourceBtn', 'click', () => openModal('shareResourceModal'));
 
         // Submit buttons

@@ -593,6 +593,8 @@ body.zen-mode #zenToggle i { transform: rotate(180deg); }
 .text-btn:hover { background: rgba(255,255,255,.12); color: var(--h-text); }
 .text-btn.accent { background: rgba(124,58,237,.15); color: var(--h-primary-l); border-color: rgba(124,58,237,.3); }
 .text-btn.accent:hover { background: rgba(124,58,237,.28); }
+.text-btn.danger { background: rgba(239,68,68,.15); color: #ef4444; border-color: rgba(239,68,68,.3); }
+.text-btn.danger:hover { background: rgba(239,68,68,.28); }
 
 /* Contact list (peers/groups/events/resources items) */
 .contact-list {

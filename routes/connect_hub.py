@@ -907,6 +907,17 @@ def export_ics(event_id):
                     headers={'Content-Disposition': f'attachment; filename={event_id}.ics'})
 
 
+@connect_bp.route('/api/events/delete-all', methods=['POST'])
+@login_required
+@demo_restricted
+def delete_all_events():
+    db = get_db()
+    email = session['user_email']
+    result = db['events'].delete_many({})
+    _log_hub_engagement(db, email, 'events_cleared')
+    return jsonify({'message': f'Deleted {result.deleted_count} events'}), 200
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 #  4. RESOURCES
 # ═══════════════════════════════════════════════════════════════════════════════
