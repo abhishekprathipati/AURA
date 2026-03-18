@@ -10,6 +10,25 @@ MODERATE_RISK = "MODERATE_RISK"
 HIGH_RISK = "HIGH_RISK"
 CRITICAL_RISK = "CRITICAL_RISK"
 
+# TODO #36 (AI/ML): Crisis Detection Limited to English
+#   Current keyword-based detection only works for English text.
+#   This is a CRITICAL limitation for multilingual student populations.
+#
+#   Issues:
+#   1. Non-English speakers may express crisis in their native language
+#   2. Code-switching (mixing languages) is common among multilingual users
+#   3. Cultural differences in expressing distress (indirect vs. direct)
+#   4. Transliterated text (e.g., Hindi in Latin script) won't match
+#
+#   Recommended improvements:
+#   - Add keyword lists for common campus languages (Hindi, Spanish, etc.)
+#   - Use multilingual NLP models (mBERT, XLM-RoBERTa) for classification
+#   - Implement language detection first, then apply appropriate model
+#   - Consider translation API for non-English text before analysis
+#   - Add support for Hinglish (Hindi-English mix) common in Indian campuses
+#   - Partner with counselors to validate crisis expressions in local languages
+#   - CRITICAL: Ensure false negative rate is minimized for crisis detection
+
 # Crisis keywords with word boundary matching to prevent false positives
 # e.g., "kill" won't match "skill", "skilled", etc.
 CRISIS_KEYWORDS = [
@@ -39,7 +58,7 @@ def predict_risk_level(stress_score: int, message: str, user_email: str = None) 
     # 1. Check for crisis language using word boundaries (case-insensitive)
     for pattern in _CRISIS_PATTERNS:
         if pattern.search(message):
-            log.warning(f"Crisis keyword detected for {user_email or 'unknown'}: '{pattern.pattern}'")
+            log.warning("Crisis keyword detected for %s: '%s'", user_email or 'unknown', pattern.pattern)
             return CRITICAL_RISK
 
     # 2. Personalized Baseline Anomaly Detection
@@ -58,24 +77,24 @@ def predict_risk_level(stress_score: int, message: str, user_email: str = None) 
                 mean = sum(scores) / len(scores)
                 variance = sum((s - mean) ** 2 for s in scores) / len(scores)
                 std_dev = variance ** 0.5
-                
+
                 if std_dev > 0:
                     z_score = (stress_score - mean) / std_dev
                     if z_score > 1.8:  # Significant spike from baseline
                         is_anomaly = True
-                        log.info(f"Personalized risk anomaly: {user_email} z-score={z_score:.2f}")
-                elif stress_score > mean + 15: # Significant jump from flat baseline
+                        log.info("Personalized risk anomaly: %s z-score=%.2f", user_email, z_score)
+                elif stress_score > mean + 15:  # Significant jump from flat baseline
                     is_anomaly = True
-                    log.info(f"Personalized risk anomaly (flat baseline): {user_email} jump={stress_score - mean}")
+                    log.info("Personalized risk anomaly (flat baseline): %s jump=%d", user_email, stress_score - mean)
         except Exception as e:
-            log.error(f"Risk baseline calc error: {e}")
+            log.error("Risk baseline calc error: %s", e)
 
     # 3. Map stress score to risk level
     if stress_score > 85 or (is_anomaly and stress_score > 60):
         return CRITICAL_RISK
     elif stress_score >= 65 or is_anomaly:
         return HIGH_RISK
-    elif stress_score >= 40: # 40-64
+    elif stress_score >= 40:  # 40-64
         return MODERATE_RISK
-    else: # < 40
+    else:  # < 40
         return LOW_RISK

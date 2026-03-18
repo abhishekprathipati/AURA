@@ -1,4 +1,16 @@
 <!DOCTYPE html>
+<!--
+TODO: REFACTORING NEEDED - This template is ~1650 lines and should be componentized.
+Suggested refactoring plan:
+  1. Extract activity sections: activities/_scream_meter.html, activities/_breathing.html,
+     activities/_journaling.html, activities/_grounding.html
+  2. Move inline CSS (~600+ lines) to external file: static/css/activities.css
+  3. Move activity logic JavaScript to modules: static/js/activities/*.js
+  4. Share breathing exercise component with relax.html via partials
+  5. Extract audio/microphone handling into reusable Web Audio utilities
+  6. Create activity registry for easy addition of new wellness activities
+This will enable modular loading and easier addition of new activities.
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8">

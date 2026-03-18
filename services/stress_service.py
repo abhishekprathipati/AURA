@@ -30,6 +30,7 @@ from models.mood import MoodModel
 from models.stress import StressModel
 from models.chat import ChatModel
 from utils.alerts import send_institutional_alert
+from config import Config
 import math
 import logging
 
@@ -99,7 +100,16 @@ WEIGHTS = {
 
 
 def _score_text_sentiment(text: str) -> float:
-    """Score a text string for stress sentiment. Returns 0-100."""
+    """Score a text string for stress sentiment. Returns 0-100.
+
+    TODO #31 (AI/ML): This is a basic keyword-matching approach. For production-grade
+    sentiment analysis, consider using:
+      - Hugging Face transformers (e.g., 'cardiffnlp/twitter-roberta-base-sentiment')
+      - spaCy with sentiment extension
+      - Fine-tuned BERT/RoBERTa for mental health domain
+    A proper NLP model would capture context, negations, sarcasm, and nuanced language
+    that keyword lists miss (e.g., "I'm not feeling great" vs "I'm feeling great").
+    """
     if not text:
         return 50.0
 
@@ -320,19 +330,27 @@ def _signal_volatility(user_email: str, db) -> Tuple[float, bool]:
     return max(0.0, min(100.0, volatility_score)), True
 
 
-def _signal_time_bias() -> Tuple[float, bool]:
+def _signal_time_bias(user_email: str = None) -> Tuple[float, bool]:
     """Signal 5: Late-night activity penalty (11 PM - 4 AM = higher stress).
     Always has data (time always exists), returns (score, True).
+
+    Timezone is configurable via Config.DEFAULT_TIMEZONE_OFFSET (minutes from UTC).
+    Can be extended to use per-user timezone preference from their profile.
     """
     now = datetime.utcnow()
-    # Accurate IST: UTC + 5 hours 30 minutes
-    ist_hour = (now.hour * 60 + now.minute + 330) // 60 % 24
-    
-    if 23 <= ist_hour or ist_hour < 4:
+
+    # Get timezone offset: could be extended to check user profile for per-user timezone
+    # For now, use the configurable default (IST = +330 minutes by default)
+    tz_offset_minutes = Config.DEFAULT_TIMEZONE_OFFSET
+
+    # Convert UTC to local hour based on configured timezone offset
+    local_hour = (now.hour * 60 + now.minute + tz_offset_minutes) // 60 % 24
+
+    if 23 <= local_hour or local_hour < 4:
         return 75.0, True
-    elif 4 <= ist_hour < 6:
+    elif 4 <= local_hour < 6:
         return 60.0, True
-    elif 22 <= ist_hour < 23:
+    elif 22 <= local_hour < 23:
         return 55.0, True
     else:
         return 30.0, True
@@ -424,7 +442,7 @@ def _zscore_spike(user_email: str, db, current_score: float) -> bool:
     return z > 2.0  # >2 standard deviations = anomaly
 
 
-def calculate_dynamic_stress(user_email: str) -> Dict:
+def calculate_dynamic_stress(user_email: str, force_refresh: bool = False) -> Dict:
     """
     Main entry point: compute stress from all signals.
 
@@ -437,6 +455,11 @@ def calculate_dynamic_stress(user_email: str) -> Dict:
       6. Multi-condition institutional alert
       7. Confidence + explainability
 
+    Args:
+        user_email: The user's email address
+        force_refresh: If True, bypass the 5-minute cache and recompute stress.
+                       Use this after mood updates or when fresh data is critical.
+
     Returns dict with:
       score, label, trend, signals, spike_detected, insight,
       confidence, dominant_factor, explanation, updated_at
@@ -445,11 +468,16 @@ def calculate_dynamic_stress(user_email: str) -> Dict:
     coll = db[StressModel.collection_name]
 
     # ── Cache: reuse recent result if < 5 min old (prevents polling flood) ──
-    five_min_ago = datetime.utcnow() - timedelta(minutes=5)
-    cached = coll.find_one(
-        {'user_email': user_email, 'created_at': {'$gte': five_min_ago}, 'source': 'dynamic_engine_v3.1'},
-        sort=[('created_at', -1)]
-    )
+    # Use force_refresh=True to bypass cache when fresh calculation is needed
+    # (e.g., after a mood entry, during crisis assessment, or for dashboard refresh)
+    if not force_refresh:
+        five_min_ago = datetime.utcnow() - timedelta(minutes=5)
+        cached = coll.find_one(
+            {'user_email': user_email, 'created_at': {'$gte': five_min_ago}, 'source': 'dynamic_engine_v3.1'},
+            sort=[('created_at', -1)]
+        )
+    else:
+        cached = None
     if cached:
         score = cached.get('score', 50)
         if score <= 25:   _label = 'Relaxed'
@@ -633,7 +661,7 @@ def calculate_dynamic_stress(user_email: str) -> Dict:
             'source': 'dynamic_engine_v3.1',
         })
     except Exception as e:
-        log.warning(f"Failed to insert student_wellness record: {e}")
+        log.warning("Failed to insert student_wellness record: %s", e)
 
     # ── 7. Multi-condition institutional alert ───────────────────────────
     # Trigger only when: score > 75 AND rising trend AND high volatility
@@ -644,13 +672,13 @@ def calculate_dynamic_stress(user_email: str) -> Dict:
         try:
             send_institutional_alert(user_email, final_score)
         except Exception as e:
-            log.error(f"Failed to send institutional alert for {user_email}: {e}")
+            log.error("Failed to send institutional alert for %s: %s", user_email, e)
     # Also alert on critical regardless (safety net)
     elif final_score > 90:
         try:
             send_institutional_alert(user_email, final_score)
         except Exception as e:
-            log.error(f"Failed to send critical alert for {user_email}: {e}")
+            log.error("Failed to send critical alert for %s: %s", user_email, e)
 
     return {
         'score': final_score,

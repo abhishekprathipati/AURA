@@ -1,3 +1,12 @@
+# TODO: ARCHITECTURE - This file is too large (~60KB). Consider splitting into:
+#   - routes/student/dashboard.py     - Dashboard and main views
+#   - routes/student/mood.py          - Mood tracking endpoints
+#   - routes/student/stress.py        - Stress monitoring endpoints
+#   - routes/student/games.py         - Game-related endpoints
+#   - routes/student/grievance.py     - Grievance submission endpoints
+#   - routes/student/api.py           - Generic API endpoints
+# Use a student/__init__.py to re-export the combined blueprint or create sub-blueprints.
+
 from flask import Blueprint, render_template, request, jsonify, session, current_app
 from utils.auth_helpers import login_required, demo_restricted, is_demo_account, DEMO_CHAT_LIMIT, DEMO_GAME_TIME_LIMIT
 from utils.database import get_db

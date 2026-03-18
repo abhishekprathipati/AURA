@@ -1,3 +1,49 @@
+# TODO: ARCHITECTURE #16 - No background task/queue system
+#   AI response generation is synchronous and blocks the request thread.
+#   For production scalability, consider:
+#   - Using Celery with Redis/RabbitMQ for async task processing
+#   - Implementing a job queue (RQ, Dramatiq, Huey) for long-running AI calls
+#   - Adding request timeouts and circuit breakers for API calls
+#   - Caching common responses to reduce API load
+#   This would improve response times and prevent thread starvation under load.
+
+# TODO #28 (SCALABILITY): Synchronous AI API Calls
+#   Current implementation makes blocking HTTP calls to AI providers (Gemini, OpenAI, Groq).
+#   For high-concurrency production deployments, consider:
+#
+#   1. Async/Await Pattern:
+#      - Use `aiohttp` or `httpx` async clients instead of synchronous SDK calls
+#      - Requires Flask-to-ASGI migration (e.g., Quart, FastAPI) or background workers
+#      - Example: `async def generate_mental_response(...)`
+#
+#   2. Background Task Queue:
+#      - Offload AI calls to Celery/RQ workers
+#      - Return a task_id immediately, poll for results
+#      - Better for long-running analysis tasks
+#
+#   3. Streaming Responses:
+#      - Use SSE (Server-Sent Events) to stream AI responses token-by-token
+#      - Improves perceived latency for users
+#
+#   Architectural changes needed:
+#      - Migrate from Flask (WSGI) to async framework or use gevent/eventlet
+#      - Update database calls to async (motor for MongoDB)
+#      - Add proper async context management
+
+# TODO #34 (AI/ML): No Model Versioning
+#   Current implementation has no versioning for:
+#   - AI model selection (hardcoded model names like 'gemini-2.5-flash')
+#   - Local emotion model weights (go_emotions)
+#   - Prompt templates and system prompts
+#
+#   Recommendations:
+#   1. Add model version config: AURA_AI_MODEL_VERSION env var
+#   2. Store model version with each response in DB for audit
+#   3. Implement A/B testing framework for prompt variations
+#   4. Add model performance tracking (latency, quality metrics)
+#   5. Version control system prompts in separate files
+#   6. Consider MLflow or similar for model lifecycle management
+
 import os
 import logging
 import json
@@ -73,24 +119,24 @@ client = None
 if GEMINI_API_KEY and Client:
     try:
         client = Client(api_key=GEMINI_API_KEY)
-        logger.info("✓ Gemini AI (google.genai) configured successfully")
+        logger.info("Gemini AI (google.genai) configured successfully")
     except Exception as e:
-        logger.error(f"Failed to configure Gemini: {e}")
+        logger.error("Failed to configure Gemini: %s", e)
         client = None
 else:
     if not GEMINI_API_KEY:
-        logger.warning("⚠ GEMINI_API_KEY not set - using fallback providers")
+        logger.warning("GEMINI_API_KEY not set - using fallback providers")
     if not Client:
-        logger.warning("⚠ google-genai not installed - install with: pip install google-genai")
+        logger.warning("google-genai not installed - install with: pip install google-genai")
 
 # Initialize OpenAI fallback if available
 openai_client = None
 if OPENAI_API_KEY and OpenAIClient:
     try:
         openai_client = OpenAIClient(api_key=OPENAI_API_KEY)
-        logger.info("✓ OpenAI configured as fallback provider")
+        logger.info("OpenAI configured as fallback provider")
     except Exception as e:
-        logger.error(f"Failed to configure OpenAI: {e}")
+        logger.error("Failed to configure OpenAI: %s", e)
         openai_client = None
 
 # Initialize Groq if available (recommended free alternative)
@@ -98,9 +144,9 @@ groq_client = None
 if GROQ_API_KEY and GroqClient:
     try:
         groq_client = GroqClient(api_key=GROQ_API_KEY)
-        logger.info("✓ Groq configured (free Llama model)")
+        logger.info("Groq configured (free Llama model)")
     except Exception as e:
-        logger.error(f"Failed to configure Groq: {e}")
+        logger.error("Failed to configure Groq: %s", e)
         groq_client = None
 
 # Initialize DeepSeek (free tier, OpenAI-compatible, excellent for study tasks)
@@ -112,9 +158,9 @@ if DEEPSEEK_API_KEY and OpenAIClient:
             api_key=DEEPSEEK_API_KEY,
             base_url='https://api.deepseek.com'
         )
-        logger.info("✓ DeepSeek configured (free study-optimised model)")
+        logger.info("DeepSeek configured (free study-optimised model)")
     except Exception as e:
-        logger.error(f"Failed to configure DeepSeek: {e}")
+        logger.error("Failed to configure DeepSeek: %s", e)
         deepseek_client = None
 
 
@@ -122,9 +168,9 @@ if DEEPSEEK_API_KEY and OpenAIClient:
 if ENABLE_LOCAL_EMOTION_MODEL and os.getenv('AURA_EAGER_MODEL_LOAD', 'false').lower() == 'true':
     try:
         get_emotion_model()
-        logger.info("✓ Emotion model pre-loaded successfully (Eager Load)")
+        logger.info("Emotion model pre-loaded successfully (Eager Load)")
     except Exception as e:
-        logger.warning(f"Failed to eager load emotion model: {e}")
+        logger.warning("Failed to eager load emotion model: %s", e)
 
 
 def _local_fallback(user_message: str, style: str = 'concise') -> str:
@@ -299,6 +345,18 @@ def predict_emotion_and_stress(user_message: str) -> tuple:
         emo_name = best_emotion['label']
         
         stress_map = {
+            # TODO #33 (AI/ML): Hardcoded Emotion-to-Stress Mapping
+            #   These fixed values don't account for:
+            #   1. Individual differences (some people thrive on "excitement")
+            #   2. Context (anger at injustice vs. anger at self)
+            #   3. Cultural variations in emotion expression
+            #   4. Personal baseline calibration over time
+            #
+            #   Future improvements:
+            #   - Learn personalized mappings from user feedback/outcomes
+            #   - Use multi-factor models (emotion + context + history)
+            #   - A/B test different mapping strategies
+            #   - Allow user preference input ("I find excitement stressful")
             "admiration": 10, "amusement": 10, "anger": 85, "annoyance": 65,
             "approval": 20, "caring": 20, "confusion": 60, "curiosity": 30,
             "desire": 40, "disappointment": 70, "disapproval": 60, "disgust": 75,
@@ -331,7 +389,7 @@ def predict_emotion_and_stress(user_message: str) -> tuple:
             
         return predicted_mood, min(100, max(0, int(round(weighted_stress)))), top_emotions
     except Exception as e:
-        logger.error(f"Failed to run local emotion model: {e}")
+        logger.error("Failed to run local emotion model: %s", e)
         return "Unknown", 50, {}
 
 
@@ -434,7 +492,7 @@ Student: "{user_message}"
 
         if response and hasattr(response, 'text') and response.text:
             text = response.text.strip()
-            logger.info(f"✓ Generated therapist response ({len(text)} chars)")
+            logger.info("Generated therapist response (%d chars)", len(text))
             return text
         else:
             logger.warning("Empty response from Gemini")
@@ -445,9 +503,9 @@ Student: "{user_message}"
                 "mental_indicators": ["System degraded"],
                 "aura_response": _generate_with_fallback(user_message, chat_history, style)
             })
-            
+
     except Exception as e:
-        logger.error(f"Gemini API error: {str(e)[:300]}")
+        logger.error("Gemini API error: %s", str(e)[:300])
         logger.exception("Full traceback:")
         return json.dumps({
             "mood": predicted_mood,
@@ -475,10 +533,10 @@ def _generate_with_fallback(user_message: str, chat_history: List[Dict[str, str]
             )
             text = (resp.choices[0].message.content or '').strip()
             if text:
-                logger.info(f"✓ DeepSeek ({model}) response ({len(text)} chars)")
+                logger.info("DeepSeek (%s) response (%d chars)", model, len(text))
                 return text
         except Exception as de:
-            logger.warning(f"DeepSeek error: {str(de)[:150]}")
+            logger.warning("DeepSeek error: %s", str(de)[:150])
 
     # 2. Groq — free, fast, Llama 3.3 70B
     if groq_client:
@@ -492,10 +550,10 @@ def _generate_with_fallback(user_message: str, chat_history: List[Dict[str, str]
             )
             text = (resp.choices[0].message.content or '').strip()
             if text:
-                logger.info(f"✓ Groq (Llama) response ({len(text)} chars)")
+                logger.info("Groq (Llama) response (%d chars)", len(text))
                 return text
         except Exception as ge:
-            logger.warning(f"Groq error: {str(ge)[:150]}")
+            logger.warning("Groq error: %s", str(ge)[:150])
 
     # 3. OpenAI fallback
     if openai_client:
@@ -509,10 +567,10 @@ def _generate_with_fallback(user_message: str, chat_history: List[Dict[str, str]
             )
             text = (resp.choices[0].message.content or '').strip()
             if text:
-                logger.info(f"✓ OpenAI fallback response ({len(text)} chars)")
+                logger.info("OpenAI fallback response (%d chars)", len(text))
                 return text
         except Exception as oe:
-            logger.error(f"OpenAI error: {str(oe)[:300]}")
+            logger.error("OpenAI error: %s", str(oe)[:300])
 
     # 4. Final local fallback
     if REQUIRE_AI:
@@ -654,10 +712,10 @@ def generate_study_response(user_message: str, chat_history: List[Dict[str, str]
             )
             if response and hasattr(response, 'text') and response.text:
                 text = response.text.strip()
-                logger.info(f"✓ Gemini study response ({len(text)} chars)")
+                logger.info("Gemini study response (%d chars)", len(text))
                 return text
         except Exception as e:
-            logger.warning(f"Gemini study error: {str(e)[:150]}")
+            logger.warning("Gemini study error: %s", str(e)[:150])
 
     # 2–4. DeepSeek → Groq → OpenAI → local
     return _generate_with_fallback(user_message, chat_history, style, persona='study')
@@ -758,7 +816,7 @@ def analyze_study_material(prompt: str, file_path: str, mime_type: str = '', his
         return "Could not analyze the material. Please try again."
 
     except Exception as e:
-        logger.error(f"Study analysis error: {str(e)[:200]}")
+        logger.error("Study analysis error: %s", str(e)[:200])
         # If no file was involved, fall back to text-only provider chain
         p_check = Path(file_path) if file_path else None
         if not p_check or not p_check.exists():

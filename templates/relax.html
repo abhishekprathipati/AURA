@@ -1,4 +1,16 @@
 <!DOCTYPE html>
+<!--
+TODO: REFACTORING NEEDED - This template is ~1360 lines and should be componentized.
+Suggested refactoring plan:
+  1. Extract relaxation modules: relax/_ambient_sounds.html, relax/_breathing.html,
+     relax/_meditation_timer.html, relax/_nature_scenes.html
+  2. Move inline CSS (~400+ lines) to external file: static/css/relax.css
+  3. Move audio player and timer logic to: static/js/relax.js
+  4. Share breathing component with activities.html via partials
+  5. Preload audio assets and implement proper audio context management
+  6. Consider service worker caching for offline relaxation features
+This will improve code organization and enable offline relaxation features.
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8">

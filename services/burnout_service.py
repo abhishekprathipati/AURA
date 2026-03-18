@@ -44,6 +44,23 @@ def analyze_burnout_risk(user_email: str) -> Dict[str, Any]:
         is_anomaly = z_score > 1.5
 
         # 4. Sustained High Stress check (last 5)
+        # TODO #35 (AI/ML): Arbitrary Thresholds - Clinical Validation Needed
+        #   The threshold of >65 for "sustained high stress" is empirically chosen
+        #   and has NOT been validated against clinical burnout assessments.
+        #
+        #   Issues with current approach:
+        #   1. No clinical basis for the 65 threshold (not from MBI or other validated scales)
+        #   2. "3+ consecutive logs" is arbitrary - burnout develops over weeks, not days
+        #   3. Individual baselines vary - 65 might be normal for some users
+        #   4. No distinction between acute stress episodes and chronic burnout
+        #
+        #   Recommendations for clinical validation:
+        #   - Partner with mental health researchers to validate thresholds
+        #   - Correlate with validated instruments (Maslach Burnout Inventory)
+        #   - Implement personalized thresholds based on user baseline
+        #   - Add temporal analysis (sustained over weeks, not just readings)
+        #   - Consider multi-dimensional burnout (exhaustion, cynicism, inefficacy)
+        #   - IMPORTANT: Add disclaimer that this is NOT a clinical diagnostic tool
         recent_scores = all_scores[:5]
         sustained_high = all(s > 65 for s in recent_scores) if len(recent_scores) >= 3 else False
 
@@ -106,5 +123,5 @@ def analyze_burnout_risk(user_email: str) -> Dict[str, Any]:
         }
 
     except Exception as e:
-        logger.error(f"Burnout analysis error: {e}", exc_info=True)
+        logger.error("Burnout analysis error: %s", e, exc_info=True)
         return {'risk_level': 'error', 'score': 0}

@@ -64,11 +64,11 @@ def update_emotion_memory(user_email: str):
             {'$set': memory_doc},
             upsert=True
         )
-        
-        log.info(f"Updated emotion memory for {user_email}: {average_stress} stress, {dominant_emotion}")
-        
+
+        log.info("Updated emotion memory for %s: %d stress, %s", user_email, average_stress, dominant_emotion)
+
     except Exception as e:
-        log.error(f"Failed to update emotion memory: {e}")
+        log.error("Failed to update emotion memory: %s", e)
 
 def get_emotion_memory(user_email: str) -> dict:
     """Fetch the current emotion memory for a user."""
@@ -79,5 +79,5 @@ def get_emotion_memory(user_email: str) -> dict:
             if memory:
                 return memory
     except Exception as e:
-        log.error(f"Failed to fetch emotion memory: {e}")
+        log.error("Failed to fetch emotion memory: %s", e)
     return {"average_stress": 50, "dominant_emotion": "Neutral"}

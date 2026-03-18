@@ -1,6 +1,12 @@
+# TODO: ARCHITECTURE - As this file grows, consider splitting into:
+#   - routes/parent/auth.py       - OTP-based authentication (send-otp, verify-otp, logout)
+#   - routes/parent/dashboard.py  - Dashboard views and child monitoring
+#   - routes/parent/api.py        - API endpoints for parent-specific data
+# Use a parent/__init__.py to re-export the combined blueprint.
+
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from utils.auth_helpers import login_required
-from utils.database import get_db
+from utils.database import get_db, paginate_query
 from utils.helpers import safe_error
 from utils.rate_limit import apply_rate_limit, Limits
 from models.parent import ParentModel
@@ -714,18 +720,31 @@ def get_student_activity_log():
 @parent_bp.route('/api/notifications', methods=['GET'])
 @parent_login_required
 def get_parent_notifications():
-    """Get notifications for parent"""
+    """Get notifications for parent with pagination support.
+
+    Query params:
+        page (int): Page number (1-indexed, default 1)
+        per_page (int): Items per page (default 20, max 100)
+
+    Example: /api/notifications?page=2&per_page=10
+    """
     try:
         student_roll = session.get('student_roll')
         db = get_db()
-        
-        # Get notifications
-        notifications = list(db['parent_notifications'].find(
-            {'student_roll': student_roll},
-            sort=[('created_at', -1)],
-            limit=20
-        ))
-        
+
+        # Parse pagination parameters (#27 Scalability: Use paginate_query utility)
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+
+        # Build query and apply pagination
+        query = {'student_roll': student_roll}
+        cursor = db['parent_notifications'].find(query).sort('created_at', -1)
+        notifications = list(paginate_query(cursor, page, per_page))
+
+        # Get total for pagination metadata (optional, for UI pagination controls)
+        total = db['parent_notifications'].count_documents(query)
+        total_pages = (total + per_page - 1) // per_page if per_page > 0 else 1
+
         formatted = []
         for notif in notifications:
             formatted.append({
@@ -749,8 +768,19 @@ def get_parent_notifications():
                     'created_at': datetime.utcnow().isoformat()
                 }
             ]
-        
-        return jsonify(formatted), 200
-        
+
+        # Return with pagination metadata
+        return jsonify({
+            'notifications': formatted,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': total,
+                'total_pages': total_pages,
+                'has_next': page < total_pages,
+                'has_prev': page > 1
+            }
+        }), 200
+
     except Exception as e:
         return jsonify({'error': safe_error(e, 'parent')}), 500

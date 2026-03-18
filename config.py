@@ -36,6 +36,12 @@ class Config:
     MONGODB_TLS_ALLOW_INVALID_CERTIFICATES = _bool('MONGODB_TLS_ALLOW_INVALID')
 
     # ── Rate-limit storage (memory for dev, Redis for prod) ─────────────
+    # WARNING: 'memory://' is for DEVELOPMENT ONLY. It stores rate-limit counters
+    # in-process memory, which means:
+    #   1) Limits reset on every server restart
+    #   2) Multi-instance deployments (Gunicorn workers, Kubernetes pods) won't share state
+    #   3) No persistence across deploys
+    # For production, set RATELIMIT_STORAGE_URI to a Redis URL (e.g., redis://localhost:6379/0)
     RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI', os.getenv('REDIS_URL', 'memory://'))
     #   Production: redis://localhost:6379/0   or   redis://<host>:6379/0
 
@@ -57,3 +63,26 @@ class Config:
     PROXY_FIX_X_FOR    = _int('PROXY_FIX_X_FOR', 1)
     PROXY_FIX_X_PROTO  = _int('PROXY_FIX_X_PROTO', 1)
     PROXY_FIX_X_HOST   = _int('PROXY_FIX_X_HOST', 1)
+
+    # ── Timezone ─────────────────────────────────────────────────────────
+    # Default timezone offset in minutes from UTC (IST = +330, EST = -300, etc.)
+    # Used for time-of-day stress bias calculations
+    # Set via DEFAULT_TIMEZONE_OFFSET env var or override per user in their profile
+    DEFAULT_TIMEZONE_OFFSET = _int('DEFAULT_TIMEZONE_OFFSET', 330)  # IST (+5:30) default
+
+    # ── Error Monitoring (Sentry) ─────────────────────────────────────────
+    # Sentry provides real-time error tracking and performance monitoring.
+    # Disabled by default. To enable:
+    #   1. Create a Sentry project at https://sentry.io/
+    #   2. Get your DSN from Project Settings > Client Keys (DSN)
+    #   3. Set SENTRY_DSN environment variable
+    #   4. Install sentry-sdk: pip install sentry-sdk[flask]
+    SENTRY_DSN         = os.getenv('SENTRY_DSN', '')  # Leave empty to disable
+    SENTRY_ENVIRONMENT = os.getenv('SENTRY_ENVIRONMENT', ENV)  # 'production', 'staging', etc.
+    SENTRY_TRACES_SAMPLE_RATE = float(os.getenv('SENTRY_TRACES_SAMPLE_RATE', '0.1'))  # 10% of transactions
+    SENTRY_PROFILES_SAMPLE_RATE = float(os.getenv('SENTRY_PROFILES_SAMPLE_RATE', '0.1'))  # 10% profiling
+
+    # ── Data Retention ────────────────────────────────────────────────────
+    # Used by scripts/cleanup.py for periodic data cleanup
+    DATA_RETENTION_CHAT_DAYS = _int('DATA_RETENTION_CHAT_DAYS', 90)   # Days to keep chat messages
+    DATA_RETENTION_LOGS_DAYS = _int('DATA_RETENTION_LOGS_DAYS', 365)  # Days to keep stress/mood logs

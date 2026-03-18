@@ -1,4 +1,16 @@
 <!DOCTYPE html>
+<!--
+TODO: REFACTORING NEEDED - This template is ~1700 lines and should be componentized.
+Suggested refactoring plan:
+  1. Extract dashboard sections: hod/_department_stats.html, hod/_student_table.html,
+     hod/_wellness_charts.html, hod/_alert_panel.html
+  2. Move inline CSS (~500+ lines) to external file: static/css/hod_dashboard.css
+  3. Move chart initialization and data fetching to: static/js/hod_dashboard.js
+  4. Share common admin components with proctor_dashboard.html via partials
+  5. Extract data tables as reusable components with sorting/filtering logic
+  6. Consider pagination and virtual scrolling for large student lists
+This will improve maintainability and enable shared components across admin dashboards.
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">

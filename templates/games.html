@@ -1,3 +1,14 @@
+{#
+TODO: REFACTORING NEEDED - This template is ~3300 lines and should be componentized.
+Suggested refactoring plan:
+  1. Extract each game (Memory Match, Pattern Recall, Focus Timer, etc.) into separate
+     partials: games/_memory_match.html, games/_pattern_recall.html, etc.
+  2. Move game-specific CSS into separate files: static/css/games/memory.css, etc.
+  3. Move game logic JavaScript into separate modules: static/js/games/memory.js, etc.
+  4. Create a games/base.html with shared game UI components (XP bar, achievements, etc.)
+  5. Use Jinja macros for repeated UI patterns (game cards, modals, buttons)
+This will improve maintainability, enable lazy-loading, and reduce initial page weight.
+#}
 {% extends "base.html" %}
 
 {% block title %}Mind Games - AURA{% endblock %}

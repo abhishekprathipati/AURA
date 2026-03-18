@@ -1,3 +1,9 @@
+[project]
+name = "aura"
+version = "1.0.0"
+description = "AURA - Student Wellness Monitoring System"
+requires-python = ">=3.11"
+
 [tool.ruff]
 line-length = 120
 target-version = "py311"
@@ -7,8 +13,95 @@ exclude = [
   "__pycache__",
   "static/uploads",
   "scripts/tools",
+  "tests/",
+  "*.pyc",
+  ".pytest_cache",
 ]
 
 [tool.ruff.lint]
-select = ["F"]
-ignore = ["F401", "F541"]
+# Rule categories to enable:
+# F - Pyflakes (unused imports, undefined names, etc.)
+# E - pycodestyle errors (syntax errors, indentation)
+# W - pycodestyle warnings (whitespace issues)
+# I - isort (import sorting)
+# B - flake8-bugbear (common bugs and design problems)
+# C4 - flake8-comprehensions (list/dict comprehension improvements)
+# UP - pyupgrade (modernize Python syntax)
+# S - flake8-bandit (security issues)
+# G - flake8-logging-format (logging format issues)
+select = [
+  "F",     # Pyflakes
+  "E",     # pycodestyle errors
+  "W",     # pycodestyle warnings
+  "B",     # flake8-bugbear
+  "C4",    # flake8-comprehensions
+  "UP",    # pyupgrade
+  "G",     # flake8-logging-format
+]
+
+ignore = [
+  # Ignore unused imports in __init__.py files (common pattern)
+  "F401",
+  # Ignore f-string without placeholders (sometimes intentional)
+  "F541",
+  # Ignore line too long for now (gradual enforcement)
+  "E501",
+  # Ignore missing trailing comma (style preference)
+  "COM812",
+  # Ignore ambiguous variable names (e.g., l, O, I)
+  "E741",
+  # Ignore assert in tests
+  "S101",
+  # Ignore hardcoded password detection (we have config-based passwords)
+  "S105",
+  "S106",
+  # Ignore subprocess calls (necessary for some operations)
+  "S603",
+  "S607",
+  # Ignore logging f-string warning (we've fixed most, but allow some)
+  "G004",
+]
+
+# Per-file ignores
+[tool.ruff.lint.per-file-ignores]
+# Tests can use assert and have looser rules
+"tests/*.py" = ["S101", "F401", "E501"]
+# Init files commonly have unused imports for re-export
+"__init__.py" = ["F401"]
+# Config files may have hardcoded values
+"config.py" = ["S105", "S106"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["utils", "services", "models", "routes"]
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+filterwarnings = [
+  "ignore::DeprecationWarning",
+  "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["app", "services", "utils", "routes", "models"]
+omit = [
+  "tests/*",
+  "*/__pycache__/*",
+  "*.pyc",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+]

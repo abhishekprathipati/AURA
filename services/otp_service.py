@@ -1,11 +1,15 @@
 """
 OTP (One-Time Password) Service for Parent Authentication
 Handles OTP generation, storage in MongoDB, verification, and SMS delivery via Fast2SMS.
+
+SECURITY: OTPs are hashed using bcrypt before storage in MongoDB.
+          OTPs are NEVER returned in API responses - only sent via SMS.
 """
 
 import secrets
 import requests
 import logging
+import bcrypt
 from datetime import datetime, timedelta
 from utils.database import get_db
 from config import Config
@@ -20,6 +24,19 @@ class OTPService:
     OTP_EXPIRY_MINUTES = 5
     MAX_ATTEMPTS = 3
     RESEND_COOLDOWN_SECONDS = 30
+
+    @staticmethod
+    def _hash_otp(otp: str) -> str:
+        """Hash an OTP using bcrypt for secure storage."""
+        return bcrypt.hashpw(otp.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    @staticmethod
+    def _verify_otp_hash(otp: str, hashed_otp: str) -> bool:
+        """Verify an OTP against its bcrypt hash."""
+        try:
+            return bcrypt.checkpw(otp.encode('utf-8'), hashed_otp.encode('utf-8'))
+        except Exception:
+            return False
 
     @staticmethod
     def generate_otp():
@@ -68,10 +85,10 @@ class OTPService:
             result = response.json()
 
             if result.get("return"):
-                logger.info(f"SMS sent successfully to +91{phone[:3]}***{phone[-3:]}")
+                logger.info("SMS sent successfully to +91%s***%s", phone[:3], phone[-3:])
                 return True
             else:
-                logger.error(f"Fast2SMS error: {result.get('message', 'Unknown error')}")
+                logger.error("Fast2SMS error: %s", result.get('message', 'Unknown error'))
                 return False
 
         except requests.exceptions.Timeout:
@@ -81,12 +98,18 @@ class OTPService:
             logger.error("Fast2SMS connection failed — check internet")
             return False
         except Exception as e:
-            logger.error(f"SMS sending failed: {str(e)}")
+            logger.error("SMS sending failed: %s", str(e))
             return False
 
     @staticmethod
     def send_otp(phone):
-        """Generate OTP, store in DB, and send via SMS"""
+        """Generate OTP, store hashed in DB, and send via SMS.
+
+        SECURITY: OTP is hashed before storage and NEVER returned in the response.
+        The OTP is only sent via SMS - never exposed in API responses.
+
+        Returns: (success: bool, message: str)
+        """
         db = get_db()
         phone = OTPService.normalize_phone(phone)
         otp = OTPService.generate_otp()
@@ -102,7 +125,7 @@ class OTPService:
             }
         )
         if recent:
-            return None, 'Please wait before requesting a new OTP'
+            return False, 'Please wait before requesting a new OTP'
 
         # Invalidate existing OTPs for this phone
         db[OTPService.collection_name].update_many(
@@ -110,10 +133,13 @@ class OTPService:
             {'$set': {'expired': True}}
         )
 
-        # Store new OTP
+        # Hash OTP before storing (SECURITY FIX #4)
+        hashed_otp = OTPService._hash_otp(otp)
+
+        # Store new OTP (hashed)
         otp_record = {
             'phone': phone,
-            'otp': otp,
+            'otp_hash': hashed_otp,  # Store hash, not plaintext
             'attempts': 0,
             'created_at': datetime.utcnow(),
             'expires_at': datetime.utcnow() + timedelta(minutes=OTPService.OTP_EXPIRY_MINUTES),
@@ -126,21 +152,31 @@ class OTPService:
         sms_sent = OTPService._send_sms(phone, otp)
 
         # Structured log (OTP never exposed)
-        import logging
         _log = logging.getLogger('aura.otp')
         _log.info('OTP generated  phone=+91%s***%s  sms=%s  ttl=%dm',
                   phone[:3], phone[-3:],
                   'sent' if sms_sent else 'demo',
                   OTPService.OTP_EXPIRY_MINUTES)
 
+        # SECURITY FIX #5: Never return OTP to frontend - only return success/failure
         if sms_sent:
-            return otp, 'OTP sent to your phone via SMS'
+            return True, 'OTP sent to your phone via SMS'
         else:
-            return otp, 'OTP generated (demo mode - check banner below)'
+            # In demo mode when SMS is not configured, log the OTP to console only
+            # This allows testing without actual SMS, but OTP is never in API response
+            _log.warning('DEMO MODE: OTP for %s***%s is %s (not returned to client)',
+                        phone[:3], phone[-3:], otp)
+            return True, 'OTP generated (demo mode - check server logs)'
 
     @staticmethod
     def verify_otp(phone, otp):
-        """Verify OTP for a phone number. Returns (success, message)"""
+        """Verify OTP for a phone number using bcrypt hash comparison.
+
+        SECURITY: OTPs are stored as bcrypt hashes. Verification uses
+        constant-time comparison to prevent timing attacks.
+
+        Returns: (success: bool, message: str)
+        """
         db = get_db()
         phone = OTPService.normalize_phone(phone)
 
@@ -172,12 +208,24 @@ class OTPService:
             {'$inc': {'attempts': 1}}
         )
 
-        # Check OTP match
-        if record['otp'] != otp:
+        # Check OTP match using bcrypt hash verification (SECURITY FIX #4)
+        # Support both old plaintext 'otp' field and new 'otp_hash' field for migration
+        stored_hash = record.get('otp_hash')
+        stored_plain = record.get('otp')
+
+        otp_valid = False
+        if stored_hash:
+            # New secure method: verify against bcrypt hash
+            otp_valid = OTPService._verify_otp_hash(otp, stored_hash)
+        elif stored_plain:
+            # Legacy fallback for old records (will be phased out)
+            otp_valid = (stored_plain == otp)
+
+        if not otp_valid:
             remaining = OTPService.MAX_ATTEMPTS - record.get('attempts', 0) - 1
             return False, f'Invalid OTP. {remaining} attempt(s) remaining.'
 
-        # OTP matched — mark as verified
+        # OTP matched - mark as verified
         db[OTPService.collection_name].update_one(
             {'_id': record['_id']},
             {'$set': {'verified': True, 'verified_at': datetime.utcnow()}}

@@ -1,3 +1,4 @@
+import hmac
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from utils.database import get_db
 from models.user import UserModel
@@ -10,6 +11,13 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        # SECURITY FIX #6: Validate CSRF token on login form POST
+        form_token = request.form.get('csrf_token', '')
+        session_token = session.get('csrf_token', '')
+        if not form_token or not session_token or not hmac.compare_digest(form_token, session_token):
+            flash('Invalid request. Please try again.', 'danger')
+            return render_template('login.html'), 403
+
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
         

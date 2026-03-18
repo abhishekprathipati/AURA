@@ -1,4 +1,16 @@
 <!DOCTYPE html>
+<!--
+TODO: REFACTORING NEEDED - This template is ~2200 lines and should be componentized.
+Suggested refactoring plan:
+  1. Extract chat UI components: chatbot/_message_list.html, chatbot/_input_area.html,
+     chatbot/_file_upload.html, chatbot/_sidebar.html
+  2. Move inline CSS (~800+ lines) to external file: static/css/study_chatbot.css
+  3. Move chat logic JavaScript to dedicated module: static/js/study_chatbot.js
+  4. Share common chatbot components with mental_chatbot.html via partials
+  5. Extract markdown rendering and code highlighting logic into reusable utilities
+  6. Consider WebSocket integration for real-time streaming responses
+This will reduce duplication, improve caching, and enable code reuse across chatbots.
+-->
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">

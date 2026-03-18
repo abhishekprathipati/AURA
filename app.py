@@ -1,3 +1,17 @@
+# TODO: ARCHITECTURE #15 - Mixed concerns in app.py
+#   This file handles too many responsibilities. Consider separating into:
+#   - app.py                  - Flask app factory and minimal configuration
+#   - socketio_handlers.py    - All SocketIO event handlers (connect, disconnect, DMs, etc.)
+#   - middleware.py           - Security headers, CSRF, request hooks
+#   - startup.py              - Database initialization, index creation, readiness checks
+#   This would improve testability and maintainability.
+
+# TODO: ARCHITECTURE #14 - No API versioning
+#   Add API versioning (e.g., /api/v1/...) to allow backward-compatible changes.
+#   Options: URL prefix versioning, header-based versioning, or query param versioning.
+#   Consider using Flask blueprints with versioned prefixes like:
+#     app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
+
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env file FIRST
 
@@ -10,6 +24,7 @@ from utils.database import init_db
 from config import Config
 import os, logging
 from utils.auth_helpers import generate_csrf_token
+from utils.content_filter import contains_blocked_content, sanitize_message
 
 def _is_production_env() -> bool:
     return (Config.ENV or '').strip().lower() == 'production'
@@ -50,6 +65,39 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S',
 )
 log = logging.getLogger('aura')
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  ERROR MONITORING (Sentry Integration)
+# ═══════════════════════════════════════════════════════════════════════════════
+# TODO: Enable Sentry for production error tracking and performance monitoring.
+# To enable:
+#   1. pip install sentry-sdk[flask]
+#   2. Set SENTRY_DSN environment variable with your project's DSN
+#   3. Uncomment the initialization code below
+#
+# Benefits:
+#   - Real-time error alerts with full stack traces
+#   - Performance monitoring and slow endpoint detection
+#   - Release tracking and deployment notifications
+#   - User context for debugging student-specific issues
+#
+# if Config.SENTRY_DSN:
+#     import sentry_sdk
+#     from sentry_sdk.integrations.flask import FlaskIntegration
+#     from sentry_sdk.integrations.logging import LoggingIntegration
+#
+#     sentry_sdk.init(
+#         dsn=Config.SENTRY_DSN,
+#         environment=Config.SENTRY_ENVIRONMENT,
+#         integrations=[
+#             FlaskIntegration(transaction_style='url'),
+#             LoggingIntegration(level=logging.WARNING, event_level=logging.ERROR),
+#         ],
+#         traces_sample_rate=Config.SENTRY_TRACES_SAMPLE_RATE,
+#         profiles_sample_rate=Config.SENTRY_PROFILES_SAMPLE_RATE,
+#         send_default_pii=False,  # Don't send personally identifiable information
+#     )
+#     log.info('Sentry error monitoring initialized (env=%s)', Config.SENTRY_ENVIRONMENT)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  APP FACTORY
@@ -95,6 +143,12 @@ elif _is_production_env():
     log.warning('CORS_ORIGINS not set in production; SocketIO will reject cross-origin requests')
 else:
     cors_allowed = '*'  # Dev convenience
+# TODO: ARCHITECTURE #13 - async_mode='threading' doesn't scale for production.
+#   For high-concurrency production deployments, switch to:
+#     async_mode='eventlet' (pip install eventlet) or
+#     async_mode='gevent' (pip install gevent-websocket)
+#   and use a production WSGI server (gunicorn with eventlet/gevent worker).
+#   Threading mode is acceptable for low-traffic or development scenarios.
 socketio = SocketIO(app, cors_allowed_origins=cors_allowed, async_mode='threading',
                     logger=False, engineio_logger=False)
 
@@ -125,6 +179,19 @@ def add_security_headers(response):
     h['Strict-Transport-Security'] = 'max-age=63072000; includeSubDomains; preload'
     h['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     h['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
+
+    # SECURITY NOTE #7: 'unsafe-inline' in CSP for scripts and styles
+    # This is a known limitation due to extensive use of inline scripts and styles
+    # in Jinja2 templates throughout the application. Removing 'unsafe-inline' would
+    # require refactoring all templates to use external JS/CSS files or implementing
+    # a nonce-based approach.
+    #
+    # TODO: Implement nonce-based CSP for better security:
+    #   1. Generate a unique nonce per request: nonce = secrets.token_urlsafe(16)
+    #   2. Pass nonce to templates via context processor
+    #   3. Add nonce="{{nonce}}" to all inline <script> and <style> tags
+    #   4. Update CSP to use 'nonce-{{nonce}}' instead of 'unsafe-inline'
+    #   5. Remove 'unsafe-inline' from script-src and style-src
     h['Content-Security-Policy'] = (
         "default-src 'self'; "
         "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io 'unsafe-inline'; "
@@ -145,8 +212,26 @@ def add_security_headers(response):
     return response
 
 # Ensure indexes on startup
+# NOTE #30 (SCALABILITY): This function creates indexes that may overlap with
+# _ensure_indexes() in utils/database.py. MongoDB's create_index is idempotent
+# (creates only if not exists), so duplicate calls are safe but wasteful.
+# The _safe_create_index wrapper handles IndexOptionsConflict gracefully.
+# Future optimization: Use a startup flag or migration system to run index
+# creation only once per deployment, not on every server restart.
+_INDEXES_ENSURED = False  # Module-level flag to track if indexes were already created
+
 def ensure_production_indexes():
-    """Create optimized indexes for production queries."""
+    """Create optimized indexes for production queries.
+
+    This function is idempotent - indexes are only created if they don't exist.
+    Uses a module-level flag to avoid redundant index checks on every startup
+    when running multiple workers or during hot reloads.
+    """
+    global _INDEXES_ENSURED
+    if _INDEXES_ENSURED:
+        log.debug('Production indexes already ensured this session, skipping')
+        return
+
     try:
         from pymongo.errors import OperationFailure
         from utils.database import get_db
@@ -205,7 +290,8 @@ def ensure_production_indexes():
         _safe_create_index(db['proctor_activity_logs'], [('timestamp', -1)], name='audit_log_time', background=True)
         _safe_create_index(db['proctor_activity_logs'], [('proctor_email', 1), ('timestamp', -1)], name='audit_log_proctor', background=True)
         _safe_create_index(db['proctor_activity_logs'], [('action', 1), ('timestamp', -1)], name='audit_log_action', background=True)
-        
+
+        _INDEXES_ENSURED = True  # Mark indexes as created for this process
         log.info('Production indexes ensured')
     except Exception as e:
         log.warning('Index creation warning: %s', e)
@@ -271,8 +357,83 @@ def health():
     except Exception as e:
         checks['mongodb'] = f'error: {e}'
         status = 503
+
+    # AI provider connectivity check (non-blocking - does not affect overall status)
+    # This verifies API key validity and network connectivity to AI services
+    checks['ai_health'] = _check_ai_provider_health()
+
     checks['timestamp'] = datetime.utcnow().isoformat() + 'Z'
     return jsonify(checks), status
+
+
+def _check_ai_provider_health():
+    """
+    Perform a lightweight connectivity check for the first available AI provider.
+    Returns status dict. Does not block health check if AI is unavailable.
+    """
+    import time
+    result = {'status': 'unconfigured', 'provider': None, 'latency_ms': None}
+
+    # Check Gemini first (primary provider)
+    gemini_key = os.getenv('GEMINI_API_KEY', '').strip()
+    if gemini_key:
+        try:
+            from google.genai import Client
+            start = time.time()
+            test_client = Client(api_key=gemini_key)
+            # List models is a lightweight API call to verify connectivity
+            models = test_client.models.list()
+            # Just access the iterator to verify the call works
+            next(iter(models), None)
+            latency = int((time.time() - start) * 1000)
+            return {'status': 'ok', 'provider': 'gemini', 'latency_ms': latency}
+        except Exception as e:
+            result = {'status': f'error: {str(e)[:100]}', 'provider': 'gemini', 'latency_ms': None}
+            # Continue to try other providers
+
+    # Check Groq (fast free alternative)
+    groq_key = os.getenv('GROQ_API_KEY', '').strip()
+    if groq_key and result['status'] != 'ok':
+        try:
+            from groq import Groq
+            start = time.time()
+            test_client = Groq(api_key=groq_key)
+            test_client.models.list()
+            latency = int((time.time() - start) * 1000)
+            return {'status': 'ok', 'provider': 'groq', 'latency_ms': latency}
+        except Exception as e:
+            if result['status'] == 'unconfigured':
+                result = {'status': f'error: {str(e)[:100]}', 'provider': 'groq', 'latency_ms': None}
+
+    # Check DeepSeek
+    deepseek_key = os.getenv('DEEPSEEK_API_KEY', '').strip()
+    if deepseek_key and result['status'] != 'ok':
+        try:
+            from openai import OpenAI
+            start = time.time()
+            test_client = OpenAI(api_key=deepseek_key, base_url='https://api.deepseek.com')
+            test_client.models.list()
+            latency = int((time.time() - start) * 1000)
+            return {'status': 'ok', 'provider': 'deepseek', 'latency_ms': latency}
+        except Exception as e:
+            if result['status'] == 'unconfigured':
+                result = {'status': f'error: {str(e)[:100]}', 'provider': 'deepseek', 'latency_ms': None}
+
+    # Check OpenAI (last resort)
+    openai_key = os.getenv('OPENAI_API_KEY', '').strip()
+    if openai_key and result['status'] != 'ok':
+        try:
+            from openai import OpenAI
+            start = time.time()
+            test_client = OpenAI(api_key=openai_key)
+            test_client.models.list()
+            latency = int((time.time() - start) * 1000)
+            return {'status': 'ok', 'provider': 'openai', 'latency_ms': latency}
+        except Exception as e:
+            if result['status'] == 'unconfigured':
+                result = {'status': f'error: {str(e)[:100]}', 'provider': 'openai', 'latency_ms': None}
+
+    return result
 
 # --- Error handlers ---
 @app.errorhandler(404)
@@ -370,22 +531,26 @@ def handle_send_dm(data):
     from flask import session as s
     from utils.database import get_db
     from datetime import datetime
-    import re as _re
 
     email = s.get('user_email', '')
     if not email:
         return
     peer = data.get('to', '')
-    text = (data.get('message', '') or '').strip()
-    if not text or len(text) > 500 or not peer:
+    raw_text = (data.get('message', '') or '').strip()
+    if not raw_text or len(raw_text) > 500 or not peer:
+        return
+
+    # Sanitize message (HTML escape) and check for blocked content
+    text = sanitize_message(raw_text)
+    if text is None:
+        return
+
+    if contains_blocked_content(raw_text):
+        emit('dm_error', {'error': 'Inappropriate content'})
         return
 
     db = get_db()
-    # Check connection + profanity + rate limit
-    BLOCKED = ['abuse','hate','spam','inappropriate','offensive','harassment','violence','threat','kill','harm']
-    if _re.search(r'\b(?:' + '|'.join(_re.escape(w) for w in BLOCKED) + r')\b', text.lower()):
-        emit('dm_error', {'error': 'Inappropriate content'})
-        return
+    # Check connection exists
     conn = db['connections'].find_one({'$or': [
         {'user_email': email, 'connected_to': peer, 'status': 'accepted'},
         {'user_email': peer, 'connected_to': email, 'status': 'accepted'},
@@ -419,25 +584,28 @@ def handle_send_group_msg(data):
     from flask import session as s
     from utils.database import get_db
     from datetime import datetime
-    import re as _re
 
     email = s.get('user_email', '')
     if not email:
         return
     gid = data.get('group_id', '')
-    text = (data.get('message', '') or '').strip()
-    if not text or len(text) > 500 or not gid:
+    raw_text = (data.get('message', '') or '').strip()
+    if not raw_text or len(raw_text) > 500 or not gid:
+        return
+
+    # Sanitize message (HTML escape) and check for blocked content
+    text = sanitize_message(raw_text)
+    if text is None:
+        return
+
+    if contains_blocked_content(raw_text):
+        emit('group_error', {'error': 'Inappropriate content'})
         return
 
     db = get_db()
     g = db['groups'].find_one({'group_id': gid})
     if not g or email not in g.get('members', []):
         emit('group_error', {'error': 'Not a member'})
-        return
-
-    BLOCKED = ['abuse','hate','spam','inappropriate','offensive','harassment','violence','threat','kill','harm']
-    if _re.search(r'\b(?:' + '|'.join(_re.escape(w) for w in BLOCKED) + r')\b', text.lower()):
-        emit('group_error', {'error': 'Inappropriate content'})
         return
 
     now = datetime.utcnow()

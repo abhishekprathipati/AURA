@@ -2,6 +2,17 @@
 Connect Hub v2 — Elite-Mode Routes & API
 ==========================================
 
+TODO: ARCHITECTURE - This file is too large (~64KB). Consider splitting into:
+    - routes/connect/peers.py         - Peer Network (connections, suggestions, profiles)
+    - routes/connect/groups.py        - Group Sessions (CRUD, membership, group chat)
+    - routes/connect/events.py        - Events (RSVP, .ics, reminders)
+    - routes/connect/resources.py     - Resources (share, like, tag-filter)
+    - routes/connect/chat.py          - Direct Chat + Group Chat (1-to-1 and group messaging)
+    - routes/connect/feed.py          - Activity Feed (live community pulse)
+    - routes/connect/notifications.py - Notifications (per-user notification queue)
+    - routes/connect/stats.py         - Stats & Recs (stress-aware intelligence)
+Use a connect/__init__.py to combine sub-blueprints or create a unified blueprint.
+
 Modules:
     1. Peer Network        — connections, suggestions, profiles
     2. Group Sessions      — CRUD, membership, group chat

@@ -1,4 +1,16 @@
 <!DOCTYPE html>
+<!--
+TODO: REFACTORING NEEDED - This template is ~2800 lines and should be componentized.
+Suggested refactoring plan:
+  1. Extract sections into partials: dashboard/_header.html, dashboard/_sidebar.html,
+     dashboard/_mood_popup.html, dashboard/_quick_actions.html, dashboard/_stats.html
+  2. Move inline CSS (~1000+ lines) to external file: static/css/student_dashboard.css
+  3. Move inline JavaScript to external modules for better caching and maintainability
+  4. Use Jinja macros for repeated card/widget patterns
+  5. Consider lazy-loading charts and non-critical sections
+  6. Extract mood popup as a reusable component shared across pages
+This will improve load times, enable better caching, and simplify maintenance.
+-->
 <!-- TEMPLATE: student_dashboard.html | EDITED: 2026-01-30 | MOOD POPUP ADDED -->
 <html lang="en" data-theme="light">
 

@@ -5,6 +5,25 @@ from utils.database import get_db
 
 logger = logging.getLogger(__name__)
 
+# TODO #32 (AI/ML): Simple Linear Regression Limitations
+#   Current implementation uses basic linear regression (y = mx + b) for forecasting.
+#   This approach has significant limitations:
+#
+#   1. Assumes linear trend - doesn't capture cyclical patterns (weekly, exam periods)
+#   2. No seasonality modeling (stress varies by academic calendar)
+#   3. Sensitive to outliers (one bad day skews the entire forecast)
+#   4. Ignores external factors (upcoming exams, holidays, etc.)
+#   5. No confidence intervals or uncertainty quantification
+#
+#   Recommended improvements:
+#   - Use Prophet (Facebook) for time series with seasonality
+#   - Implement ARIMA/SARIMA for more robust forecasting
+#   - Add exponential smoothing (Holt-Winters) for trend + seasonality
+#   - Consider LSTM/GRU neural networks for complex patterns
+#   - Include external regressors (calendar events, assignment deadlines)
+#   - Add ensemble methods combining multiple forecasters
+#   - Implement proper cross-validation for model selection
+
 def forecast_stress(user_email: str, days_ahead: int = 3) -> Dict[str, Any]:
     """
     Project future stress levels based on the last 14 days of history.
@@ -99,5 +118,5 @@ def forecast_stress(user_email: str, days_ahead: int = 3) -> Dict[str, Any]:
         }
 
     except Exception as e:
-        logger.error(f"Stress forecasting error: {e}", exc_info=True)
+        logger.error("Stress forecasting error: %s", e, exc_info=True)
         return {'forecast': [], 'confidence': 0, 'trend': 'error'}
