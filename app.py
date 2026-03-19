@@ -18,13 +18,20 @@ load_dotenv()  # Load environment variables from .env file FIRST
 from flask import Flask, redirect, session, render_template, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from routes import init_routes
-from flask_mail import Mail
 from models import init_models
 from utils.database import init_db
 from config import Config
 import os, logging
 from utils.auth_helpers import generate_csrf_token
 from utils.content_filter import contains_blocked_content, sanitize_message
+
+# Optional: Flask-Mail for email functionality
+try:
+    from flask_mail import Mail
+    MAIL_AVAILABLE = True
+except ImportError:
+    MAIL_AVAILABLE = False
+    Mail = None
 
 def _is_production_env() -> bool:
     return (Config.ENV or '').strip().lower() == 'production'
@@ -131,7 +138,12 @@ limiter.init_app(app)
 app.limiter = limiter
 
 # ── Email ──
-mail = Mail(app)
+mail = None
+if MAIL_AVAILABLE:
+    mail = Mail(app)
+    log.info('Flask-Mail initialized for email functionality')
+else:
+    log.warning('Flask-Mail not installed; email functionality disabled')
 
 # ── SocketIO ──
 _cors_origins = os.getenv('CORS_ORIGINS', '').strip()
