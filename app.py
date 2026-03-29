@@ -76,35 +76,27 @@ log = logging.getLogger('aura')
 # ═══════════════════════════════════════════════════════════════════════════════
 #  ERROR MONITORING (Sentry Integration)
 # ═══════════════════════════════════════════════════════════════════════════════
-# TODO: Enable Sentry for production error tracking and performance monitoring.
-# To enable:
-#   1. pip install sentry-sdk[flask]
-#   2. Set SENTRY_DSN environment variable with your project's DSN
-#   3. Uncomment the initialization code below
-#
-# Benefits:
-#   - Real-time error alerts with full stack traces
-#   - Performance monitoring and slow endpoint detection
-#   - Release tracking and deployment notifications
-#   - User context for debugging student-specific issues
-#
-# if Config.SENTRY_DSN:
-#     import sentry_sdk
-#     from sentry_sdk.integrations.flask import FlaskIntegration
-#     from sentry_sdk.integrations.logging import LoggingIntegration
-#
-#     sentry_sdk.init(
-#         dsn=Config.SENTRY_DSN,
-#         environment=Config.SENTRY_ENVIRONMENT,
-#         integrations=[
-#             FlaskIntegration(transaction_style='url'),
-#             LoggingIntegration(level=logging.WARNING, event_level=logging.ERROR),
-#         ],
-#         traces_sample_rate=Config.SENTRY_TRACES_SAMPLE_RATE,
-#         profiles_sample_rate=Config.SENTRY_PROFILES_SAMPLE_RATE,
-#         send_default_pii=False,  # Don't send personally identifiable information
-#     )
-#     log.info('Sentry error monitoring initialized (env=%s)', Config.SENTRY_ENVIRONMENT)
+# FIX #46: Sentry integration enabled — initializes when SENTRY_DSN env var is set.
+if Config.SENTRY_DSN:
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+        from sentry_sdk.integrations.logging import LoggingIntegration
+
+        sentry_sdk.init(
+            dsn=Config.SENTRY_DSN,
+            environment=Config.SENTRY_ENVIRONMENT,
+            integrations=[
+                FlaskIntegration(transaction_style='url'),
+                LoggingIntegration(level=logging.WARNING, event_level=logging.ERROR),
+            ],
+            traces_sample_rate=Config.SENTRY_TRACES_SAMPLE_RATE,
+            profiles_sample_rate=Config.SENTRY_PROFILES_SAMPLE_RATE,
+            send_default_pii=False,  # Don't send personally identifiable information
+        )
+        log.info('Sentry error monitoring initialized (env=%s)', Config.SENTRY_ENVIRONMENT)
+    except ImportError:
+        log.warning('sentry-sdk not installed. Run: pip install sentry-sdk[flask]')
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  APP FACTORY
@@ -174,6 +166,16 @@ _runtime_readiness_checks()
 def inject_csrf_token():
     return dict(csrf_token=generate_csrf_token)
 
+@app.context_processor
+def inject_csp_nonce():
+    """FIX #7: Generate a unique CSP nonce per request for inline scripts/styles."""
+    import secrets as _sec
+    nonce = _sec.token_urlsafe(16)
+    # Store on flask.g so add_security_headers can access it
+    from flask import g
+    g.csp_nonce = nonce
+    return dict(csp_nonce=nonce)
+
 @app.before_request
 def ensure_csrf_token():
     if 'csrf_token' not in session:
@@ -192,22 +194,24 @@ def add_security_headers(response):
     h['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     h['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
 
-    # SECURITY NOTE #7: 'unsafe-inline' in CSP for scripts and styles
-    # This is a known limitation due to extensive use of inline scripts and styles
-    # in Jinja2 templates throughout the application. Removing 'unsafe-inline' would
-    # require refactoring all templates to use external JS/CSS files or implementing
-    # a nonce-based approach.
-    #
-    # TODO: Implement nonce-based CSP for better security:
-    #   1. Generate a unique nonce per request: nonce = secrets.token_urlsafe(16)
-    #   2. Pass nonce to templates via context processor
-    #   3. Add nonce="{{nonce}}" to all inline <script> and <style> tags
-    #   4. Update CSP to use 'nonce-{{nonce}}' instead of 'unsafe-inline'
-    #   5. Remove 'unsafe-inline' from script-src and style-src
+    # FIX #7: Nonce-based CSP replaces 'unsafe-inline'.
+    # Each request gets a unique nonce (set by inject_csp_nonce context processor).
+    # Inline <script nonce="{{ csp_nonce }}"> and <style nonce="{{ csp_nonce }}"> tags
+    # are allowed; all others are blocked. Falls back to 'unsafe-inline' if nonce
+    # is unavailable (e.g., non-template responses like JSON APIs).
+    from flask import g
+    nonce = getattr(g, 'csp_nonce', None)
+    if nonce:
+        script_src = f"'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io 'nonce-{nonce}'"
+        style_src = f"'self' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'nonce-{nonce}'"
+    else:
+        # Fallback for non-HTML responses (JSON APIs, redirects)
+        script_src = "'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io 'unsafe-inline'"
+        style_src = "'self' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline'"
     h['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io 'unsafe-inline'; "
-        "style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline'; "
+        f"script-src {script_src}; "
+        f"style-src {style_src}; "
         "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net data:; "
         "img-src 'self' data: blob:; "
         "connect-src 'self' ws: wss:; "

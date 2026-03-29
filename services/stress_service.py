@@ -334,16 +334,24 @@ def _signal_time_bias(user_email: str = None) -> Tuple[float, bool]:
     """Signal 5: Late-night activity penalty (11 PM - 4 AM = higher stress).
     Always has data (time always exists), returns (score, True).
 
-    Timezone is configurable via Config.DEFAULT_TIMEZONE_OFFSET (minutes from UTC).
-    Can be extended to use per-user timezone preference from their profile.
+    FIX #17: Reads per-user timezone_offset from their profile.
+    Falls back to Config.DEFAULT_TIMEZONE_OFFSET if not set.
     """
     now = datetime.utcnow()
 
-    # Get timezone offset: could be extended to check user profile for per-user timezone
-    # For now, use the configurable default (IST = +330 minutes by default)
+    # FIX #17: Try per-user timezone first, then global default
     tz_offset_minutes = Config.DEFAULT_TIMEZONE_OFFSET
+    if user_email:
+        try:
+            db = get_db()
+            if db is not None:
+                user = db['users'].find_one({'email': user_email}, {'timezone_offset': 1})
+                if user and user.get('timezone_offset') is not None:
+                    tz_offset_minutes = user['timezone_offset']
+        except Exception:
+            pass  # Fall back to default on any error
 
-    # Convert UTC to local hour based on configured timezone offset
+    # Convert UTC to local hour based on timezone offset
     local_hour = (now.hour * 60 + now.minute + tz_offset_minutes) // 60 % 24
 
     if 23 <= local_hour or local_hour < 4:

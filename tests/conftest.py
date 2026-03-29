@@ -15,6 +15,11 @@ os.environ['TESTING'] = 'true'
 os.environ['MONGODB_URI'] = 'mongodb://localhost:27017/aura_test'
 os.environ['SECRET_KEY'] = 'test-secret-key-for-testing-only'
 os.environ['SMS_ENABLED'] = 'false'
+# Prevent database.get_db() from attempting a real MongoDB connection during tests.
+# The mock_db fixture patches get_db for unit tests; the app fixture uses this flag.
+os.environ['AURA_SKIP_DB_INIT'] = 'true'
+# Prevent HuggingFace transformer model loading during tests (slow / requires internet).
+os.environ['AURA_ENABLE_LOCAL_EMOTION_MODEL'] = 'false'
 
 
 @pytest.fixture(scope='session')
@@ -45,7 +50,12 @@ def runner(app):
 
 @pytest.fixture
 def mock_db(monkeypatch):
-    """Mock database connection for unit tests that don't need real DB."""
+    """Mock database connection for unit tests that don't need real DB.
+
+    Patches get_db at both the source module (utils.database) AND at any
+    service module that has already bound it via `from utils.database import get_db`.
+    This prevents the tests from hanging on a real MongoDB connection.
+    """
     class MockCollection:
         def __init__(self):
             self._data = []
@@ -82,6 +92,9 @@ def mock_db(monkeypatch):
         def limit(self, n):
             return self
 
+        def skip(self, n):
+            return self
+
         def __iter__(self):
             return iter(self._data)
 
@@ -105,7 +118,30 @@ def mock_db(monkeypatch):
     def mock_get_db():
         return mock_database
 
+    # Patch the source module
     monkeypatch.setattr('utils.database.get_db', mock_get_db)
+
+    # Patch service-level bound references (from utils.database import get_db)
+    # These modules bind get_db at import time, so we must patch each one.
+    _service_modules = [
+        'services.prediction_service',
+        'services.burnout_service',
+        'services.risk_service',
+        'services.stress_service',
+        'services.student_service',
+        'services.otp_service',
+        'services.proctor_service',
+        'services.memory_service',
+    ]
+    for mod_path in _service_modules:
+        try:
+            import importlib
+            mod = importlib.import_module(mod_path)
+            if hasattr(mod, 'get_db'):
+                monkeypatch.setattr(mod, 'get_db', mock_get_db)
+        except ImportError:
+            pass
+
     return mock_database
 
 

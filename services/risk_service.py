@@ -2,6 +2,7 @@ import logging
 import re
 from datetime import datetime, timedelta
 from utils.database import get_db
+from utils.crisis_keywords import CRISIS_PATTERNS as _CRISIS_PATTERNS
 
 log = logging.getLogger(__name__)
 
@@ -10,47 +11,8 @@ MODERATE_RISK = "MODERATE_RISK"
 HIGH_RISK = "HIGH_RISK"
 CRITICAL_RISK = "CRITICAL_RISK"
 
-# TODO #36 (AI/ML): Crisis Detection Limited to English
-#   Current keyword-based detection only works for English text.
-#   This is a CRITICAL limitation for multilingual student populations.
-#
-#   Issues:
-#   1. Non-English speakers may express crisis in their native language
-#   2. Code-switching (mixing languages) is common among multilingual users
-#   3. Cultural differences in expressing distress (indirect vs. direct)
-#   4. Transliterated text (e.g., Hindi in Latin script) won't match
-#
-#   Recommended improvements:
-#   - Add keyword lists for common campus languages (Hindi, Spanish, etc.)
-#   - Use multilingual NLP models (mBERT, XLM-RoBERTa) for classification
-#   - Implement language detection first, then apply appropriate model
-#   - Consider translation API for non-English text before analysis
-#   - Add support for Hinglish (Hindi-English mix) common in Indian campuses
-#   - Partner with counselors to validate crisis expressions in local languages
-#   - CRITICAL: Ensure false negative rate is minimized for crisis detection
-
-# Crisis keywords with word boundary matching to prevent false positives
-# e.g., "kill" won't match "skill", "skilled", etc.
-CRISIS_KEYWORDS = [
-    r"\bi feel hopeless\b",
-    r"\bi want to give up\b",
-    r"\bnothing matters\b",
-    r"\bi can'?t continue\b",
-    r"\bi hate my life\b",
-    r"\bsuicide\b",
-    r"\bkill myself\b",
-    r"\bend my life\b",
-    r"\bbetter off dead\b",
-    r"\bdon'?t want to wake up\b",
-    r"\bhurting myself\b",
-    r"\bself[- ]?harm\b",
-    r"\bharm myself\b",
-    r"\bleave this world\b",
-    r"\bno point in living\b"
-]
-
-# Pre-compile patterns for performance
-_CRISIS_PATTERNS = [re.compile(kw, re.IGNORECASE) for kw in CRISIS_KEYWORDS]
+# Crisis patterns imported from utils.crisis_keywords (single source of truth, #45)
+# Includes English, Hindi/Hinglish, and Spanish patterns (#36)
 
 def predict_risk_level(stress_score: int, message: str, user_email: str = None) -> str:
     """Predict mental health risk level based on stress score, keywords, and personal baseline."""

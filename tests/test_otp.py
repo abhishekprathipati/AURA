@@ -93,20 +93,22 @@ class TestOTPSendWithMockDB:
     """Tests for OTP sending with mocked database."""
 
     def test_send_otp_returns_otp_and_message(self, mock_db):
-        """Test that send_otp returns OTP and a message."""
+        """Test that send_otp returns (success, message) — OTP is never returned for security."""
         from services.otp_service import OTPService
 
-        otp, message = OTPService.send_otp('9876543210')
+        success, message = OTPService.send_otp('9876543210')
 
-        assert otp is not None
-        assert len(otp) == 6
-        assert 'OTP' in message or 'demo' in message.lower()
+        assert success is True, f"Expected success=True, got {success!r}"
+        assert isinstance(message, str), f"Expected message to be str, got {type(message)}"
+        assert len(message) > 0
+        # OTP intentionally NOT in response (security fix #5)
+        assert 'OTP' in message or 'demo' in message.lower() or 'sent' in message.lower()
 
     def test_send_otp_stores_in_database(self, mock_db):
         """Test that send_otp stores the OTP record."""
         from services.otp_service import OTPService
 
-        otp, _ = OTPService.send_otp('9876543210')
+        success, _ = OTPService.send_otp('9876543210')
 
         # Check that data was inserted into the collection
         collection = mock_db[OTPService.collection_name]

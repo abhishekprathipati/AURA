@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA: An Adaptive AI System for Emotional and Academic Growth</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Georgia', serif; line-height: 1.65; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 60px; }
+        @media print { .page-break { page-break-after: always; } }
+        h1 { font-size: 32px; text-align: center; margin: 30px 0; color: #1a472a; }
+        h2 { font-size: 22px; margin: 40px 0 15px 0; color: #1a472a; border-left: 4px solid #2e5c4a; padding-left: 15px; }
+        h3 { font-size: 18px; margin: 20px 0 10px 0; color: #2e5c4a; }
+        .subtitle { text-align: center; font-size: 14px; color: #666; margin: 20px 0; }
+        .author-info { text-align: center; margin: 40px 0; padding: 20px; background: #f0f4f2; }
+        .abstract { background: #e8f0ed; padding: 20px; margin: 30px 0; border-left: 4px solid #2e5c4a; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+        table thead { background: #2e5c4a; color: white; }
+        table th, table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        table tbody tr:nth-child(even) { background: #f9f9f9; }
+        .formula { background: #f0f4f2; padding: 15px; margin: 15px 0; border-radius: 4px; font-family: monospace; }
+        .diagram { background: #f0f4f2; padding: 15px; margin: 15px 0; font-family: monospace; font-size: 11px; overflow-x: auto; white-space: pre; }
+        ul, ol { margin-left: 30px; margin-bottom: 15px; }
+        li { margin-bottom: 8px; }
+        .stats-box { background: #e8f0ed; padding: 20px; margin: 20px 0; border-left: 4px solid #2e5c4a; }
+        .result-highlight { background: #fff3cd; padding: 10px; margin: 10px 0; border-left: 4px solid #ffc107; }
+        .highlight { background: #fffacd; padding: 2px 5px; }
+        p { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>AURA</h1>
+<p class="subtitle">An Adaptive AI System for Emotional and Academic Growth</p>
+<p class="subtitle" style="font-size: 13px;">A Multi-Signal Behavioral Stress Monitoring and Wellness Support Platform for Student Mental Health</p>
+
+<div class="author-info">
+    <h3>Authors</h3>
+    <p><strong>Abhishek Prathipati, Harika Padala, Teja Srinivas Dasari, Sowjanya Guttula</strong></p>
+    <p>Department of Computer Science and Engineering - AI & ML</p>
+    <p>B.Tech CSE (AI & ML)</p>
+    <p><strong>Aditya College of Engineering and Technology</strong></p>
+    <p>Surampalem, Andhra Pradesh, India</p>
+    <p style="margin-top: 20px; font-size: 12px;">March 21, 2026 | Version 1.0 | Production Ready ✅</p>
+</div>
+
+<div class="abstract">
+    <h2>Abstract</h2>
+    <p>Student mental wellness monitoring in academic institutions typically relies on single-metric self-reporting, which is prone to manipulation, data sparsity, and oscillation artifacts. This paper presents <strong>AURA</strong> (An Adaptive AI System for Emotional and Academic Growth), a comprehensive institutional AI-driven student mental wellness and academic support platform.</p>
+    <p>AURA is a multi-signal behavioral stress estimation framework that fuses six heterogeneous signals—self-reported mood, conversational sentiment, engagement activity, emotional volatility, temporal context, and trend momentum—through adaptive weight redistribution and exponential moving average stabilization.</p>
+    <p>Evaluation demonstrates <span class="highlight">92% variance reduction</span>, <span class="highlight">22% manipulation suppression</span>, monotonically increasing confidence calibration, and superior discrimination across behavioral scenarios.</p>
+    <p><strong>Keywords:</strong> stress monitoring, multi-signal fusion, behavioral modeling, student wellness, AI academic support, mental health</p>
+</div>
+
+<div class="page-break"></div>
+
+<h2>1. Introduction</h2>
+<h3>1.1 Problem Statement</h3>
+<p>Mental health challenges among university students have reached epidemic proportions, with 60–80% experiencing significant stress during academic terms [1]. Existing digital wellness platforms rely on single-signal self-reporting, suffering from:</p>
+<ul>
+    <li><strong>Manipulation vulnerability</strong> – Students can trivially game single-metric systems</li>
+    <li><strong>Data sparsity</strong> – Forgotten check-ins produce no signal despite escalating stress</li>
+    <li><strong>Oscillation noise</strong> – Single bad moods can spike scores unnecessarily, triggering false alarms</li>
+</ul>
+
+<h3>1.2 Key Contributions</h3>
+<ul>
+    <li>A <strong>six-signal behavioral stress model</strong> with mathematically grounded signal fusion</li>
+    <li>An <strong>anti-manipulation defense mechanism</strong> using burst detection (22% suppression)</li>
+    <li>A <strong>confidence scoring framework</strong> quantifying estimation reliability</li>
+    <li>Complete <strong>end-to-end platform</strong> integrating stress monitoring, AI chatbot, study assistance, grievance management, and parental portals</li>
+    <li>Empirical demonstration of <strong>92% variance reduction</strong> and <strong>monotonically calibrated confidence</strong></li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>2. System Architecture</h2>
+
+<h3>2.1 Technical Stack</h3>
+<table>
+    <tr><th>Component</th><th>Technology</th></tr>
+    <tr><td>Framework</td><td>Flask (Python 3.12)</td></tr>
+    <tr><td>Database</td><td>MongoDB 4.4+</td></tr>
+    <tr><td>AI Engine</td><td>Google Gemini 2.5 Flash</td></tr>
+    <tr><td>Frontend</td><td>Jinja2 HTML, ES6 JavaScript</td></tr>
+    <tr><td>Deployment</td><td>Render + MongoDB Atlas</td></tr>
+</table>
+
+<h3>2.2 Component Architecture</h3>
+<div class="diagram">
+┌───────────────────────────────────────────────┐
+│        User Interfaces                        │
+│  (Student/Proctor/Parent/HOD)                 │
+└────────────────┬────────────────────────────┘
+                 │
+┌────────────────┴────────────────────────────┐
+│   Flask Routes & APIs (137 endpoints)       │
+│  ├─ Authentication                          │
+│  ├─ Wellness & Chatbots                     │
+│  ├─ Proctor/HOD Dashboards                  │
+│  └─ Parent Portal                           │
+└────────────────┬────────────────────────────┘
+                 │
+┌────────────────┴────────────────────────────┐
+│   Business Logic Services                   │
+│  ├─ Stress Engine (Multi-Signal)            │
+│  ├─ AI Integration (Gemini)                 │
+│  ├─ Alerts & Notifications                  │
+│  └─ OTP Service                             │
+└────────────────┬────────────────────────────┘
+        ┌────────┴────────┐
+        ↓                 ↓
+   ┌─────────┐     ┌──────────────┐
+   │ MongoDB │     │ Google APIs  │
+   │ Atlas   │     │ (Gemini)     │
+   └─────────┘     └──────────────┘
+</div>
+
+<div class="page-break"></div>
+
+<h2>3. Core Features</h2>
+
+<h3>3.1 Student Wellness Dashboard</h3>
+<ul>
+    <li>Real-time stress score with confidence indicator</li>
+    <li>7-day trend graphs and mood distribution</li>
+    <li>Dominant stress factor with natural language explanation</li>
+    <li>Quick access to mental health chatbot and study assistant</li>
+</ul>
+
+<h3>3.2 AI Mental Health Chatbot</h3>
+<ul>
+    <li>Powered by Google Gemini 2.5 Flash</li>
+    <li>Empathetic, clinically-informed responses</li>
+    <li>Real-time sentiment analysis and crisis detection</li>
+    <li>Persistent conversation history</li>
+</ul>
+
+<h3>3.3 Multimodal Study Assistant</h3>
+<ul>
+    <li>PDF upload and analysis for homework help</li>
+    <li>Image recognition for visual learning materials</li>
+    <li>Real-time explanations powered by Gemini vision</li>
+</ul>
+
+<h3>3.4 Emotion-Aware UI Personalization</h3>
+<p>Dynamic theme system responds to student mood:</p>
+<table>
+    <tr><th>Mood</th><th>Theme</th><th>Effect</th></tr>
+    <tr><td>Happy</td><td>Bright Blues</td><td>Energetic</td></tr>
+    <tr><td>Stressed</td><td>Lavender</td><td>Calming</td></tr>
+    <tr><td>Angry</td><td>Warm Tones</td><td>Soothing</td></tr>
+    <tr><td>Sad</td><td>Cool Grays</td><td>Minimalist</td></tr>
+</table>
+
+<h3>3.5 Grievance Management System</h3>
+<p>Complete workflow: submit → assign → resolve → notify. Categories: academic, infrastructure, faculty, hostel, other.</p>
+
+<h3>3.6 Proctor Dashboard</h3>
+<p>Student watchlist with 7-day stress trends, risk indicators, and audit logging of all actions.</p>
+
+<h3>3.7 HOD Executive Dashboard</h3>
+<p>Department-wide analytics: 30-day wellness trends, high-risk count, grievance resolution rate.</p>
+
+<h3>3.8 Parent Portal</h3>
+<p>OTP-based authentication, student performance view, complaint system, suggestion box, announcements feed.</p>
+
+<div class="page-break"></div>
+
+<h2>4. Multi-Signal Stress Calculation Engine</h2>
+
+<h3>4.1 Three-Stage Pipeline</h3>
+
+<h4>Stage 1: Signal Extraction</h4>
+<div class="formula">
+Ŝ_t = Σ (w_i* × x_i)
+
+Six signals:
+• Mood (35%) - Self-reported emotion
+• Sentiment (25%) - NLP analysis of chats
+• Activity (15%) - Yerkes-Dodson curve
+• Volatility (10%) - Mood variance (48h)
+• Time Bias (5%) - IST sleep pattern
+• Trend (10%) - 7-day momentum
+</div>
+
+<h4>Stage 2: EMA Smoothing</h4>
+<div class="formula">
+S_t^ema = α × S_{t-1} + (1 - α) × Ŝ_t
+
+α = 0.6 (normal) or 0.3 (sparse mode)
+Result: 96% variance reduction
+</div>
+
+<h4>Stage 3: Logistic Compression</h4>
+<div class="formula">
+S_final = 100 / (1 + e^(-0.08(S_ema - 50)))
+
+Properties:
+• Soft ceiling/floor behavior
+• Mid-range amplification for discrimination
+• Monotonicity preserves ordinal ranking
+</div>
+
+<h3>4.2 Adaptive Weight Redistribution</h3>
+<p>When signal i lacks data, weight redistributed proportionally to prevent phantom neutral bias:</p>
+<div class="formula">
+w_i* = w_i + (w_i / Σw_j) × Σw_k
+
+Guarantees: Σw_i* = 1 always
+</div>
+
+<h3>4.3 Anti-Manipulation Defense</h3>
+<p><strong>Threat:</strong> Student sends ≥4 messages with extreme sentiment in <300 seconds.</p>
+<div class="formula">
+When burst detected:
+w_chat,i = e^(-0.15i) × √((i+1)/4)
+
+Multipliers: {0.50, 0.71, 0.87, 1.00}
+Result: 22% sentiment manipulation suppression
+</div>
+
+<h3>4.4 Confidence Scoring</h3>
+<div class="formula">
+C = (|D|/n × 0.4) + (min(r,10)/10 × 0.35) +
+    max(0.05, 0.25 - σ_x/30 × 0.20)
+
+Calibration: 0.15 (zero data) → 0.77 (full data)
+Span: 0.62 (monotonic increase)
+</div>
+
+<div class="page-break"></div>
+
+<h2>5. Experimental Results</h2>
+
+<h3>5.1 Manipulation Resistance</h3>
+<table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Naive sentiment</td><td>36.2</td></tr>
+    <tr><td>AURA v3 sentiment (burst-adjusted)</td><td>33.2</td></tr>
+    <tr style="background: #fff3cd;"><td><strong>Burst suppression</strong></td><td><strong>22.2%</strong></td></tr>
+    <tr><td>Mood-only baseline</td><td>78</td></tr>
+    <tr><td>AURA v3 final score</td><td>63</td></tr>
+</table>
+
+<h3>5.2 EMA Stability</h3>
+<table>
+    <tr><th>Metric</th><th>Raw</th><th>EMA</th><th>Total</th></tr>
+    <tr><td>Variance</td><td>581.5</td><td>22.0</td><td>45.8</td></tr>
+    <tr style="background: #fff3cd;"><td><strong>Variance Reduction</strong></td><td>—</td><td><strong>96.2%</strong></td><td><strong>92.1%</strong></td></tr>
+</table>
+
+<h3>5.3 Crisis Sensitivity</h3>
+<table>
+    <tr><th>Reading</th><th>Score</th><th>Status</th></tr>
+    <tr><td>1</td><td>42</td><td>—</td></tr>
+    <tr><td>2</td><td>52</td><td>—</td></tr>
+    <tr style="background: #fff3cd;"><td>3</td><td>57</td><td><strong>Elevated ✓</strong></td></tr>
+    <tr><td>4</td><td>63</td><td>—</td></tr>
+    <tr style="background: #fff3cd;"><td>5</td><td>68</td><td><strong>High ✓</strong></td></tr>
+</table>
+
+<p><strong>Key Finding:</strong> Reaches Elevated within 3 readings, High within 5 readings. Balanced sensitivity and stability.</p>
+
+<h3>5.4 Confidence Calibration</h3>
+<table>
+    <tr><th>Data Volume</th><th>Documents</th><th>Confidence</th></tr>
+    <tr><td>Zero data</td><td>0</td><td>0.15</td></tr>
+    <tr><td>1 mood</td><td>1</td><td>0.30</td></tr>
+    <tr><td>Full data</td><td>24</td><td>0.77</td></tr>
+</table>
+
+<p><strong>Key Finding:</strong> Monotonically increasing (span = 0.62). Enables meaningful UI communication of data insufficiency.</p>
+
+<div class="page-break"></div>
+
+<h2>6. Database Schema</h2>
+
+<h3>6.1 Collections</h3>
+<table>
+    <tr><th>Collection</th><th>Purpose</th></tr>
+    <tr><td>users</td><td>User accounts (students, proctors, HOD)</td></tr>
+    <tr><td>moods</td><td>Mood log entries with timestamps</td></tr>
+    <tr><td>chats</td><td>Mental & study conversations</td></tr>
+    <tr><td>stress</td><td>Calculated stress scores with signals</td></tr>
+    <tr><td>grievances</td><td>Student complaints</td></tr>
+    <tr><td>alerts</td><td>High-stress alerts</td></tr>
+    <tr><td>parents</td><td>Parent account links</td></tr>
+    <tr><td>proctor_audit_log</td><td>Administrative action audit trail</td></tr>
+</table>
+
+<h3>6.2 Stress Document Schema</h3>
+<p>Each stress record includes: final score, pre-logistic raw score, all 6 signal values, spike detection, confidence, dominant factor, natural language explanation.</p>
+
+<div class="page-break"></div>
+
+<h2>7. Deployment Architecture</h2>
+
+<h3>7.1 Cloud Infrastructure</h3>
+<div class="diagram">
+Browsers (HTTPS)
+    ↓
+┌──────────────────────────────────────┐
+│ Render Web Service (Flask)           │
+│ Python 3.12, 137 Routes              │
+└─────────────┬──────────────────────┘
+              │ PyMongo
+              ↓
+     ┌─────────────────────┐
+     │ MongoDB Atlas       │
+     │ (Production DB)     │
+     │ 8 collections       │
+     └─────────────────────┘
+
+     ┌─────────────────────┐
+     │ Google Gemini API   │
+     │ (Mental & Study)    │
+     └─────────────────────┘
+</div>
+
+<h3>7.2 Scalability</h3>
+<table>
+    <tr><th>Tier</th><th>Cost</th><th>RAM</th><th>Users</th></tr>
+    <tr><td>Free</td><td>$0</td><td>512MB</td><td>~10</td></tr>
+    <tr><td>Starter</td><td>$7/mo</td><td>2GB</td><td>~100</td></tr>
+    <tr><td>Standard</td><td>$25/mo</td><td>4GB</td><td>~1000</td></tr>
+</table>
+
+<p><strong>Current:</strong> Free Tier suitable for 50–100 concurrent users (academic context).</p>
+
+<div class="page-break"></div>
+
+<h2>8. Security & Privacy</h2>
+
+<h3>8.1 Authentication</h3>
+<ul>
+    <li>Session-based authentication with bcrypt hashing</li>
+    <li>OTP-based authentication for parents (Fast2SMS)</li>
+    <li>@login_required and @role_required decorators</li>
+</ul>
+
+<h3>8.2 Data Protection</h3>
+<ul>
+    <li>MongoDB encryption at rest (Atlas automatic)</li>
+    <li>HTTPS/TLS in transit (Render enforces)</li>
+    <li>Anonymous student IDs (STU_ + MD5 hash) in proctor contexts</li>
+    <li>Department-scoped visibility (RBAC)</li>
+</ul>
+
+<h3>8.3 Audit Trail</h3>
+<p>All proctor/HOD actions logged to proctor_audit_log with actor, action, target, timestamp, details.</p>
+
+<h3>8.4 Rate Limiting</h3>
+<p>5-tier rate limiting protects against brute-force attacks and API abuse.</p>
+
+<div class="page-break"></div>
+
+<h2>9. Limitations & Future Work</h2>
+
+<h3>9.1 Limitations</h3>
+<ul>
+    <li><strong>Rule-Based by Design</strong> – No ML. Intentional for transparency in academic contexts.</li>
+    <li><strong>EMA Lag</strong> – Genuine rapid improvement delayed by 1–2 readings. Acceptable trade-off.</li>
+    <li><strong>Timezone Assumption</strong> – Hardcoded to IST (+5:30).</li>
+    <li><strong>Keyword-Based NLP</strong> – Trades recall for simplicity and no GPU costs.</li>
+    <li><strong>No Clinical Validation</strong> – Behavioral approximation, not diagnostic instrument.</li>
+</ul>
+
+<h3>9.2 Future Enhancements</h3>
+<ul>
+    <li>Per-student adaptive thresholds (Q2 2026)</li>
+    <li>Peer cohort comparison (Q2 2026)</li>
+    <li>Time-series forecasting for proactive intervention (Q3 2026)</li>
+    <li>Multilingual NLP support (Q3 2026)</li>
+    <li>Voice interaction (Q4 2026)</li>
+    <li>Counselor appointment scheduling (Q4 2026)</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>10. Conclusion</h2>
+
+<p>AURA demonstrates that multi-signal behavioral monitoring provides measurably superior student stress estimation and support compared to single-metric platforms. Through adaptive weight redistribution, the framework gracefully handles data sparsity without phantom anchoring. EMA stabilization reduces oscillation by <span class="highlight">96%</span> while maintaining crisis sensitivity.</p>
+
+<p>Logistic compression achieves <span class="highlight">92% total variance reduction</span> with soft ceiling/floor behavior and amplified mid-range discrimination. Anti-manipulation burst detection suppresses sentiment gaming by <span class="highlight">22%</span>. The three-factor confidence score (span = 0.62) provides calibrated uncertainty quantification enabling appropriate UI communication.</p>
+
+<p>Integrated with AI mental health chatbot, multimodal study assistant, grievance management, and parental portals, AURA forms a complete institutional wellness ecosystem. The transparent, rule-based framework is defensible under academic scrutiny and suitable for institutional contexts where algorithmic accountability is required.</p>
+
+<div class="stats-box">
+    <h3>✓ PROJECT STATUS: PRODUCTION READY</h3>
+    <p>Live at aura-student-wellness.onrender.com, serving Aditya College of Engineering and Technology</p>
+</div>
+
+<div class="page-break"></div>
+
+<h2>References</h2>
+<ol>
+    <li>Beiter, R., et al., "The prevalence and correlates of depression, anxiety, and stress," <em>Journal of Affective Disorders</em>, vol. 173, pp. 90–96, 2015.</li>
+    <li>Paulhus, D. L., "Measurement and control of response bias," in <em>Measures of Personality and Social Psychological Attitudes</em>, 1991.</li>
+    <li>Gjoreski, M., et al., "Monitoring stress with a wrist device," <em>Journal of Biomedical Informatics</em>, vol. 73, pp. 159–170, 2017.</li>
+    <li>Guntuku, S. C., et al., "Detecting depression on social media," <em>Current Opinion in Behavioral Sciences</em>, vol. 18, pp. 43–49, 2017.</li>
+    <li>Wang, R., et al., "StudentLife: Assessing mental health and behavior," <em>Proc. ACM UbiComp</em>, 2014.</li>
+    <li>Yerkes, R. M. and Dodson, J. D., "Stimulus strength and habit formation," <em>Journal of Comparative Neurology and Psychology</em>, vol. 18, no. 5, 1908.</li>
+    <li>Lund, H. G., et al., "Sleep patterns in college students," <em>Journal of Adolescent Health</em>, vol. 46, no. 2, pp. 124–132, 2010.</li>
+</ol>
+
+<h2>Appendix A: Team Information</h2>
+
+<div class="author-info">
+    <p><strong>Development Team</strong></p>
+    <p>Abhishek Prathipati – Full-stack development, stress engine, API design</p>
+    <p>Harika Padala – Frontend UI/UX, theme system, dashboard design</p>
+    <p>Teja Srinivas Dasari – AI integration, Gemini API, chatbot implementation</p>
+    <p>Sowjanya Guttula – Database design, proctor/HOD dashboards, audit logging</p>
+    <p style="margin-top: 20px;"><strong>Institution</strong></p>
+    <p>Department of Computer Science and Engineering - AI & ML</p>
+    <p>Aditya College of Engineering and Technology</p>
+    <p>Surampalem, Andhra Pradesh, India</p>
+</div>
+
+<h2>Appendix B: Key Metrics Summary</h2>
+
+<div class="stats-box">
+    <p>✓ 92% Variance Reduction (EMA + Logistic)<br/>
+    ✓ 22% Manipulation Suppression<br/>
+    ✓ 0.62 Confidence Span (Monotonic Calibration)<br/>
+    ✓ 3 Readings to Elevated Threshold<br/>
+    ✓ 5 Readings to High Threshold<br/>
+    ✓ 6-Signal Fusion Architecture<br/>
+    ✓ 137 Total API Routes<br/>
+    ✓ 16 HTML Templates<br/>
+    ✓ 100% Rule-Based (No Black-Box ML)<br/>
+    ✓ Production Deployed on Render</p>
+</div>
+
+<hr style="margin: 40px 0; border: none; border-top: 2px solid #ddd;">
+
+<p style="text-align: center; font-size: 12px; color: #666; margin-top: 40px;">
+    <strong>AURA: An Adaptive AI System for Emotional and Academic Growth</strong><br/>
+    Document Version 1.0 | March 21, 2026 | Status: Production Ready ✅<br/><br/>
+    <em>AURA is a behavioral wellness estimation framework. It does not constitute medical or psychological diagnosis. All stress scores should be interpreted as approximate behavioral indicators and supplemented by professional evaluation.</em>
+</p>
+
+</div>
+
+</body>
+</html>

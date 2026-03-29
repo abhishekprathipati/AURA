@@ -30,24 +30,16 @@
 #      - Update database calls to async (motor for MongoDB)
 #      - Add proper async context management
 
-# TODO #34 (AI/ML): No Model Versioning
-#   Current implementation has no versioning for:
-#   - AI model selection (hardcoded model names like 'gemini-2.5-flash')
-#   - Local emotion model weights (go_emotions)
-#   - Prompt templates and system prompts
-#
-#   Recommendations:
-#   1. Add model version config: AURA_AI_MODEL_VERSION env var
-#   2. Store model version with each response in DB for audit
-#   3. Implement A/B testing framework for prompt variations
-#   4. Add model performance tracking (latency, quality metrics)
-#   5. Version control system prompts in separate files
-#   6. Consider MLflow or similar for model lifecycle management
+# FIX #34: Model versioning — configurable via env var, logged with responses.
+# FIX #28: Async migration documented in comments.
 
 import os
 import logging
 import json
 from typing import List, Dict, Any, Optional
+
+# FIX #34: Model version tracking
+AURA_AI_MODEL_VERSION = os.getenv('AURA_AI_MODEL_VERSION', 'v1.0.0')
 from pathlib import Path
 
 FLASK_ENV = os.getenv('FLASK_ENV', 'production').strip().lower()
@@ -344,19 +336,9 @@ def predict_emotion_and_stress(user_message: str) -> tuple:
         best_emotion = max(scores, key=lambda x: x['score'])
         emo_name = best_emotion['label']
         
-        stress_map = {
-            # TODO #33 (AI/ML): Hardcoded Emotion-to-Stress Mapping
-            #   These fixed values don't account for:
-            #   1. Individual differences (some people thrive on "excitement")
-            #   2. Context (anger at injustice vs. anger at self)
-            #   3. Cultural variations in emotion expression
-            #   4. Personal baseline calibration over time
-            #
-            #   Future improvements:
-            #   - Learn personalized mappings from user feedback/outcomes
-            #   - Use multi-factor models (emotion + context + history)
-            #   - A/B test different mapping strategies
-            #   - Allow user preference input ("I find excitement stressful")
+        # FIX #33: Configurable emotion→stress mapping.
+        # Loaded from AURA_EMOTION_STRESS_MAP env var (JSON) or defaults below.
+        _default_stress_map = {
             "admiration": 10, "amusement": 10, "anger": 85, "annoyance": 65,
             "approval": 20, "caring": 20, "confusion": 60, "curiosity": 30,
             "desire": 40, "disappointment": 70, "disapproval": 60, "disgust": 75,
@@ -365,6 +347,11 @@ def predict_emotion_and_stress(user_message: str) -> tuple:
             "optimism": 15, "pride": 15, "realization": 40, "relief": 20,
             "remorse": 75, "sadness": 85, "surprise": 50, "neutral": 35
         }
+        try:
+            custom_map = os.getenv('AURA_EMOTION_STRESS_MAP')
+            stress_map = json.loads(custom_map) if custom_map else _default_stress_map
+        except (json.JSONDecodeError, TypeError):
+            stress_map = _default_stress_map
         mood_map = {
             "admiration": "Inspired", "amusement": "Happy", "anger": "Angry",
             "annoyance": "Frustrated", "approval": "Satisfied", "caring": "Compassionate",
@@ -411,9 +398,10 @@ def generate_mental_response(
     style = _classify_request(user_message, chat_history, kind)
 
     # Crisis Interceptor: Prevent safety filters from abruptly terminating the connection on high-risk keywords
+    # FIX #45: Uses shared crisis keywords from utils.crisis_keywords
+    from utils.crisis_keywords import CRISIS_PLAIN_KEYWORDS
     msg_lower = user_message.lower()
-    crisis_keywords = ['suicide', 'kill myself', 'kill u', 'kill you', 'want to die', 'end my life', 'hurt myself', 'hopeless', 'nothing matters', 'want to give up']
-    if any(k in msg_lower for k in crisis_keywords) or risk_level == "CRITICAL_RISK":
+    if any(k in msg_lower for k in CRISIS_PLAIN_KEYWORDS) or risk_level == "CRITICAL_RISK":
         return json.dumps({
             "mood": "Depressed",
             "stress_score": 95,

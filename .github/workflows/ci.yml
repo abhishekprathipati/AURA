@@ -33,7 +33,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest tests/ -v --tb=short || true
+          pytest tests/ -v --tb=short
 
       - name: Lint with ruff
         run: |

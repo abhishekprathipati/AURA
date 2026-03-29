@@ -47,12 +47,18 @@ apply_rate_limit = limiter.limit
 # We use the active explicit Redis store configured for Limiter
 # to handle specific IP+Email rate limits across scaled workers.
 from flask import current_app
-import redis
-
 import os
+
 
 def _get_redis():
     """Get Redis connection using primary REDIS_URL or fallback."""
+    try:
+        import redis
+    except ImportError:
+        raise RuntimeError(
+            "'redis' package is not installed. "
+            "Install it with: pip install redis"
+        )
     url = os.environ.get('REDIS_URL') or current_app.config.get('RATELIMIT_STORAGE_URI') or 'redis://localhost:6379'
     return redis.from_url(url)
 

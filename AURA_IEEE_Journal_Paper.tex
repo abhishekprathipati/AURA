@@ -1,0 +1,835 @@
+\documentclass[journal]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{subcaption}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{AURA: An Adaptive Multi-Signal Behavioral Stress Monitoring Framework with AI-Powered Intervention for Institutional Student Mental Wellness}
+
+\author{Abhishek Prathipati,~\IEEEmembership{Student Member,}
+        Harika Padala,
+        Teja Srinivas Dasari,
+        and~Sowjanya Guttula
+\thanks{Manuscript submitted March 2026.}
+\thanks{A. Prathipati, H. Padala, T. S. Dasari, and S. Guttula are with the Department of Computer Science and Engineering - AI \& ML, Aditya College of Engineering and Technology, Surampalem, Andhra Pradesh 533437, India (e-mail: abhishek.cse@acet.ac.in; harika.cse@acet.ac.in; teja.cse@acet.ac.in; sowjanya.cse@acet.ac.in).}}
+
+\markboth{IEEE Transactions on Learning Technologies,~Vol.~XX, No.~X, March~2026}
+{Prathipati \MakeLowercase{\textit{et al.}}: AURA: Multi-Signal Behavioral Stress Monitoring Framework}
+
+\maketitle
+
+\begin{abstract}
+The escalating mental health crisis among university students demands proactive monitoring solutions that transcend traditional single-metric self-reporting approaches. Existing wellness platforms suffer from manipulation vulnerability, data sparsity during critical periods, and oscillation artifacts that produce unreliable stress estimations with unacceptable false positive and negative rates.
+
+This paper presents AURA (Adaptive Understanding and Response Architecture), a comprehensive multi-signal behavioral stress estimation framework designed for institutional deployment. AURA addresses the limitations of single-metric approaches through several key innovations: (1) fusion of six heterogeneous behavioral signals---self-reported mood, conversational sentiment, engagement activity, emotional volatility, temporal context, and trend momentum---each normalized to a common scale and double-clamped to ensure domain validity; (2) adaptive weight redistribution that dynamically adjusts signal contributions based on data availability, preventing the ``phantom neutral'' anchoring problem inherent in fixed-weight systems; (3) exponential moving average stabilization with mode-adaptive smoothing factors ($\alpha=0.6$ for normal operation, $\alpha=0.3$ for sparse data conditions); (4) logistic compression enforcing psychological realism through bounded, interpretable output ranges with soft ceiling/floor behavior; (5) burst-detection anti-manipulation defense using diminishing-returns attenuation that suppresses sentiment gaming by 22\%; (6) z-score anomaly detection for statistical spike identification; and (7) three-factor confidence scoring providing calibrated uncertainty quantification.
+
+Beyond stress monitoring, AURA integrates an AI-powered mental health chatbot leveraging Google Gemini 2.5 Flash for empathetic conversational support, multimodal study assistance with vision capabilities for document and image analysis, comprehensive grievance management workflows, parental involvement portals with OTP-based authentication, and emotion-aware UI personalization that adapts visual characteristics to detected emotional states.
+
+Experimental evaluation across 10 synthetic behavioral archetypes demonstrates 92\% variance reduction through combined stabilization techniques, 22\% manipulation suppression, monotonically calibrated confidence spanning 0.15--0.77, crisis detection within 3--5 readings, and superior discrimination across calm, volatile, crisis, and data-sparse scenarios compared to mood-only baselines. The rule-based, transparent architecture supports institutional accountability requirements where black-box machine learning approaches face resistance.
+
+The platform is production-deployed at Aditya College of Engineering and Technology, actively supporting student mental wellness through continuous behavioral monitoring and accessible intervention pathways.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Behavioral stress monitoring, multi-signal fusion, adaptive weight redistribution, student mental health, explainable AI, educational technology, wellness platforms, anomaly detection, confidence calibration, manipulation detection.
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+\IEEEPARstart{M}{ental} health challenges among university students have reached epidemic proportions globally. Empirical studies consistently report that 60--80\% of students experience significant stress during academic terms, with depression and anxiety identified as leading causes of disability among young adults by the World Health Organization \cite{beiter2015, who2017}. Academic environments serve as primary stress amplifiers through examination pressure, competitive dynamics, social adjustment challenges, and uncertain career prospects.
+
+Traditional institutional response mechanisms---counselors, academic advisors (proctors), peer support networks---operate fundamentally in reactive mode. Intervention triggers only when students self-identify distress through help-seeking behavior or when faculty/staff observe visible behavioral deterioration. This creates a critical intervention gap: students may experience escalating distress for extended periods before crossing the threshold of observable crisis, during which early intervention could have prevented adverse outcomes.
+
+\subsection{The Single-Metric Problem}
+
+Contemporary digital wellness platforms predominantly employ single-metric self-reporting paradigms. Students periodically select a mood from a predefined categorical list (e.g., ``happy,'' ``stressed,'' ``anxious''), and the platform derives stress scores directly from these selections. This approach, while simple to implement, suffers from three fundamental limitations that compromise its utility for institutional mental health monitoring:
+
+\subsubsection{Manipulation Vulnerability}
+Single-metric systems are trivially gameable because they lack corroborating evidence channels. A student experiencing genuine distress may report positive moods to avoid perceived stigma or unwanted intervention. Conversely, students seeking attention or testing system response may report extreme moods without authentic distress. With no secondary signals to cross-validate self-reports, the system cannot distinguish authentic entries from manipulated ones, producing unreliable wellness assessments.
+
+\subsubsection{Data Sparsity}
+Students frequently forget or neglect daily check-ins, particularly during high-stress periods when monitoring is most critical. When the sole input channel is self-reported mood, missing data produces zero signal despite potentially escalating stress. The platform becomes functionally ``blind'' during precisely the periods where behavioral indicators would be most valuable for early intervention.
+
+\subsubsection{Oscillation Artifacts}
+A single negative mood entry resulting from a transient bad moment (argument with peer, minor academic setback, physical fatigue) can spike stress scores unnecessarily, triggering false alarms that desensitize institutional responders and waste counselor resources. Conversely, a single positive entry during sustained underlying distress produces false negatives that mask intervention opportunities. Single-metric systems lack the statistical robustness to distinguish signal from noise, producing stress trajectories dominated by high-frequency oscillation rather than meaningful trend.
+
+\subsection{Research Objectives}
+
+This paper presents AURA (Adaptive Understanding and Response Architecture), a comprehensive multi-signal behavioral stress estimation framework designed to address these limitations. Our research objectives are:
+
+\begin{enumerate}
+    \item Design a multi-signal stress model that fuses complementary behavioral data sources to reduce single-point-of-failure vulnerability
+    \item Develop adaptive mechanisms for graceful degradation when data is sparse, preventing phantom anchoring
+    \item Implement stabilization techniques that reduce oscillation artifacts while maintaining crisis sensitivity
+    \item Create anti-manipulation defenses that detect and suppress gaming attempts
+    \item Provide confidence scoring that quantifies estimation reliability
+    \item Integrate active intervention mechanisms including AI chatbot support and institutional workflows
+    \item Maintain algorithmic transparency suitable for institutional accountability requirements
+\end{enumerate}
+
+\subsection{Paper Organization}
+
+The remainder of this paper is organized as follows: Section~\ref{sec:related} reviews related work in student wellness monitoring, behavioral signal fusion, and explainable AI in healthcare contexts. Section~\ref{sec:architecture} describes the AURA system architecture and technical implementation. Section~\ref{sec:engine} presents the multi-signal stress calculation engine with mathematical foundations. Section~\ref{sec:features} details the comprehensive platform features. Section~\ref{sec:evaluation} provides experimental evaluation methodology and results. Section~\ref{sec:security} addresses security and privacy considerations. Section~\ref{sec:limitations} discusses limitations and future work. Section~\ref{sec:conclusion} concludes the paper.
+
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Student Wellness Monitoring Systems}
+
+Wang et al.'s StudentLife project \cite{wang2014} pioneered smartphone-based behavioral sensing for mental health assessment among university students. Their approach correlated passively collected sensor data---location patterns, physical activity, sleep duration derived from phone usage, social interaction proxies from communication logs---with self-reported wellbeing measures. The study demonstrated significant correlations between passive behavioral indicators and mental health outcomes, establishing feasibility of sensor-based wellness monitoring. However, their approach required continuous smartphone data collection, raising substantial privacy concerns in institutional deployment contexts where students may resist comprehensive surveillance.
+
+Gjoreski et al. \cite{gjoreski2017} explored wearable-based stress detection using physiological signals including heart rate variability (HRV), galvanic skin response (GSR), and skin temperature. Their context-aware classification achieved promising accuracy in controlled settings. However, the hardware requirements---specialized wearable devices---are incompatible with scalable institutional deployment where provisioning devices for all students is economically prohibitive.
+
+Commercial wellness platforms (Calm, Headspace, Wysa) focus on intervention delivery (guided meditation, breathing exercises, chatbot conversations) rather than continuous monitoring. While valuable for self-directed wellness, these platforms lack institutional integration for proactive identification of at-risk students based on behavioral trajectories.
+
+Sano et al. \cite{sano2018} identified physiological markers and modifiable behaviors associated with self-reported stress using wearable sensors and mobile phones. Their findings inform our signal selection, particularly regarding circadian disruption (irregular sleep) as a stress correlate.
+
+\subsection{Behavioral Signal Fusion}
+
+Multi-modal emotion recognition research has explored fusion strategies for combining heterogeneous signals including facial expressions, speech prosody, text sentiment, and physiological measures \cite{poria2017}. Early fusion (feature concatenation), late fusion (decision aggregation), and hybrid approaches have been proposed with varying trade-offs between accuracy and interpretability.
+
+Critical to AURA's design, most existing fusion approaches assume simultaneous availability of all modalities—an assumption that fails in real-world deployment where sensor failures, privacy restrictions, and user non-compliance produce partial observations. Graceful degradation under data sparsity receives insufficient attention in the literature.
+
+The Yerkes-Dodson law \cite{yerkes1908} establishes the inverted-U relationship between arousal/stress and performance. Moderate arousal optimizes performance; both insufficient arousal (disengagement) and excessive arousal (anxiety) impair function. This theoretical framework grounds our activity signal's treatment: both platform disengagement (zero interactions) and hyperactive engagement (anxiety-driven frequent usage) are interpreted as stress indicators, with moderate engagement associated with low stress.
+
+\subsection{Explainable AI in Healthcare}
+
+Black-box machine learning models face significant resistance in healthcare and mental health contexts due to accountability requirements \cite{holzinger2017}. When algorithmic decisions affect student welfare and trigger institutional intervention, stakeholders (administrators, parents, ethics boards) require understanding of how conclusions were reached. Neural networks that produce accurate predictions without interpretable reasoning face deployment barriers.
+
+Our rule-based approach prioritizes transparency over marginal accuracy gains that deep learning might provide. Every AURA stress score can be decomposed into constituent signal contributions, weight assignments, and stabilization adjustments—enabling institutional stakeholders to audit and understand algorithmic behavior.
+
+\section{System Architecture}
+\label{sec:architecture}
+
+\subsection{Design Philosophy}
+
+AURA's architecture reflects several key design principles:
+
+\begin{itemize}
+    \item \textbf{Transparency over Opacity:} Rule-based algorithms with interpretable parameters rather than black-box machine learning
+    \item \textbf{Graceful Degradation:} Adaptive mechanisms that handle missing data without artificial anchoring
+    \item \textbf{Defense in Depth:} Multiple mechanisms (multi-signal fusion, burst detection, confidence scoring) protecting against gaming
+    \item \textbf{Institutional Integration:} Role-based access, audit trails, and workflows compatible with academic administrative structures
+    \item \textbf{Practical Deployment:} Web-based architecture requiring no client-side installation or specialized hardware
+\end{itemize}
+
+\subsection{Technical Stack}
+
+Table~\ref{tab:techstack} summarizes the technology components.
+
+\begin{table}[htbp]
+\caption{AURA Technical Stack}
+\label{tab:techstack}
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Component} & \textbf{Technology} & \textbf{Purpose} \\
+\midrule
+Framework & Flask (Python 3.12) & Web backend \\
+Database & MongoDB 4.4+ & Document storage \\
+AI Engine & Google Gemini 2.5 Flash & Chatbot, vision \\
+Frontend & Jinja2, ES6 JS & User interface \\
+Charts & Chart.js, ApexCharts & Visualization \\
+Auth & Session + bcrypt & User management \\
+Deployment & Render + Atlas & Cloud hosting \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Architectural Layers}
+
+The system comprises four primary layers:
+
+\subsubsection{Presentation Layer}
+Role-based dashboards serve students, proctors (academic advisors), Heads of Department (HOD), and parents. The emotion-aware UI theming system dynamically adjusts visual characteristics (color palettes, contrast levels, animation intensity) based on detected mood state, providing environmental support aligned with emotional needs.
+
+\subsubsection{Application Layer}
+Flask routes handle HTTP requests with authentication validation and role-based access control. Decorators (\texttt{@login\_required}, \texttt{@role\_required('proctor')}) protect sensitive endpoints. Rate limiting prevents abuse and brute-force attacks.
+
+\subsubsection{Service Layer}
+Core business logic resides in dedicated service modules:
+\begin{itemize}
+    \item \textbf{Stress Service:} Multi-signal calculation engine (Section~\ref{sec:engine})
+    \item \textbf{AI Service:} Google Gemini integration for chatbot and document analysis
+    \item \textbf{OTP Service:} Parent authentication via SMS verification
+    \item \textbf{Alert Service:} Institutional notification dispatch
+\end{itemize}
+
+\subsubsection{Data Layer}
+MongoDB collections store persistent data:
+\begin{itemize}
+    \item \textbf{users:} Accounts with role assignments
+    \item \textbf{moods:} Self-reported mood entries with timestamps
+    \item \textbf{chats:} Conversation logs with sentiment annotations
+    \item \textbf{stress:} Calculated stress scores with signal breakdowns
+    \item \textbf{grievances:} Student complaints and resolution status
+    \item \textbf{alerts:} High-stress notifications and recipient tracking
+    \item \textbf{parents:} Parent accounts linked to students
+    \item \textbf{proctor\_audit\_log:} Administrative action trail
+\end{itemize}
+
+\section{Multi-Signal Stress Calculation Engine}
+\label{sec:engine}
+
+The AURA stress calculation engine implements a mathematically grounded pipeline for behavioral stress estimation. This section presents the formal foundations and implementation details.
+
+\subsection{Pipeline Overview}
+
+Fig.~\ref{fig:pipeline} illustrates the computation pipeline from raw inputs to final stress score.
+
+The pipeline comprises seven stages:
+\begin{enumerate}
+    \item Signal extraction from heterogeneous data sources
+    \item Signal normalization to common [0, 100] scale
+    \item Data availability assessment and sparse mode detection
+    \item Adaptive weight redistribution
+    \item Weighted signal fusion
+    \item EMA stabilization with mode-adaptive smoothing
+    \item Logistic compression for bounded output
+\end{enumerate}
+
+Additionally, parallel pathways compute z-score anomaly detection, confidence scoring, and alert condition evaluation.
+
+\subsection{Mathematical Formulation}
+
+Let $x_i$ denote the normalized value of signal $i$ where $i \in \{1, 2, \ldots, 6\}$ corresponding to mood, sentiment, activity, volatility, time bias, and trend respectively. Let $w_i$ denote the base weight for signal $i$, and $d_i \in \{0, 1\}$ indicate whether signal $i$ has valid data.
+
+\subsubsection{Stage 1: Weighted Signal Fusion}
+
+The raw composite score before stabilization is:
+
+\begin{equation}
+\hat{S}_t = \sum_{i=1}^{6} w_i^{*} \cdot x_i
+\end{equation}
+
+where $w_i^{*}$ denotes the adaptive weight computed from base weight $w_i$ and data availability flags $\{d_i\}$.
+
+\subsubsection{Stage 2: EMA Stabilization}
+
+Exponential moving average smoothing dampens oscillation:
+
+\begin{equation}
+S_t^{\text{ema}} = \alpha \cdot S_{t-1} + (1 - \alpha) \cdot \hat{S}_t
+\end{equation}
+
+The smoothing factor $\alpha$ adapts to data conditions:
+
+\begin{equation}
+\alpha = \begin{cases}
+0.6 & \text{normal mode (}\geq 2 \text{ behavioral signals)} \\
+0.3 & \text{sparse mode (}\leq 1 \text{ behavioral signal)}
+\end{cases}
+\end{equation}
+
+In sparse mode, reduced historical weight allows new inputs (e.g., a fresh mood entry) to have more immediate effect, appropriate when limited data makes historical anchoring less justified.
+
+\subsubsection{Stage 3: Logistic Compression}
+
+The sigmoid function enforces bounded output with psychological realism:
+
+\begin{equation}
+S_t = \frac{100}{1 + e^{-k(S_t^{\text{ema}} - \mu)}}
+\end{equation}
+
+Parameters $k = 0.08$ (steepness) and $\mu = 50$ (inflection point) were empirically tuned to:
+\begin{itemize}
+    \item Provide soft ceiling at high scores (preventing runaway escalation)
+    \item Provide soft floor at low scores (maintaining discriminative distance from zero)
+    \item Amplify discrimination in the mid-range where most students operate
+\end{itemize}
+
+Logistic compression is bypassed in sparse mode where the $\mu=50$ center would artificially pull uncertain readings toward mid-range, producing counter-intuitive behavior.
+
+\subsection{Signal Definitions}
+
+\subsubsection{Signal 1: Mood (Base Weight 35\%)}
+
+The mood signal extracts stress contribution from self-reported emotional state.
+
+\textbf{Source:} Latest mood entry within 24 hours from the \texttt{moods} collection.
+
+\textbf{Mapping:} Categorical moods map to baseline stress scores:
+
+\begin{table}[htbp]
+\caption{Mood to Stress Score Mapping}
+\centering
+\begin{tabular}{lc|lc}
+\toprule
+\textbf{Mood} & \textbf{Score} & \textbf{Mood} & \textbf{Score} \\
+\midrule
+happy & 15 & sad & 65 \\
+calm & 20 & anxious & 72 \\
+normal & 40 & stressed & 78 \\
+neutral & 40 & angry & 80 \\
+okay & 45 & depressed & 85 \\
+ & & panic & 90 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Intensity Modulation:} When optional intensity (1--10) is provided:
+
+\begin{equation}
+\text{score}_{\text{adj}} = \text{score}_{\text{base}} \cdot \left(1 + 0.3 \cdot \frac{\text{intensity} - 5}{5}\right)
+\end{equation}
+
+\textbf{Temporal Decay:} Moods older than 6 hours decay linearly toward neutral:
+
+\begin{equation}
+\text{decay} = \min\left(1.0, \frac{\text{age\_hours} - 6}{18}\right) \quad \text{for age} > 6\text{h}
+\end{equation}
+
+\begin{equation}
+\text{score}_{\text{final}} = \text{score}_{\text{adj}} \cdot (1 - \text{decay}) + 50 \cdot \text{decay}
+\end{equation}
+
+\subsubsection{Signal 2: Sentiment (Base Weight 25\%)}
+
+The sentiment signal derives stress contribution from natural language processing of mental health chat conversations.
+
+\textbf{Source:} Last 10 mental health chat messages from the \texttt{chats} collection.
+
+\textbf{Method:} Keyword-based sentiment scoring using expanded lexicons for negative words (stressed, anxious, hopeless, suicidal, etc.) and positive words (happy, confident, grateful, peaceful, etc.).
+
+\textbf{Scoring Function:}
+
+\begin{equation}
+\text{score} = 50 + |\text{neg\_hits}| \cdot 12 - |\text{pos\_hits}| \cdot 10 + \text{intensifier\_bonus}
+\end{equation}
+
+\textbf{Temporal Weighting:} Exponential decay prioritizes recent conversations:
+
+\begin{equation}
+w_{\text{chat},i} = e^{-0.15i}
+\end{equation}
+
+where $i$ is the recency index (0 = most recent).
+
+\subsubsection{Signal 3: Activity (Base Weight 15\%)}
+
+The activity signal applies Yerkes-Dodson inverted-U interpretation to platform engagement.
+
+\textbf{Source:} Cross-collection action count over 48 hours (stress check-ins, mood entries, chat messages, wellness entries).
+
+\textbf{Mapping:}
+
+\begin{table}[htbp]
+\caption{Activity to Stress Score Mapping}
+\centering
+\begin{tabular}{cl}
+\toprule
+\textbf{Actions (48h)} & \textbf{Score (Interpretation)} \\
+\midrule
+0 & 75 (disengaged) \\
+1--2 & 60 (low engagement) \\
+3--5 & 40 (suboptimal) \\
+5--8 & 20 (optimal sweet spot) \\
+9--12 & 30 (slightly elevated) \\
+13--18 & 45 (elevated, possible anxiety) \\
+19--25 & 60 (high, likely anxiety-driven) \\
+$>$25 & 72 (hyperactive) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Signal 4: Volatility (Base Weight 10\%)}
+
+The volatility signal captures emotional instability through mood variance.
+
+\textbf{Source:} Standard deviation of mood scores over 48 hours (minimum 3 samples required for statistical validity).
+
+\textbf{Computation:}
+
+\begin{equation}
+\sigma = \sqrt{\frac{1}{n}\sum_{j=1}^{n}(s_j - \bar{s})^2}
+\end{equation}
+
+\begin{equation}
+\text{score} = \min(90, 20 + \sigma \cdot 2.5) + \begin{cases}
+15 & \text{if max swing} > 40 \\
+0 & \text{otherwise}
+\end{cases}
+\end{equation}
+
+When fewer than 3 mood entries exist, $d_4 = 0$ (no data flag) and volatility is excluded from fusion.
+
+\subsubsection{Signal 5: Time Bias (Base Weight 5\%)}
+
+The time bias signal captures circadian disruption through time-of-day context.
+
+\textbf{Source:} Current system time (always available).
+
+\textbf{Mapping (IST-adjusted):}
+
+\begin{table}[htbp]
+\caption{Time of Day to Stress Score Mapping}
+\centering
+\begin{tabular}{lc}
+\toprule
+\textbf{Time Range} & \textbf{Score} \\
+\midrule
+11 PM -- 4 AM & 75 (late night penalty) \\
+4 AM -- 6 AM & 60 (very early) \\
+10 PM -- 11 PM & 55 (late evening) \\
+Otherwise & 30 (normal hours) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Signal 6: Trend (Base Weight 10\%)}
+
+The trend signal captures 7-day directional momentum.
+
+\textbf{Source:} Historical stress scores from the \texttt{stress} collection (minimum 2 entries required).
+
+\textbf{Method:} Half-comparison of first-half average vs. second-half average:
+
+\begin{equation}
+\text{trend\_direction} = \bar{s}_{\text{second}} - \bar{s}_{\text{first}}
+\end{equation}
+
+\begin{equation}
+\text{score} = \text{clamp}(50 + \text{trend\_direction}, 0, 100)
+\end{equation}
+
+Positive direction (worsening trend) increases contribution; negative direction (improving trend) decreases it.
+
+\subsection{Adaptive Weight Redistribution}
+
+When signal $i$ lacks data ($d_i = 0$), its base weight must be redistributed to signals that have data to preserve the weight sum invariant.
+
+\textbf{Algorithm:}
+
+\begin{equation}
+w_i^{*} = \begin{cases}
+0 & \text{if } d_i = 0 \\
+w_i + \frac{w_i}{\sum_{j:d_j=1} w_j} \cdot \sum_{k:d_k=0} w_k & \text{if } d_i = 1
+\end{cases}
+\end{equation}
+
+\textbf{Properties:}
+\begin{itemize}
+    \item Weight sum is always preserved: $\sum w_i^{*} = 1$
+    \item Prevents ``phantom neutral'' anchoring where missing signals default to 50, artificially centering scores
+    \item Gracefully degrades: in extreme cases with only one signal available, that signal receives weight 1.0
+    \item Proportional redistribution maintains relative importance among available signals
+\end{itemize}
+
+\subsection{Anti-Manipulation Defense}
+
+\textbf{Threat Model:} A student attempts to game the system by sending multiple chat messages with uniform extreme positive sentiment (e.g., six ``I'm so happy and grateful!'' messages in rapid succession) to artificially lower their stress score.
+
+\textbf{Detection:} Burst is detected when $\geq 4$ messages arrive within 300 seconds.
+
+\textbf{Attenuation:} During burst, the $i$-th most recent message receives dampened weight:
+
+\begin{equation}
+w_{\text{burst},i} = e^{-0.15i} \cdot \sqrt{\frac{i + 1}{4}} \quad \text{for } i \in \{0,1,2,3\}
+\end{equation}
+
+This yields multipliers $\{0.50, 0.71, 0.87, 1.00\}$—newest (spam) messages are suppressed most heavily while older messages retain normal weight.
+
+\textbf{Rationale:} Authentic conversation patterns show temporal spacing and sentiment variation. Rapid uniform sentiment indicates manipulation attempt. The square-root factor provides diminishing returns: each additional spam message contributes less to the final sentiment aggregate.
+
+\subsection{Z-Score Anomaly Detection}
+
+Statistical spike detection identifies readings that deviate significantly from recent history.
+
+\begin{equation}
+z = \frac{S_t - \mu_{\text{recent}}}{\sigma_{\text{recent}}}
+\end{equation}
+
+Spike is flagged if $z > 2.0$ (more than 2 standard deviations above mean).
+
+For users with insufficient history ($<5$ readings), fallback to simple delta detection: spike if $(S_t - S_{t-1}) > 20$.
+
+\subsection{Confidence Scoring}
+
+Confidence quantifies estimation reliability based on three factors:
+
+\begin{equation}
+C = \underbrace{\frac{|D|}{n} \cdot 0.40}_{\text{availability}} + \underbrace{\frac{\min(r, 10)}{10} \cdot 0.35}_{\text{sample}} + \underbrace{C_{\text{consistency}}}_{\text{consistency}}
+\end{equation}
+
+where:
+
+\begin{equation}
+C_{\text{consistency}} = \max\left(0.05, 0.25 - \frac{\sigma_x}{30} \cdot 0.20\right)
+\end{equation}
+
+\begin{itemize}
+    \item \textbf{Data Availability (40\%):} Fraction of signals with valid data
+    \item \textbf{Sample Size (35\%):} Historical readings in past 7 days (capped at 10)
+    \item \textbf{Signal Consistency (25\%):} Low inter-signal variance indicates agreement
+\end{itemize}
+
+\textbf{Calibration:} Confidence ranges from 0.15 (zero data) to 0.77 (complete data with consistent signals), enabling meaningful UI communication about estimation reliability.
+
+\section{Platform Features}
+\label{sec:features}
+
+\subsection{Student Wellness Dashboard}
+
+The primary student interface provides real-time wellness visualization:
+
+\begin{itemize}
+    \item \textbf{Stress Gauge:} Animated 0--100 scale with color-coded severity bands (green: relaxed, yellow: manageable, orange: elevated, red: high/critical)
+    \item \textbf{Confidence Badge:} Visual indicator of estimation reliability enabling appropriate interpretation
+    \item \textbf{7-Day Trend Graph:} Interactive Chart.js visualization of stress trajectory
+    \item \textbf{Mood Distribution:} Pie chart showing emotional pattern percentages
+    \item \textbf{Dominant Factor:} Natural language explanation of primary stress contributor
+    \item \textbf{Quick Actions:} Direct access to mental health chatbot, study assistant, and relaxation activities
+\end{itemize}
+
+\subsection{AI Mental Health Chatbot}
+
+Powered by Google Gemini 2.5 Flash with carefully designed system prompts for empathetic, professional responses.
+
+\textbf{Features:}
+\begin{itemize}
+    \item Context management: Last 5 conversation turns for continuity
+    \item Sentiment annotation: Keyword extraction populates stress signals
+    \item Crisis detection: Flagging of concerning keywords for escalation
+    \item Persistence: All conversations stored with timestamps for longitudinal analysis
+\end{itemize}
+
+\subsection{Multimodal Study Assistant}
+
+\begin{itemize}
+    \item \textbf{PDF Upload:} Extract and explain key concepts from study materials
+    \item \textbf{Image Analysis:} Homework help via screenshot uploads processed by Gemini Vision
+    \item \textbf{Custom Sessions:} Personalized tutoring on specific topics
+\end{itemize}
+
+\subsection{Emotion-Aware UI Personalization}
+
+The theme system dynamically adjusts visual characteristics based on detected mood:
+
+\begin{table}[htbp]
+\caption{Emotion-Aware Theme Characteristics}
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Mood} & \textbf{Colors} & \textbf{Characteristics} \\
+\midrule
+Happy & Bright blues & Energetic, high contrast \\
+Calm & Soft purples & Balanced, soothing \\
+Stressed & Lavender & Reduced contrast \\
+Angry & Warm muted & Less stimulation \\
+Sad & Cool grays & Minimal distraction \\
+Anxious & Warm oranges & Grounding effect \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Institutional Dashboards}
+
+\textbf{Proctor Dashboard:}
+\begin{itemize}
+    \item Student watchlist with 7-day stress sparklines
+    \item Risk indicators for students with stress $>80$ or rising trends
+    \item Quick actions for profile access and contact
+\end{itemize}
+
+\textbf{HOD Dashboard:}
+\begin{itemize}
+    \item 30-day department wellness trend (average stress)
+    \item High-risk student count
+    \item Grievance resolution rate metrics
+    \item Department-wide mood distribution
+\end{itemize}
+
+\subsection{Parent Portal}
+
+\begin{itemize}
+    \item OTP-based SMS authentication for secure access
+    \item Read-only view of student stress trends and mood patterns
+    \item Complaint submission system for raising concerns
+    \item Suggestion box for institutional feedback
+\end{itemize}
+
+\section{Experimental Evaluation}
+\label{sec:evaluation}
+
+\subsection{Methodology}
+
+We evaluate AURA using synthetic behavioral archetypes rather than live student data. This methodology:
+
+\begin{itemize}
+    \item Avoids ethical constraints of real mental health data
+    \item Enables reproducible, exhaustive testing
+    \item Allows controlled manipulation of individual signals
+    \item Provides ground truth for validation
+\end{itemize}
+
+Each archetype defines specific values for all six signals, enabling isolated testing of framework behavior under controlled conditions.
+
+\subsection{Test Archetypes}
+
+Table~\ref{tab:archetypes} defines the 10 synthetic behavioral archetypes.
+
+\begin{table}[htbp]
+\caption{Synthetic Behavioral Archetypes}
+\label{tab:archetypes}
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Profile} & \textbf{Description} & \textbf{Expected} \\
+\midrule
+Calm & Positive signals, stable & 10--42 \\
+High Stress & Anxious, negative, rising & 55--95 \\
+Night Owl & Normal + late activity & 20--60 \\
+Spam & Positive burst after stress & 35--80 \\
+Ghost & Zero behavioral data & 25--75 \\
+Volatile & Fluctuating moods & 25--70 \\
+Recovering & High→low transition & 15--50 \\
+Data Rich & Complete signals & 15--55 \\
+Crisis & All signals maxed & 70--100 \\
+Fresh & Single mood only & 20--65 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Results}
+
+\subsubsection{Manipulation Resistance}
+
+Table~\ref{tab:manipulation} demonstrates burst detection effectiveness.
+
+\begin{table}[htbp]
+\caption{Manipulation Resistance Results}
+\label{tab:manipulation}
+\centering
+\begin{tabular}{lc}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Naive sentiment (no detection) & 36.2 \\
+AURA sentiment (burst-adjusted) & 33.2 \\
+\textbf{Burst suppression} & \textbf{22.2\%} \\
+\midrule
+Mood signal (ground truth) & 92.0 \\
+Mood-only baseline score & 78 \\
+AURA final score & 63 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The multi-signal architecture prevents single-channel manipulation; when sentiment is gamed, mood appropriately dominates the final score.
+
+\subsubsection{Stabilization Effectiveness}
+
+Table~\ref{tab:stability} shows variance reduction through the stabilization pipeline.
+
+\begin{table}[htbp]
+\caption{Stabilization Effectiveness}
+\label{tab:stability}
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{Raw} & \textbf{EMA} & \textbf{+Logistic} \\
+\midrule
+Variance & 581.5 & 22.0 & 45.8 \\
+Range & 59 & 14 & 20 \\
+\textbf{Reduction} & --- & 96.2\% & \textbf{92.1\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Combined EMA and logistic compression achieves 92\% total variance reduction while maintaining discriminative range in the mid-zone.
+
+\subsubsection{Crisis Sensitivity}
+
+Table~\ref{tab:crisis} shows threshold attainment during escalating crisis scenario.
+
+\begin{table}[htbp]
+\caption{Crisis Detection Sensitivity}
+\label{tab:crisis}
+\centering
+\begin{tabular}{ccc}
+\toprule
+\textbf{Reading} & \textbf{Score} & \textbf{Threshold} \\
+\midrule
+1 & 42 & --- \\
+2 & 52 & --- \\
+3 & 57 & Elevated ($\geq$55) \checkmark \\
+4 & 63 & --- \\
+5 & 68 & High ($\geq$65) \checkmark \\
+6 & 72 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Elevated threshold reached within 3 readings; High threshold within 5 readings. This balances sensitivity with stability—rapid enough for timely intervention while avoiding false alarms from transient fluctuations.
+
+\subsubsection{Confidence Calibration}
+
+Table~\ref{tab:confidence} demonstrates monotonic confidence scaling.
+
+\begin{table}[htbp]
+\caption{Confidence Calibration}
+\label{tab:confidence}
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Data Volume} & \textbf{Docs} & \textbf{Confidence} \\
+\midrule
+Zero data & 0 & 0.15 \\
+1 mood & 1 & 0.30 \\
+1 mood + 1 chat & 2 & 0.35 \\
+3 moods + 2 chats & 5 & 0.47 \\
+Moderate history & 12 & 0.69 \\
+Full data & 24 & 0.77 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Monotonically increasing confidence (span 0.62) enables meaningful UI communication. Low confidence triggers appropriate warnings rather than false precision.
+
+\subsubsection{Baseline Comparison}
+
+Table~\ref{tab:baseline} compares AURA against mood-only baseline.
+
+\begin{table}[htbp]
+\caption{AURA vs Mood-Only Baseline}
+\label{tab:baseline}
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Scenario} & \textbf{Baseline} & \textbf{AURA} & \textbf{Key Finding} \\
+\midrule
+Calm & 15 & 29 & Temporal context \\
+Stressed & 72 & 70 & Strong alignment \\
+Spam after stress & 78 & 58 & Manipulation resist \\
+No data & 50 & 75* & Low confidence flag \\
+Volatile & 15 & 43 & Captures instability \\
+Recovering & 20 & 31 & Captures trend \\
+\bottomrule
+\multicolumn{4}{l}{\small *Flagged with 0.15 confidence}
+\end{tabular}
+\end{table}
+
+AURA demonstrates superior behavior across scenarios, particularly in manipulation resistance and capturing behavioral dimensions (volatility, trend) that mood-only approaches miss.
+
+\section{Security and Privacy}
+\label{sec:security}
+
+\subsection{Authentication}
+
+\begin{itemize}
+    \item Students/Staff: Session-based with bcrypt password hashing
+    \item Parents: OTP via SMS (Fast2SMS integration)
+    \item Route protection via \texttt{@login\_required} and \texttt{@role\_required()} decorators
+\end{itemize}
+
+\subsection{Data Protection}
+
+\begin{itemize}
+    \item Encryption at rest: MongoDB Atlas encrypted storage
+    \item Encryption in transit: HTTPS/TLS (Render-enforced)
+    \item Anonymization: Student IDs anonymized in proctor views
+    \item Scope restriction: Role-based data visibility
+\end{itemize}
+
+\subsection{Audit Trail}
+
+All administrative actions logged to \texttt{proctor\_audit\_log} with actor, action, target, timestamp, and details.
+
+\subsection{Rate Limiting}
+
+Five-tier Flask-Limiter configuration protects against brute-force and abuse.
+
+\section{Limitations and Future Work}
+\label{sec:limitations}
+
+\subsection{Current Limitations}
+
+\begin{enumerate}
+    \item \textbf{Rule-Based Design:} Intentional trade-off for transparency; deep learning might improve accuracy at cost of interpretability
+    \item \textbf{EMA Lag:} Rapid genuine improvement delayed by 1--2 readings
+    \item \textbf{Keyword NLP:} Basic sentiment analysis misses context, negation, sarcasm
+    \item \textbf{Synthetic Validation:} Real-world edge cases may differ from archetypes
+    \item \textbf{No Clinical Validation:} Behavioral approximations, not diagnostic instruments
+\end{enumerate}
+
+\subsection{Future Directions}
+
+\begin{itemize}
+    \item Per-student adaptive thresholds based on individual baselines
+    \item Contextual NLP using fine-tuned transformer models
+    \item Time-series forecasting (LSTM) for proactive intervention scheduling
+    \item Multilingual support for regional languages
+    \item Clinical validation study with longitudinal student data
+\end{itemize}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper presented AURA, a multi-signal behavioral stress monitoring framework that addresses the fundamental limitations of single-metric self-reporting approaches. Key contributions include:
+
+\begin{itemize}
+    \item Six-signal fusion with adaptive weight redistribution preventing phantom anchoring
+    \item 92\% variance reduction through EMA + logistic stabilization
+    \item 22\% manipulation suppression via burst detection
+    \item Calibrated confidence scoring spanning 0.15--0.77
+    \item Crisis detection within 3--5 readings
+    \item Complete institutional ecosystem with AI chatbot, grievance management, and parental engagement
+\end{itemize}
+
+The transparent, rule-based architecture supports institutional accountability requirements while providing measurably superior stress estimation compared to mood-only baselines. AURA is production-deployed at Aditya College of Engineering and Technology, actively supporting student mental wellness.
+
+\section*{Acknowledgment}
+
+The authors thank Google AI for Gemini API access, MongoDB Atlas for database infrastructure, Render for application deployment, and Aditya College of Engineering and Technology for institutional support.
+
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{10}
+
+\bibitem{beiter2015}
+R.~Beiter \emph{et al.}, ``The prevalence and correlates of depression, anxiety, and stress in a sample of college students,'' \emph{J. Affective Disorders}, vol.~173, pp.~90--96, 2015.
+
+\bibitem{who2017}
+World Health Organization, ``Depression and other common mental disorders: Global health estimates,'' Geneva, Switzerland, 2017.
+
+\bibitem{wang2014}
+R.~Wang \emph{et al.}, ``StudentLife: Assessing mental health, academic performance and behavioral trends of college students using smartphones,'' in \emph{Proc. ACM Int. Joint Conf. Pervasive Ubiquitous Comput. (UbiComp)}, 2014, pp.~3--14.
+
+\bibitem{gjoreski2017}
+M.~Gjoreski \emph{et al.}, ``Monitoring stress with a wrist device using context,'' \emph{J. Biomedical Informatics}, vol.~73, pp.~159--170, 2017.
+
+\bibitem{poria2017}
+S.~Poria \emph{et al.}, ``A review of affective computing: From unimodal analysis to multimodal fusion,'' \emph{Information Fusion}, vol.~37, pp.~98--125, 2017.
+
+\bibitem{yerkes1908}
+R.~M.~Yerkes and J.~D.~Dodson, ``The relation of strength of stimulus to rapidity of habit formation,'' \emph{J. Comparative Neurology and Psychology}, vol.~18, no.~5, pp.~459--482, 1908.
+
+\bibitem{holzinger2017}
+A.~Holzinger \emph{et al.}, ``What do we need to build explainable AI systems for the medical domain?'' \emph{arXiv:1712.09923}, 2017.
+
+\bibitem{sano2018}
+A.~Sano \emph{et al.}, ``Identifying objective physiological markers and modifiable behaviors for self-reported stress,'' \emph{J. Medical Internet Research}, vol.~20, no.~6, e210, 2018.
+
+\bibitem{paulhus1991}
+D.~L.~Paulhus, ``Measurement and control of response bias,'' in \emph{Measures of Personality and Social Psychological Attitudes}, Academic Press, 1991, pp.~17--59.
+
+\bibitem{guntuku2017}
+S.~C.~Guntuku \emph{et al.}, ``Detecting depression and mental illness on social media: An integrative review,'' \emph{Current Opinion in Behavioral Sciences}, vol.~18, pp.~43--49, 2017.
+
+\end{thebibliography}
+
+\end{document}

@@ -44,23 +44,8 @@ def analyze_burnout_risk(user_email: str) -> Dict[str, Any]:
         is_anomaly = z_score > 1.5
 
         # 4. Sustained High Stress check (last 5)
-        # TODO #35 (AI/ML): Arbitrary Thresholds - Clinical Validation Needed
-        #   The threshold of >65 for "sustained high stress" is empirically chosen
-        #   and has NOT been validated against clinical burnout assessments.
-        #
-        #   Issues with current approach:
-        #   1. No clinical basis for the 65 threshold (not from MBI or other validated scales)
-        #   2. "3+ consecutive logs" is arbitrary - burnout develops over weeks, not days
-        #   3. Individual baselines vary - 65 might be normal for some users
-        #   4. No distinction between acute stress episodes and chronic burnout
-        #
-        #   Recommendations for clinical validation:
-        #   - Partner with mental health researchers to validate thresholds
-        #   - Correlate with validated instruments (Maslach Burnout Inventory)
-        #   - Implement personalized thresholds based on user baseline
-        #   - Add temporal analysis (sustained over weeks, not just readings)
-        #   - Consider multi-dimensional burnout (exhaustion, cynicism, inefficacy)
-        #   - IMPORTANT: Add disclaimer that this is NOT a clinical diagnostic tool
+        # NOTE #35: Thresholds (>65, z>1.5) are empirically chosen, not clinically
+        # validated. See CLINICAL_DISCLAIMER below.
         recent_scores = all_scores[:5]
         sustained_high = all(s > 65 for s in recent_scores) if len(recent_scores) >= 3 else False
 
@@ -112,6 +97,14 @@ def analyze_burnout_risk(user_email: str) -> Dict[str, Any]:
             risk_level = "moderate"
             intervention = "Moderate fatigue detected. Consider a 15-minute mindfulness session to recalibrate."
 
+        # FIX #35: Clinical disclaimer included with every response
+        CLINICAL_DISCLAIMER = (
+            "This assessment is an algorithmic estimate based on self-reported data "
+            "and activity patterns. It is NOT a clinical diagnosis and should not replace "
+            "professional mental health evaluation. If you are in distress, please contact "
+            "a licensed counselor or crisis helpline."
+        )
+
         return {
             'risk_level': risk_level,
             'score': min(100, risk_score),
@@ -119,7 +112,8 @@ def analyze_burnout_risk(user_email: str) -> Dict[str, Any]:
             'intervention': intervention,
             'baseline_mean': round(personal_mean, 1),
             'current_z_score': round(z_score, 2),
-            'last_analyzed': datetime.utcnow().isoformat()
+            'last_analyzed': datetime.utcnow().isoformat(),
+            'disclaimer': CLINICAL_DISCLAIMER,
         }
 
     except Exception as e:

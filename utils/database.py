@@ -8,6 +8,7 @@
 #   deployments without manual intervention.
 
 import threading
+import uuid
 from typing import Any, Dict
 from pymongo import MongoClient, ASCENDING, errors
 from datetime import datetime
@@ -25,22 +26,24 @@ def _build_client() -> MongoClient:
     tls = getattr(Config, 'MONGODB_TLS', False)
     allow_invalid = getattr(Config, 'MONGODB_TLS_ALLOW_INVALID_CERTIFICATES', False)
 
+    import os
+    _is_testing = os.getenv('TESTING', 'false').lower() in ('1', 'true', 'yes')
+
     # Connection pooling configuration (#29 Scalability)
     # These settings optimize connection reuse and prevent connection exhaustion
     client_kwargs = {
-        'serverSelectionTimeoutMS': 5000,
+        'serverSelectionTimeoutMS': 500 if _is_testing else 5000,
         # Pool size settings - adjust based on expected concurrent connections
-        'maxPoolSize': 50,           # Max connections per server (default: 100, reduced for free tiers)
-        'minPoolSize': 5,            # Minimum idle connections to maintain
-        'maxIdleTimeMS': 30000,      # Close idle connections after 30s
+        'maxPoolSize': 5 if _is_testing else 50,
+        'minPoolSize': 0 if _is_testing else 5,
+        'maxIdleTimeMS': 5000 if _is_testing else 30000,
         # Connection lifecycle
-        'connectTimeoutMS': 10000,   # Timeout for initial connection
-        'socketTimeoutMS': 30000,    # Timeout for socket operations
+        'connectTimeoutMS': 500 if _is_testing else 10000,
+        'socketTimeoutMS': 1000 if _is_testing else 30000,
         # Write concern for data safety
-        'retryWrites': True,         # Automatically retry failed writes
-        'retryReads': True,          # Automatically retry failed reads
-        # For serverless/free tier MongoDB Atlas, use smaller pool
-        'waitQueueTimeoutMS': 10000, # Max time to wait for available connection
+        'retryWrites': True,
+        'retryReads': True,
+        'waitQueueTimeoutMS': 500 if _is_testing else 10000,
     }
     if tls:
         client_kwargs['tls'] = True
@@ -68,6 +71,7 @@ def _ensure_indexes(database) -> None:
             # Default indexes per model
             if model is UserModel:
                 coll.create_index([('email', ASCENDING)], unique=True)
+                coll.create_index([('user_id', ASCENDING)], unique=True, sparse=True)  # FIX #8
                 coll.create_index([('created_at', ASCENDING)])
             elif model is ChatModel:
                 coll.create_index([('user_email', ASCENDING)])
@@ -161,7 +165,9 @@ def create_demo_users(database) -> int:
     for config in DEMO_USERS_CONFIG:
         user_doc = {
             **config,
+            'user_id': str(uuid.uuid4()),  # FIX #8: UUID for internal identification
             'hashed_password': hash_password(DEMO_PASSWORD),
+            'timezone_offset': 330,  # FIX #17: IST default for demo users
             'created_at': datetime.utcnow(),
         }
         res = users.update_one(
@@ -263,7 +269,15 @@ def seed_demo_data(database) -> Dict[str, Any]:
     }
 
 def init_db(app=None):
-    """Initialize database connection with thread-safe lazy initialization."""
+    """Initialize database connection with thread-safe lazy initialization.
+
+    No-ops when AURA_SKIP_DB_INIT=true (used in test environments that fully
+    mock the DB layer to avoid requiring a real MongoDB server to be running).
+    """
+    import os
+    if os.getenv('AURA_SKIP_DB_INIT', 'false').lower() in ('1', 'true', 'yes'):
+        return None
+
     global client, db
     with _db_lock:
         if db is not None:
@@ -276,7 +290,15 @@ def init_db(app=None):
 
 
 def get_db():
-    """Return an active database connection, initializing if needed (thread-safe)."""
+    """Return an active database connection, initializing if needed (thread-safe).
+
+    Returns None when AURA_SKIP_DB_INIT=true (used by test fixtures that fully
+    mock the DB layer, allowing the Flask app to initialize without a real server).
+    """
+    import os
+    if os.getenv('AURA_SKIP_DB_INIT', 'false').lower() in ('1', 'true', 'yes'):
+        return None
+
     global db, client
     # Fast path: already initialized
     if db is not None:

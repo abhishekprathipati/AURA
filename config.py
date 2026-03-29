@@ -1,4 +1,5 @@
 import os
+import sys
 import secrets
 
 # ─── Helpers ───────────────────────────────────────────────────────────
@@ -10,11 +11,20 @@ def _bool(key, default='false'):
 def _int(key, default):
     return int(os.getenv(key, str(default)))
 
+def _is_prod():
+    return os.getenv('FLASK_ENV', 'production').strip().lower() == 'production'
+
 
 class Config:
     """Centralised configuration — every value overridable via env."""
 
     # ── Core Flask ──────────────────────────────────────────────────────
+    # FIX #2: Enforce SECRET_KEY in production — crash loudly rather than
+    # silently using an ephemeral key that invalidates sessions on restart.
+    if _is_prod() and not os.getenv('SECRET_KEY'):
+        print('FATAL: SECRET_KEY environment variable is required in production.', file=sys.stderr)
+        print('Generate one with: python -c "import secrets; print(secrets.token_hex(32))"', file=sys.stderr)
+        sys.exit(1)
     SECRET_KEY        = os.getenv('SECRET_KEY', _FALLBACK_SECRET)
     DEBUG             = _bool('FLASK_DEBUG')
     ENV               = os.getenv('FLASK_ENV', 'production')   # 'development' | 'production'
@@ -36,13 +46,12 @@ class Config:
     MONGODB_TLS_ALLOW_INVALID_CERTIFICATES = _bool('MONGODB_TLS_ALLOW_INVALID')
 
     # ── Rate-limit storage (memory for dev, Redis for prod) ─────────────
-    # WARNING: 'memory://' is for DEVELOPMENT ONLY. It stores rate-limit counters
-    # in-process memory, which means:
-    #   1) Limits reset on every server restart
-    #   2) Multi-instance deployments (Gunicorn workers, Kubernetes pods) won't share state
-    #   3) No persistence across deploys
-    # For production, set RATELIMIT_STORAGE_URI to a Redis URL (e.g., redis://localhost:6379/0)
+    # FIX #25: Enforce Redis in production — memory backend is per-process
+    # and resets on restart, which is unacceptable for production.
     RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI', os.getenv('REDIS_URL', 'memory://'))
+    if _is_prod() and RATELIMIT_STORAGE_URI.startswith('memory://'):
+        print('WARNING: RATELIMIT_STORAGE_URI is memory:// in production.', file=sys.stderr)
+        print('Set RATELIMIT_STORAGE_URI=redis://localhost:6379/0 for production.', file=sys.stderr)
     #   Production: redis://localhost:6379/0   or   redis://<host>:6379/0
 
     # ── Fast2SMS (parent OTP) ───────────────────────────────────────────
