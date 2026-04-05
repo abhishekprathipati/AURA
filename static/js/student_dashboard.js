@@ -1386,16 +1386,17 @@ class AdvancedDashboard {
 
                 // Render Forecast Items
                 container.innerHTML = data.forecast.map(item => {
-                    let color = '#22c55e'; // relax
-                    if (item.score > 75) color = '#ef4444'; // critical
-                    else if (item.score > 55) color = '#f97316'; // high
-                    else if (item.score > 35) color = '#eab308'; // moderate
+                    let color = '#22c55e'; // low stress (green)
+                    let bg = 'rgba(34,197,94,0.1)';
+                    if (item.score > 75) { color = '#ef4444'; bg = 'rgba(239,68,68,0.1)'; }
+                    else if (item.score > 55) { color = '#f97316'; bg = 'rgba(249,115,22,0.1)'; }
+                    else if (item.score > 35) { color = '#eab308'; bg = 'rgba(234,179,8,0.1)'; }
 
                     return `
-                        <div style="flex: 1; text-align: center; padding: 10px; background: var(--surface); border-radius: 12px; border: 1px solid var(--border); transition: transform 0.2s;">
-                            <div style="font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 600;">${esc(item.day)}</div>
-                            <div style="font-size: 20px; font-weight: 800; color: ${color}; margin: 4px 0;">${parseInt(item.score) || 0}</div>
-                            <div style="font-size: 9px; color: var(--muted);">Projected</div>
+                        <div style="flex:1;text-align:center;padding:14px 10px;background:${bg};border-radius:14px;border:1.5px solid ${color}44;min-width:60px;">
+                            <div style="font-size:10px;color:${color};text-transform:uppercase;font-weight:700;opacity:.85;">${esc(item.day)}</div>
+                            <div style="font-size:24px;font-weight:900;color:${color};margin:6px 0 2px;line-height:1;">${parseInt(item.score) || 0}</div>
+                            <div style="font-size:9px;color:${color};font-weight:600;opacity:.6;">Projected</div>
                         </div>
                     `;
                 }).join('');
