@@ -15,7 +15,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
 {% block body_class %}games-page{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce }}">
     /* ════════════════════════════════════════════════
        AURA MIND GAMES — BOLD SOLID DARK THEME
        8 Games • XP System • No Glass • Pure Power
@@ -2165,7 +2165,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
         <a href="/register" class="gm-btn gm-btn-primary" style="display:inline-block;margin-top:18px;text-decoration:none;">Create Account</a>
     </div>
 </div>
-<script>
+<script nonce="{{ csp_nonce }}">
 (function(){
     var limit = {{ demo_time_limit|default(300) }};
     var start = Date.now();
@@ -2174,7 +2174,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
 </script>
 {% endif %}
 
-<script>
+<script nonce="{{ csp_nonce }}">
 /* ════════════════════════════════════════════════
    AURA GAMES ENGINE — Bold Edition
    XP • Combo • Confetti • 12 Games

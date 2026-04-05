@@ -1,8 +1,8 @@
 // AURA Service Worker - Offline Support with Intelligent Caching Strategies
-// Version: v5 (cache-first for static, network-first for dynamic)
+// Version: v6 (cache-first for static, network-first for dynamic)
 
-const CACHE_NAME = 'aura-offline-v5';
-const STATIC_CACHE_NAME = 'aura-static-v5';
+const CACHE_NAME = 'aura-offline-v6';
+const STATIC_CACHE_NAME = 'aura-static-v6';
 
 // Critical resources to pre-cache during installation
 const PRECACHE_URLS = [

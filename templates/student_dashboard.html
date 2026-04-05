@@ -22,174 +22,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student_dashboard.css') }}?v=20260405-fix-css">
-    <style nonce="{{ csp_nonce }}">
-        /* SVG Icon System */
-        .icon {
-            width: 24px;
-            height: 24px;
-            stroke: currentColor;
-            fill: none;
-            display: inline-block;
-            vertical-align: middle;
-        }
-
-        .icon.icon-sm {
-            width: 16px;
-            height: 16px;
-        }
-
-        .icon.icon-lg {
-            width: 32px;
-            height: 32px;
-        }
-
-        /* Additional styles for Connect Hub and enhancements */
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .action-feedback {
-            transition: opacity 0.3s;
-        }
-
-        .text-success {
-            color: #22c55e;
-        }
-
-        .text-error {
-            color: #ef4444;
-        }
-
-        .ai-launch-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-        }
-
-        .text-info {
-            color: #3b82f6;
-        }
-
-        .connection-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background: rgba(var(--accent-rgb), 0.1);
-            border-radius: 8px;
-            font-size: 13px;
-            margin-top: 8px;
-        }
-
-        .status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--accent);
-        }
-
-        .status-indicator.offline {
-            background: var(--danger);
-        }
-
-        .hub-features {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-top: 16px;
-        }
-
-        .hub-feature {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px;
-            background: var(--surface-muted);
-            border-radius: 8px;
-            transition: all 0.2s ease;
-        }
-
-        .hub-feature:hover {
-            background: rgba(var(--primary-rgb), 0.1);
-            transform: translateY(-2px);
-        }
-
-        .feature-icon {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, var(--primary), var(--primary-strong));
-            color: white;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .feature-label {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text);
-        }
-
-        /* Enhanced dashboard styles */
-        .dashboard-header {
-            background: var(--header-gradient);
-            color: white;
-            padding: 24px 32px;
-            border-radius: 16px;
-            margin-bottom: 32px;
-            box-shadow: 0 10px 25px rgba(var(--primary-rgb), 0.2);
-        }
-
-        .system-identity h1 {
-            font-size: 32px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            margin-bottom: 4px;
-            background: linear-gradient(135deg, #ffffff, #e0e7ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .card {
-            backdrop-filter: blur(10px);
-            background: var(--surface);
-            border: 1px solid var(--border);
-            transition: background 0.3s ease, border-color 0.3s ease;
-        }
-
-        .card-primary {
-            background: linear-gradient(145deg, var(--surface), var(--surface-muted));
-            border: 1px solid rgba(var(--primary-rgb), 0.2);
-            box-shadow: 0 8px 32px rgba(var(--primary-rgb), 0.1);
-        }
-
-        .metric-value {
-            font-size: 72px;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary-strong), var(--primary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .btn-module {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .btn-module:hover {
-            transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student_dashboard.css') }}?v=20260406">
 </head>
 
 <body>
@@ -718,454 +551,6 @@ This will improve load times, enable better caching, and simplify maintenance.
             <!-- RIGHT COLUMN - Sidebar -->
             <div class="dashboard-right">
 
-                <!-- ══ QUICK ACTIONS — PREMIUM PANEL ══ -->
-                <style nonce="{{ csp_nonce }}">
-                    /* ── QA Panel Tabs ── */
-                    .qa-tabs-row {
-                        display: flex;
-                        gap: 4px;
-                        background: var(--surface-muted, #f3f4f6);
-                        border-radius: 10px;
-                        padding: 3px;
-                        margin-bottom: 14px;
-                    }
-
-                    .qa-tab-btn {
-                        flex: 1;
-                        padding: 6px 4px;
-                        border: none;
-                        background: transparent;
-                        border-radius: 8px;
-                        font-size: 11px;
-                        font-weight: 700;
-                        color: var(--muted, #9ca3af);
-                        cursor: pointer;
-                        transition: all .18s;
-                        white-space: nowrap;
-                    }
-
-                    .qa-tab-btn.active {
-                        background: var(--surface, #fff);
-                        color: var(--text, #1f2937);
-                        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-                    }
-
-                    [data-theme="dark"] .qa-tabs-row {
-                        background: rgba(255, 255, 255, 0.06);
-                    }
-
-                    [data-theme="dark"] .qa-tab-btn.active {
-                        background: rgba(255, 255, 255, 0.12);
-                        color: #f1f5f9;
-                    }
-
-                    .qa-pane {
-                        display: none;
-                    }
-
-                    .qa-pane.active {
-                        display: block;
-                    }
-
-                    /* ── 2×2 action cards ── */
-                    .qa-grid-v2 {
-                        display: grid;
-                        grid-template-columns: repeat(2, 1fr);
-                        gap: 8px;
-                    }
-
-                    .qa-card-v2 {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        gap: 6px;
-                        padding: 14px 8px 12px;
-                        border-radius: 14px;
-                        border: none;
-                        background: var(--surface-muted, #f9fafb);
-                        text-decoration: none;
-                        cursor: pointer;
-                        transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s, background .15s;
-                        border: 1px solid transparent;
-                        position: relative;
-                        overflow: hidden;
-                    }
-
-                    .qa-card-v2::before {
-                        content: '';
-                        position: absolute;
-                        inset: 0;
-                        background: var(--qa-glow, rgba(99, 102, 241, 0.08));
-                        opacity: 0;
-                        border-radius: inherit;
-                        transition: opacity .2s;
-                    }
-
-                    .qa-card-v2:hover {
-                        transform: translateY(-3px) scale(1.03);
-                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09);
-                        border-color: rgba(0, 0, 0, 0.06);
-                    }
-
-                    .qa-card-v2:hover::before {
-                        opacity: 1;
-                    }
-
-                    .qa-card-v2:active {
-                        transform: scale(.97);
-                    }
-
-                    [data-theme="dark"] .qa-card-v2 {
-                        background: rgba(255, 255, 255, 0.06);
-                        border-color: rgba(255, 255, 255, 0.07);
-                    }
-
-                    [data-theme="dark"] .qa-card-v2:hover {
-                        background: rgba(255, 255, 255, 0.1);
-                    }
-
-                    .qa-v2-ico {
-                        width: 42px;
-                        height: 42px;
-                        border-radius: 12px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 20px;
-                        flex-shrink: 0;
-                        transition: transform .2s;
-                    }
-
-                    .qa-card-v2:hover .qa-v2-ico {
-                        transform: scale(1.12) rotate(-4deg);
-                    }
-
-                    .qa-v2-label {
-                        font-size: 12px;
-                        font-weight: 700;
-                        color: var(--text, #1f2937);
-                        text-align: center;
-                        line-height: 1.2;
-                        margin: 0;
-                    }
-
-                    .qa-v2-sub {
-                        font-size: 11px;
-                        color: var(--muted, #9ca3af);
-                        text-align: center;
-                        margin: 0;
-                        line-height: 1.2;
-                    }
-
-                    [data-theme="dark"] .qa-v2-label {
-                        color: #f1f5f9;
-                    }
-
-                    /* icon colours */
-                    .ico-purple {
-                        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-                        box-shadow: 0 4px 12px rgba(139, 92, 246, .3);
-                    }
-
-                    .ico-teal {
-                        background: linear-gradient(135deg, #10b981, #059669);
-                        box-shadow: 0 4px 12px rgba(16, 185, 129, .3);
-                    }
-
-                    .ico-indigo {
-                        background: linear-gradient(135deg, #6366f1, #4338ca);
-                        box-shadow: 0 4px 12px rgba(99, 102, 241, .3);
-                    }
-
-                    .ico-blue {
-                        background: linear-gradient(135deg, #3b82f6, #2563eb);
-                        box-shadow: 0 4px 12px rgba(59, 130, 246, .3);
-                    }
-
-                    .ico-orange {
-                        background: linear-gradient(135deg, #f59e0b, #d97706);
-                        box-shadow: 0 4px 12px rgba(245, 158, 11, .3);
-                    }
-
-                    .ico-rose {
-                        background: linear-gradient(135deg, #f43f5e, #e11d48);
-                        box-shadow: 0 4px 12px rgba(244, 63, 94, .3);
-                    }
-
-                    /* ── Feedback bar ── */
-                    .qa-feedback {
-                        min-height: 20px;
-                        padding: 0 2px;
-                        font-size: 12px;
-                        font-weight: 600;
-                        margin-bottom: 8px;
-                        transition: all .2s;
-                        border-radius: 6px;
-                    }
-
-                    /* ── Insights tab ── */
-                    .qa-insights-grid {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        gap: 8px;
-                        margin-bottom: 8px;
-                    }
-
-                    .qa-ins-card {
-                        background: var(--surface-muted, #f9fafb);
-                        border: 1px solid var(--border, #e5e7eb);
-                        border-radius: 12px;
-                        padding: 12px 10px;
-                        text-align: center;
-                    }
-
-                    [data-theme="dark"] .qa-ins-card {
-                        background: rgba(255, 255, 255, 0.05);
-                        border-color: rgba(255, 255, 255, 0.08);
-                    }
-
-                    .qa-ins-val {
-                        font-size: 22px;
-                        font-weight: 900;
-                        color: var(--text, #1f2937);
-                        line-height: 1;
-                    }
-
-                    [data-theme="dark"] .qa-ins-val {
-                        color: #f8fafc;
-                    }
-
-                    .qa-ins-lbl {
-                        font-size: 10px;
-                        font-weight: 700;
-                        color: var(--muted, #9ca3af);
-                        text-transform: uppercase;
-                        letter-spacing: .5px;
-                        margin-top: 3px;
-                    }
-
-                    .qa-ins-badge {
-                        display: inline-block;
-                        font-size: 10px;
-                        font-weight: 700;
-                        padding: 2px 8px;
-                        border-radius: 6px;
-                        margin-top: 4px;
-                    }
-
-                    .badge-good {
-                        background: #d1fae5;
-                        color: #065f46;
-                    }
-
-                    .badge-warn {
-                        background: #fef3c7;
-                        color: #92400e;
-                    }
-
-                    .badge-bad {
-                        background: #fee2e2;
-                        color: #991b1b;
-                    }
-
-                    [data-theme="dark"] .badge-good {
-                        background: rgba(16, 185, 129, .2);
-                        color: #6ee7b7;
-                    }
-
-                    [data-theme="dark"] .badge-warn {
-                        background: rgba(245, 158, 11, .2);
-                        color: #fcd34d;
-                    }
-
-                    [data-theme="dark"] .badge-bad {
-                        background: rgba(239, 68, 68, .2);
-                        color: #fca5a5;
-                    }
-
-                    .qa-ins-refresh {
-                        width: 100%;
-                        padding: 8px;
-                        border: 1px solid var(--border, #e5e7eb);
-                        border-radius: 10px;
-                        background: transparent;
-                        font-size: 12px;
-                        font-weight: 600;
-                        color: var(--muted, #6b7280);
-                        cursor: pointer;
-                        transition: all .15s;
-                        margin-top: 4px;
-                    }
-
-                    .qa-ins-refresh:hover {
-                        background: var(--primary, #6366f1);
-                        color: white;
-                        border-color: var(--primary, #6366f1);
-                    }
-
-                    /* ── Feed tab ── */
-                    .qa-feed-empty {
-                        text-align: center;
-                        padding: 20px 0;
-                        color: var(--muted, #9ca3af);
-                        font-size: 13px;
-                    }
-
-                    /* ── Inline Breathe Panel ── */
-                    .qa-inline-panel {
-                        background: var(--surface-muted, #f9fafb);
-                        border: 1px solid var(--border, #e5e7eb);
-                        border-radius: 14px;
-                        padding: 16px;
-                        margin-top: 10px;
-                        animation: slideDown .25s cubic-bezier(.34, 1.56, .64, 1);
-                    }
-
-                    [data-theme="dark"] .qa-inline-panel {
-                        background: rgba(255, 255, 255, 0.06);
-                        border-color: rgba(255, 255, 255, 0.1);
-                    }
-
-                    @keyframes slideDown {
-                        from {
-                            opacity: 0;
-                            transform: translateY(-10px);
-                        }
-
-                        to {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                    }
-
-                    .qa-breathe-circle {
-                        width: 90px;
-                        height: 90px;
-                        border-radius: 50%;
-                        background: linear-gradient(135deg, rgba(245, 158, 11, .2), rgba(251, 146, 60, .2));
-                        border: 2px solid rgba(245, 158, 11, .3);
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        margin: 0 auto 12px;
-                        transition: all 4s ease-in-out;
-                        font-size: 12px;
-                        font-weight: 700;
-                        color: var(--text, #1f2937);
-                        gap: 2px;
-                    }
-
-                    [data-theme="dark"] .qa-breathe-circle {
-                        color: #f1f5f9;
-                    }
-
-                    .qa-breathe-circle.grow {
-                        transform: scale(1.45);
-                        background: linear-gradient(135deg, rgba(16, 185, 129, .22), rgba(52, 211, 153, .22));
-                        border-color: rgba(16, 185, 129, .4);
-                    }
-
-                    .qa-breathe-circle.shrink {
-                        transform: scale(1);
-                        background: linear-gradient(135deg, rgba(59, 130, 246, .2), rgba(99, 102, 241, .2));
-                        border-color: rgba(99, 102, 241, .3);
-                    }
-
-                    .qa-breathe-count {
-                        font-size: 20px;
-                        font-weight: 900;
-                        line-height: 1;
-                    }
-
-                    .qa-breathe-label {
-                        font-size: 10px;
-                        font-weight: 700;
-                        text-transform: uppercase;
-                        letter-spacing: .5px;
-                        opacity: .7;
-                    }
-
-                    .qa-panel-close {
-                        float: right;
-                        background: none;
-                        border: none;
-                        font-size: 16px;
-                        color: var(--muted, #9ca3af);
-                        cursor: pointer;
-                        line-height: 1;
-                        padding: 0;
-                    }
-
-                    .qa-panel-title {
-                        font-size: 13px;
-                        font-weight: 800;
-                        color: var(--text, #1f2937);
-                        margin-bottom: 10px;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                    }
-
-                    [data-theme="dark"] .qa-panel-title {
-                        color: #f1f5f9;
-                    }
-
-                    .qa-breathe-btns {
-                        display: flex;
-                        gap: 8px;
-                        justify-content: center;
-                    }
-
-                    .qa-breathe-btn {
-                        padding: 8px 18px;
-                        border: none;
-                        border-radius: 10px;
-                        font-size: 12px;
-                        font-weight: 700;
-                        cursor: pointer;
-                        transition: all .15s;
-                    }
-
-                    .qa-breathe-start {
-                        background: linear-gradient(135deg, #f59e0b, #d97706);
-                        color: white;
-                    }
-
-                    .qa-breathe-stop {
-                        background: var(--border, #e5e7eb);
-                        color: var(--text, #374151);
-                    }
-
-                    [data-theme="dark"] .qa-breathe-stop {
-                        background: rgba(255, 255, 255, 0.1);
-                        color: #e2e8f0;
-                    }
-
-                    .qa-breathe-progress {
-                        display: flex;
-                        justify-content: center;
-                        gap: 5px;
-                        margin-bottom: 10px;
-                    }
-
-                    .qa-bp-dot {
-                        width: 7px;
-                        height: 7px;
-                        border-radius: 50%;
-                        background: var(--border, #e5e7eb);
-                        transition: background .3s;
-                    }
-
-                    .qa-bp-dot.active {
-                        background: #f59e0b;
-                    }
-
-                    .qa-bp-dot.done {
-                        background: #10b981;
-                    }
-
-                </style>
 
                 <div class="quick-actions-right" id="qaPanel">
                     <!-- Header -->
@@ -2074,8 +1459,8 @@ This will improve load times, enable better caching, and simplify maintenance.
     <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.2.1/build/global/luxon.min.js"></script>
-    <script src="{{ url_for('static', filename='js/mood_handler.js') }}?v=20260405-fix"></script>
-    <script src="{{ url_for('static', filename='js/student_dashboard.js') }}?v=20260405-fix"></script>
+    <script src="{{ url_for('static', filename='js/mood_handler.js') }}?v=20260406"></script>
+    <script src="{{ url_for('static', filename='js/student_dashboard.js') }}?v=20260406"></script>
     <script nonce="{{ csp_nonce }}">
         // Random Color Theme Feature — FULL DASHBOARD THEMING ENGINE
         (function () {
@@ -2209,7 +1594,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                 body.style.setProperty('background', bodyBg, 'important');
                 body.style.backgroundAttachment = 'fixed';
 
-                /* === Direct element overrides (override inline <style> specificity) === */
+                /* === Direct element overrides (override inline <style nonce="{{ csp_nonce }}"> specificity) === */
                 var header = document.querySelector('.dashboard-header');
                 if (header) {
                     header.style.background = 'linear-gradient(135deg, ' + mix('#0b1224', theme.primary, 0.2) + ', ' + mix('#0b1224', theme.primary, 0.45) + ' 30%, ' + mix('#0b1224', theme.accent, 0.6) + ' 100%)';
@@ -2298,7 +1683,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     </script>
 
     <!-- ═══ DASHBOARD TABS LOGIC ═══ -->
-    <script>
+    <script nonce="{{ csp_nonce }}">
         document.addEventListener('DOMContentLoaded', () => {
             const tabs = document.querySelectorAll('.dash-tab');
             const contents = document.querySelectorAll('.dash-tab-content');
@@ -2326,10 +1711,10 @@ This will improve load times, enable better caching, and simplify maintenance.
             function openPanel(panelId) {
                 closePanel(); // close any open one first
                 const panel = document.getElementById(panelId);
-                if (!panel) return;
+                if (!panel) { console.warn('[AURA] Panel not found:', panelId); return; }
                 activePanel = panel;
                 panel.classList.add('active');
-                overlay.classList.add('active');
+                if (overlay) overlay.classList.add('active');
                 document.body.classList.add('panel-open');
                 // Refresh Connect Hub stats when panel opens
                 if (panelId === 'panel-hub' && window.dashboard) {
@@ -2342,17 +1727,18 @@ This will improve load times, enable better caching, and simplify maintenance.
                     activePanel.classList.remove('active');
                     activePanel = null;
                 }
-                overlay.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
                 document.body.classList.remove('panel-open');
             }
 
             sidebarBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     openPanel(btn.getAttribute('data-panel'));
                 });
             });
 
-            overlay.addEventListener('click', closePanel);
+            if (overlay) overlay.addEventListener('click', closePanel);
 
             document.querySelectorAll('.slide-panel-close').forEach(btn => {
                 btn.addEventListener('click', closePanel);
@@ -2365,7 +1751,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     </script>
 
     <!-- ═══ ACADEMIC DATA VISUALIZATION ═══ -->
-    <script>
+    <script nonce="{{ csp_nonce }}">
         (function () {
             /* ─────────────────────────────────────────────
                BULLETPROOF: Promise-lock prevents ANY
@@ -2543,7 +1929,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     </script>
 
     <!-- ═══ ULTRA-PREMIUM VISUAL EFFECTS ═══ -->
-    <script>
+    <script nonce="{{ csp_nonce }}">
         (function () {
             'use strict';
 
@@ -2753,7 +2139,7 @@ This will improve load times, enable better caching, and simplify maintenance.
         })();
     </script>
 
-    <script>
+    <script nonce="{{ csp_nonce }}">
         async function changePassword() {
             const msgEl = document.getElementById('pwdChangeMsg');
             const curPw = document.getElementById('currentPassword').value;
