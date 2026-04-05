@@ -22,7 +22,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student_dashboard.css') }}?v=20260317a">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student_dashboard.css') }}?v=20260405-fix-css">
     <style nonce="{{ csp_nonce }}">
         /* SVG Icon System */
         .icon {
@@ -2074,8 +2074,8 @@ This will improve load times, enable better caching, and simplify maintenance.
     <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.2.1/build/global/luxon.min.js"></script>
-    <script src="{{ url_for('static', filename='js/mood_handler.js') }}?v=20260405"></script>
-    <script src="{{ url_for('static', filename='js/student_dashboard.js') }}?v=20260405"></script>
+    <script src="{{ url_for('static', filename='js/mood_handler.js') }}?v=20260405-fix"></script>
+    <script src="{{ url_for('static', filename='js/student_dashboard.js') }}?v=20260405-fix"></script>
     <script nonce="{{ csp_nonce }}">
         // Random Color Theme Feature — FULL DASHBOARD THEMING ENGINE
         (function () {
