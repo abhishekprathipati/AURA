@@ -2,11 +2,14 @@
 __pycache__/
 *.pyc
 *.pyo
-.env
-.env.production
+*.pyd
 *.sqlite3
 instance/
 .venv/
+
+# Environment files
+.env
+.env.production
 
 # VS Code
 .vscode/
@@ -34,20 +37,13 @@ test_*_out.txt
 .DS_Store
 Thumbs.db
 
-# Publication / paper export files (local use only)
+# Paper drafts and local publication working files (root-level)
 paper_content.txt
+paper_v2_content.txt
+paper_v3_content.txt
+my_first_doc_content.txt
+ijcrt_ready_content.txt
 extract_text.py
 CLAUDE_PROMPT_IJCRT.txt
-5.4 Web Framework and Frontend Technologies Used
-5.4.1 Flask (Python Web Framework)
-Introduction to Flask:
-Flask is a lightweight, flexible Python web framework designed for building scalable web applications with minimal boilerplate while maintaining full control over architecture.
-
-Why Flask Was Chosen for AURA:
-
-Simplicity: Clean, readable code structure for rapid development
-Modularity: Easy separation of routes, services, and models for maintainability
-Extensibility: Seamless integration with Flask-SocketIO for real-time communication
-Production-Ready: Proven in educational institutions globally; easy to monitor and debug
-Lightweight: Lower resource footprint compared to FastAPI, ideal for educational deployments
-MongoDB Integration: Direct support via Flask-MongoEngine and PyMongo
+Claude_10Page_Masterpiece_Prompt.txt
+*.docx
