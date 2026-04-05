@@ -48,6 +48,61 @@ apply_rate_limit = limiter.limit
 # to handle specific IP+Email rate limits across scaled workers.
 from flask import current_app
 import os
+import threading
+import time
+
+
+_memory_lock = threading.Lock()
+_memory_attempts = {}
+
+
+def _is_prod() -> bool:
+    env = str(current_app.config.get('ENV', os.environ.get('FLASK_ENV', 'production'))).strip().lower()
+    return env == 'production'
+
+
+def _allow_local_fallback() -> bool:
+    storage_uri = str(
+        current_app.config.get(
+            'RATELIMIT_STORAGE_URI',
+            os.environ.get('RATELIMIT_STORAGE_URI', os.environ.get('REDIS_URL', '')),
+        )
+    ).strip().lower()
+    return (not _is_prod()) or storage_uri.startswith('memory://')
+
+
+def _memory_key(ip: str, email: str) -> str:
+    return f"aura:bruteforce:{ip}:{email.lower()}"
+
+
+def _memory_get_attempts(ip: str, email: str) -> int:
+    key = _memory_key(ip, email)
+    now = time.time()
+    with _memory_lock:
+        record = _memory_attempts.get(key)
+        if not record:
+            return 0
+        if now >= record['expires_at']:
+            _memory_attempts.pop(key, None)
+            return 0
+        return int(record['count'])
+
+
+def _memory_incr_attempts(ip: str, email: str, ttl_seconds: int = 300) -> None:
+    key = _memory_key(ip, email)
+    now = time.time()
+    with _memory_lock:
+        record = _memory_attempts.get(key)
+        if not record or now >= record['expires_at']:
+            _memory_attempts[key] = {'count': 1, 'expires_at': now + ttl_seconds}
+        else:
+            record['count'] = int(record['count']) + 1
+
+
+def _memory_clear_attempts(ip: str, email: str) -> None:
+    key = _memory_key(ip, email)
+    with _memory_lock:
+        _memory_attempts.pop(key, None)
 
 
 _memory_store = {}
@@ -94,7 +149,18 @@ def check_login_rate(ip: str, email: str = ''):
         # Success - no lockout in effect
         return {'allowed': True, 'message': 'OK'}
     except Exception as e:
-        # FAIL-CLOSED: If Redis is down, we must block to prevent brute-force.
+        # In development, allow local in-memory fallback for usability.
+        if _allow_local_fallback():
+            current_app.logger.warning(f"Rate limit Redis unavailable in development, using in-memory fallback: {e}")
+            attempts = _memory_get_attempts(ip, email)
+            if attempts >= 5:
+                return {
+                    'allowed': False,
+                    'message': 'Account locked due to too many failed attempts. Please try again in 5 minutes.'
+                }
+            return {'allowed': True, 'message': 'OK'}
+
+        # FAIL-CLOSED in production.
         current_app.logger.error(f"CRITICAL: Rate limit Redis check failed (Failing Closed): {e}")
         return {
             'allowed': False,
@@ -116,6 +182,10 @@ def record_failed_login(ip: str, email: str = ''):
         r.incr(key)
         r.expire(key, 300) # 5 minutes lockout
     except Exception as e:
+        if _allow_local_fallback():
+            _memory_incr_attempts(ip, email, ttl_seconds=300)
+            current_app.logger.warning(f"Recorded failed login attempt in in-memory fallback: {e}")
+            return
         current_app.logger.warning(f"Failed to record login attempt: {e}")
 
 def clear_login_attempts(ip: str, email: str = ''):
@@ -129,4 +199,8 @@ def clear_login_attempts(ip: str, email: str = ''):
 
         r.delete(key)
     except Exception as e:
+        if _allow_local_fallback():
+            _memory_clear_attempts(ip, email)
+            current_app.logger.warning(f"Cleared login attempts in in-memory fallback: {e}")
+            return
         current_app.logger.warning(f"Failed to clear login attempts: {e}")

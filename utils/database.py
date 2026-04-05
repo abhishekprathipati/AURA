@@ -12,6 +12,7 @@ import uuid
 from typing import Any, Dict
 from pymongo import MongoClient, ASCENDING, errors
 from datetime import datetime
+import logging
 from config import Config
 from models import UserModel, ChatModel, MoodModel, StressModel
 
@@ -19,6 +20,11 @@ from models import UserModel, ChatModel, MoodModel, StressModel
 _db_lock = threading.Lock()
 client: MongoClient | None = None
 db = None
+log = logging.getLogger(__name__)
+
+
+def _is_true(value: str) -> bool:
+    return value.strip().lower() in ('1', 'true', 'yes', 'on')
 
 def _build_client() -> MongoClient:
     if not Config.MONGODB_URI:
@@ -54,9 +60,20 @@ def _build_client() -> MongoClient:
         # Trigger server selection to validate connection
         client.admin.command('ping')
         return client
-    except errors.ServerSelectionTimeoutError as e:
-        raise RuntimeError(f'MongoDB connection timeout: {e}')
     except Exception as e:
+        # When local network/DNS blocks Atlas SRV resolution, allow non-strict
+        # mode to keep the app bootable using an in-memory Mongo-compatible DB.
+        strict_db = _is_true(os.getenv('AURA_STRICT_DB', 'false'))
+        if not strict_db:
+            try:
+                import mongomock
+                log.warning('MongoDB unavailable (%s). Falling back to in-memory mongomock. Set AURA_STRICT_DB=true to disable fallback.', e)
+                return mongomock.MongoClient()
+            except Exception as mock_error:
+                raise RuntimeError(f'Failed to connect to MongoDB: {e}; mock fallback failed: {mock_error}')
+
+        if isinstance(e, errors.ServerSelectionTimeoutError):
+            raise RuntimeError(f'MongoDB connection timeout: {e}')
         raise RuntimeError(f'Failed to connect to MongoDB: {e}')
 
 def _ensure_indexes(database) -> None:

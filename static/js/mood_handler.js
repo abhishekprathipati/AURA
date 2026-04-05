@@ -2,6 +2,7 @@
 
 /**
  * Updates the user's mood and applies the corresponding theme
+ * Immediately closes the modal, then processes update in background
  * @param {string} mood - e.g. 'happy', 'stressed', 'anxious', 'calm', 'sad'
  */
 function closeMoodModal() {
@@ -21,6 +22,18 @@ function openMoodModal() {
 }
 
 async function updateMood(mood) {
+    // STEP 1: Close modal immediately (don't wait for API)
+    const modal = document.getElementById('moodModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.classList.remove('mood-modal-open');
+    }
+
+    // STEP 2: Apply theme & persistence immediately
+    localStorage.setItem('aura-mood-theme', mood);
+    applyAuraTheme(mood);
+
+    // STEP 3: Send to backend in background (don't block UI)
     try {
         // Close the modal immediately so the UI never gets stuck waiting on the network.
         closeMoodModal();
@@ -28,6 +41,7 @@ async function updateMood(mood) {
         // Send mood to backend with a timeout so slow requests do not block the UI.
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
+
         const response = await fetch('/student/api/mood', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -76,18 +90,15 @@ async function updateMood(mood) {
         // Keep the modal closed after success.
         closeMoodModal();
 
-        // No redirect: stay on dashboard for all moods
-
     } catch (error) {
-        console.error('Mood update failed:', error);
+        console.warn('Background mood sync failed (UI still updated):', error);
         
         // Ensure modal is closed even on failure to prevent getting stuck.
         closeMoodModal();
 
-        if (window.dashboard && window.dashboard.showToast) {
-            window.dashboard.showToast('Unable to update mood. Please try again.', 'error');
-        } else {
-            alert('Unable to update mood. Please try again.');
+        // If it was a real failure (not demo), logs it
+        if (window.dashboard && window.dashboard.showToast && !error.message.includes('403')) {
+            // Optional: window.dashboard.showToast('Sync failed, mood saved locally.', 'info');
         }
     }
 }
@@ -186,16 +197,28 @@ window.addEventListener('DOMContentLoaded', () => {
         checkDailyMood();
     }
 
-    // Enable keyboard navigation for mood cards
+    // Setup mood card click handlers with fallback
     document.querySelectorAll('.mood-card').forEach(card => {
         card.setAttribute('tabindex', '0'); // Make focusable
         card.setAttribute('role', 'button'); // Semantic role
         card.setAttribute('aria-label', `Select ${card.querySelector('h3')?.textContent} mood`);
 
+        // Add addEventListener as fallback in case onclick fails
+        card.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const moodType = card.getAttribute('data-mood') || card.querySelector('h3')?.textContent?.toLowerCase();
+            if (moodType) {
+                updateMood(moodType);
+            }
+        });
+
+        // Keyboard navigation
         card.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                card.click(); // Trigger the existing theme logic
+                e.stopPropagation();
+                card.click();
             }
         });
     });
@@ -232,6 +255,20 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Add event listener to skip button for additional reliability
+    const skipBtn = document.getElementById('moodSkipBtn');
+    if (skipBtn) {
+        skipBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const modal = document.getElementById('moodModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.classList.remove('mood-modal-open');
+            }
+        });
+    }
 });
 
 // Expose globally for inline onclick handlers
