@@ -151,7 +151,7 @@ Upgrade in Render Dashboard → **Settings** → **Plan**
 
 - **Render Docs**: https://render.com/docs
 - **GitHub Issues**: Report bugs at `abhishekprathipati/AURA/issues`
-- **AURA Audit Report**: See `AUDIT_REPORT.md` for remaining TODOs
+- **AURA Audit Report**: See `../reports/AUDIT_REPORT.md` for remaining TODOs
 
 ---
 

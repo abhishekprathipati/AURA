@@ -7,7 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}?v=20260124">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20260124">
-    <style>
+    <style nonce="{{ csp_nonce }}">
         /* CRITICAL FIX: Ensure main content area is always visible */
         html, body {
             width: 100%;
@@ -89,7 +89,7 @@
     <script src="{{ url_for('static', filename='js/theme-engine.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block extra_js %}{% endblock %}
-    <script>
+    <script nonce="{{ csp_nonce }}">
     // Register service worker for offline support
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {

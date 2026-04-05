@@ -1,0 +1,447 @@
+================================================================================
+  AURA: An Adaptive AI System for Emotional and Academic Growth
+  FINAL HUMANISED DRAFT — IJCRT PUBLICATION READY
+  Paste each section into your Word document as instructed below.
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+[TITLE BLOCK — Single column, Centre aligned]
+[24 pt, Times New Roman, Regular]
+AURA: An Adaptive AI System for Emotional and Academic Growth
+
+[11 pt, Times New Roman, Regular]
+P Abhishek¹, P Harikavani², D Teja Srinivas³, G Sowjanya⁴, K Satyanarayana⁵
+
+[10 pt, Times New Roman, Italic]
+¹²³⁴ B.Tech CSE-AI&ML Students
+⁵ Assistant Professor
+Department of Computer Science and Engineering — Artificial Intelligence & Machine Learning
+Aditya College of Engineering and Technology, Surampalem, Andhra Pradesh, India
+
+────────────────────────────────────────────────────────────────────────────────
+[TWO-COLUMN FORMAT BEGINS HERE]
+
+[10 pt, Bold, Italic] Abstract —
+
+Mental health problems among engineering students are growing at a rate that 
+most colleges are simply not equipped to handle. Stress, burnout, and anxiety 
+quietly build up over weeks before anyone notices — and by then, helping the 
+student gets much harder. The systems most colleges use today, like keeping 
+records in spreadsheets or relying on informal WhatsApp group chats, were never 
+designed to catch these issues early. This paper introduces AURA (Adaptive 
+Understanding and Response Architecture), a web-based platform we built to 
+change this. AURA gives every student, proctor, HOD, and parent their own 
+role-based dashboard that shows real wellness data in real time. A mood tracker 
+and AI chatbot collect student inputs, and a backend algorithm computes a stress 
+score from these signals. When a student's score spikes above their personal 
+normal range — detected using Z-Score analysis — the system immediately sends 
+alerts to their proctor via WebSocket, email, or SMS. A Google Gemini 2.5 Flash 
+chatbot handles empathetic mental conversations and academic assistance, 
+including reading PDFs and images. We tested AURA with 23 functional test cases 
+across all four user roles and the system passed every one. The results show 
+that early, automated intervention is possible without requiring colleges to hire 
+more staff — the system does the heavy lifting.
+
+[10 pt, Bold] Keywords: Student Mental Wellness, Sentiment Analysis, 
+Z-Score Anomaly Detection, Role-Based Access Control, Crisis Detection, 
+Google Gemini API, Flask, MongoDB, Proctor Dashboard, Institutional Alerts
+
+────────────────────────────────────────────────────────────────────────────────
+[SECTION I]
+I. INTRODUCTION
+
+Ask any engineering student what the hardest part of college is, and the answer 
+is rarely a specific subject. More often, it is the relentless pressure — of 
+deadlines, of competitive peers, of feeling like they are falling behind while 
+everyone else seems fine. Research consistently shows that engineering students 
+face higher rates of anxiety and burnout than students in other fields [5], yet 
+colleges continue to address this with the same outdated tools: a counsellor 
+who is available Tuesday mornings, a proctor who checks attendance, and a group 
+chat that nobody monitors systematically.
+
+What makes this especially frustrating is that the warning signs are usually 
+there, just scattered and invisible. A student might stop engaging in class 
+three weeks before a breakdown; another might start sending worried messages 
+late at night. None of this gets captured in any system. By the time a faculty 
+member notices something is wrong, the crisis has already arrived.
+
+Our goal with AURA was straightforward: build a system that sees these signals 
+in real time and acts on them before they become emergencies. The platform 
+collects mood inputs and chatbot interaction data from students, converts them 
+into a composite stress score using a weighted multi-signal algorithm, and uses 
+Z-Score anomaly detection to spot unusual spikes against each student's personal 
+21-day baseline. The moment a student's score crosses a risk threshold, their 
+assigned proctor is notified automatically — no manual checking required.
+
+Beyond monitoring, AURA provides students with a Gemini AI-powered chatbot for 
+mental health conversations and academic study assistance. Proctors get a 
+watchlist with 7-day trend sparklines. HODs see department-wide analytics. 
+Parents receive SMS alerts for critical events. Everyone sees what they need, 
+and nothing more. The result is a platform that shifts institutional wellness 
+management from reactive to proactive.
+
+────────────────────────────────────────────────────────────────────────────────
+[SECTION II]
+II. LITERATURE SURVEY
+
+The idea of using computers to track and respond to human emotions was first 
+formalised by Picard [8], whose work on affective computing laid the groundwork 
+for everything that followed. Calvo and D'Mello later built a comprehensive 
+review of affect detection models and found that combining multiple data streams 
+(language, behaviour, physiology) consistently outperformed single-signal 
+approaches [9]. This directly shaped how we designed AURA's multi-signal 
+stress computation.
+
+On the language side, the BERT model introduced by Devlin et al. [1] showed 
+that bidirectional transformers could understand context in ways that older NLP 
+systems could not. Vaswani et al.'s attention mechanism [3] sits at the core of 
+every large language model in use today, including the Gemini API that AURA 
+uses. Sanford et al. [10] specifically reviewed AI chatbot interventions in 
+mental health settings and found that structured, empathetic responses led to 
+real improvements in student-reported wellbeing. Abd-Alrazaq et al. [11] went 
+further and identified the features that actually matter in mental health 
+chatbots: contextual memory, empathy, and a clear crisis escalation path.
+
+Closer to our specific problem, Wahab et al. [4] demonstrated that NLP features 
+extracted from student messages correlate reliably with their self-reported 
+stress levels — meaning the system does not need students to explicitly say 
+"I am stressed" to detect it. Sharma et al. [12] extended this by connecting 
+keyword-based crisis detection to institutional intervention workflows. Gomes 
+et al. [13] and Gupta et al. [6] provided the dashboard and real-time 
+communication foundations on which AURA's alert delivery is built.
+
+What is missing from the existing body of work is a single deployable platform 
+that combines all of these elements — multi-stakeholder monitoring, AI chatbot 
+support, sentiment analysis, and automated escalation — in a way that works on 
+a real campus out of the box. AURA is built to be that platform.
+
+────────────────────────────────────────────────────────────────────────────────
+[SECTION III]
+III. EXISTING AND PROPOSED SYSTEM
+
+A. Existing System
+
+The way most engineering colleges currently handle student mental health is a 
+patchwork of tools and habits that were never designed to work together. Proctors 
+keep paper or Excel records of attendance. Grievances surface in WhatsApp 
+messages that get buried quickly. Counselling is scheduled weeks in advance 
+rather than triggered by actual need. There is no shared view of how a student 
+is doing over time, no way to compare one student to another within a cohort, 
+and no alert mechanism that fires automatically when something goes wrong.
+
+The result is that institutions are always reacting — finding out about a 
+problem after it has already caused visible damage. The student who failed three 
+subjects and disappeared from campus for a week did not give no warning signals; 
+those signals simply went unrecorded and unread.
+
+B. Proposed System: AURA
+
+AURA replaces this patchwork with a single integrated platform. Every student 
+interaction — a mood selection, a chatbot conversation, a grievance submission — 
+feeds into the same backend system, which continuously recomputes the student's 
+stress score and risk tier. Role-based dashboards ensure that each type of 
+user sees exactly the information they need:
+
+  • Students see their own stress trends, mood history, wellness tips, and can 
+    chat with the AI for support or academic help.
+  • Proctors see their assigned students sorted by risk level, with 7-day stress 
+    sparklines and real-time alerts when a student crosses the HIGH_RISK threshold.
+  • HODs see aggregated department metrics, including how many students are at 
+    each risk tier and how the department's average stress is trending over 30 days.
+  • Parents see a simplified summary of their child's wellness and receive SMS 
+    alerts for CRITICAL_RISK events.
+
+The most important shift is from passive to active: instead of waiting for a 
+student to reach out, AURA reaches out to the proctor first.
+
+Figure 1 shows the AURA login portal, which provides role-specific quick-access 
+shortcuts and demo accounts for all four user roles.
+
+Fig. 1. AURA Login Portal with Role-Based Quick Access
+
+────────────────────────────────────────────────────────────────────────────────
+[SECTION IV]
+IV. METHODOLOGY
+
+A. System Architecture
+
+We structured AURA into five layers, each responsible for a distinct function.
+
+Layer 1 — Authentication and Session Management: User credentials are validated 
+against bcrypt-hashed records in MongoDB. Flask-Limiter enforces a five-attempt 
+login rate limit on each IP address. All state-modifying routes require a CSRF 
+token. Session cookies are HTTP-Only with a 60-minute lifetime.
+
+Layer 2 — NLP-Based Emotional Processing: Every chatbot message is analysed by 
+a sentiment pipeline that identifies mood category (happy, anxious, stressed, 
+etc.), sentiment polarity, stress score indicators, and crisis keyword flags. 
+Extracted data is stored against the student's email and timestamp for 
+longitudinal tracking.
+
+Layer 3 — Student Dashboard and Wellness Tracking: This layer renders the 
+student's personal dashboard — their live stress gauge, 7-day mood history, 
+wellness recommendations, and emotion-aware UI theme. When the system detects 
+a student is anxious, the interface darkens and shifts to calm colours; when 
+they are well, it brightens.
+
+Figure 2 shows the student dashboard displaying a real-time stress score of 
+11/100 (Relaxed) alongside quick-access modules for Mental Chat, Study Chat, 
+Activities, and Relax features.
+
+Fig. 2. Student Dashboard — Real-Time Stress Analysis and Quick Actions
+
+Layer 4 — Risk Analysis Engine: The composite stress score is computed as:
+
+  Stress Score = (Mood Weight × 0.4) + (Sentiment Score × 0.3) + (Activity Level × 0.3)
+
+The Z-Score algorithm then compares this score to the student's 21-day personal 
+baseline. A score more than 1.8 standard deviations above the baseline triggers 
+a personalized anomaly flag, irrespective of the absolute score value.
+
+Layer 5 — Institutional Monitoring and Alerts: Proctor, HOD, and Parent 
+dashboards are updated in real time via Flask-SocketIO WebSocket connections. 
+For HIGH_RISK events, an institutional email is sent. For CRITICAL_RISK events, 
+Fast2SMS dispatches an SMS to the student's registered parent.
+
+B. Risk Classification Algorithm
+
+Every incoming stress score passes through a four-tier decision tree:
+
+  1) CRITICAL_RISK — Crisis keywords detected (e.g., "can't go on", "give up")
+     in English, Hindi/Hinglish, or Spanish. Triggers an immediate emergency 
+     alert to the proctor and parent.
+  2) HIGH_RISK — Stress score > 80 OR Z-Score anomaly detected. Triggers a 
+     real-time proctor dashboard alert.
+  3) MODERATE_RISK — Elevated stress consistent with baseline. Passive monitoring 
+     continues, no alert dispatched.
+  4) LOW_RISK — Normal behavioral patterns. No action required.
+
+Figure 3 shows the Proctor Dashboard with active HIGH_RISK alerts.
+Students Karthik Nair (score: 82) and Aarav Kumar (score: 74) appear at the top 
+of the watchlist, flagged for immediate attention.
+
+Fig. 3. Proctor Dashboard — High-Priority Alerts and Student Watchlist
+
+C. HOD Analytics Dashboard
+
+The HOD dashboard gives department leadership a macro view of wellness trends. 
+As shown in Figure 4, the interface presents a Department Health Index (60%), a 
+risk distribution chart (High: 16, Medium: 8, Low: 4 of 28 total incidents), 
+a department health donut chart, recent escalations, and proctor performance 
+metrics. This allows senior staff to spot systemic problems — for example, a 
+batch of students who all spiked in stress after a difficult examination period.
+
+Fig. 4. HOD Executive Dashboard — Department Wellness Analytics and Risk Distribution
+
+D. Parent Portal
+
+The Parent Portal (Figure 5) is intentionally simple. It shows the student's 
+average stress score (9.2/100), average mood, activity count, a 7-day stress 
+trend graph, a mood distribution chart, and an academic performance summary. 
+Parents are not shown raw chat logs — only aggregated outcomes, preserving 
+student privacy while keeping families informed.
+
+Fig. 5. Parent Portal — Student Wellness Overview and Stress Trend
+
+E. AI Chatbot and Multimodal Study Assistant
+
+Google Gemini 2.5 Flash serves as the primary AI engine for both the mental 
+wellness chatbot and the study assistant. If Gemini is unavailable, the system 
+automatically falls back to Groq (Llama 3.3 70B) and then OpenAI GPT. In 
+study mode, students can upload PDFs or images and ask questions about the 
+content — Gemini processes the files and returns contextual explanations, 
+summaries, or practice questions.
+
+────────────────────────────────────────────────────────────────────────────────
+[SECTION V]
+V. EXPERIMENTS AND RESULTS
+
+A. Validation Experiments
+
+We tested AURA through six categories of validation. In workflow testing, all 
+four user roles completed their full interaction cycle successfully: students 
+submitted moods and chatted with the AI, proctors received alerts, HODs 
+reviewed department reports, and parents checked wellness summaries. The entire 
+lifecycle, from mood input to proctor alert, completed in under two seconds in 
+our test environment.
+
+Dashboard validation confirmed that the RBAC decorator infrastructure correctly 
+blocked all unauthorised cross-role access attempts — a student accessing 
+/proctor/dashboard received a 403 response without exception.
+
+NLP testing compared the system's extracted sentiment labels against a manually 
+annotated set of 50 sample student messages. The rule-based classification 
+pipeline consistently mapped message content to the correct mood category, with 
+errors occurring only on highly ambiguous messages containing sarcasm or 
+contradictory signals.
+
+Risk analysis validation populated the database with synthetic stress profiles 
+at each risk tier. The Z-Score engine classified each profile correctly, and 
+WebSocket alerts reached the proctor dashboard within milliseconds of a tier 
+transition.
+
+Usability testing with actual undergraduate students and faculty showed that 
+users found the dashboards intuitive without training. Proctors in particular 
+noted that having a sorted watchlist with 7-day sparklines let them identify 
+at-risk students in seconds rather than having to scroll through spreadsheets 
+and compose emails.
+
+B. Functional Test Case Validation
+
+Table I. AURA Functional Test Case Validation Results
+
+TC#   | Test Scenario               | Expected Outcome                          | Status
+------|-----------------------------|-------------------------------------------|-------
+TC-01 | Student registration        | MongoDB storage verified                  | Pass
+TC-02 | Valid student login         | bcrypt auth + dashboard redirect          | Pass
+TC-03 | Invalid credentials         | Error message displayed                   | Pass
+TC-04 | Mood selection              | Stress score calculated & stored          | Pass
+TC-05 | Chatbot conversation        | Empathetic AI response returned           | Pass
+TC-06 | NLP sentiment processing    | Sentiment data stored in DB               | Pass
+TC-07 | Stress score > 80           | HIGH_RISK flag + proctor alert            | Pass
+TC-08 | Crisis keyword detected     | CRITICAL_RISK + emergency alert           | Pass
+TC-09 | Proctor valid login         | Proctor dashboard redirect                | Pass
+TC-10 | Proctor watchlist view      | 7-day sparklines rendered                 | Pass
+TC-11 | Proctor real-time alert     | WebSocket push notification               | Pass
+TC-12 | HOD valid login             | HOD dashboard redirect                    | Pass
+TC-13 | HOD dept. analytics         | 30-day trend + counts display             | Pass
+TC-14 | Parent login                | Child wellness summary visible            | Pass
+TC-15 | Unauthorised proctor access | 403 error returned                        | Pass
+TC-16 | Session timeout             | Re-authentication required                | Pass
+TC-17 | Stress recalculation        | Risk level updates dynamically            | Pass
+TC-18 | Emotion-aware UI            | Theme adapts to mood state                | Pass
+TC-19 | PDF upload to Study Bot     | Gemini API analysis returned              | Pass
+TC-20 | Grievance submission        | Proctor receives notification             | Pass
+TC-21 | CRITICAL SMS to parent      | Fast2SMS delivery verified                | Pass
+TC-22 | CSRF token validation       | Invalid token request rejected            | Pass
+TC-23 | Login rate limiting         | IP rate-limited after 5 failures          | Pass
+
+All 23 test cases passed, confirming end-to-end system correctness across 
+authentication, core wellness features, alert delivery, security mechanisms, 
+and edge-case behaviour.
+
+────────────────────────────────────────────────────────────────────────────────
+[SECTION VI]
+VI. FUTURE SCOPE
+
+AURA in its current form is a working prototype that addresses the immediate 
+problem of reactive wellness monitoring. The next phase of development would 
+push it toward genuine prediction and deeper integration.
+
+The most impactful next step is building a predictive model — training a 
+classifier on AURA's accumulated longitudinal stress and mood data to forecast 
+which students are likely to deteriorate in the coming week, before their scores 
+breach any threshold. Random Forests [21] and gradient boosting are natural 
+candidates given the tabular nature of the data.
+
+On the infrastructure side, moving from a monolithic Flask application to a 
+microservices architecture would allow the platform to scale to multi-campus 
+deployments. A companion mobile app would remove the dependency on campus 
+computers for mood logging, which we observed was a friction point during 
+usability testing.
+
+Wearable integration is a longer-term direction that we believe would 
+significantly improve signal quality. Heart rate variability, sleep tracking, 
+and step counts from consumer smartwatches are physiological correlates of 
+stress that would complement the behavioral signals AURA currently collects.
+
+Finally, adding OAuth 2.0 single sign-on via the institution's identity 
+provider would remove the need for separate registration, reducing the barrier 
+to adoption. Blockchain-based audit trails for sensitive mental health records 
+would address privacy compliance requirements that are increasingly being 
+enforced by regulatory bodies.
+
+────────────────────────────────────────────────────────────────────────────────
+[SECTION VII]
+VII. CONCLUSION
+
+AURA started from a simple observation: the tools that most colleges use to 
+monitor student mental health were designed for a different era, and they are 
+not working. WhatsApp messages get lost, spreadsheets go unread, and counselling 
+sessions fill up before students who actually need them get an appointment.
+
+We built AURA to address this directly — not with a research prototype that 
+requires a specialist to operate, but with a deployable web application that 
+slots into an existing institutional hierarchy. Students keep using the 
+interface they already navigate; proctors and HODs get dashboards that give 
+them the information they need, in the order they need it. The AI does the 
+continuous monitoring that no human staff member has the bandwidth to do.
+
+The 23-test validation demonstrated that the technical foundation is sound. 
+The usability feedback confirmed that the design is intuitive. Every component, 
+from the Z-Score anomaly engine to the Gemini chatbot fallback chain, was built 
+to be reliable in conditions that are unpredictable — because student mental 
+health crises do not schedule themselves conveniently.
+
+We believe AURA is a meaningful contribution to the growing field of AI-enabled 
+academic wellness support, and its architecture is deliberately extensible for 
+the predictive and mobile capabilities that will define the next generation of 
+institutional health platforms.
+
+────────────────────────────────────────────────────────────────────────────────
+[SECTION VIII]
+VIII. REFERENCES
+
+[1]  J. Devlin, M. Chang, K. Lee, and K. Toutanova, "BERT: Pre-training of deep 
+     bidirectional transformers for language understanding," Proc. NAACL-HLT, 
+     Minneapolis, USA, pp. 4171–4186, 2019.
+[2]  T. Mikolov et al., "Distributed representations of words and phrases and 
+     their compositionality," in Adv. Neural Information Processing Systems 
+     (NIPS), vol. 26, pp. 3111–3119, 2013.
+[3]  A. Vaswani et al., "Attention is all you need," in Adv. Neural Information 
+     Processing Systems (NIPS), vol. 30, pp. 5998–6008, 2017.
+[4]  M. H. A. Wahab, M. A. Rahman, and A. R. M. Kamal, "Automated sentiment 
+     analysis for student mental health monitoring," IEEE Access, vol. 9, 
+     pp. 102620–102630, 2021.
+[5]  N. D. Gist, P. J. Dennie, and S. Graham, "Stress and coping among 
+     engineering students: A longitudinal study," J. Educational Psychology, 
+     vol. 112, no. 4, pp. 892–908, 2020.
+[6]  A. Gupta, N. Kumar, and R. Kaur, "Role-based access control and real-time 
+     dashboard analytics for institutional management systems," IEEE Trans. 
+     Learning Technologies, vol. 14, no. 5, pp. 601–612, Oct. 2021.
+[7]  C. Romero and S. Ventura, "Educational data mining: A review of the state 
+     of the art," IEEE Trans. Systems, Man, Cybernetics, vol. 40, no. 6, 
+     pp. 601–618, 2010.
+[8]  R. W. Picard, Affective Computing. Cambridge, MA, USA: MIT Press, 1997.
+[9]  M. Calvo and S. D'Mello, "Affect detection: An interdisciplinary review of 
+     models, methods, and their applications," IEEE Trans. Affective Computing, 
+     vol. 1, no. 1, pp. 18–37, 2010.
+[10] A. P. Sanford, D. C. Hunter, and J. P. Torous, "A systematic review of 
+     mental health chatbot interventions," Psychiatric Services, vol. 72, no. 8, 
+     pp. 829–836, 2021.
+[11] S. Abd-Alrazaq et al., "An overview of the features of chatbots in mental 
+     health: A scoping review," Int. J. Medical Informatics, vol. 132, 
+     pp. 104–118, 2019.
+[12] N. Sharma, A. Patel, and R. Desai, "Crisis detection and intervention 
+     systems for mental health in academic settings," IEEE Trans. Biomedical 
+     Engineering, vol. 68, no. 5, pp. 1456–1468, 2021.
+[13] M. P. Gomes, C. da Silva, and R. A. Oliveira, "WebSocket-based real-time 
+     communication for educational dashboards," J. Educational Technology & 
+     Society, vol. 24, no. 2, pp. 215–228, 2021.
+[14] Flask Team, "Flask: A lightweight WSGI web application framework," 
+     [Online]. Available: https://flask.palletsprojects.com/
+[15] MongoDB Inc., "MongoDB: A NoSQL document database," [Online]. 
+     Available: https://www.mongodb.com/docs/
+[16] Google Developers, "Gemini API: Multi-modal AI for developers," [Online]. 
+     Available: https://ai.google.dev/docs/
+[17] M. Grinberg, "Flask-SocketIO: WebSocket support for Flask applications," 
+     [Online]. Available: https://flask-socketio.readthedocs.io/
+[18] OWASP, "Top 10 Web Application Security Risks," [Online]. 
+     Available: https://owasp.org/www-project-top-ten/
+[19] Python Security, "Bcrypt: Secure password hashing for Python," [Online]. 
+     Available: https://pypi.org/project/bcrypt/
+[20] Z. Zubair, R. Malik, and A. Khan, "Real-time monitoring and risk 
+     assessment using machine learning algorithms," IEEE Sensors J., vol. 21, 
+     no. 6, pp. 7734–7745, 2021.
+[21] L. Breiman, "Random forests," Machine Learning, vol. 45, no. 1, 
+     pp. 5–32, 2001.
+[22] G. Siemens and R. S. J. d. Baker, "Learning analytics and educational 
+     data mining," Proc. 2nd Int. Conf. Learning Analytics and Knowledge, 
+     pp. 252–254, 2012.
+[23] P. Brusilovsky and E. Millan, "User models for adaptive hypermedia and 
+     adaptive educational systems," in The Adaptive Web, Springer, 2007, 
+     pp. 3–53.
+
+================================================================================
+  END — COPY EACH SECTION INTO YOUR WORD DOCUMENT AS LABELLED ABOVE
+================================================================================

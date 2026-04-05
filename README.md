@@ -4,6 +4,17 @@
 
 ## 🎯 Project Overview
 
+## 📚 Documentation Quick Links
+
+- **Documentation Index:** `docs/README.md`
+- **Deployment:** `docs/deployment/DEPLOYMENT_GUIDE.md`
+- **Environment Files:** `docs/deployment/ENV_FILES.md`
+- **Migrations:** `docs/deployment/MIGRATIONS.md`
+- **Architecture:** `docs/project/PROJECT_STRUCTURE_GUIDE.md`
+- **Audit Report:** `docs/reports/AUDIT_REPORT.md`
+- **Publications (AURA):** `docs/publications/aura/`
+- **Publications (SkillForge):** `docs/publications/skillforge/`
+
 **AURA** is a comprehensive institutional AI-driven student mental wellness and academic support platform designed for Aditya College of Engineering and Technology. 
 
 It is a **closed-loop behavioral telemetry and intervention system** that:

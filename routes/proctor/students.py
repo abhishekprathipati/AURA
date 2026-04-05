@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, render_template, session, Response, current_app
+from flask import Blueprint, jsonify, request, render_template, session, Response, current_app, redirect, url_for
 from bson import ObjectId
 from datetime import datetime, timedelta
 import uuid
@@ -18,6 +18,13 @@ from routes.proctor import (
     _ensure_indexes, _time_since, _trend_icon, _risk_color,
     _severity_score, _serialize_incident, _serialize_action, _default_status,
 )
+
+@proctor_bp.route('', strict_slashes=False)
+@proctor_bp.route('/', strict_slashes=False)
+@login_required
+@proctor_only
+def proctor_root_redirect():
+    return redirect(url_for('proctor.proctor_dashboard'))
 
 @proctor_bp.route('/dashboard')
 @login_required

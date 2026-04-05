@@ -33,3 +33,21 @@ test_*_out.txt
 # OS noise
 .DS_Store
 Thumbs.db
+
+# Publication / paper export files (local use only)
+paper_content.txt
+extract_text.py
+CLAUDE_PROMPT_IJCRT.txt
+5.4 Web Framework and Frontend Technologies Used
+5.4.1 Flask (Python Web Framework)
+Introduction to Flask:
+Flask is a lightweight, flexible Python web framework designed for building scalable web applications with minimal boilerplate while maintaining full control over architecture.
+
+Why Flask Was Chosen for AURA:
+
+Simplicity: Clean, readable code structure for rapid development
+Modularity: Easy separation of routes, services, and models for maintainability
+Extensibility: Seamless integration with Flask-SocketIO for real-time communication
+Production-Ready: Proven in educational institutions globally; easy to monitor and debug
+Lightweight: Lower resource footprint compared to FastAPI, ideal for educational deployments
+MongoDB Integration: Direct support via Flask-MongoEngine and PyMongo

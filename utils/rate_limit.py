@@ -50,6 +50,8 @@ from flask import current_app
 import os
 
 
+_memory_store = {}
+
 def _get_redis():
     """Get Redis connection using primary REDIS_URL or fallback."""
     try:
@@ -60,6 +62,8 @@ def _get_redis():
             "Install it with: pip install redis"
         )
     url = os.environ.get('REDIS_URL') or current_app.config.get('RATELIMIT_STORAGE_URI') or 'redis://localhost:6379'
+    if url.startswith('memory://'):
+        return None
     return redis.from_url(url)
 
 def check_login_rate(ip: str, email: str = ''):
@@ -67,11 +71,21 @@ def check_login_rate(ip: str, email: str = ''):
     Checks if the IP+Email combo has breached limits.
     Returns: {'allowed': bool, 'message': str}
     """
+    key = f"aura:bruteforce:{ip}:{email.lower()}"
     try:
         r = _get_redis()
-        key = f"aura:bruteforce:{ip}:{email.lower()}"
-        attempts = r.get(key)
+        if r is None:
+            # Use memory fallback
+            import time
+            record = _memory_store.get(key)
+            if record and record['expires'] > time.time():
+                if record['attempts'] >= 5:
+                    return {'allowed': False, 'message': 'Account locked due to too many failed attempts. Please try again in 5 minutes.'}
+            elif record and record['expires'] <= time.time():
+                del _memory_store[key]
+            return {'allowed': True, 'message': 'OK'}
 
+        attempts = r.get(key)
         if attempts and int(attempts) >= 5:
             return {
                 'allowed': False,
@@ -88,18 +102,31 @@ def check_login_rate(ip: str, email: str = ''):
         }
 
 def record_failed_login(ip: str, email: str = ''):
+    key = f"aura:bruteforce:{ip}:{email.lower()}"
     try:
         r = _get_redis()
-        key = f"aura:bruteforce:{ip}:{email.lower()}"
+        if r is None:
+            import time
+            record = _memory_store.get(key, {'attempts': 0, 'expires': time.time() + 300})
+            record['attempts'] += 1
+            record['expires'] = time.time() + 300
+            _memory_store[key] = record
+            return
+
         r.incr(key)
         r.expire(key, 300) # 5 minutes lockout
     except Exception as e:
         current_app.logger.warning(f"Failed to record login attempt: {e}")
 
 def clear_login_attempts(ip: str, email: str = ''):
+    key = f"aura:bruteforce:{ip}:{email.lower()}"
     try:
         r = _get_redis()
-        key = f"aura:bruteforce:{ip}:{email.lower()}"
+        if r is None:
+            if key in _memory_store:
+                del _memory_store[key]
+            return
+
         r.delete(key)
     except Exception as e:
         current_app.logger.warning(f"Failed to clear login attempts: {e}")

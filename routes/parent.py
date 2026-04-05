@@ -16,6 +16,14 @@ from datetime import datetime, timedelta
 
 parent_bp = Blueprint('parent', __name__)
 
+
+@parent_bp.route('', strict_slashes=False)
+@parent_bp.route('/', strict_slashes=False)
+def parent_root():
+    if session.get('parent_logged_in'):
+        return redirect(url_for('parent.dashboard'))
+    return redirect(url_for('parent.login'))
+
 # ==========================================
 # PARENT AUTHENTICATION (OTP-Based)
 # ==========================================

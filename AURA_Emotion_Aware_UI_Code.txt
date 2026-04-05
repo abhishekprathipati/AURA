@@ -1,0 +1,71 @@
+================================================================================
+AURA: EMOTION-AWARE UI LOGIC
+Copy and paste this section into your "Emotion-Aware Interface" section in the paper.
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+Emotion-Aware UI: Algorithmic Theme Injection
+────────────────────────────────────────────────────────────────────────────────
+
+Traditional educational dashboards maintain static user interfaces irrespective of the user’s psychological condition. The AURA presentation layer introduces an 'Emotion-Aware UI' algorithmic engine executed natively on the client side via vanilla ECMAScript 6 (ES6) and manipulated via cascading CSS variables defined in the DOM's `:root` pseudo-class. 
+
+When a student’s backend risk tier updates, the server pushes a synchronized event payload containing a `hex` primary and accent payload tailored to their psychological state. For example, a student triggering a HIGH_RISK anomaly receives a calming monochromatic blue/grey palette designed to minimize cognitive overload, whereas a LOW_RISK state generates a vibrant, heavily saturated interface. 
+
+The color mutation is handled via mathematical hex-to-RBG extraction and dynamic structural mixing using alpha channels.
+
+[CODE SNIPPET - You can include this in your paper as "Fig X: Emotion-Aware Theme Algorithmic Logic"]
+
+```javascript
+/* === Core Dynamic CSS Variable Injection Engine === */
+function applyColorTheme(theme) {
+    const root = document.documentElement;
+    const isDark = root.getAttribute('data-theme') === 'dark';
+
+    // Core accent tokens mutation
+    root.style.setProperty('--primary', theme.primary);
+    root.style.setProperty('--primary-strong', darken(theme.primary, 0.12));
+    root.style.setProperty('--primary-soft', alpha(theme.primary, 0.12));
+    root.style.setProperty('--accent', theme.accent);
+
+    // Environment and Surface Lighting Mixing
+    if (isDark) {
+        // Deeply mix Primary hue into background geometry for unified lighting
+        root.style.setProperty('--bg', mix('#0b1224', theme.primary, 0.06));
+        root.style.setProperty('--surface', mix('#111827', theme.primary, 0.05));
+        root.style.setProperty('--border', mix('#1f2937', theme.primary, 0.1));
+        root.style.setProperty('--shadow', '0 14px 40px ' + alpha(theme.primary, 0.15));
+    } else {
+        root.style.setProperty('--bg', mix('#f8fafc', theme.primary, 0.04));
+        root.style.setProperty('--surface', mix('#ffffff', theme.primary, 0.025));
+        root.style.setProperty('--border', mix('#e2e8f0', theme.primary, 0.08));
+    }
+
+    // Algorithmic Base Header Glow Generation
+    const hBase = isDark ? '#0b1224' : '#0f172a';
+    root.style.setProperty('--header-gradient',
+        `linear-gradient(135deg, ${mix(hBase, theme.primary, 0.2)}, ${mix(hBase, theme.primary, 0.45)} 30%, ${mix(hBase, theme.accent, 0.6)} 100%)`
+    );
+    
+    // Inject Dynamic Glow Halo into standard CSS overrides
+    root.style.setProperty('--header-glow', `radial-gradient(circle at 80% 0%, ${alpha(theme.accent, 0.3)}, transparent 35%)`);
+}
+
+// Color Utility Functions handling Hex to Dec conversions
+function hexToRgb(hex) {
+    const n = parseInt(hex.replace('#', ''), 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
+// Alpha-blending color mixer matrix
+function mix(h1, h2, w) {
+    const a = hexToRgb(h1), b = hexToRgb(h2);
+    return toHex(
+        a.r + (b.r - a.r) * w, 
+        a.g + (b.g - a.g) * w, 
+        a.b + (b.b - a.b) * w
+    );
+}
+```
+
+This implementation allows AURA to bypass expensive server-side rendering for theme updates, achieving instantaneous, 60fps local UX mutations that adapt seamlessly to the student's algorithmic risk profile.
+================================================================================

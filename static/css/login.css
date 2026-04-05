@@ -498,6 +498,8 @@ form {
     cursor: pointer;
     transition: all .25s var(--ease);
     position: relative;
+    z-index: 50; /* Protect against canvas overlaps */
+    pointer-events: auto !important;
     overflow: hidden;
 }
 

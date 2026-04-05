@@ -456,13 +456,13 @@ def _check_ai_provider_health():
 def not_found(e):
     if request.accept_mimetypes.best == 'application/json':
         return jsonify({'error': 'Not found'}), 404
-    return render_template('base.html', show_nav=False, error_code=404, error_msg='Page not found'), 404
+    return render_template('error.html', show_nav=False, error_code=404, error_msg='Page not found'), 404
 
 @app.errorhandler(500)
 def server_error(e):
     if request.accept_mimetypes.best == 'application/json':
         return jsonify({'error': 'Internal server error'}), 500
-    return render_template('base.html', show_nav=False, error_code=500, error_msg='Something went wrong'), 500
+    return render_template('error.html', show_nav=False, error_code=500, error_msg='Something went wrong'), 500
 
 @app.errorhandler(429)
 def rate_limited(e):

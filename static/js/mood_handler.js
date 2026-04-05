@@ -14,19 +14,36 @@ async function updateMood(mood) {
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
+            let errorMessage = `HTTP ${response.status}`;
+            let isDemo = false;
+            
+            try {
+                const errData = await response.json();
+                if (errData.demo_restricted) {
+                    isDemo = true;
+                }
+            } catch (e) {
+                // Ignore json parsing block errors
+            }
 
-        const data = await response.json();
+            if (isDemo) {
+                if (window.dashboard && window.dashboard.showToast) {
+                    window.dashboard.showToast('Demo Mode: Mood was changed locally but not saved.', 'warning');
+                }
+            } else {
+                throw new Error(errorMessage);
+            }
+        } else {
+            const data = await response.json();
+            // Live-update stress display if engine returned fresh data
+            if (data.stress && window.dashboard && window.dashboard.updateStressDisplay) {
+                window.dashboard.updateStressDisplay({ stress: data.stress });
+            }
+        }
 
         // Store theme in localStorage for persistence
         localStorage.setItem('aura-mood-theme', mood);
         applyAuraTheme(mood);
-
-        // Live-update stress display if engine returned fresh data
-        if (data.stress && window.dashboard && window.dashboard.updateStressDisplay) {
-            window.dashboard.updateStressDisplay({ stress: data.stress });
-        }
 
         // Update wellness streak
         if (window.updateWellnessStreak) {
@@ -44,6 +61,14 @@ async function updateMood(mood) {
 
     } catch (error) {
         console.error('Mood update failed:', error);
+        
+        // Ensure modal is closed even on failure to prevent getting stuck
+        const modal = document.getElementById('moodModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.classList.remove('mood-modal-open');
+        }
+
         if (window.dashboard && window.dashboard.showToast) {
             window.dashboard.showToast('Unable to update mood. Please try again.', 'error');
         } else {

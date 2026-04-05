@@ -19,6 +19,10 @@ window.addEventListener('DOMContentLoaded', () => {
 	let zenMode = false;
 	const zenBtn = document.getElementById('zenModeToggle');
 
+	if (!header) {
+		return;
+	}
+
 	// Ensure hotspot exists
 	if (!hotspot) {
 		const hotspotEl = document.createElement('div');

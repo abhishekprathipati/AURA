@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}AURA - {{ error_code or 500 }}{% endblock %}
+
+{% block content %}
+<section style="max-width: 760px; margin: 48px auto; padding: 32px; border-radius: 16px; background: rgba(255, 255, 255, 0.92); box-shadow: 0 10px 30px rgba(2, 6, 23, 0.12); color: #0f172a;">
+    <h1 style="font-size: 2rem; margin-bottom: 10px;">{{ error_code or 500 }}</h1>
+    <p style="font-size: 1.05rem; line-height: 1.5; margin-bottom: 18px;">{{ error_msg or 'Something went wrong.' }}</p>
+    <p style="opacity: 0.8; margin-bottom: 22px;">Try returning to the login page or dashboard.</p>
+    <a href="{{ url_for('index') }}" style="display: inline-block; padding: 10px 16px; border-radius: 10px; background: #0f172a; color: #ffffff; text-decoration: none; font-weight: 600;">Go to Home</a>
+</section>
+{% endblock %}

@@ -13,7 +13,7 @@ AURA/
 ├── run.py                          # Entrypoint — SocketIO server on port 5000
 ├── requirements.txt                # Python dependencies
 ├── README.md                       # Project documentation
-├── PROJECT_STRUCTURE_GUIDE.md      # ← This file
+├── docs/project/PROJECT_STRUCTURE_GUIDE.md  # ← This file
 │
 ├── models/                         # MongoDB schema helpers
 │   ├── __init__.py                 #   Exports all model classes

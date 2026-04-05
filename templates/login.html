@@ -118,13 +118,18 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce }}">
         function fillAndSubmit(email, password) {
             document.getElementById('email').value = email;
             document.getElementById('password').value = password;
             document.getElementById('email').focus();
             setTimeout(() => {
-                document.querySelector('form').submit();
+                const submitBtn = document.querySelector('.btn-login');
+                if (submitBtn) {
+                    submitBtn.click();
+                } else {
+                    document.forms[0].submit();
+                }
             }, 300);
         }
 

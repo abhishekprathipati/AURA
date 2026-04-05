@@ -1,0 +1,70 @@
+================================================================================
+AURA: SYSTEM ARCHITECTURE AND TECHNICAL MATTER FOR THE PAPER
+Copy and paste these sections into your Word document to expand it.
+These sections are highly technical, academic, and based strictly on your code.
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+III. SYSTEM ARCHITECTURE AND COMPONENT DESIGN
+────────────────────────────────────────────────────────────────────────────────
+
+AURA is engineered upon a highly scalable, real-time, five-layer microservices-oriented architecture using the Flask (Python 3.11) framework. The architectural design deliberately separates concerns into authentication, natural language processing, client interfacing, algorithmic risk analysis, and institutional data dissemination, ensuring robust fault tolerance and sub-second latency for alert push notifications.
+
+A. Layer 1: Security, Identity, and Authentication Control
+The foundational layer manages Role-Based Access Control (RBAC) across four distinct stakeholder personas (Student, Proctor, HOD, and Parent). User credentials are computationally hashed using the bcrypt algorithm with randomized salting prior to MongoDB insertion, neutralizing rainbow table attacks. Application-layer security is fortified by Flask-Limiter, utilizing an in-memory or Redis-backed sliding window mechanism that strictly caps authentication attempts to five occurrences per IP address before initiating a temporary block, thereby mitigating automated brute-force threat vectors. 
+
+To safeguard against cross-site request forgery (CSRF), unique cryptographic tokens are regenerated per session and validated against all state-modifying requests. Furthermore, cross-site scripting (XSS) attacks are neutralized via a dynamic Content-Security-Policy (CSP). For every HTTP request, a unique 16-byte secure nonce is generated natively within the Flask application context. This nonce is dynamically injected into allowed inline scripts exclusively via Jinja2 templating, stripping execution privileges from unauthorized external scripts.
+
+B. Layer 2: High-Availability Natural Language Processing (NLP) Pipeline
+Recognizing the unreliability of a single-vendor AI reliance, Layer 2 constructs a multi-model, high-availability Large Language Model (LLM) fallback pipeline. The primary conversational and multimodal processing agent is Google Gemini 2.5 Flash, selected for its rapid inference and robust visual parsing capabilities (e.g., student-uploaded PDF and image OCR). 
+
+In the event of network timeouts, API exhaustion, or rate-limiting by the primary provider, the architecture implements a sequential failover cascade constraint. The system first attempts failover to DeepSeek, specifically utilizing its 'reasoner' logic pathway for academic study tasks and 'chat' for emotional support. A secondary failover is routed to Groq’s Llama-3.3-70b-versatile node, leveraging its tensor processing unit architecture for ultra-low-latency free-tier inference. Failing externally available cloud APIs, the system reverts to OpenAI GPT models, and finally, to a hardcoded localized heuristic keyword matcher to ensure non-disruptive, 24/7 service availability.
+
+C. Layer 3: Emotion-Aware Interface and Client State Management
+The presentation layer manages the stateful student dashboard. It implements an 'Emotion-Aware UI' methodology, dynamically mutating the cascading style sheets (CSS) color palette and CSS variables based on the active stress tier derived from the backend. Utilizing Jinja2 macro rendering, high-stress identifiers force the DOM into a visually neutralizing, low-contrast UI palette (e.g., calming blues and deactivated hues) to mitigate visual overstimulation, whereas relaxed states present a vibrant interface. The dashboard features localized real-time polling to update sparklines and wellness counters without initiating total page reloads.
+
+D. Layer 4: Mathematical Analysis and Real-Time Telemetry Processing
+At the core of AURA is the algorithmic stress quantification engine, operating asynchronously from standard web requests. Incoming JSON payloads representing mood inputs, chat interactions, and site engagement duration are evaluated simultaneously. The data streams are temporally decayed (older inputs weigh significantly less) and processed through a nonlinear logistic compression algorithm to constrain the resulting indices to a mathematically sound, bounded output array representing strict psychological realism (detailed extensively in Section IV).
+
+E. Layer 5: Asynchronous Notification and Institutional WebSockets
+Alert delivery sidesteps traditional REST polling by employing full-duplex WebSocket connections instantiated via Flask-SocketIO. Upon successful authentication, proctor and HOD sockets attach to exclusive application-layer TCP rooms (e.g., `room='proctor_alerts'`). When Layer 4 detects a Z-Score anomaly, an asynchronous push event broadcasts the incident payload instantaneously to the designated proctor’s active socket. Simultaneously, for CRITICAL_RISK flagged events, the layer invokes backend HTTP requests to the Fast2SMS API portal, dispatching an immediate localized SMS to the registered parent database entry and standard SMTP-based emails to institutional heads.
+
+────────────────────────────────────────────────────────────────────────────────
+IV. MATHEMATICAL MODELLING OF DYNAMIC STRESS
+────────────────────────────────────────────────────────────────────────────────
+
+Traditional wellness platforms rely heavily on singular inputs uniformly weighted. AURA challenges this paradigm by introducing the Dynamic Multi-Signal Engine (v3.1), which computes a composite, bounded stress output derived from six orthogonal behavioral signals.
+
+A. The Six-Signal Composition Engine
+For a given student, the raw behavioral stress index, $S_{raw}$, is computed dynamically on a 0–100 continuous scale using the following weighted parameters mapping behavioral telemetry to numerical distress values:
+
+1. Temporal Mood Baseline ($W_m = 0.35$): Derives heavily from explicit student input. Mood scores are mapped on a non-linear anxiety curve (e.g., Happy=15, Calm=20, Sad=65, Angry=80, Panic=90). Inputs older than 6 hours are subjected to a linear decay equation converging toward a neutral baseline (50) at 24 hours.
+2. Sentiment Polarity Extraction ($W_s = 0.25$): Considers the sentiment orientation of the last ten chat messages. To prevent rapid emotional spamming or data manipulation, recent interactions are weighted using exponential decay $e^{-0.15i}$, alongside a square-root diminishing returns cap for bursts exceeding four messages within a five-minute window.
+3. Yerkes-Dodson Activity Modeling ($W_a = 0.15$): System usage volume is mapped to a classical inverted-U anxiety distribution curve. Zero activity over 48 hours outputs high stress (75, indicating depressive isolation); typical engagement (5-8 actions) maps to low stress (20); whereas hyperactive interaction (>25 check-ins) triggers a severe anxiety flag (72).
+4. Affective Volatility ($W_v = 0.10$): Calculated via the standard deviation ($\sigma$) of all recorded mood thresholds over a 48-hour trailing window. High rapid vacillation outputs an augmented stress addition.
+5. Circadian Chronotype Penalization ($W_t = 0.05$): Utilizing dynamic timezone offsets matching the user locale, time-of-day analytics penalize late-night activity (23:00 to 04:00 local time) with a +75 base score, mapping sleep schedule disruptions statistically parallel to elevated psychological burden.
+6. Momentum Trend Vector ($W_d = 0.10$): Evaluates a rolling 7-day average, identifying the directional rate of change (+1.0 multiplier for increasing trajectories).
+
+B. Sparse Data Recalibration and Adaptive Weighting
+If behavioral signals inherently lack data (e.g., a student logs a mood but executes zero chats), assigning arbitrary zero values would artificially deflate their actual stress presentation. AURA implements dynamic weight redistribution. If the data flag for a specific vector returns `False`, its designated operational weight is redistributed proportionally across the remaining active signals, sustaining statistical validity independent of engagement frequency.
+
+C. Logistic Compression and Final Output Regularization
+Given the raw composite signal index $S_{raw}$, standard summation formulas risk uncontrolled score escalation resulting in 'false-panic' triggers. To enforce psychological data realism, AURA stabilizes the raw output incorporating an Exponential Moving Average (EMA) calculated against the student's previous reading ($EMA_{prev\_weight} = 0.6$ for normal data; $0.3$ for sparse occurrences). 
+
+The temporally stabilized score ($S_{ema}$) is subsequently mapped to an asymptotic 'S-Curve' using bounded logistic compression:
+$$S_{final} = \frac{100}{1 + e^{-k(S_{ema} - \mu)}}$$
+Where sensitivity $k = 0.08$ and the neutral midpoint $\mu = 50.0$. This non-linear mapping ensures the score scales aggressively within the middle bounds (40-60) but requires significantly higher cumulative trauma to push toward the extreme 100 maximum, eliminating artificial spikes from isolated minor perturbations.
+
+D. Z-Score Anomaly Detection
+A severe institutional problem occurs when a student with a chronically elevated score ($S_{final} \approx 65$) jumps to 80, whilst a historically relaxed student ($S_{final} \approx 20$) spikes to 70. A static threshold alert system fails the latter. AURA employs a rolling Z-Score calculation utilizing a 21-day backward-facing database snapshot. 
+$$z = \frac{x - \mu}{\sigma}$$
+If the current discrete stress reading generates a Z-Score anomaly > 1.8—indicating a sudden deviation nearly two standard deviations from their personal normalized distribution mean—it instantaneously triggers a HIGH_RISK protocol response irrespective of reaching the nominal 80 absolute tier threshold.
+
+────────────────────────────────────────────────────────────────────────────────
+V. MONGODB DATABASE PERFORMANCE AND INDEXING 
+────────────────────────────────────────────────────────────────────────────────
+
+A major limitation spanning similar institutional deployments lies in massive query bottlenecks generated during active semester periods involving high concurrent system checks by proctoring staff executing dashboard refreshes. AURA addresses this with proactive MongoDB index scaling. 
+
+Data segregation occurs natively, mapping long-term wellness trend graphs (`student_wellness` collections) separately from instantaneous system states. The database layer utilizes advanced Compound Indexes defined specifically for Proctors. The `risk_incidents` queue is optimized by establishing B-Tree indexes constructed upon `[('status', 1), ('risk_level', -1), ('timestamp', -1)]`. This strict composite mapping ensures that when an HOD or Proctor polls the unacknowledged incident dashboard categorized by highest threat level, the MongoDB database executes an instantaneous index-covered query traversing the tree directly in memory, bypassing expensive disk-level collection scans completely.
+================================================================================

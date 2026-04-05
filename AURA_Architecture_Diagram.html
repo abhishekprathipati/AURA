@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA System Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 1000px;
+            width: 100%;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        p {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>AURA System Architecture</h1>
+        <p>You can screenshot this diagram, or right click it and select "Save Image As" to use in your research paper.</p>
+        
+        <div class="mermaid">
+        graph TD
+            %% Define Styles
+            classDef layerBox fill:#f8fcff,stroke:#85b3e6,stroke-width:2px,rx:10px,ry:10px,color:#333;
+            classDef moduleBox fill:#ffffff,stroke:#4caf50,stroke-width:1.5px,rx:5px,ry:5px,font-size:14px,color:#222;
+            classDef externalBox fill:#f1f3f4,stroke:#9aa0a6,stroke-width:1.5px,stroke-dasharray: 5 5,color:#555;
+            
+            subgraph L5 ["Layer 5: Asynchronous Notification & Delivery"]
+                WS[Flask-SocketIO WebSockets<br>Real-time Dashboards]
+                SMS[Fast2SMS API<br>Critical Parent Alerts]
+                EMAIL[SMTP Server<br>Institutional Emails]
+            end
+            
+            subgraph L4 ["Layer 4: Mathematical Analysis & Algorithms"]
+                SE[Dynamic 6-Signal Engine<br>Mood, Sentiment, Activity, Time, Volatility, Trend]
+                LC[Logistic Compression Pipeline<br>S = 100 / (1 + e^-k(x-μ))]
+                ZS[Z-Score Anomaly Detector<br>z = (x-μ)/σ > 1.8]
+                SE --> LC --> ZS
+            end
+
+            subgraph L3 ["Layer 3: Client State Management"]
+                E_UI[Emotion-Aware UI<br>Jinja2 Theme Injection]
+                DASH[Role-Based Dashboards<br>Student | Proctor | HOD | Parent]
+                E_UI -.-> DASH
+            end
+
+            subgraph L2 ["Layer 2: High-Availability NLP Pipeline"]
+                GEMINI[Primary: Google Gemini 2.5<br>Multimodal & Dialogue]
+                DEEPSEEK[Fallback 1: DeepSeek<br>Study Reasoner]
+                GROQ[Fallback 2: Groq Llama 3<br>Low-Latency]
+                OPENAI[Fallback 3: OpenAI GPT]
+                HEURISTIC[Fallback 4: Local Keywords]
+                GEMINI --> DEEPSEEK --> GROQ --> OPENAI --> HEURISTIC
+            end
+
+            subgraph L1 ["Layer 1: Security & Identity Layer"]
+                RBAC[RBAC Authentication]
+                BCRYPT[Bcrypt Password Hashing]
+                FLIM[Flask-Limiter Rate Control]
+                CSP[Dynamic CSP & Nonces]
+                RBAC --- BCRYPT --- FLIM --- CSP
+            end
+
+            %% Data Flow
+            DB[(MongoDB Atlas<br>Production Compound Indexes)]:::externalBox
+            
+            L1 == Secure Auth ==> L3
+            L3 == Telemetry/Chat ==> L2
+            L2 == Analyzed Data ==> L4
+            L4 == Incident Triggers ==> L5
+            
+            L1 -. Read/Write .-> DB
+            L2 -. Save Metrics .-> DB
+            L4 -. Log Scores .-> DB
+
+            %% Apply Styles
+            class L1,L2,L3,L4,L5 layerBox;
+            class WS,SMS,EMAIL,SE,LC,ZS,E_UI,DASH,GEMINI,DEEPSEEK,GROQ,OPENAI,HEURISTIC,RBAC,BCRYPT,FLIM,CSP moduleBox;
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

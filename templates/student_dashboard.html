@@ -2026,7 +2026,7 @@ This will improve load times, enable better caching, and simplify maintenance.
 
     <!-- MOOD CHECK-IN MODAL -->
     <div class="mood-modal" id="moodModal" style="display: none;">
-        <div class="mood-modal-overlay"></div>
+        <div class="mood-modal-overlay" onclick="document.getElementById('moodModal').style.display='none'; document.body.classList.remove('mood-modal-open');"></div>
         <div class="mood-modal-content">
             <div class="mood-modal-header">
                 <h2>🌅 How are you feeling today?</h2>
@@ -2074,8 +2074,8 @@ This will improve load times, enable better caching, and simplify maintenance.
     <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.2.1/build/global/luxon.min.js"></script>
-    <script src="{{ url_for('static', filename='js/mood_handler.js') }}?v=20260227"></script>
-    <script src="{{ url_for('static', filename='js/student_dashboard.js') }}?v=20260227"></script>
+    <script src="{{ url_for('static', filename='js/mood_handler.js') }}?v=20260405"></script>
+    <script src="{{ url_for('static', filename='js/student_dashboard.js') }}?v=20260405"></script>
     <script>
         // Random Color Theme Feature — FULL DASHBOARD THEMING ENGINE
         (function () {

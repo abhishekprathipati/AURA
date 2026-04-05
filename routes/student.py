@@ -22,6 +22,7 @@ from bson import ObjectId
 from collections import OrderedDict
 import uuid
 import hashlib
+from flask import redirect, url_for
 
 # Create the Blueprint
 student_bp = Blueprint('student', __name__)
@@ -73,6 +74,12 @@ def bucket_by_day(history):
 # ==========================================
 # 1. PAGE ROUTES (Navigation)
 # ==========================================
+
+@student_bp.route('', strict_slashes=False)
+@student_bp.route('/', strict_slashes=False)
+@login_required
+def student_root_redirect():
+    return redirect(url_for('student.dashboard'))
 
 @student_bp.route('/dashboard')
 @login_required
