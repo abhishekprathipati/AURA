@@ -23,7 +23,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student_dashboard.css') }}?v=20260317a">
-    <style>
+    <style nonce="{{ csp_nonce }}">
         /* SVG Icon System */
         .icon {
             width: 24px;
@@ -435,7 +435,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                             </details>
 
                             <!-- Phase 5.1: Emotional Fingerprint (Radar Chart) -->
-                            <div class="emotional-radar-section" style="margin-top: 24px; padding-top: 20px; border-top: 1px border var(--border);">
+                            <div class="emotional-radar-section" style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border);">
                                 <h4 class="card-subtitle" style="margin-bottom: 12px; font-weight: 600; color: var(--text);">
                                     <i class="fas fa-brain" style="margin-right: 6px; color: var(--primary);"></i>
                                     Emotional Fingerprint
@@ -719,7 +719,7 @@ This will improve load times, enable better caching, and simplify maintenance.
             <div class="dashboard-right">
 
                 <!-- ══ QUICK ACTIONS — PREMIUM PANEL ══ -->
-                <style>
+                <style nonce="{{ csp_nonce }}">
                     /* ── QA Panel Tabs ── */
                     .qa-tabs-row {
                         display: flex;
@@ -1243,7 +1243,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                 </div>
 
                 <!-- ── QA Panel JS ── -->
-                <script>
+                <script nonce="{{ csp_nonce }}">
                     (function () {
                         /* ── Tab switch ── */
                         window.qaSwitch = function (tab, btn) {
@@ -2076,7 +2076,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.2.1/build/global/luxon.min.js"></script>
     <script src="{{ url_for('static', filename='js/mood_handler.js') }}?v=20260405"></script>
     <script src="{{ url_for('static', filename='js/student_dashboard.js') }}?v=20260405"></script>
-    <script>
+    <script nonce="{{ csp_nonce }}">
         // Random Color Theme Feature — FULL DASHBOARD THEMING ENGINE
         (function () {
             const colorThemes = [
