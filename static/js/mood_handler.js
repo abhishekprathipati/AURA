@@ -4,14 +4,37 @@
  * Updates the user's mood and applies the corresponding theme
  * @param {string} mood - e.g. 'happy', 'stressed', 'anxious', 'calm', 'sad'
  */
+function closeMoodModal() {
+    const modal = document.getElementById('moodModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    document.body.classList.remove('mood-modal-open');
+}
+
+function openMoodModal() {
+    const modal = document.getElementById('moodModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+    document.body.classList.add('mood-modal-open');
+}
+
 async function updateMood(mood) {
     try {
-        // Send mood to backend
+        // Close the modal immediately so the UI never gets stuck waiting on the network.
+        closeMoodModal();
+
+        // Send mood to backend with a timeout so slow requests do not block the UI.
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
         const response = await fetch('/student/api/mood', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mood: mood })
+            body: JSON.stringify({ mood: mood }),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             let errorMessage = `HTTP ${response.status}`;
@@ -50,24 +73,16 @@ async function updateMood(mood) {
             window.updateWellnessStreak();
         }
 
-        // Hide modal
-        const modal = document.getElementById('moodModal');
-        if (modal) {
-            modal.style.display = 'none';
-            document.body.classList.remove('mood-modal-open');
-        }
+        // Keep the modal closed after success.
+        closeMoodModal();
 
         // No redirect: stay on dashboard for all moods
 
     } catch (error) {
         console.error('Mood update failed:', error);
         
-        // Ensure modal is closed even on failure to prevent getting stuck
-        const modal = document.getElementById('moodModal');
-        if (modal) {
-            modal.style.display = 'none';
-            document.body.classList.remove('mood-modal-open');
-        }
+        // Ensure modal is closed even on failure to prevent getting stuck.
+        closeMoodModal();
 
         if (window.dashboard && window.dashboard.showToast) {
             window.dashboard.showToast('Unable to update mood. Please try again.', 'error');
@@ -144,11 +159,7 @@ async function checkDailyMood() {
 
         if (!data.has_mood_today) {
             // Show modal
-            const modal = document.getElementById('moodModal');
-            if (modal) {
-                modal.style.display = 'flex';
-                document.body.classList.add('mood-modal-open');
-            }
+            openMoodModal();
         } else if (data.mood) {
             // Apply saved mood theme
             applyAuraTheme(data.mood);
@@ -189,6 +200,26 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Make overlay and skip button close the modal reliably, even if inline handlers fail.
+    const modal = document.getElementById('moodModal');
+    if (modal) {
+        const overlay = modal.querySelector('.mood-modal-overlay');
+        const skipButton = modal.querySelector('.mood-skip-btn');
+        if (overlay) {
+            overlay.addEventListener('click', closeMoodModal);
+            overlay.addEventListener('touchend', (event) => {
+                event.preventDefault();
+                closeMoodModal();
+            }, { passive: false });
+        }
+        if (skipButton) {
+            skipButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                closeMoodModal();
+            });
+        }
+    }
+
     // Initialize Check-In Modal keyboard support
     const checkInButtons = document.querySelectorAll('.mood-btn');
     checkInButtons.forEach(btn => {
@@ -206,5 +237,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // Expose globally for inline onclick handlers
 window.updateMood = updateMood;
 window.applyAuraTheme = applyAuraTheme;
+window.closeMoodModal = closeMoodModal;
+window.openMoodModal = openMoodModal;
 // backward compatibility
 window.applyTheme = applyAuraTheme;
