@@ -4779,7 +4779,7 @@ body.panel-open {
     background: rgba(255,255,255,.07);
 }
 
-[data-theme="dark"] 
+
 
 
 
@@ -5540,7 +5540,7 @@ body.panel-open {
 
         .btn-module:hover {
             transform: translateY(-4px) scale(1.05);
-
+        }
 
 /* ── UI/UX QA PANEL ── */
 .qa-header { margin-bottom: 10px; }
