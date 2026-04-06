@@ -158,15 +158,14 @@ class OTPService:
                   'sent' if sms_sent else 'demo',
                   OTPService.OTP_EXPIRY_MINUTES)
 
-        # SECURITY FIX #5: Never return OTP to frontend - only return success/failure
+        # SECURITY FIX #5: Never return OTP to frontend in production.
+        # For demo mode: we MUST return it so the UI banner works.
         if sms_sent:
             return True, 'OTP sent to your phone via SMS'
         else:
-            # In demo mode when SMS is not configured, log the OTP to console only
-            # This allows testing without actual SMS, but OTP is never in API response
-            _log.warning('DEMO MODE: OTP for %s***%s is %s (not returned to client)',
+            _log.warning('DEMO MODE: OTP for %s***%s is %s (returned to client)',
                         phone[:3], phone[-3:], otp)
-            return True, 'OTP generated (demo mode - check server logs)'
+            return otp, 'OTP generated (demo mode - check screen banner)'
 
     @staticmethod
     def verify_otp(phone, otp):

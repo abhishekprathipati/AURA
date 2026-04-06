@@ -91,7 +91,7 @@ def send_otp():
         if not sms_sent:
             response_data['demo_mode'] = True
             response_data['demo_otp'] = otp
-            message = "SMS service is unavailable. Please check server logs for the security code (Demo Mode)."
+            message = "SMS not configured. Your OTP is displayed in the banner at the bottom of this screen."
             response_data['message'] = message
 
         return jsonify(response_data), 200
