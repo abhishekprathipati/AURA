@@ -7,7 +7,7 @@
     <p id="sw-status" style="color:#64748b;margin-bottom:24px;">Checking...</p>
     <button id="sw-btn" onclick="unregisterSW()" style="padding:10px 24px;border-radius:10px;border:none;background:#6366f1;color:#fff;font-weight:600;cursor:pointer;font-size:0.9rem;" disabled>Unregister</button>
 </div>
-<script>
+<script nonce="{{ csp_nonce }}">
 async function unregisterSW() {
     const regs = await navigator.serviceWorker.getRegistrations();
     for (const r of regs) await r.unregister();

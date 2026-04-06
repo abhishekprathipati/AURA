@@ -21,7 +21,7 @@ This will improve maintainability and enable shared components across admin dash
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
 
-    <style>
+    <style nonce="{{ csp_nonce }}">
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
@@ -1146,7 +1146,7 @@ This will improve maintainability and enable shared components across admin dash
 
     <div class="toast" id="toast"></div>
 
-    <script>
+    <script nonce="{{ csp_nonce }}">
     // ═══ UTILITIES ═══
     const IS_DEMO = {{ 'true' if session.get('is_demo') else 'false' }};
     const DASHBOARD_STATE = {

@@ -71,7 +71,7 @@
                 <div class="demo-title">Demo Accounts — Click to Login</div>
 
                 <div class="demo-grid">
-                    <div class="demo-card" onclick="fillAndSubmit('student@aura.edu', 'password123')">
+                    <div class="demo-card" id="demo-student">
                         <div class="card-icon">🎓</div>
                         <div class="card-info">
                             <div class="card-role">Student</div>
@@ -79,7 +79,7 @@
                         </div>
                         <div class="card-arrow">→</div>
                     </div>
-                    <div class="demo-card" onclick="fillAndSubmit('proctor@aura.edu', 'password123')">
+                    <div class="demo-card" id="demo-proctor">
                         <div class="card-icon">🧑‍🏫</div>
                         <div class="card-info">
                             <div class="card-role">Proctor</div>
@@ -87,7 +87,7 @@
                         </div>
                         <div class="card-arrow">→</div>
                     </div>
-                    <div class="demo-card" onclick="fillAndSubmit('hod@aura.edu', 'password123')">
+                    <div class="demo-card" id="demo-hod">
                         <div class="card-icon">👨‍💼</div>
                         <div class="card-info">
                             <div class="card-role">HOD / Admin</div>
@@ -95,7 +95,7 @@
                         </div>
                         <div class="card-arrow">→</div>
                     </div>
-                    <div class="demo-card" onclick="window.location.href='/parent/login'">
+                    <div class="demo-card" id="demo-parent">
                         <div class="card-icon">👨‍👩‍👧</div>
                         <div class="card-info">
                             <div class="card-role">Parent Portal</div>
@@ -132,6 +132,27 @@
                 }
             }, 300);
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const demoStudent = document.getElementById('demo-student');
+            if (demoStudent) {
+                demoStudent.addEventListener('click', () => fillAndSubmit('student@aura.edu', 'password123'));
+            }
+            const demoProctor = document.getElementById('demo-proctor');
+            if (demoProctor) {
+                demoProctor.addEventListener('click', () => fillAndSubmit('proctor@aura.edu', 'password123'));
+            }
+            const demoHod = document.getElementById('demo-hod');
+            if (demoHod) {
+                demoHod.addEventListener('click', () => fillAndSubmit('hod@aura.edu', 'password123'));
+            }
+            const demoParent = document.getElementById('demo-parent');
+            if (demoParent) {
+                demoParent.addEventListener('click', () => {
+                    window.location.href = '/parent/login';
+                });
+            }
+        });
 
         // ═══════════════════════════════════════════════════════
         // AURA Neural Network Particle Animation
