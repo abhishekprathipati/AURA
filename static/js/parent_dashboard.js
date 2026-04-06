@@ -23,6 +23,29 @@ document.addEventListener('DOMContentLoaded', () => {
     loadNotifications();
     bindForms();
 
+    // CSP-compliant event wiring for nav
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', window.logout);
+
+    const bellBtn = document.getElementById('notifBellBtn');
+    if (bellBtn) bellBtn.addEventListener('click', window.toggleNotifications);
+
+    const closeBtn = document.getElementById('notifCloseBtn');
+    if (closeBtn) closeBtn.addEventListener('click', window.toggleNotifications);
+
+    // Announcement tab delegation
+    const tabsContainer = document.getElementById('announcementTabs');
+    if (tabsContainer) {
+        tabsContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.tab');
+            if (!btn) return;
+            const filter = btn.dataset.filter || 'all';
+            tabsContainer.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            window.switchAnnouncement(filter, null);
+        });
+    }
+
     // Auto-refresh every 5 minutes
     setInterval(() => {
         loadWellnessSummary();
@@ -165,18 +188,10 @@ function renderAcademicTrendChart(records) {
                 labels: {
                     style: {
                         colors: '#667eea',
-                        fontSize: '12px',
+                        fontSize: '11px',
                         fontWeight: 600
                     },
                     formatter: val => val.toFixed(1)
-                },
-                title: {
-                    text: 'GPA',
-                    style: {
-                        color: '#667eea',
-                        fontSize: '13px',
-                        fontWeight: 700
-                    }
                 }
             },
             {
@@ -194,18 +209,10 @@ function renderAcademicTrendChart(records) {
                 labels: {
                     style: {
                         colors: '#10b981',
-                        fontSize: '12px',
+                        fontSize: '11px',
                         fontWeight: 600
                     },
                     formatter: val => val.toFixed(0) + '%'
-                },
-                title: {
-                    text: 'Attendance',
-                    style: {
-                        color: '#10b981',
-                        fontSize: '13px',
-                        fontWeight: 700
-                    }
                 }
             }
         ],

@@ -101,6 +101,7 @@
             padding: 28px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
         }
         
         .card:hover {
@@ -443,6 +444,8 @@
         
         #academicTrendChart {
             min-height: 260px;
+            margin-left: -8px;
+            margin-right: -8px;
         }
         
         @media (max-width: 768px) {
@@ -674,11 +677,11 @@
         <h1>🎓 AURA Parent Portal</h1>
         <div class="user-info">
             <span class="user-name">{{ parent.name }}</span>
-            <div class="notif-bell" onclick="window.toggleNotifications()" title="Notifications" role="button" aria-label="Notifications">
+            <div class="notif-bell" id="notifBellBtn" title="Notifications" role="button" aria-label="Notifications">
                 🔔
                 <span id="notificationBadge" class="notif-count">0</span>
             </div>
-            <button class="btn-logout" onclick="logout()">Logout</button>
+            <button class="btn-logout" id="logoutBtn">Logout</button>
         </div>
     </nav>
 
@@ -686,7 +689,7 @@
     <div id="notificationsPanel" class="notif-panel" role="dialog" aria-label="Notifications">
         <div class="notif-panel-hd">
             <span>Notifications</span>
-            <button class="notif-close" onclick="window.toggleNotifications()" aria-label="Close">✕</button>
+            <button class="notif-close" id="notifCloseBtn" aria-label="Close">✕</button>
         </div>
         <div id="notificationsList" style="padding:8px 0;"></div>
     </div>
@@ -869,10 +872,10 @@
                     <div class="card-icon announcement-icon">📢</div>
                     <h3>Announcements</h3>
                 </div>
-                <div class="tabs">
-                    <button class="tab active" onclick="switchAnnouncement('all', event)">All</button>
-                    <button class="tab" onclick="switchAnnouncement('achievements', event)">Achievements</button>
-                    <button class="tab" onclick="switchAnnouncement('placements', event)">Placements</button>
+                <div class="tabs" id="announcementTabs">
+                    <button class="tab active" data-filter="all">All</button>
+                    <button class="tab" data-filter="achievements">Achievements</button>
+                    <button class="tab" data-filter="placements">Placements</button>
                 </div>
                 <div class="announcement-list" id="announcementList"></div>
             </div>
