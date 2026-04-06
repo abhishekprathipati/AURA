@@ -274,7 +274,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                                     Emotional Fingerprint
                                 </h4>
                                 <div id="emotionRadarChart" style="min-height: 250px;"></div>
-                                <div id="noEmotionsMessage" style="display:none; text-align:center; padding: 20px; color: var(--muted); font-size: 13px;">
+                                <div id="noEmotionsMessage" class="aura-hidden" style="text-align:center; padding: 20px; color: var(--muted); font-size: 13px;">
                                     Start a mental wellness chat to see your emotional breakdown.
                                 </div>
                             </div>
@@ -597,14 +597,14 @@ This will improve load times, enable better caching, and simplify maintenance.
                             <!-- 4. Mental Chatbot -->
                             <a href="{{ url_for('student.mental_chatbot') }}" class="qa-card-v2"
                                 style="--qa-glow:rgba(236,72,153,0.1);">
-                                <div class="qa-v2-ico" style="background:rgba(236,72,153,0.15); color:#ec4899;">💬</div>
+                                <div class="qa-v2-ico ico-pink">💬</div>
                                 <p class="qa-v2-label">AURA Chat</p>
                                 <p class="qa-v2-sub">Mental Wellness</p>
                             </a>
                             <!-- 5. Study Chatbot -->
                             <a href="{{ url_for('student.study_chatbot') }}" class="qa-card-v2"
                                 style="--qa-glow:rgba(59,130,246,0.1);">
-                                <div class="qa-v2-ico" style="background:rgba(59,130,246,0.15); color:#3b82f6;">📚</div>
+                                <div class="qa-v2-ico ico-blue">📚</div>
                                 <p class="qa-v2-label">Study Bot</p>
                                 <p class="qa-v2-sub">Academic Help</p>
                             </a>

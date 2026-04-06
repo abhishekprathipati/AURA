@@ -673,8 +673,8 @@ class AdvancedDashboard {
         } else {
             const radarSection = document.getElementById('emotionRadarChart');
             const noMsg = document.getElementById('noEmotionsMessage');
-            if (radarSection) radarSection.style.display = 'none';
-            if (noMsg) noMsg.style.display = 'block';
+            if (radarSection) radarSection.classList.add('aura-hidden');
+            if (noMsg) noMsg.classList.remove('aura-hidden');
         }
     }
 
@@ -683,8 +683,8 @@ class AdvancedDashboard {
         
         const radarSection = document.getElementById('emotionRadarChart');
         const noMsg = document.getElementById('noEmotionsMessage');
-        if (radarSection) radarSection.style.display = 'block';
-        if (noMsg) noMsg.style.display = 'none';
+        if (radarSection) radarSection.classList.remove('aura-hidden');
+        if (noMsg) noMsg.classList.add('aura-hidden');
 
         const labels = Object.keys(emotions).map(e => e.charAt(0).toUpperCase() + e.slice(1));
         const values = Object.values(emotions);
@@ -1386,17 +1386,16 @@ class AdvancedDashboard {
 
                 // Render Forecast Items
                 container.innerHTML = data.forecast.map(item => {
-                    let color = '#22c55e'; // low stress (green)
-                    let bg = 'rgba(34,197,94,0.1)';
-                    if (item.score > 75) { color = '#ef4444'; bg = 'rgba(239,68,68,0.1)'; }
-                    else if (item.score > 55) { color = '#f97316'; bg = 'rgba(249,115,22,0.1)'; }
-                    else if (item.score > 35) { color = '#eab308'; bg = 'rgba(234,179,8,0.1)'; }
+                    let levelClass = 'forecast-low'; // low stress (green)
+                    if (item.score > 75) { levelClass = 'forecast-high'; }
+                    else if (item.score > 55) { levelClass = 'forecast-moderate'; }
+                    else if (item.score > 35) { levelClass = 'forecast-elevated'; }
 
                     return `
-                        <div style="flex:1;text-align:center;padding:14px 10px;background:${bg};border-radius:14px;border:1.5px solid ${color}44;min-width:60px;">
-                            <div style="font-size:10px;color:${color};text-transform:uppercase;font-weight:700;opacity:.85;">${esc(item.day)}</div>
-                            <div style="font-size:24px;font-weight:900;color:${color};margin:6px 0 2px;line-height:1;">${parseInt(item.score) || 0}</div>
-                            <div style="font-size:9px;color:${color};font-weight:600;opacity:.6;">Projected</div>
+                        <div class="forecast-item ${levelClass}">
+                            <div class="forecast-day">${esc(item.day)}</div>
+                            <div class="forecast-score">${parseInt(item.score) || 0}</div>
+                            <div class="forecast-label">Projected</div>
                         </div>
                     `;
                 }).join('');

@@ -45,7 +45,7 @@ from pathlib import Path
 FLASK_ENV = os.getenv('FLASK_ENV', 'production').strip().lower()
 ENABLE_LOCAL_EMOTION_MODEL = os.getenv(
     'AURA_ENABLE_LOCAL_EMOTION_MODEL',
-    'true' if FLASK_ENV != 'production' else 'false'
+    'true'
 ).strip().lower() == 'true'
 
 # Use google.genai (new recommended SDK). Fallback to Groq/OpenAI if Gemini quota exhausted.

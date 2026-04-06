@@ -5654,11 +5654,15 @@ body.panel-open {
 .ico-teal   { background: linear-gradient(135deg, #d1fae5, #ffffff); box-shadow: 0 4px 12px rgba(16,185,129,0.15); }
 .ico-indigo { background: linear-gradient(135deg, #e0e7ff, #ffffff); box-shadow: 0 4px 12px rgba(99,102,241,0.15); }
 .ico-orange { background: linear-gradient(135deg, #fef3c7, #ffffff); box-shadow: 0 4px 12px rgba(245,158,11,0.15); }
+.ico-pink   { background: linear-gradient(135deg, #fce7f3, #ffffff); box-shadow: 0 4px 12px rgba(236,72,153,0.15); color: #ec4899; }
+.ico-blue   { background: linear-gradient(135deg, #dbeafe, #ffffff); box-shadow: 0 4px 12px rgba(59,130,246,0.15); color: #3b82f6; }
 
-[data-theme="dark"] .ico-purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-[data-theme="dark"] .ico-teal   { background: linear-gradient(135deg, #10b981, #059669); }
-[data-theme="dark"] .ico-indigo { background: linear-gradient(135deg, #6366f1, #4338ca); }
-[data-theme="dark"] .ico-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+[data-theme="dark"] .ico-purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #fff; }
+[data-theme="dark"] .ico-teal   { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+[data-theme="dark"] .ico-indigo { background: linear-gradient(135deg, #6366f1, #4338ca); color: #fff; }
+[data-theme="dark"] .ico-orange { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+[data-theme="dark"] .ico-pink   { background: linear-gradient(135deg, #f472b6, #db2777); color: #fff; }
+[data-theme="dark"] .ico-blue   { background: linear-gradient(135deg, #60a5fa, #2563eb); color: #fff; }
 
 .qa-feedback {
     margin-bottom: 10px;
@@ -5706,3 +5710,88 @@ body.panel-open {
 .qa-bp-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border, #e5e7eb); transition: background .3s; }
 .qa-bp-dot.active { background: #f59e0b; }
 .qa-bp-dot.done { background: #10b981; }
+/* ===== STRESS FORECAST STYLES ===== */
+#stressForecastContainer {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.forecast-item {
+    flex: 1;
+    text-align: center;
+    padding: 14px 10px;
+    border-radius: 14px;
+    min-width: 60px;
+    border: 1.5px solid transparent;
+}
+
+.forecast-day {
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 700;
+    opacity: .85;
+}
+
+.forecast-score {
+    font-size: 24px;
+    font-weight: 900;
+    margin: 6px 0 2px;
+    line-height: 1;
+}
+
+.forecast-label {
+    font-size: 9px;
+    font-weight: 600;
+    opacity: .6;
+}
+
+/* Low Stress (Green) */
+.forecast-low {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.27);
+}
+.forecast-low .forecast-day,
+.forecast-low .forecast-score,
+.forecast-low .forecast-label {
+    color: #22c55e;
+}
+
+/* Elevated Stress (Yellow/Gold) */
+.forecast-elevated {
+    background: rgba(234, 179, 8, 0.1);
+    border-color: rgba(234, 179, 8, 0.27);
+}
+.forecast-elevated .forecast-day,
+.forecast-elevated .forecast-score,
+.forecast-elevated .forecast-label {
+    color: #eab308;
+}
+
+/* Moderate Stress (Orange) */
+.forecast-moderate {
+    background: rgba(249, 115, 22, 0.1);
+    border-color: rgba(249, 115, 22, 0.27);
+}
+.forecast-moderate .forecast-day,
+.forecast-moderate .forecast-score,
+.forecast-moderate .forecast-label {
+    color: #f97316;
+}
+
+/* High Stress (Red) */
+.forecast-high {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.27);
+}
+.forecast-high .forecast-day,
+.forecast-high .forecast-score,
+.forecast-high .forecast-label {
+    color: #ef4444;
+}
+
+/* Base Hidden Utility for CSP Compliance */
+.aura-hidden {
+    display: none !important;
+}
