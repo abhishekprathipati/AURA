@@ -43,7 +43,7 @@ def login():
 
 
 @parent_bp.route('/api/send-otp', methods=['POST'])
-@apply_rate_limit(Limits.STRICT)
+@apply_rate_limit(Limits.MODERATE)
 def send_otp():
     """Step 1: Validate phone against student records and send OTP"""
     try:
@@ -101,7 +101,7 @@ def send_otp():
 
 
 @parent_bp.route('/api/verify-otp', methods=['POST'])
-@apply_rate_limit(Limits.STRICT)
+@apply_rate_limit(Limits.MODERATE)
 def verify_otp():
     """Step 2: Verify OTP and auto-login or prompt registration"""
     try:

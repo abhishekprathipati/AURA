@@ -425,7 +425,9 @@
                 });
                 const data = await res.json();
 
-                if (res.ok) {
+                if (res.status === 429) {
+                    showAlert('⏱️ Too many attempts. Please wait 1 minute before trying again.');
+                } else if (res.ok) {
                     currentPhone = phone;
                     studentName = data.student_name || '';
                     studentRoll = data.student_roll || '';
@@ -433,7 +435,7 @@
                     document.getElementById('otpSentMsg').textContent =
                         data.sms_sent
                         ? `OTP sent via SMS to +91 ${data.masked_phone}`
-                        : `Enter the 6-digit code shown below (Demo Mode)`;
+                        : `Enter the 6-digit code shown in the banner below`;
 
                     if (data.demo_otp) {
                         document.getElementById('demoBanner').style.display = 'block';
@@ -449,10 +451,10 @@
                     goToStep(2);
                     startResendTimer();
                 } else {
-                    showAlert(data.error || 'Failed to send OTP');
+                    showAlert(data.error || 'Failed to send OTP. Your phone may not be registered.');
                 }
             } catch (err) {
-                showAlert('Network error. Please check your connection.');
+                showAlert('Network error. Please check your connection and try again.');
             }
             setLoading('sendOtpBtn', false, 'Send OTP');
         }
