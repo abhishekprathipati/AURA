@@ -7,7 +7,9 @@ files = [
     r'd:\AURA\templates\games.html', 
     r'd:\AURA\templates\relax.html', 
     r'd:\AURA\templates\student_dashboard.html',
-    r'd:\AURA\templates\login.html'
+    r'd:\AURA\templates\login.html',
+    r'd:\AURA\templates\mental_chatbot.html',
+    r'd:\AURA\templates\study_chatbot.html'
 ]
 
 total_fixed = 0

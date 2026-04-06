@@ -30,7 +30,7 @@ This will reduce duplication, improve caching, and enable code reuse across chat
 <!-- ═══════════════ LAYOUT ═══════════════ -->
 <div class="sc-layout study-container" id="scLayout">
 
-  <button class="mobile-toggle" onclick="document.querySelector('.sc-sidebar').classList.toggle('open')" style="display:none;position:fixed;top:12px;left:12px;z-index:1001;background:var(--sc-primary,#6366f1);color:white;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:1.2rem;">&#9776;</button>
+  <button class="mobile-toggle" id="auto_evt_f6631afb8b05" style="display:none;position:fixed;top:12px;left:12px;z-index:1001;background:var(--sc-primary,#6366f1);color:white;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:1.2rem;">&#9776;</button>
 
   <!-- ── SIDEBAR ── -->
   <aside class="sc-sidebar">
@@ -76,7 +76,7 @@ This will reduce duplication, improve caching, and enable code reuse across chat
             <span class="sc-file-status-name" id="scFileStatusName">—</span>
             <span class="sc-file-status-size" id="scFileStatusSize"></span>
           </div>
-          <button class="sc-file-status-clear" onclick="clearCurrentFile()" title="Remove file">✕</button>
+          <button class="sc-file-status-clear" id="auto_evt_c5e289ea0bff" title="Remove file">✕</button>
         </div>
       </div>
 
@@ -417,5 +417,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+
+<script nonce="{{ csp_nonce }}">
+document.addEventListener("DOMContentLoaded", function() {
+    var el = document.getElementById('auto_evt_f6631afb8b05'); if(el) el.addEventListener('click', function(event) { document.querySelector('.sc-sidebar').classList.toggle('open') });
+    var el = document.getElementById('auto_evt_c5e289ea0bff'); if(el) el.addEventListener('click', function(event) { clearCurrentFile() });
+});
+</script>
 </body>
 </html>

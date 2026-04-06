@@ -16,7 +16,7 @@ document.documentElement.classList.add('mc-root');
 
 <div class="mc-layout" id="mcLayout">
 
-  <button class="mobile-toggle" onclick="document.querySelector('.mc-sidebar').classList.toggle('open')" style="display:none;position:fixed;top:12px;left:12px;z-index:1001;background:var(--mc-primary,#6366f1);color:white;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:1.2rem;">&#9776;</button>
+  <button class="mobile-toggle" id="auto_evt_7eafc2c46f3b" style="display:none;position:fixed;top:12px;left:12px;z-index:1001;background:var(--mc-primary,#6366f1);color:white;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:1.2rem;">&#9776;</button>
 
   <!-- ── Sidebar ─────────────────────────────────────── -->
   <aside class="mc-sidebar" id="mcSidebar">
@@ -163,5 +163,11 @@ document.documentElement.classList.add('mc-root');
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="{{ url_for('static', filename='js/chat-engine.js') }}?v=20260305"></script>
+
+<script nonce="{{ csp_nonce }}">
+document.addEventListener("DOMContentLoaded", function() {
+    var el = document.getElementById('auto_evt_7eafc2c46f3b'); if(el) el.addEventListener('click', function(event) { document.querySelector('.mc-sidebar').classList.toggle('open') });
+});
+</script>
 </body>
 </html>
