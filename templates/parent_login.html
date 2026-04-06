@@ -291,7 +291,7 @@
                 <input type="tel" id="phoneInput" maxlength="10" placeholder="9876543210"
                        autocomplete="tel" inputmode="numeric" autofocus>
             </div>
-            <button class="btn-primary" id="sendOtpBtn" onclick="sendOTP()">Send OTP</button>
+            <button class="btn-primary" id="sendOtpBtn">Send OTP</button>
             <p style="text-align:center; margin-top:16px; font-size:12px; color:#9ca3af;">
                 📌 Demo phone: <b style="color:#667eea;">9876543210</b>
             </p>
@@ -311,10 +311,10 @@
             </div>
             <div class="resend-section">
                 <span id="resendTimer">Resend OTP in <b>30s</b></span>
-                <button id="resendBtn" class="btn-resend" style="display:none;" onclick="sendOTP()">Resend OTP</button>
+                <button id="resendBtn" class="btn-resend" style="display:none;">Resend OTP</button>
             </div>
-            <button class="btn-primary" id="verifyOtpBtn" onclick="verifyOTP()">Verify OTP</button>
-            <button class="btn-secondary" onclick="goToStep(1)">← Change Phone Number</button>
+            <button class="btn-primary" id="verifyOtpBtn">Verify OTP</button>
+            <button class="btn-secondary" id="changePhoneBtn">← Change Phone Number</button>
         </div>
 
         <!-- ===== STEP 3: Complete Registration ===== -->
@@ -341,7 +341,7 @@
                     <option value="guardian">🧑 Legal Guardian</option>
                 </select>
             </div>
-            <button class="btn-primary" id="registerBtn" onclick="completeRegistration()">Complete Registration</button>
+            <button class="btn-primary" id="registerBtn">Complete Registration</button>
         </div>
 
         <!-- ===== Success Screen ===== -->
@@ -585,6 +585,13 @@
         document.getElementById('phoneInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendOTP(); });
         document.getElementById('phoneInput').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, ''); });
         document.getElementById('parentName').addEventListener('keydown', e => { if (e.key === 'Enter') completeRegistration(); });
+
+        // CSP-compliant: wire up all button clicks via addEventListener
+        document.getElementById('sendOtpBtn').addEventListener('click', sendOTP);
+        document.getElementById('resendBtn').addEventListener('click', sendOTP);
+        document.getElementById('verifyOtpBtn').addEventListener('click', verifyOTP);
+        document.getElementById('changePhoneBtn').addEventListener('click', () => goToStep(1));
+        document.getElementById('registerBtn').addEventListener('click', completeRegistration);
     </script>
 </body>
 </html>
