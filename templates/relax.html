@@ -61,63 +61,63 @@ This will improve code organization and enable offline relaxation features.
 
     <div class="relax-grid">
 
-        <div class="r-card" onclick="openOv('ambOv')">
+        <div class="r-card" id="auto_evt_935add451804">
             <div class="r-banner bn-violet">🎵</div>
             <div class="r-card-body">
                 <span class="r-tag tag-sound">Sound</span>
                 <div class="r-title">Ambient Soundscapes</div>
                 <div class="r-desc">Immersive procedural audio environments — rain, ocean, forest crackling fire and white noise — all generated in your browser, zero downloads.</div>
-                <button class="r-btn rb-violet" onclick="openOv('ambOv')">Play Sounds</button>
+                <button class="r-btn rb-violet" id="auto_evt_f830bcc2b594">Play Sounds</button>
             </div>
         </div>
 
-        <div class="r-card" onclick="openOv('medOv')">
+        <div class="r-card" id="auto_evt_f3e1279a4950">
             <div class="r-banner bn-indigo">⏱️</div>
             <div class="r-card-body">
                 <span class="r-tag tag-meditate">Meditate</span>
                 <div class="r-title">Meditation Timer</div>
                 <div class="r-desc">A visual ring timer with interval bells, session counter, and optional ambient hum. Set 1 to 30 minutes and simply sit.</div>
-                <button class="r-btn rb-indigo" onclick="openOv('medOv')">Open Timer</button>
+                <button class="r-btn rb-indigo" id="auto_evt_541216765fb8">Open Timer</button>
             </div>
         </div>
 
-        <div class="r-card" onclick="openOv('scanOv')">
+        <div class="r-card" id="auto_evt_b5ebbdd3551d">
             <div class="r-banner bn-emerald">🌙</div>
             <div class="r-card-body">
                 <span class="r-tag tag-body">Body</span>
                 <div class="r-title">Body Scan Relaxation</div>
                 <div class="r-desc">A 9-step guided progressive muscle relaxation. Move awareness through each part of your body and consciously release all tension.</div>
-                <button class="r-btn rb-emerald" onclick="openOv('scanOv')">Begin Scan</button>
+                <button class="r-btn rb-emerald" id="auto_evt_f36f98004eb2">Begin Scan</button>
             </div>
         </div>
 
-        <div class="r-card" onclick="openOv('binOv')">
+        <div class="r-card" id="auto_evt_656bdf6114cd">
             <div class="r-banner bn-cyan">🧠</div>
             <div class="r-card-body">
                 <span class="r-tag tag-wave">Brainwave</span>
                 <div class="r-title">Binaural Beats</div>
                 <div class="r-desc">Delta, Theta, Alpha, and Gamma wave entrainment via dual-oscillator Web Audio API tones. Tune your brain for sleep, calm, focus or creativity.</div>
-                <button class="r-btn rb-cyan" onclick="openOv('binOv')">Tune In</button>
+                <button class="r-btn rb-cyan" id="auto_evt_1be4467ab240">Tune In</button>
             </div>
         </div>
 
-        <div class="r-card" onclick="openOv('cbOv')">
+        <div class="r-card" id="auto_evt_d6f718b6980d">
             <div class="r-banner bn-rose">💨</div>
             <div class="r-card-body">
                 <span class="r-tag tag-breath">Breath</span>
                 <div class="r-title">Custom Breathing Builder</div>
                 <div class="r-desc">Design your own breathing pattern. Set exact inhale, hold, and exhale durations with sliders. Animated circle guides every breath.</div>
-                <button class="r-btn rb-rose" onclick="openOv('cbOv')">Build Pattern</button>
+                <button class="r-btn rb-rose" id="auto_evt_f93e24e6d2ff">Build Pattern</button>
             </div>
         </div>
 
-        <div class="r-card" onclick="openOv('vizOv')">
+        <div class="r-card" id="auto_evt_dd85e4be04d6">
             <div class="r-banner bn-amber">🌅</div>
             <div class="r-card-body">
                 <span class="r-tag tag-visual">Visualize</span>
                 <div class="r-title">Visualization Journey</div>
                 <div class="r-desc">Three guided meditation journeys — Mountain Lake, Tropical Beach, and Enchanted Forest. Step through immersive scenes with auto-play or at your own pace.</div>
-                <button class="r-btn rb-amber" onclick="openOv('vizOv')">Begin Journey</button>
+                <button class="r-btn rb-amber" id="auto_evt_0c6a3994ddfd">Begin Journey</button>
             </div>
         </div>
 
@@ -131,16 +131,16 @@ This will improve code organization and enable offline relaxation features.
 
 <!-- 1. AMBIENT SOUNDS -->
 <div id="ambOv" class="ov">
-    <button class="ov-close" onclick="closeOv('ambOv')">✕ Close</button>
+    <button class="ov-close" id="auto_evt_74d116c1bdd6">✕ Close</button>
     <div class="ov-title">🎵 Ambient Soundscapes</div>
     <div class="gp amb-panel">
         <div class="amb-sounds">
-            <button class="amb-btn" id="ambRain"    onclick="ambPlay('rain')">   <span>🌧️</span><span>Rain</span></button>
-            <button class="amb-btn" id="ambOcean"   onclick="ambPlay('ocean')">  <span>🌊</span><span>Ocean</span></button>
-            <button class="amb-btn" id="ambForest"  onclick="ambPlay('forest')"> <span>🌲</span><span>Forest</span></button>
-            <button class="amb-btn" id="ambFire"    onclick="ambPlay('fire')">   <span>🔥</span><span>Fire</span></button>
-            <button class="amb-btn" id="ambWhite"   onclick="ambPlay('white')">  <span>☁️</span><span>White Noise</span></button>
-            <button class="amb-btn" id="ambCafe"    onclick="ambPlay('cafe')">   <span>☕</span><span>Café</span></button>
+            <button class="amb-btn" id="ambRain">   <span>🌧️</span><span>Rain</span></button>
+            <button class="amb-btn" id="ambOcean">  <span>🌊</span><span>Ocean</span></button>
+            <button class="amb-btn" id="ambForest"> <span>🌲</span><span>Forest</span></button>
+            <button class="amb-btn" id="ambFire">   <span>🔥</span><span>Fire</span></button>
+            <button class="amb-btn" id="ambWhite">  <span>☁️</span><span>White Noise</span></button>
+            <button class="amb-btn" id="ambCafe">   <span>☕</span><span>Café</span></button>
         </div>
         <div class="amb-vol-row">
             <span class="amb-vol-lbl">🔊 Volume</span>
@@ -153,16 +153,16 @@ This will improve code organization and enable offline relaxation features.
 
 <!-- 2. MEDITATION TIMER -->
 <div id="medOv" class="ov">
-    <button class="ov-close" onclick="closeOv('medOv')">✕ Close</button>
+    <button class="ov-close" id="auto_evt_b5622680831a">✕ Close</button>
     <div class="ov-title">⏱️ Meditation Timer</div>
     <div class="gp med-panel">
         <div class="med-presets">
-            <button class="med-preset" data-min="1"  onclick="medSetDur(1,this)">1 min</button>
-            <button class="med-preset" data-min="3"  onclick="medSetDur(3,this)">3 min</button>
-            <button class="med-preset" data-min="5"  onclick="medSetDur(5,this)">5 min</button>
-            <button class="med-preset" data-min="10" onclick="medSetDur(10,this)">10 min</button>
-            <button class="med-preset" data-min="20" onclick="medSetDur(20,this)">20 min</button>
-            <button class="med-preset" data-min="30" onclick="medSetDur(30,this)">30 min</button>
+            <button class="med-preset" data-min="1" id="auto_evt_46b0ff8b1426">1 min</button>
+            <button class="med-preset" data-min="3" id="auto_evt_c57c7043f3d3">3 min</button>
+            <button class="med-preset" data-min="5" id="auto_evt_6e39a581df87">5 min</button>
+            <button class="med-preset" data-min="10" id="auto_evt_6fe1f067bb60">10 min</button>
+            <button class="med-preset" data-min="20" id="auto_evt_4cfc3c952a19">20 min</button>
+            <button class="med-preset" data-min="30" id="auto_evt_ecc60b8e217c">30 min</button>
         </div>
         <div class="med-ring-wrap">
             <svg viewBox="0 0 210 210" width="210" height="210">
@@ -184,20 +184,20 @@ This will improve code organization and enable offline relaxation features.
         <div class="med-sessions" id="medSessions">Sessions today: 0</div>
         <div class="med-bell-row">
             <span class="med-bell-lbl">🔔 Interval bell</span>
-            <div class="med-bell-toggle" id="bellToggle" onclick="medToggleBell()">
+            <div class="med-bell-toggle" id="bellToggle">
                 <div class="med-bell-thumb"></div>
             </div>
         </div>
         <div class="med-btns">
-            <button class="med-start" id="medStartBtn" onclick="medToggle()">▶ Start</button>
-            <button class="med-ghost" onclick="medReset()">↩ Reset</button>
+            <button class="med-start" id="medStartBtn">▶ Start</button>
+            <button class="med-ghost" id="auto_evt_d26ef6bb7315">↩ Reset</button>
         </div>
     </div>
 </div>
 
 <!-- 3. BODY SCAN -->
 <div id="scanOv" class="ov">
-    <button class="ov-close" onclick="closeOv('scanOv')">✕ Close</button>
+    <button class="ov-close" id="auto_evt_35556e5aa817">✕ Close</button>
     <div class="ov-title">🌙 Body Scan Relaxation</div>
     <div class="gp scan-panel">
         <div class="scan-track" id="scanTrack">
@@ -212,48 +212,48 @@ This will improve code organization and enable offline relaxation features.
             <div class="scan-instruction" id="scanInstr">Close your eyes. Bring your awareness to the top of your head. Notice any tightness or tension in your scalp. With each exhale, let it soften and release completely.</div>
             <div class="scan-progress-bar"><div class="scan-progress-fill" id="scanFill" style="width:0%"></div></div>
             <div class="scan-auto-btn">
-                <button class="scan-toggle" id="scanAutoBtn" onclick="scanToggleAuto()">⏱ Auto-advance</button>
+                <button class="scan-toggle" id="scanAutoBtn">⏱ Auto-advance</button>
                 <span style="font-size:12px;color:rgba(255,255,255,0.3);" id="scanAutoInfo">30s per step</span>
             </div>
             <div class="scan-nav">
-                <button class="scan-prev" id="scanPrevBtn" style="display:none;" onclick="scanStep(-1)">← Back</button>
-                <button class="scan-next" onclick="scanStep(1)">Next →</button>
+                <button class="scan-prev" id="scanPrevBtn" style="display:none;">← Back</button>
+                <button class="scan-next" id="auto_evt_077938df93c1">Next →</button>
             </div>
         </div>
         <div class="scan-done" id="scanDone" style="display:none;">
             <div class="scan-done-ico">✨</div>
             <h3>Body Scan Complete</h3>
             <p>You've moved awareness through your entire body and released all held tension. Rest in this stillness for a moment.</p>
-            <button class="scan-again" onclick="scanReset()">Begin Again</button>
+            <button class="scan-again" id="auto_evt_30cbd85a6066">Begin Again</button>
         </div>
     </div>
 </div>
 
 <!-- 4. BINAURAL BEATS -->
 <div id="binOv" class="ov">
-    <button class="ov-close" onclick="closeOv('binOv')">✕ Close</button>
+    <button class="ov-close" id="auto_evt_0f89dfcf719f">✕ Close</button>
     <div class="ov-title">🧠 Binaural Beats</div>
     <div class="gp bin-panel">
         <div class="bin-waves">
-            <div class="bin-wave" id="bwDelta" onclick="binSelect('delta')">
+            <div class="bin-wave" id="bwDelta">
                 <span class="bin-wave-ico">🌛</span>
                 <span class="bin-wave-name">Delta</span>
                 <span class="bin-wave-hz">0.5–3 Hz</span>
                 <span class="bin-wave-tag">Deep Sleep</span>
             </div>
-            <div class="bin-wave active" id="bwTheta" onclick="binSelect('theta')">
+            <div class="bin-wave active" id="bwTheta">
                 <span class="bin-wave-ico">🫧</span>
                 <span class="bin-wave-name">Theta</span>
                 <span class="bin-wave-hz">4–7 Hz</span>
                 <span class="bin-wave-tag">Meditation</span>
             </div>
-            <div class="bin-wave" id="bwAlpha" onclick="binSelect('alpha')">
+            <div class="bin-wave" id="bwAlpha">
                 <span class="bin-wave-ico">🌊</span>
                 <span class="bin-wave-name">Alpha</span>
                 <span class="bin-wave-hz">8–13 Hz</span>
                 <span class="bin-wave-tag">Calm Focus</span>
             </div>
-            <div class="bin-wave" id="bwGamma" onclick="binSelect('gamma')">
+            <div class="bin-wave" id="bwGamma">
                 <span class="bin-wave-ico">⚡</span>
                 <span class="bin-wave-name">Gamma</span>
                 <span class="bin-wave-hz">30–50 Hz</span>
@@ -267,8 +267,8 @@ This will improve code organization and enable offline relaxation features.
             <input type="range" class="bin-vol-sl" id="binVol" min="0" max="100" value="40" oninput="binSetVol(this.value)">
         </div>
         <div class="bin-ctrl">
-            <button class="bin-play" id="binPlayBtn" onclick="binToggle()">▶ Play</button>
-            <button class="bin-stop" onclick="binStop()">■ Stop</button>
+            <button class="bin-play" id="binPlayBtn">▶ Play</button>
+            <button class="bin-stop" id="auto_evt_3398f94548a9">■ Stop</button>
         </div>
         <div class="bin-visual"><div class="bin-visual-bar" id="binBar"></div></div>
     </div>
@@ -276,7 +276,7 @@ This will improve code organization and enable offline relaxation features.
 
 <!-- 5. CUSTOM BREATHING -->
 <div id="cbOv" class="ov">
-    <button class="ov-close" onclick="closeOv('cbOv')">✕ Close</button>
+    <button class="ov-close" id="auto_evt_738882a41688">✕ Close</button>
     <div class="ov-title">💨 Custom Breathing Builder</div>
     <div class="gp cbreath-panel">
         <div class="cbreath-sliders">
@@ -307,40 +307,40 @@ This will improve code organization and enable offline relaxation features.
         </div>
         <div class="cb-info" id="cbInfo">4s inhale · 4s hold · 6s exhale · 2s hold = 16s cycle</div>
         <div class="cb-btns">
-            <button class="cb-start" id="cbStartBtn" onclick="cbToggle()">▶ Start</button>
-            <button class="cb-reset" onclick="cbReset()">↩ Reset</button>
+            <button class="cb-start" id="cbStartBtn">▶ Start</button>
+            <button class="cb-reset" id="auto_evt_4a29232cc93e">↩ Reset</button>
         </div>
     </div>
 </div>
 
 <!-- 6. VISUALIZATION JOURNEY -->
 <div id="vizOv" class="ov">
-    <button class="ov-close" onclick="closeOv('vizOv')">✕ Close</button>
+    <button class="ov-close" id="auto_evt_5312fc2994d2">✕ Close</button>
     <div class="ov-title">🌅 Visualization Journey</div>
     <div class="gp viz-panel">
         <div class="viz-scenes">
-            <button class="viz-scene-btn active" id="vs0" onclick="vizScene(0,this)">🏔️ Mountain Lake</button>
-            <button class="viz-scene-btn"        id="vs1" onclick="vizScene(1,this)">🏝️ Tropical Beach</button>
-            <button class="viz-scene-btn"        id="vs2" onclick="vizScene(2,this)">🌲 Enchanted Forest</button>
+            <button class="viz-scene-btn active" id="vs0">🏔️ Mountain Lake</button>
+            <button class="viz-scene-btn"        id="vs1">🏝️ Tropical Beach</button>
+            <button class="viz-scene-btn"        id="vs2">🌲 Enchanted Forest</button>
         </div>
         <div class="viz-auto-row">
             <span class="viz-auto-lbl">Auto-advance</span>
-            <button class="viz-speed" id="vizAutoBtn" onclick="vizToggleAuto()">⏱ 8s per step</button>
+            <button class="viz-speed" id="vizAutoBtn">⏱ 8s per step</button>
         </div>
         <div class="viz-progress" id="vizProgress"></div>
         <div class="viz-step-num" id="vizStepNum">Step 1 of 7</div>
         <div class="viz-text-box" id="vizText">Loading your journey…</div>
         <div id="vizMain">
             <div class="viz-nav">
-                <button class="viz-prev" id="vizPrevBtn" style="display:none;" onclick="vizStep(-1)">← Back</button>
-                <button class="viz-next" onclick="vizStep(1)">Continue →</button>
+                <button class="viz-prev" id="vizPrevBtn" style="display:none;">← Back</button>
+                <button class="viz-next" id="auto_evt_194344259d5a">Continue →</button>
             </div>
         </div>
         <div class="viz-complete" id="vizComplete" style="display:none;">
             <div class="viz-complete-ico">🌟</div>
             <h3>Journey Complete</h3>
             <p>Take a slow, deep breath and gently return your awareness to the room.<br>Carry this calmness with you.</p>
-            <button class="viz-again" onclick="vizReset()">Begin Again</button>
+            <button class="viz-again" id="auto_evt_4d49e0733918">Begin Again</button>
         </div>
     </div>
 </div>
@@ -899,5 +899,62 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySele
 </script>
 {% endif %}
 
+
+<script nonce="{{ csp_nonce }}">
+document.addEventListener("DOMContentLoaded", function() {
+    var el = document.getElementById('auto_evt_935add451804'); if(el) el.addEventListener('click', function(event) { openOv('ambOv') });
+    var el = document.getElementById('auto_evt_f830bcc2b594'); if(el) el.addEventListener('click', function(event) { openOv('ambOv') });
+    var el = document.getElementById('auto_evt_f3e1279a4950'); if(el) el.addEventListener('click', function(event) { openOv('medOv') });
+    var el = document.getElementById('auto_evt_541216765fb8'); if(el) el.addEventListener('click', function(event) { openOv('medOv') });
+    var el = document.getElementById('auto_evt_b5ebbdd3551d'); if(el) el.addEventListener('click', function(event) { openOv('scanOv') });
+    var el = document.getElementById('auto_evt_f36f98004eb2'); if(el) el.addEventListener('click', function(event) { openOv('scanOv') });
+    var el = document.getElementById('auto_evt_656bdf6114cd'); if(el) el.addEventListener('click', function(event) { openOv('binOv') });
+    var el = document.getElementById('auto_evt_1be4467ab240'); if(el) el.addEventListener('click', function(event) { openOv('binOv') });
+    var el = document.getElementById('auto_evt_d6f718b6980d'); if(el) el.addEventListener('click', function(event) { openOv('cbOv') });
+    var el = document.getElementById('auto_evt_f93e24e6d2ff'); if(el) el.addEventListener('click', function(event) { openOv('cbOv') });
+    var el = document.getElementById('auto_evt_dd85e4be04d6'); if(el) el.addEventListener('click', function(event) { openOv('vizOv') });
+    var el = document.getElementById('auto_evt_0c6a3994ddfd'); if(el) el.addEventListener('click', function(event) { openOv('vizOv') });
+    var el = document.getElementById('auto_evt_74d116c1bdd6'); if(el) el.addEventListener('click', function(event) { closeOv('ambOv') });
+    var el = document.getElementById('ambRain'); if(el) el.addEventListener('click', function(event) { ambPlay('rain') });
+    var el = document.getElementById('ambOcean'); if(el) el.addEventListener('click', function(event) { ambPlay('ocean') });
+    var el = document.getElementById('ambForest'); if(el) el.addEventListener('click', function(event) { ambPlay('forest') });
+    var el = document.getElementById('ambFire'); if(el) el.addEventListener('click', function(event) { ambPlay('fire') });
+    var el = document.getElementById('ambWhite'); if(el) el.addEventListener('click', function(event) { ambPlay('white') });
+    var el = document.getElementById('ambCafe'); if(el) el.addEventListener('click', function(event) { ambPlay('cafe') });
+    var el = document.getElementById('auto_evt_b5622680831a'); if(el) el.addEventListener('click', function(event) { closeOv('medOv') });
+    var el = document.getElementById('auto_evt_46b0ff8b1426'); if(el) el.addEventListener('click', function(event) { medSetDur(1,this) });
+    var el = document.getElementById('auto_evt_c57c7043f3d3'); if(el) el.addEventListener('click', function(event) { medSetDur(3,this) });
+    var el = document.getElementById('auto_evt_6e39a581df87'); if(el) el.addEventListener('click', function(event) { medSetDur(5,this) });
+    var el = document.getElementById('auto_evt_6fe1f067bb60'); if(el) el.addEventListener('click', function(event) { medSetDur(10,this) });
+    var el = document.getElementById('auto_evt_4cfc3c952a19'); if(el) el.addEventListener('click', function(event) { medSetDur(20,this) });
+    var el = document.getElementById('auto_evt_ecc60b8e217c'); if(el) el.addEventListener('click', function(event) { medSetDur(30,this) });
+    var el = document.getElementById('bellToggle'); if(el) el.addEventListener('click', function(event) { medToggleBell() });
+    var el = document.getElementById('medStartBtn'); if(el) el.addEventListener('click', function(event) { medToggle() });
+    var el = document.getElementById('auto_evt_d26ef6bb7315'); if(el) el.addEventListener('click', function(event) { medReset() });
+    var el = document.getElementById('auto_evt_35556e5aa817'); if(el) el.addEventListener('click', function(event) { closeOv('scanOv') });
+    var el = document.getElementById('scanAutoBtn'); if(el) el.addEventListener('click', function(event) { scanToggleAuto() });
+    var el = document.getElementById('scanPrevBtn'); if(el) el.addEventListener('click', function(event) { scanStep(-1) });
+    var el = document.getElementById('auto_evt_077938df93c1'); if(el) el.addEventListener('click', function(event) { scanStep(1) });
+    var el = document.getElementById('auto_evt_30cbd85a6066'); if(el) el.addEventListener('click', function(event) { scanReset() });
+    var el = document.getElementById('auto_evt_0f89dfcf719f'); if(el) el.addEventListener('click', function(event) { closeOv('binOv') });
+    var el = document.getElementById('bwDelta'); if(el) el.addEventListener('click', function(event) { binSelect('delta') });
+    var el = document.getElementById('bwTheta'); if(el) el.addEventListener('click', function(event) { binSelect('theta') });
+    var el = document.getElementById('bwAlpha'); if(el) el.addEventListener('click', function(event) { binSelect('alpha') });
+    var el = document.getElementById('bwGamma'); if(el) el.addEventListener('click', function(event) { binSelect('gamma') });
+    var el = document.getElementById('binPlayBtn'); if(el) el.addEventListener('click', function(event) { binToggle() });
+    var el = document.getElementById('auto_evt_3398f94548a9'); if(el) el.addEventListener('click', function(event) { binStop() });
+    var el = document.getElementById('auto_evt_738882a41688'); if(el) el.addEventListener('click', function(event) { closeOv('cbOv') });
+    var el = document.getElementById('cbStartBtn'); if(el) el.addEventListener('click', function(event) { cbToggle() });
+    var el = document.getElementById('auto_evt_4a29232cc93e'); if(el) el.addEventListener('click', function(event) { cbReset() });
+    var el = document.getElementById('auto_evt_5312fc2994d2'); if(el) el.addEventListener('click', function(event) { closeOv('vizOv') });
+    var el = document.getElementById('vs0'); if(el) el.addEventListener('click', function(event) { vizScene(0,this) });
+    var el = document.getElementById('vs1'); if(el) el.addEventListener('click', function(event) { vizScene(1,this) });
+    var el = document.getElementById('vs2'); if(el) el.addEventListener('click', function(event) { vizScene(2,this) });
+    var el = document.getElementById('vizAutoBtn'); if(el) el.addEventListener('click', function(event) { vizToggleAuto() });
+    var el = document.getElementById('vizPrevBtn'); if(el) el.addEventListener('click', function(event) { vizStep(-1) });
+    var el = document.getElementById('auto_evt_194344259d5a'); if(el) el.addEventListener('click', function(event) { vizStep(1) });
+    var el = document.getElementById('auto_evt_4d49e0733918'); if(el) el.addEventListener('click', function(event) { vizReset() });
+});
+</script>
 </body>
 </html>

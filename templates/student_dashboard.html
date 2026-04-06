@@ -563,7 +563,7 @@ This will improve load times, enable better caching, and simplify maintenance.
 
                     <!-- Tabs -->
                     <div class="qa-tabs-row" role="tablist">
-                        <button class="qa-tab-btn active" data-tab="actions" onclick="qaSwitch('actions',this)"
+                        <button class="qa-tab-btn active" data-tab="actions" id="auto_evt_b908eeaaf270"
                             role="tab">⚡ Actions</button>
                     </div>
 
@@ -595,8 +595,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                                 <p class="qa-v2-sub">Stress relief</p>
                             </a>
                             <!-- 5. Quick Breathe (inline) -->
-                            <button type="button" class="qa-card-v2" style="--qa-glow:rgba(245,158,11,0.1);"
-                                onclick="qaToggleBreath()">
+                            <button type="button" class="qa-card-v2" style="--qa-glow:rgba(245,158,11,0.1);" id="auto_evt_f6136ea92b10">
                                 <div class="qa-v2-ico ico-orange">🫁</div>
                                 <p class="qa-v2-label">Breathe</p>
                                 <p class="qa-v2-sub">Quick reset</p>
@@ -607,7 +606,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                         <div class="qa-inline-panel" id="qaBreathPanel" style="display:none;">
                             <div class="qa-panel-title">
                                 <span>🫁 Quick Box Breathing</span>
-                                <button class="qa-panel-close" onclick="qaToggleBreath()">✕</button>
+                                <button class="qa-panel-close" id="auto_evt_2d9188689a19">✕</button>
                             </div>
                             <div class="qa-breathe-progress" id="qaBpDots">
                                 <div class="qa-bp-dot" id="qbd0"></div>
@@ -620,9 +619,8 @@ This will improve load times, enable better caching, and simplify maintenance.
                                 <span class="qa-breathe-label" id="qaBreathLabel">Ready</span>
                             </div>
                             <div class="qa-breathe-btns">
-                                <button class="qa-breathe-btn qa-breathe-start" id="qaBreathStartBtn"
-                                    onclick="qaBreathToggle()">▶ Start</button>
-                                <button class="qa-breathe-btn qa-breathe-stop" onclick="qaToggleBreath()">Close</button>
+                                <button class="qa-breathe-btn qa-breathe-start" id="qaBreathStartBtn">▶ Start</button>
+                                <button class="qa-breathe-btn qa-breathe-stop" id="auto_evt_16d902ea4f2d">Close</button>
                             </div>
                         </div>
                 </div>
@@ -1022,7 +1020,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                             style="padding:10px 12px; border:1px solid var(--border-color,#d1d5db); border-radius:8px; font-size:14px; background:var(--surface-muted,#f9fafb); color:var(--text-primary);">
                         <input type="password" id="confirmNewPassword" placeholder="Confirm New Password"
                             style="padding:10px 12px; border:1px solid var(--border-color,#d1d5db); border-radius:8px; font-size:14px; background:var(--surface-muted,#f9fafb); color:var(--text-primary);">
-                        <button onclick="changePassword()" type="button"
+                        <button id="auto_evt_c03788469347" type="button"
                             style="padding:10px 16px; background:var(--accent,#6366f1); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:opacity .2s;"
                             onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                             Update Password
@@ -1411,46 +1409,45 @@ This will improve load times, enable better caching, and simplify maintenance.
 
     <!-- MOOD CHECK-IN MODAL -->
     <div class="mood-modal" id="moodModal" style="display: none;">
-        <div class="mood-modal-overlay" onclick="document.getElementById('moodModal').style.display='none'; document.body.classList.remove('mood-modal-open');"></div>
+        <div class="mood-modal-overlay" id="auto_evt_2506532e8fb6"></div>
         <div class="mood-modal-content">
             <div class="mood-modal-header">
                 <h2>🌅 How are you feeling today?</h2>
                 <p>Take a moment to check in with yourself</p>
             </div>
             <div class="mood-grid">
-                <div class="mood-card" onclick="updateMood('happy')" data-mood="happy">
+                <div class="mood-card" id="auto_evt_2e9eedaae03a" data-mood="happy">
                     <span class="mood-emoji">😊</span>
                     <h3>Happy</h3>
                     <p>Feeling great today!</p>
                 </div>
-                <div class="mood-card" onclick="updateMood('calm')" data-mood="calm">
+                <div class="mood-card" id="auto_evt_72e8dbf61a61" data-mood="calm">
                     <span class="mood-emoji">😌</span>
                     <h3>Calm</h3>
                     <p>Peaceful and relaxed</p>
                 </div>
-                <div class="mood-card" onclick="updateMood('stressed')" data-mood="stressed">
+                <div class="mood-card" id="auto_evt_7d9043bc7b78" data-mood="stressed">
                     <span class="mood-emoji">😰</span>
                     <h3>Stressed</h3>
                     <p>Feeling overwhelmed</p>
                 </div>
-                <div class="mood-card" onclick="updateMood('anxious')" data-mood="anxious">
+                <div class="mood-card" id="auto_evt_db0110b0d3c8" data-mood="anxious">
                     <span class="mood-emoji">😟</span>
                     <h3>Anxious</h3>
                     <p>Worried about things</p>
                 </div>
-                <div class="mood-card" onclick="updateMood('sad')" data-mood="sad">
+                <div class="mood-card" id="auto_evt_ca2985aacc9a" data-mood="sad">
                     <span class="mood-emoji">😢</span>
                     <h3>Sad</h3>
                     <p>Feeling down</p>
                 </div>
-                <div class="mood-card" onclick="updateMood('angry')" data-mood="angry">
+                <div class="mood-card" id="auto_evt_c5f9093846ae" data-mood="angry">
                     <span class="mood-emoji">😤</span>
                     <h3>Frustrated</h3>
                     <p>Things aren't going well</p>
                 </div>
             </div>
-            <button class="mood-skip-btn" id="moodSkipBtn"
-                onclick="document.getElementById('moodModal').style.display='none'; document.body.classList.remove('mood-modal-open');">
+            <button class="mood-skip-btn" id="moodSkipBtn">
                 Skip for now
             </button>
         </div>
@@ -2179,6 +2176,25 @@ This will improve load times, enable better caching, and simplify maintenance.
         }
     </script>
 
+
+<script nonce="{{ csp_nonce }}">
+document.addEventListener("DOMContentLoaded", function() {
+    var el = document.getElementById('auto_evt_b908eeaaf270'); if(el) el.addEventListener('click', function(event) { qaSwitch('actions',this) });
+    var el = document.getElementById('auto_evt_f6136ea92b10'); if(el) el.addEventListener('click', function(event) { qaToggleBreath() });
+    var el = document.getElementById('auto_evt_2d9188689a19'); if(el) el.addEventListener('click', function(event) { qaToggleBreath() });
+    var el = document.getElementById('qaBreathStartBtn'); if(el) el.addEventListener('click', function(event) { qaBreathToggle() });
+    var el = document.getElementById('auto_evt_16d902ea4f2d'); if(el) el.addEventListener('click', function(event) { qaToggleBreath() });
+    var el = document.getElementById('auto_evt_c03788469347'); if(el) el.addEventListener('click', function(event) { changePassword() });
+    var el = document.getElementById('auto_evt_2506532e8fb6'); if(el) el.addEventListener('click', function(event) { document.getElementById('moodModal').style.display='none'; document.body.classList.remove('mood-modal-open'); });
+    var el = document.getElementById('auto_evt_2e9eedaae03a'); if(el) el.addEventListener('click', function(event) { updateMood('happy') });
+    var el = document.getElementById('auto_evt_72e8dbf61a61'); if(el) el.addEventListener('click', function(event) { updateMood('calm') });
+    var el = document.getElementById('auto_evt_7d9043bc7b78'); if(el) el.addEventListener('click', function(event) { updateMood('stressed') });
+    var el = document.getElementById('auto_evt_db0110b0d3c8'); if(el) el.addEventListener('click', function(event) { updateMood('anxious') });
+    var el = document.getElementById('auto_evt_ca2985aacc9a'); if(el) el.addEventListener('click', function(event) { updateMood('sad') });
+    var el = document.getElementById('auto_evt_c5f9093846ae'); if(el) el.addEventListener('click', function(event) { updateMood('angry') });
+    var el = document.getElementById('moodSkipBtn'); if(el) el.addEventListener('click', function(event) { document.getElementById('moodModal').style.display='none'; document.body.classList.remove('mood-modal-open'); });
+});
+</script>
 </body>
 
 </html>
