@@ -21,8 +21,8 @@
     --text: #0f172a;
     --muted: #64748b;
     --muted-strong: #475569;
-    --shadow: 0 14px 40px rgba(15, 23, 42, .10);
-    --shadow-soft: 0 10px 24px rgba(15, 23, 42, .07);
+    --shadow: 0 14px 40px rgba(15, 23, 42, 0.10);
+    --shadow-soft: 0 10px 24px rgba(15, 23, 42, 0.07);
     --radius-lg: 18px;
     --radius-md: 12px;
     --radius-sm: 10px;
@@ -5794,4 +5794,435 @@ body.panel-open {
 /* Base Hidden Utility for CSP Compliance */
 .aura-hidden {
     display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITY CLASSES - Extracted from inline styles (refactoring)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Date text styling */
+.date-text-style {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+/* Status indicator SVG icon (green active circle) */
+.status-indicator-icon {
+    fill: #10b981;
+    stroke: none;
+}
+
+/* Hidden by default utility */
+.hidden-initial {
+    display: none;
+}
+
+/* ═══ Emotional Radar Section ═══ */
+.emotional-radar-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.card-subtitle-styled {
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.icon-accent-primary {
+    margin-right: 6px;
+    color: var(--primary);
+}
+
+.icon-accent-success {
+    margin-right: 6px;
+    color: var(--accent);
+}
+
+.chart-min-height-250 {
+    min-height: 250px;
+}
+
+.chart-min-height-260 {
+    min-height: 260px;
+}
+
+.chart-min-height-280 {
+    min-height: 280px;
+}
+
+.no-data-message-centered {
+    text-align: center;
+    padding: 20px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* ═══ Stress Forecast Section ═══ */
+.stress-forecast-section {
+    margin-top: 24px;
+}
+
+.forecast-card-gradient {
+    background: linear-gradient(135deg, var(--surface), rgba(var(--primary-rgb), 0.05));
+    border: 1px solid rgba(var(--primary-rgb), 0.1);
+}
+
+.card-header-borderless {
+    border-bottom: none;
+    padding-bottom: 5px;
+}
+
+.card-title-sm {
+    font-size: 15px;
+}
+
+.forecast-confidence-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    background: rgba(var(--accent-rgb), 0.1);
+    color: var(--accent);
+    border-radius: 20px;
+}
+
+.card-body-compact {
+    padding-top: 5px;
+}
+
+.forecast-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.forecast-day-placeholder {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px dashed var(--border);
+}
+
+.forecast-loading-text {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.forecast-insight {
+    margin-top: 15px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+    display: none;
+}
+
+/* Legend colors */
+.legend-color-primary {
+    background: #3b82f6;
+}
+
+.legend-color-success {
+    background: #10b981;
+}
+
+/* Chart height utility */
+.chart-height-240 {
+    height: 240px;
+}
+
+/* Card body padding */
+.card-body-padded {
+    padding: 20px;
+}
+
+/* Academic stats bar initial width */
+.acad-bar-initial {
+    width: 0%;
+}
+
+/* Academic chart section */
+.acad-chart-section {
+    margin-top: 24px;
+}
+
+/* ═══ Empty States ═══ */
+.empty-state-container {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.empty-state-title {
+    font-size: 18px;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.empty-state-description {
+    color: var(--muted);
+    max-width: 300px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+/* ═══ Quick Actions Panel ═══ */
+.qa-header-compact {
+    margin-bottom: 10px;
+}
+
+/* QA Card glow colors - using CSS custom property */
+.qa-card-purple {
+    --qa-glow: rgba(139, 92, 246, 0.1);
+}
+
+.qa-card-green {
+    --qa-glow: rgba(16, 185, 129, 0.1);
+}
+
+.qa-card-pink {
+    --qa-glow: rgba(236, 72, 153, 0.1);
+}
+
+.qa-card-blue {
+    --qa-glow: rgba(59, 130, 246, 0.1);
+}
+
+.qa-card-indigo {
+    --qa-glow: rgba(99, 102, 241, 0.1);
+}
+
+.qa-card-amber {
+    --qa-glow: rgba(245, 158, 11, 0.1);
+}
+
+/* ═══ Sidebar Icons ═══ */
+.sidebar-icon-lg {
+    width: 32px;
+    height: 32px;
+}
+
+/* Section spacing */
+.section-mt-lg {
+    margin-bottom: 16px;
+}
+
+.section-mb-md {
+    margin-bottom: 12px;
+}
+
+/* ═══ Settings Panel ═══ */
+.settings-section {
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.settings-heading {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.settings-heading-icon {
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.settings-feedback {
+    display: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.settings-form-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settings-input {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color, #d1d5db);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--surface-muted, #f9fafb);
+    color: var(--text-primary);
+}
+
+.settings-btn-primary {
+    padding: 10px 16px;
+    background: var(--accent, #6366f1);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.settings-btn-primary:hover {
+    opacity: 0.9;
+}
+
+/* ═══ Goals Progress ═══ */
+.goals-progress-initial {
+    width: 0%;
+}
+
+/* ═══ Phone Link ═══ */
+.phone-link-inherit {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ═══ Modal Styles ═══ */
+.modal-narrow {
+    max-width: 440px;
+}
+
+.modal-medium {
+    max-width: 480px;
+}
+
+.modal-header-urgent {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #fff;
+    border-radius: 16px 16px 0 0;
+    padding: 20px 24px;
+}
+
+.modal-title-urgent {
+    margin: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-body-padded {
+    padding: 24px;
+}
+
+.modal-text-primary {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.modal-text-secondary {
+    margin: 0 0 20px;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-modal-cancel {
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.btn-modal-danger {
+    padding: 10px 20px;
+    border-radius: 10px;
+    background: #dc2626;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-modal-danger:hover {
+    background: #b91c1c;
+}
+
+/* ═══ Schedule Modal Form ═══ */
+.modal-title-flex {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.schedule-form {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+}
+
+.form-textarea {
+    resize: vertical;
+    font-family: inherit;
+}
+
+.my-bookings-section {
+    display: none;
+    margin-top: 4px;
+}
+
+.my-bookings-title {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 8px;
+}
+
+.my-bookings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.modal-actions-spaced {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.btn-modal-submit {
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
 }

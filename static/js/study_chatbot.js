@@ -1289,43 +1289,103 @@ let fcScore  = { got: 0, again: 0 };
 
 /**
  * Parse flashcard pairs from an AI response.
- * Expects lines like:
- *   **Term/Question**: ...
- *   **Definition/Answer**: ...
- *   ---
+ * Supports multiple formats including inline formats like:
+ *   - 1. Term/Question: X Definition/Answer: Y
+ *   - **Term/Question**: X **Definition/Answer**: Y
+ *   - Term: X | Definition: Y
  */
 function parseFlashcards(text) {
   const cards = [];
-  // Split by horizontal rule or numbered item
-  const blocks = text.split(/\n---+\n|\n\d+\.\s/);
-
-  blocks.forEach(block => {
-    // Try to extract front/back from bold label pattern
-    const frontMatch = block.match(/\*\*(?:Term|Question)[^*]*\*\*[:\s]*([\s\S]+?)(?=\*\*(?:Definition|Answer)|$)/i);
-    const backMatch  = block.match(/\*\*(?:Definition|Answer)[^*]*\*\*[:\s]*([\s\S]+?)(?=\n\*\*|$)/i);
-
-    if (frontMatch && backMatch) {
-      const front = frontMatch[1].trim().replace(/\*\*/g, '');
-      const back  = backMatch[1].trim().replace(/\*\*/g, '');
+  
+  // Normalize text
+  let normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  
+  // STRATEGY 1: Split by numbered items first, then extract term/definition from each
+  // Pattern: "4. Term/Question: X Definition/Answer: Y"
+  // We need to find where each numbered item starts
+  
+  // Insert newlines before each numbered pattern to make splitting easier
+  const withBreaks = normalizedText.replace(/(\d+)\.\s+(?:Term|Question)/gi, '\n$1. Term/Question');
+  const blocks = withBreaks.split(/\n/).filter(b => b.trim());
+  
+  for (const block of blocks) {
+    // Skip if doesn't contain both term and definition
+    if (!(/(?:Term|Question)/i.test(block) && /(?:Definition|Answer)/i.test(block))) continue;
+    
+    // Extract using split on Definition/Answer
+    const parts = block.split(/(?:Definition|Answer)(?:\/(?:Answer|Definition))?[:\s]+/i);
+    if (parts.length >= 2) {
+      // First part contains the term/question
+      let front = parts[0].replace(/^\d+\.\s*/, '').replace(/(?:\*\*)?(?:Term|Question)(?:\/(?:Question|Term))?(?:\*\*)?[:\s]*/i, '').replace(/\*\*/g, '').trim();
+      // Second part (and beyond) is the definition/answer
+      let back = parts.slice(1).join(' ').replace(/\*\*/g, '').trim();
+      
+      // Remove any trailing numbered item that might have been caught
+      back = back.replace(/\s+\d+\.\s*(?:Term|Question).*$/i, '').trim();
+      
+      if (front && back && front.length < 500 && back.length < 2000) {
+        cards.push({ front, back });
+      }
+    }
+  }
+  
+  if (cards.length > 0) return cards;
+  
+  // STRATEGY 2: Use regex to find all Term/Question...Definition/Answer pairs
+  // Handle continuous text where cards run into each other
+  const cardRegex = /(?:\d+\.\s*)?(?:\*\*)?(?:Term|Question)(?:\/(?:Question|Term))?(?:\*\*)?[:\s]+(.+?)(?:\*\*)?(?:Definition|Answer)(?:\/(?:Answer|Definition))?(?:\*\*)?[:\s]+(.+?)(?=(?:\d+\.\s*)?(?:\*\*)?(?:Term|Question)|$)/gis;
+  
+  let match;
+  while ((match = cardRegex.exec(normalizedText)) !== null) {
+    let front = match[1].replace(/\*\*/g, '').trim();
+    let back = match[2].replace(/\*\*/g, '').trim();
+    
+    if (front && back && front.length < 500 && back.length < 2000) {
+      cards.push({ front, back });
+    }
+  }
+  
+  if (cards.length > 0) return cards;
+  
+  // STRATEGY 3: Split by horizontal rule (---)
+  const hrBlocks = normalizedText.split(/\n-{3,}\n/);
+  for (const block of hrBlocks) {
+    const termMatch = block.match(/\*\*(?:Term|Question)[^*]*\*\*[:\s]*([\s\S]+?)(?=\*\*(?:Definition|Answer)|$)/i);
+    const defMatch = block.match(/\*\*(?:Definition|Answer)[^*]*\*\*[:\s]*([\s\S]+?)$/i);
+    if (termMatch && defMatch) {
+      const front = termMatch[1].trim().replace(/\*\*/g, '');
+      const back = defMatch[1].trim().replace(/\*\*/g, '');
       if (front && back) cards.push({ front, back });
     }
-  });
-
-  // Fallback: try Q:/A: pattern
-  if (cards.length === 0) {
-    const qaBlocks = text.split(/\n(?=\d+\.|\*\*Card)/);
-    qaBlocks.forEach(block => {
-      const lines = block.split('\n').filter(l => l.trim());
-      if (lines.length >= 2) {
-        const front = lines[0].replace(/^\d+\.\s*/, '').replace(/\*\*/g, '').trim();
-        const back  = lines.slice(1).join(' ').replace(/\*\*/g, '').trim();
-        if (front && back && front.length < 200) {
-          cards.push({ front, back });
-        }
-      }
-    });
   }
-
+  
+  if (cards.length > 0) return cards;
+  
+  // STRATEGY 4: Line-by-line pattern matching for multiline format
+  const lines = normalizedText.split('\n').filter(l => l.trim());
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Check if single line contains both term and definition
+    const singleLineMatch = line.match(/(?:\d+\.\s*)?(?:\*\*)?(?:Term|Question)[^:]*(?:\*\*)?[:\s]+(.+?)\s+(?:\*\*)?(?:Definition|Answer)[^:]*(?:\*\*)?[:\s]+(.+)/i);
+    if (singleLineMatch) {
+      const front = singleLineMatch[1].replace(/\*\*/g, '').trim();
+      const back = singleLineMatch[2].replace(/\*\*/g, '').trim();
+      if (front && back) cards.push({ front, back });
+      continue;
+    }
+    
+    // Check if this line is Term and next line is Definition
+    if (/(?:Term|Question)/i.test(line) && lines[i + 1] && /(?:Definition|Answer)/i.test(lines[i + 1])) {
+      const front = line.replace(/^(?:\d+\.\s*)?(?:\*\*)?(?:Term|Question)[^:]*(?:\*\*)?[:\s]*/i, '').replace(/\*\*/g, '').trim();
+      const back = lines[i + 1].replace(/^(?:\*\*)?(?:Definition|Answer)[^:]*(?:\*\*)?[:\s]*/i, '').replace(/\*\*/g, '').trim();
+      if (front && back) {
+        cards.push({ front, back });
+        i++; // Skip next line
+      }
+    }
+  }
+  
   return cards;
 }
 

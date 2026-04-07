@@ -39,8 +39,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                     <div class="system-context">
                         <span class="welcome-text">Welcome back,</span>
                         <span class="user-name" id="userName">Student</span>
-                        <span class="date-text" id="currentDate"
-                            style="display:block;font-size:12px;color:var(--muted);margin-top:2px;"></span>
+                        <span class="date-text date-text-style" id="currentDate"></span>
                     </div>
                 </div>
 
@@ -48,7 +47,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                 <div class="user-controls">
                     <div class="user-status">
                         <div class="status-badge">
-                            <svg class="icon icon-sm" viewBox="0 0 24 24" style="fill: #10b981; stroke: none;">
+                            <svg class="icon icon-sm status-indicator-icon" viewBox="0 0 24 24">
                                 <circle cx="12" cy="12" r="8" />
                             </svg>
                             <span>Active Now</span>
@@ -169,7 +168,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                             </div>
 
                             <!-- Spike Alert (hidden by default) -->
-                            <div class="spike-alert" id="spikeAlert" style="display:none;">
+                            <div class="spike-alert hidden-initial" id="spikeAlert">
                                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                                     stroke-width="2">
                                     <path
@@ -194,10 +193,10 @@ This will improve load times, enable better caching, and simplify maintenance.
                             </div>
 
                             <!-- AI Insight -->
-                            <div class="stress-insight" id="stressInsight" style="display:none;"></div>
+                            <div class="stress-insight hidden-initial" id="stressInsight"></div>
 
                             <!-- Confidence + Dominant Factor -->
-                            <div class="stress-meta" id="stressMeta" style="display:none;">
+                            <div class="stress-meta hidden-initial" id="stressMeta">
                                 <div class="meta-chip confidence-chip" id="confidenceChip"
                                     title="Model confidence based on data availability and signal consistency">
                                     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
@@ -268,37 +267,37 @@ This will improve load times, enable better caching, and simplify maintenance.
                             </details>
 
                             <!-- Phase 5.1: Emotional Fingerprint (Radar Chart) -->
-                            <div class="emotional-radar-section" style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border);">
-                                <h4 class="card-subtitle" style="margin-bottom: 12px; font-weight: 600; color: var(--text);">
-                                    <i class="fas fa-brain" style="margin-right: 6px; color: var(--primary);"></i>
+                            <div class="emotional-radar-section">
+                                <h4 class="card-subtitle card-subtitle-styled">
+                                    <i class="fas fa-brain icon-accent-primary"></i>
                                     Emotional Fingerprint
                                 </h4>
-                                <div id="emotionRadarChart" style="min-height: 250px;"></div>
-                                <div id="noEmotionsMessage" class="aura-hidden" style="text-align:center; padding: 20px; color: var(--muted); font-size: 13px;">
+                                <div id="emotionRadarChart" class="chart-min-height-250"></div>
+                                <div id="noEmotionsMessage" class="aura-hidden no-data-message-centered">
                                     Start a mental wellness chat to see your emotional breakdown.
                                 </div>
                             </div>
 
                             <!-- Phase 5.2: Stress Forecasting Card -->
-                            <div class="stress-forecast-section" style="margin-top: 24px;">
-                                <div class="card card-elevated" style="background: linear-gradient(135deg, var(--surface), rgba(var(--primary-rgb), 0.05)); border: 1px solid rgba(var(--primary-rgb), 0.1);">
-                                    <header class="card-header" style="border-bottom: none; padding-bottom: 5px;">
-                                        <h4 class="card-title" style="font-size: 15px;">
-                                            <i class="fas fa-crystal-ball" style="margin-right: 6px; color: var(--accent);"></i>
+                            <div class="stress-forecast-section">
+                                <div class="card card-elevated forecast-card-gradient">
+                                    <header class="card-header card-header-borderless">
+                                        <h4 class="card-title card-title-sm">
+                                            <i class="fas fa-crystal-ball icon-accent-success"></i>
                                             3-Day Stress Projection
                                         </h4>
-                                        <div class="card-badge" id="forecastConfidence" style="font-size: 10px; padding: 2px 8px; background: rgba(var(--accent-rgb), 0.1); color: var(--accent); border-radius: 20px;">
+                                        <div class="card-badge forecast-confidence-badge" id="forecastConfidence">
                                             AI Prediction
                                         </div>
                                     </header>
-                                    <div class="card-body" style="padding-top: 5px;">
-                                        <div id="stressForecastContainer" style="display: flex; justify-content: space-between; gap: 10px; margin-top: 10px;">
+                                    <div class="card-body card-body-compact">
+                                        <div id="stressForecastContainer" class="forecast-container">
                                             <!-- Forecast items will be injected here -->
-                                            <div style="flex: 1; text-align: center; padding: 12px; background: var(--surface); border-radius: 12px; border: 1px dashed var(--border);">
-                                                <div style="font-size: 11px; color: var(--muted);">Loading...</div>
+                                            <div class="forecast-day-placeholder">
+                                                <div class="forecast-loading-text">Loading...</div>
                                             </div>
                                         </div>
-                                        <div id="forecastInsight" style="margin-top: 15px; font-size: 12px; color: var(--muted); line-height: 1.4; display: none;">
+                                        <div id="forecastInsight" class="forecast-insight">
                                             <i class="fas fa-info-circle"></i>
                                             <span id="forecastInsightText"></span>
                                         </div>
@@ -319,11 +318,11 @@ This will improve load times, enable better caching, and simplify maintenance.
                             <h3 class="chart-title">7-Day Stress History</h3>
                             <div class="chart-legend">
                                 <div class="legend-item">
-                                    <span class="legend-color" style="background: #3b82f6;"></span>
+                                    <span class="legend-color legend-color-primary"></span>
                                     <span class="legend-label">Stress Level</span>
                                 </div>
                                 <div class="legend-item">
-                                    <span class="legend-color" style="background: #10b981;"></span>
+                                    <span class="legend-color legend-color-success"></span>
                                     <span class="legend-label">Recovery</span>
                                 </div>
                             </div>
@@ -452,7 +451,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                         </header>
 
                         <div class="card-body">
-                            <div id="detailedChart" class="chart-container" style="height: 240px;" role="img"
+                            <div id="detailedChart" class="chart-container chart-height-240" role="img"
                                 aria-label="Detailed stress history chart"></div>
                         </div>
                     </section>
@@ -477,14 +476,14 @@ This will improve load times, enable better caching, and simplify maintenance.
                             <div class="card-badge acad-semester-badge" id="acadSemBadge">—</div>
                         </header>
 
-                        <div class="card-body" style="padding: 20px;">
+                        <div class="card-body card-body-padded">
                             <!-- Summary Stats Row -->
                             <div class="acad-stats-grid" id="acadStatsGrid">
                                 <div class="acad-stat">
                                     <div class="acad-stat-value" id="acadCgpa">—</div>
                                     <div class="acad-stat-label">CGPA</div>
                                     <div class="acad-stat-bar">
-                                        <div class="acad-stat-fill acad-fill-primary" id="acadCgpaBar" style="width:0%">
+                                        <div class="acad-stat-fill acad-fill-primary acad-bar-initial" id="acadCgpaBar">
                                         </div>
                                     </div>
                                 </div>
@@ -492,7 +491,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                                     <div class="acad-stat-value" id="acadSgpa">—</div>
                                     <div class="acad-stat-label">SGPA</div>
                                     <div class="acad-stat-bar">
-                                        <div class="acad-stat-fill acad-fill-accent" id="acadSgpaBar" style="width:0%">
+                                        <div class="acad-stat-fill acad-fill-accent acad-bar-initial" id="acadSgpaBar">
                                         </div>
                                     </div>
                                 </div>
@@ -500,7 +499,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                                     <div class="acad-stat-value" id="acadAttendance">—</div>
                                     <div class="acad-stat-label">Attendance</div>
                                     <div class="acad-stat-bar">
-                                        <div class="acad-stat-fill acad-fill-green" id="acadAttBar" style="width:0%">
+                                        <div class="acad-stat-fill acad-fill-green acad-bar-initial" id="acadAttBar">
                                         </div>
                                     </div>
                                 </div>
@@ -508,7 +507,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                                     <div class="acad-stat-value" id="acadCredits">—</div>
                                     <div class="acad-stat-label">Credits</div>
                                     <div class="acad-stat-bar">
-                                        <div class="acad-stat-fill acad-fill-orange" id="acadCredBar" style="width:0%">
+                                        <div class="acad-stat-fill acad-fill-orange acad-bar-initial" id="acadCredBar">
                                         </div>
                                     </div>
                                 </div>
@@ -517,25 +516,24 @@ This will improve load times, enable better caching, and simplify maintenance.
                             <!-- CGPA Trend Chart -->
                             <div class="acad-chart-section">
                                 <h4 class="acad-chart-title">📈 CGPA & SGPA Trend</h4>
-                                <div id="acadTrendChart" style="min-height: 260px;"></div>
+                                <div id="acadTrendChart" class="chart-min-height-260"></div>
                             </div>
 
                             <!-- Subject Performance Chart -->
-                            <div class="acad-chart-section" style="margin-top: 24px;">
+                            <div class="acad-chart-section">
                                 <h4 class="acad-chart-title">📊 Subject Performance <span class="acad-subtitle"
                                         id="acadSubSem"></span></h4>
-                                <div id="acadSubjectChart" style="min-height: 280px;"></div>
+                                <div id="acadSubjectChart" class="chart-min-height-280"></div>
                             </div>
 
                             <!-- Removed Redundant Subject Table -->
 
                             <!-- Empty State (Hidden initially) -->
-                            <div id="acadEmptyState" class="chart-empty"
-                                style="display:none; text-align:center; padding: 40px 20px;">
-                                <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
-                                <h4 style="font-size: 18px; color: var(--text); margin-bottom: 8px;">No Academic Records
+                            <div id="acadEmptyState" class="chart-empty empty-state-container">
+                                <div class="empty-state-icon">📚</div>
+                                <h4 class="empty-state-title">No Academic Records
                                     Found</h4>
-                                <p style="color: var(--muted); max-width: 300px; margin: 0 auto; line-height: 1.5;">Your
+                                <p class="empty-state-description">Your
                                     university has not uploaded any CGPA or subject performance data for your account
                                     yet.</p>
                             </div>
@@ -554,7 +552,7 @@ This will improve load times, enable better caching, and simplify maintenance.
 
                 <div class="quick-actions-right" id="qaPanel">
                     <!-- Header -->
-                    <div class="qa-header" style="margin-bottom:10px;">
+                    <div class="qa-header qa-header-compact">
                         <div class="qa-title">
                             <div class="qa-icon">⚡</div>
                             <h3>Quick Actions</h3>
@@ -574,42 +572,37 @@ This will improve load times, enable better caching, and simplify maintenance.
                     <div class="qa-pane active" id="qa-pane-actions">
                         <div class="qa-grid-v2">
                             <!-- 1. Activities -->
-                            <a href="{{ url_for('student.activities') }}" class="qa-card-v2"
-                                style="--qa-glow:rgba(139,92,246,0.1);">
+                            <a href="{{ url_for('student.activities') }}" class="qa-card-v2 qa-card-purple">
                                 <div class="qa-v2-ico ico-purple">🎯</div>
                                 <p class="qa-v2-label">Activities</p>
                                 <p class="qa-v2-sub">Wellness tools</p>
                             </a>
                             <!-- 2. Relax Zone -->
-                            <a href="{{ url_for('student.relax') }}" class="qa-card-v2"
-                                style="--qa-glow:rgba(16,185,129,0.1);">
+                            <a href="{{ url_for('student.relax') }}" class="qa-card-v2 qa-card-green">
                                 <div class="qa-v2-ico ico-teal">🧘</div>
                                 <p class="qa-v2-label">Relax Zone</p>
                                 <p class="qa-v2-sub">Calm & meditate</p>
                             </a>
                             <!-- 3. Mental Chatbot -->
-                            <a href="{{ url_for('student.mental_chatbot') }}" class="qa-card-v2"
-                                style="--qa-glow:rgba(236,72,153,0.1);">
+                            <a href="{{ url_for('student.mental_chatbot') }}" class="qa-card-v2 qa-card-pink">
                                 <div class="qa-v2-ico ico-pink">💬</div>
                                 <p class="qa-v2-label">AURA Chat</p>
                                 <p class="qa-v2-sub">Mental Wellness</p>
                             </a>
                             <!-- 4. Study Chatbot -->
-                            <a href="{{ url_for('student.study_chatbot') }}" class="qa-card-v2"
-                                style="--qa-glow:rgba(59,130,246,0.1);">
+                            <a href="{{ url_for('student.study_chatbot') }}" class="qa-card-v2 qa-card-blue">
                                 <div class="qa-v2-ico ico-blue">📚</div>
                                 <p class="qa-v2-label">Study Bot</p>
                                 <p class="qa-v2-sub">Academic Help</p>
                             </a>
                             <!-- 5. Games -->
-                            <a href="{{ url_for('student.games') }}" class="qa-card-v2"
-                                style="--qa-glow:rgba(99,102,241,0.1);">
+                            <a href="{{ url_for('student.games') }}" class="qa-card-v2 qa-card-indigo">
                                 <div class="qa-v2-ico ico-indigo">🎮</div>
                                 <p class="qa-v2-label">Games</p>
                                 <p class="qa-v2-sub">Stress relief</p>
                             </a>
                             <!-- 6. Quick Breathe (inline) -->
-                            <button type="button" class="qa-card-v2" style="--qa-glow:rgba(245,158,11,0.1);" id="auto_evt_f6136ea92b10">
+                            <button type="button" class="qa-card-v2 qa-card-amber" id="auto_evt_f6136ea92b10">
                                 <div class="qa-v2-ico ico-orange">🫁</div>
                                 <p class="qa-v2-label">Breathe</p>
                                 <p class="qa-v2-sub">Quick reset</p>
@@ -617,7 +610,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                         </div>
 
                         <!-- Inline Breathe Panel -->
-                        <div class="qa-inline-panel" id="qaBreathPanel" style="display:none;">
+                        <div class="qa-inline-panel hidden-initial" id="qaBreathPanel">
                             <div class="qa-panel-title">
                                 <span>🫁 Quick Box Breathing</span>
                                 <button class="qa-panel-close" id="auto_evt_2d9188689a19">✕</button>
@@ -826,7 +819,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     <div class="slide-panel" id="panel-hub">
         <div class="slide-panel-header">
             <div class="slide-panel-title">
-                <span class="sidebar-btn-icon icon-green" style="width:32px;height:32px;">
+                <span class="sidebar-btn-icon icon-green sidebar-icon-lg">
                     <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
                         <path
                             d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
@@ -837,7 +830,7 @@ This will improve load times, enable better caching, and simplify maintenance.
             <button class="slide-panel-close" aria-label="Close panel">&times;</button>
         </div>
         <div class="slide-panel-body">
-            <div class="connection-status" style="margin-bottom:16px;">
+            <div class="connection-status section-mt-lg">
                 <span class="status-indicator"></span>
                 <span class="status-text" id="connectionStatus">Connected</span>
             </div>
@@ -898,7 +891,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     <div class="slide-panel" id="panel-support">
         <div class="slide-panel-header">
             <div class="slide-panel-title">
-                <span class="sidebar-btn-icon icon-red" style="width:32px;height:32px;">
+                <span class="sidebar-btn-icon icon-red sidebar-icon-lg">
                     <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
                         <path
                             d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z" />
@@ -909,7 +902,7 @@ This will improve load times, enable better caching, and simplify maintenance.
             <button class="slide-panel-close" aria-label="Close panel">&times;</button>
         </div>
         <div class="slide-panel-body">
-            <div class="support-badge" style="margin-bottom:12px;">
+            <div class="support-badge section-mb-md">
                 <svg class="icon icon-sm" viewBox="0 0 24 24" stroke-width="2">
                     <circle cx="12" cy="12" r="9" />
                     <path d="M12 7v5" />
@@ -954,7 +947,7 @@ This will improve load times, enable better caching, and simplify maintenance.
             <div class="support-hotline">
                 <div class="hotline-label">Wellness Hotline</div>
                 <a href="tel:18002738255" class="hotline-number"
-                    style="text-decoration:none;color:inherit;">1-800-273-8255</a>
+                    class="phone-link-inherit">1-800-273-8255</a>
                 <div class="hotline-note">Available 24/7 · Tap to call</div>
             </div>
         </div>
@@ -964,7 +957,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     <div class="slide-panel" id="panel-profile">
         <div class="slide-panel-header">
             <div class="slide-panel-title">
-                <span class="sidebar-btn-icon icon-blue" style="width:32px;height:32px;">
+                <span class="sidebar-btn-icon icon-blue sidebar-icon-lg">
                     <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
                         <path
                             d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
@@ -1015,28 +1008,25 @@ This will improve load times, enable better caching, and simplify maintenance.
                 </div>
 
                 <!-- Change Password Section -->
-                <div style="margin-top:24px; padding-top:18px; border-top:1px solid var(--border-color, #e5e7eb);">
-                    <h4 style="margin:0 0 12px; font-size:15px; font-weight:600; color:var(--text-primary);">
+                <div class="settings-section">
+                    <h4 class="settings-heading">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
-                            stroke-width="2" style="vertical-align:middle;margin-right:6px;">
+                            stroke-width="2" class="settings-heading-icon">
                             <rect x="3" y="11" width="18" height="11" rx="2" />
                             <path d="M7 11V7a5 5 0 0110 0v4" />
                         </svg>
                         Change Password
                     </h4>
-                    <div id="pwdChangeMsg"
-                        style="display:none; padding:8px 12px; border-radius:8px; font-size:13px; margin-bottom:10px;">
+                    <div id="pwdChangeMsg" class="settings-feedback">
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:10px;">
+                    <div class="settings-form-stack">
                         <input type="password" id="currentPassword" placeholder="Current Password"
-                            style="padding:10px 12px; border:1px solid var(--border-color,#d1d5db); border-radius:8px; font-size:14px; background:var(--surface-muted,#f9fafb); color:var(--text-primary);">
+                            class="settings-input">
                         <input type="password" id="newPassword" placeholder="New Password"
-                            style="padding:10px 12px; border:1px solid var(--border-color,#d1d5db); border-radius:8px; font-size:14px; background:var(--surface-muted,#f9fafb); color:var(--text-primary);">
+                            class="settings-input">
                         <input type="password" id="confirmNewPassword" placeholder="Confirm New Password"
-                            style="padding:10px 12px; border:1px solid var(--border-color,#d1d5db); border-radius:8px; font-size:14px; background:var(--surface-muted,#f9fafb); color:var(--text-primary);">
-                        <button id="auto_evt_c03788469347" type="button"
-                            style="padding:10px 16px; background:var(--accent,#6366f1); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:opacity .2s;"
-                            onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                            class="settings-input">
+                        <button id="auto_evt_c03788469347" type="button" class="settings-btn-primary">
                             Update Password
                         </button>
                     </div>
@@ -1049,7 +1039,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     <div class="slide-panel" id="panel-goals">
         <div class="slide-panel-header">
             <div class="slide-panel-title">
-                <span class="sidebar-btn-icon icon-green" style="width:32px;height:32px;">
+                <span class="sidebar-btn-icon icon-green sidebar-icon-lg">
                     <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
                         <path
                             d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
@@ -1104,7 +1094,7 @@ This will improve load times, enable better caching, and simplify maintenance.
             </div>
             <div class="goals-progress">
                 <div class="goals-progress-bar">
-                    <div class="goals-progress-fill" id="goalsProgressFill" style="width:0%"></div>
+                    <div class="goals-progress-fill goals-progress-initial" id="goalsProgressFill"></div>
                 </div>
                 <div class="goals-progress-text"><span id="goalsCompleted">0</span>/4 completed</div>
             </div>
@@ -1115,7 +1105,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     <div class="slide-panel" id="panel-journal">
         <div class="slide-panel-header">
             <div class="slide-panel-title">
-                <span class="sidebar-btn-icon icon-orange" style="width:32px;height:32px;">
+                <span class="sidebar-btn-icon icon-orange sidebar-icon-lg">
                     <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
                         <path
                             d="M14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z" />
@@ -1157,7 +1147,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     <div class="slide-panel" id="panel-grievance">
         <div class="slide-panel-header">
             <div class="slide-panel-title">
-                <span class="sidebar-btn-icon icon-red" style="width:32px;height:32px;">
+                <span class="sidebar-btn-icon icon-red sidebar-icon-lg">
                     <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
                         <path
                             d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z" />
@@ -1182,7 +1172,7 @@ This will improve load times, enable better caching, and simplify maintenance.
                     Submit Grievance
                 </button>
             </form>
-            <div id="grievanceFeedback" class="grievance-feedback" style="display:none;"></div>
+            <div id="grievanceFeedback" class="grievance-feedback hidden-initial"></div>
         </div>
     </div>
 
@@ -1299,10 +1289,9 @@ This will improve load times, enable better caching, and simplify maintenance.
     <!-- ═══════ URGENT HELP CONFIRMATION MODAL ═══════ -->
     <div class="modal" id="urgentModal" role="dialog" aria-labelledby="urgentModalTitle" aria-hidden="true">
         <div class="modal-overlay"></div>
-        <div class="modal-content" style="max-width:440px;">
-            <header class="modal-header"
-                style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border-radius:16px 16px 0 0;padding:20px 24px;">
-                <h2 id="urgentModalTitle" style="margin:0;font-size:18px;display:flex;align-items:center;gap:8px;">
+        <div class="modal-content modal-narrow">
+            <header class="modal-header modal-header-urgent">
+                <h2 id="urgentModalTitle" class="modal-title-urgent">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
                         <path
                             d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
@@ -1310,18 +1299,16 @@ This will improve load times, enable better caching, and simplify maintenance.
                     Request Immediate Help
                 </h2>
             </header>
-            <div style="padding:24px;">
-                <p style="margin:0 0 8px;font-size:15px;color:var(--text);line-height:1.6;">
+            <div class="modal-body-padded">
+                <p class="modal-text-primary">
                     This will <strong>immediately notify</strong> a wellness counselor that you need help.
                 </p>
-                <p style="margin:0 0 20px;font-size:13px;color:var(--muted);">
+                <p class="modal-text-secondary">
                     Your identity is kept confidential. A proctor will be alerted within minutes.
                 </p>
-                <div style="display:flex;gap:12px;justify-content:flex-end;">
-                    <button type="button" class="btn btn-secondary" id="urgentCancelBtn"
-                        style="padding:10px 20px;border-radius:10px;cursor:pointer;">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="urgentConfirmBtn"
-                        style="padding:10px 20px;border-radius:10px;background:#dc2626;color:#fff;border:none;cursor:pointer;font-weight:600;">
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary btn-modal-cancel" id="urgentCancelBtn">Cancel</button>
+                    <button type="button" class="btn btn-primary btn-modal-danger" id="urgentConfirmBtn">
                         Yes, I Need Help Now
                     </button>
                 </div>
@@ -1332,9 +1319,9 @@ This will improve load times, enable better caching, and simplify maintenance.
     <!-- ═══════ SCHEDULE SESSION MODAL ═══════ -->
     <div class="modal" id="scheduleModal" role="dialog" aria-labelledby="scheduleModalTitle" aria-hidden="true">
         <div class="modal-overlay"></div>
-        <div class="modal-content" style="max-width:480px;">
+        <div class="modal-content modal-medium">
             <header class="modal-header">
-                <h2 id="scheduleModalTitle" class="modal-title" style="display:flex;align-items:center;gap:8px;">
+                <h2 id="scheduleModalTitle" class="modal-title modal-title-flex">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="4" width="18" height="18" rx="2" />
                         <line x1="16" y1="2" x2="16" y2="6" />
@@ -1350,13 +1337,10 @@ This will improve load times, enable better caching, and simplify maintenance.
                     </svg>
                 </button>
             </header>
-            <form id="scheduleForm" style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+            <form id="scheduleForm" class="schedule-form">
                 <div>
-                    <label
-                        style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Session
-                        Type</label>
-                    <select id="sessionType" class="form-select"
-                        style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);">
+                    <label class="form-label">Session Type</label>
+                    <select id="sessionType" class="form-select">
                         <option value="general">General Wellness</option>
                         <option value="academic">Academic Stress</option>
                         <option value="anxiety">Anxiety / Panic</option>
@@ -1366,36 +1350,26 @@ This will improve load times, enable better caching, and simplify maintenance.
                 </div>
                 <div class="form-grid">
                     <div>
-                        <label
-                            style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Date</label>
-                        <input type="date" id="sessionDate" class="form-input" required
-                            style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);">
+                        <label class="form-label">Date</label>
+                        <input type="date" id="sessionDate" class="form-input" required>
                     </div>
                     <div>
-                        <label
-                            style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Time</label>
-                        <input type="time" id="sessionTime" class="form-input" required
-                            style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);">
+                        <label class="form-label">Time</label>
+                        <input type="time" id="sessionTime" class="form-input" required>
                     </div>
                 </div>
                 <div>
-                    <label
-                        style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">Notes
-                        (optional)</label>
-                    <textarea id="sessionNotes" rows="3"
-                        placeholder="Anything you'd like the counselor to know beforehand..."
-                        style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);resize:vertical;font-family:inherit;"></textarea>
+                    <label class="form-label">Notes (optional)</label>
+                    <textarea id="sessionNotes" rows="3" class="form-textarea"
+                        placeholder="Anything you'd like the counselor to know beforehand..."></textarea>
                 </div>
-                <div id="scheduleMyBookings" style="display:none;margin-top:4px;">
-                    <h4 style="font-size:13px;color:var(--muted);margin:0 0 8px;">Your Upcoming Sessions</h4>
-                    <div id="myBookingsList"
-                        style="display:flex;flex-direction:column;gap:6px;max-height:120px;overflow-y:auto;"></div>
+                <div id="scheduleMyBookings" class="my-bookings-section">
+                    <h4 class="my-bookings-title">Your Upcoming Sessions</h4>
+                    <div id="myBookingsList" class="my-bookings-list"></div>
                 </div>
-                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:4px;">
-                    <button type="button" class="btn btn-secondary" id="scheduleCancelBtn"
-                        style="padding:10px 20px;border-radius:10px;cursor:pointer;">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="scheduleSubmitBtn"
-                        style="padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:600;">
+                <div class="modal-actions-spaced">
+                    <button type="button" class="btn btn-secondary btn-modal-cancel" id="scheduleCancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-modal-submit" id="scheduleSubmitBtn">
                         Book Session
                     </button>
                 </div>
@@ -1422,7 +1396,7 @@ This will improve load times, enable better caching, and simplify maintenance.
     </div>
 
     <!-- MOOD CHECK-IN MODAL -->
-    <div class="mood-modal" id="moodModal" style="display: none;">
+    <div class="mood-modal hidden-initial" id="moodModal">
         <div class="mood-modal-overlay" id="auto_evt_2506532e8fb6"></div>
         <div class="mood-modal-content">
             <div class="mood-modal-header">
