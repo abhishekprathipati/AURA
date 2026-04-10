@@ -26,6 +26,11 @@ _api_keys_and_tokens_.txt
 
 # One-off scripts
 tmp_*.py
+fix*.py
+cleanup.bat
+
+# Patch files
+*.patch
 
 # Generated outputs / local artifacts
 output*.txt
