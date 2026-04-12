@@ -44,5 +44,8 @@ python-engineio==4.9.1
 # Production Server
 gunicorn==23.0.0
 
+# Email
+Flask-Mail==1.0.4
+
 # Environment
 python-dotenv==1.0.1

@@ -24,6 +24,7 @@ from config import Config
 import os, logging
 from utils.auth_helpers import generate_csrf_token
 from utils.content_filter import contains_blocked_content, sanitize_message
+from services.otp_timer_service import OTPTimerService
 
 # Optional: Flask-Mail for email functionality
 try:
@@ -648,6 +649,128 @@ def handle_mark_dm_read(data):
             {'from_email': peer, 'to_email': email, 'seen': False},
             {'$set': {'seen': True}})
         emit('read_receipt', {'from': email, 'peer': peer}, room=peer)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  SOCKET.IO EVENT HANDLERS — OTP Real-Time Countdown (Parent Portal)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@socketio.on('otp_countdown_start')
+def handle_otp_countdown_start(data):
+    """Client starts listening to OTP countdown timer for a phone number.
+
+    The client emits this when a parent requests an OTP.
+    The server joins the client to a phone-specific room and begins emitting
+    countdown tick events every second until the OTP expires.
+    """
+    from flask import session as s
+    phone = data.get('phone', '').strip()
+
+    if not phone:
+        emit('error', {'msg': 'Phone number required for countdown'})
+        return
+
+    # Join user to phone-specific countdown room
+    # Use a safe room name: otp_{last_4_digits_of_phone}
+    room_name = f'otp_{phone[-4:] if len(phone) >= 4 else phone}'
+    join_room(room_name)
+
+    log.debug('Client joined OTP countdown room: %s', room_name)
+
+    # Send initial status
+    remaining = OTPTimerService.get_remaining_seconds(phone)
+    if remaining is not None:
+        emit('otp_timer_tick', {
+            'seconds_remaining': remaining,
+            'expired': False
+        })
+    else:
+        emit('otp_timer_tick', {
+            'seconds_remaining': 0,
+            'expired': True
+        })
+
+
+@socketio.on('otp_countdown_stop')
+def handle_otp_countdown_stop(data):
+    """Client stops listening to OTP countdown timer.
+
+    Called when the parent cancels the OTP flow or successfully verifies.
+    """
+    phone = data.get('phone', '').strip()
+
+    if phone:
+        room_name = f'otp_{phone[-4:] if len(phone) >= 4 else phone}'
+        leave_room(room_name)
+        log.debug('Client left OTP countdown room: %s', room_name)
+
+
+# Background thread for OTP countdown emission
+import threading
+
+_countdown_thread = None
+_countdown_running = False
+
+def _start_otp_countdown_emitter():
+    """Background thread that emits OTP countdown ticks every second."""
+    global _countdown_thread, _countdown_running
+
+    if _countdown_running:
+        return
+
+    def countdown_loop():
+        import time
+        while _countdown_running:
+            try:
+                # Get all active OTP sessions
+                active_phones = OTPTimerService.get_all_active_sessions()
+
+                for phone in active_phones:
+                    remaining = OTPTimerService.get_remaining_seconds(phone)
+
+                    if remaining is not None and remaining > 0:
+                        room_name = f'otp_{phone[-4:] if len(phone) >= 4 else phone}'
+                        # Emit countdown tick to all clients in the room
+                        socketio.emit('otp_timer_tick', {
+                            'seconds_remaining': remaining,
+                            'expired': False
+                        }, room=room_name, skip_sid=True)
+                    elif remaining is not None:
+                        # OTP expired
+                        room_name = f'otp_{phone[-4:] if len(phone) >= 4 else phone}'
+                        socketio.emit('otp_timer_tick', {
+                            'seconds_remaining': 0,
+                            'expired': True
+                        }, room=room_name, skip_sid=True)
+                        # Cleanup
+                        OTPTimerService.cancel_otp_session(phone)
+
+                # Cleanup expired sessions
+                OTPTimerService.cleanup_expired_sessions()
+
+                time.sleep(1)  # Tick every second
+            except Exception as e:
+                log.error('OTP countdown emitter error: %s', e)
+                time.sleep(1)
+
+    _countdown_running = True
+    _countdown_thread = threading.Thread(target=countdown_loop, daemon=True)
+    _countdown_thread.start()
+    log.info('OTP countdown emitter started')
+
+
+def _stop_otp_countdown_emitter():
+    """Stop the background countdown thread."""
+    global _countdown_running
+    _countdown_running = False
+    if _countdown_thread:
+        _countdown_thread.join(timeout=2)
+    log.info('OTP countdown emitter stopped')
+
+
+# Start countdown emitter on app startup
+with app.app_context():
+    _start_otp_countdown_emitter()
 
 
 if __name__ == '__main__':

@@ -20,7 +20,7 @@ with app.app_context():
             'roll_number': roll
         }}
     )
-    
+
     # 2. Add an academic record so the parent dashboard has some data to show
     db['academic_records'].update_one(
         {'student_roll': roll},

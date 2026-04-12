@@ -45,10 +45,15 @@ def login():
 @parent_bp.route('/api/send-otp', methods=['POST'])
 @apply_rate_limit(Limits.MODERATE)
 def send_otp():
-    """Step 1: Validate phone against student records and send OTP"""
+    """Step 1: Validate phone against student records and send OTP (SMS or Email)"""
     try:
         data = request.get_json() or {}
         phone = data.get('phone', '').strip()
+        delivery_method = data.get('delivery_method', 'sms').lower()
+
+        # Validate delivery method
+        if delivery_method not in ('sms', 'email'):
+            return jsonify({'error': 'Delivery method must be "sms" or "email"'}), 400
 
         # Normalize phone
         phone = OTPService.normalize_phone(phone)
@@ -67,16 +72,23 @@ def send_otp():
                          'Please contact your ward\'s institution to update your phone number.'
             }), 404
 
+        # Get email address for email delivery
+        email_address = student.get('email', '') if delivery_method == 'email' else None
+        if delivery_method == 'email' and not email_address:
+            return jsonify({
+                'error': 'Email delivery is not available. Your email is not on file. Please use SMS instead.'
+            }), 400
+
         # Generate and send OTP
-        otp, message = OTPService.send_otp(phone)
+        otp, message = OTPService.send_otp(phone, delivery_method=delivery_method, email_address=email_address)
         if otp is None:
             return jsonify({'error': message}), 429
 
         # Mask phone for display
         masked_phone = phone[:2] + '******' + phone[-2:]
 
-        # Check if SMS was actually sent (message will say 'via SMS' if it was)
-        sms_sent = 'via SMS' in message
+        # Check if delivery was actually successful
+        delivery_sent = 'via' in message.lower()
 
         response_data = {
             'success': True,
@@ -84,15 +96,15 @@ def send_otp():
             'masked_phone': masked_phone,
             'student_name': student.get('name', 'Student'),
             'student_roll': student.get('roll_number', ''),
-            'sms_sent': sms_sent
+            'delivery_method': delivery_method,
+            'delivery_sent': delivery_sent
         }
 
         # Include OTP for demo mode so frontend can display it
-        if not sms_sent:
+        if not delivery_sent:
             response_data['demo_mode'] = True
             response_data['demo_otp'] = otp
-            message = "SMS not configured. Your OTP is displayed in the banner at the bottom of this screen."
-            response_data['message'] = message
+            response_data['message'] = f"OTP generated (demo mode - check screen banner). Delivery method: {delivery_method.upper()}"
 
         return jsonify(response_data), 200
 

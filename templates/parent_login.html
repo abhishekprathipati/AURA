@@ -291,6 +291,13 @@
                 <input type="tel" id="phoneInput" maxlength="10" placeholder="9876543210"
                        autocomplete="tel" inputmode="numeric" autofocus>
             </div>
+            <div class="form-group">
+                <label for="deliveryMethod">Delivery Method</label>
+                <select id="deliveryMethod">
+                    <option value="sms">📱 Send via SMS</option>
+                    <option value="email">📧 Send via Email</option>
+                </select>
+            </div>
             <button class="btn-primary" id="sendOtpBtn">Send OTP</button>
             <p style="text-align:center; margin-top:16px; font-size:12px; color:#9ca3af;">
                 📌 Demo phone: <b style="color:#667eea;">9876543210</b>
@@ -308,6 +315,10 @@
                 <input type="text" maxlength="1" class="otp-box" data-index="3" inputmode="numeric">
                 <input type="text" maxlength="1" class="otp-box" data-index="4" inputmode="numeric">
                 <input type="text" maxlength="1" class="otp-box" data-index="5" inputmode="numeric">
+            </div>
+            <!-- Real-time countdown timer from SocketIO -->
+            <div class="resend-section" id="countdownDisplay" style="margin-bottom: 20px; padding: 12px; background: #f0f0ff; border-radius: 8px; border-left: 4px solid #667eea;">
+                <span id="liveCountdown">⏱️ Code expires in <b>5:00</b></span>
             </div>
             <div class="resend-section">
                 <span id="resendTimer">Resend OTP in <b>30s</b></span>
@@ -367,11 +378,41 @@
         </div>
     </div>
 
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script nonce="{{ csp_nonce }}">
         let currentPhone = '';
         let studentRoll = '';
         let studentName = '';
         let resendInterval = null;
+        let deliveryMethod = 'sms';
+        let socket = io();
+        let countdownInterval = null;
+
+        // SocketIO: Listen for real-time OTP countdown
+        socket.on('otp_timer_tick', (data) => {
+            const { seconds_remaining, expired } = data;
+            if (expired) {
+                document.getElementById('liveCountdown').textContent = '⏱️ Code has <b style="color: #dc2626;">expired</b>';
+                document.getElementById('liveCountdown').style.color = '#dc2626';
+                document.getElementById('verifyOtpBtn').disabled = true;
+            } else {
+                const mins = Math.floor(seconds_remaining / 60);
+                const secs = seconds_remaining % 60;
+                const display = `${mins}:${secs.toString().padStart(2, '0')}`;
+                document.getElementById('liveCountdown').textContent = `⏱️ Code expires in <b>${display}</b>`;
+
+                // Highlight if < 30 seconds
+                if (seconds_remaining < 30) {
+                    document.getElementById('countdownDisplay').style.background = '#fef2f2';
+                    document.getElementById('countdownDisplay').style.borderLeftColor = '#dc2626';
+                    document.getElementById('liveCountdown').style.color = '#dc2626';
+                } else {
+                    document.getElementById('countdownDisplay').style.background = '#f0f0ff';
+                    document.getElementById('countdownDisplay').style.borderLeftColor = '#667eea';
+                    document.getElementById('liveCountdown').style.color = 'inherit';
+                }
+            }
+        });
 
         function showAlert(msg, type = 'error') {
             const box = document.getElementById('alertBox');
@@ -390,7 +431,13 @@
 
         function goToStep(step) {
             clearAlert();
-            if (step !== 2) document.getElementById('demoBanner').style.display = 'none';
+            if (step !== 2) {
+                document.getElementById('demoBanner').style.display = 'none';
+                // Leave countdown room when leaving step 2
+                if (socket.connected) {
+                    socket.emit('otp_countdown_stop', { phone: currentPhone });
+                }
+            }
             document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
             document.getElementById(step === 4 ? 'successScreen' : `step${step}`).classList.add('active');
 
@@ -404,13 +451,21 @@
             document.getElementById('line2').classList.toggle('done', step >= 3 || step === 4);
 
             if (step === 1) setTimeout(() => document.getElementById('phoneInput').focus(), 100);
-            if (step === 2) setTimeout(() => document.querySelector('.otp-box').focus(), 100);
+            if (step === 2) {
+                setTimeout(() => document.querySelector('.otp-box').focus(), 100);
+                // Join countdown room
+                if (socket.connected) {
+                    socket.emit('otp_countdown_start', { phone: currentPhone });
+                }
+            }
             if (step === 3) setTimeout(() => document.getElementById('parentName').focus(), 100);
         }
 
         // ===== Step 1: Send OTP =====
         async function sendOTP() {
             const phone = document.getElementById('phoneInput').value.replace(/\D/g, '');
+            deliveryMethod = document.getElementById('deliveryMethod').value;
+
             if (!phone || phone.length !== 10) {
                 showAlert('Please enter a valid 10-digit phone number');
                 return;
@@ -421,7 +476,7 @@
                 const res = await fetch('/parent/api/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone })
+                    body: JSON.stringify({ phone, delivery_method: deliveryMethod })
                 });
                 const data = await res.json();
 
@@ -432,10 +487,11 @@
                     studentName = data.student_name || '';
                     studentRoll = data.student_roll || '';
 
+                    const methodLabel = deliveryMethod === 'email' ? 'email' : 'SMS';
                     document.getElementById('otpSentMsg').textContent =
-                        data.sms_sent
-                        ? `OTP sent via SMS to +91 ${data.masked_phone}`
-                        : `Enter the 6-digit code shown in the banner below`;
+                        data.delivery_sent
+                        ? `OTP sent via ${methodLabel} to ${data.masked_phone}`
+                        : `Enter the code shown in the banner below`;
 
                     if (data.demo_otp) {
                         document.getElementById('demoBanner').style.display = 'block';
@@ -445,13 +501,15 @@
                     }
 
                     document.querySelectorAll('.otp-box').forEach(b => {
-                        b.value = ''; b.classList.remove('filled');
+                        b.value = '';
+                        b.classList.remove('filled');
+                        b.disabled = false;
                     });
 
                     goToStep(2);
                     startResendTimer();
                 } else {
-                    showAlert(data.error || 'Failed to send OTP. Your phone may not be registered.');
+                    showAlert(data.error || `Failed to send OTP via ${deliveryMethod.toUpperCase()}.`);
                 }
             } catch (err) {
                 showAlert('Network error. Please check your connection and try again.');
