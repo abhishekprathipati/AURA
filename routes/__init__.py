@@ -4,6 +4,7 @@ from .proctor import proctor_bp
 from .chat import chat_bp
 from .parent import parent_bp
 from .parent_management import parent_bp as parent_mgmt_bp
+from .parent_profile import parent_profile_bp
 from .connect_hub import connect_bp
 from .account import account_bp  # FIX #48: password change
 
@@ -14,6 +15,7 @@ def init_routes(app):
     app.register_blueprint(chat_bp)
     app.register_blueprint(parent_bp, url_prefix='/parent')
     app.register_blueprint(parent_mgmt_bp)  # Parent management APIs
+    app.register_blueprint(parent_profile_bp)  # Student add parent email
     app.register_blueprint(connect_bp, url_prefix='/student')
     app.register_blueprint(account_bp)  # FIX #48
 
