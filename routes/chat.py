@@ -16,6 +16,8 @@ from services.memory_service import update_emotion_memory, get_emotion_memory
 from utils.auth_helpers import demo_restricted, demo_chat_limited, login_required
 from utils.helpers import safe_error
 from utils.rate_limit import apply_rate_limit, Limits
+from utils.crisis_detection import detect_crisis
+from utils.alerts import send_crisis_alert
 
 chat_bp = Blueprint('chat', __name__)
 log = logging.getLogger(__name__)
@@ -121,7 +123,35 @@ def api_chat_mental():
         if not user_email:
             log.warning("Not logged in")
             return jsonify({'error': 'Not logged in'}), 401
-        
+
+        # ╔═══════════════════════════════════════════════════════════════╗
+        # ║ CRISIS DETECTION - Check for dangerous/suicidal keywords     ║
+        # ╚═══════════════════════════════════════════════════════════════╝
+        is_crisis, risk_level = detect_crisis(user_message)
+        if is_crisis:
+            # CRITICAL: Send immediate alert to proctor & parent
+            user_name = session.get('user_name', user_email.split('@')[0])
+            log.critical('CRISIS DETECTED from %s: risk=%s, message=%s', user_email, risk_level, user_message[:50])
+
+            try:
+                alert_result = send_crisis_alert(user_email, user_name, user_message, risk_level)
+                log.critical('Crisis alert sent: proctor=%s, parent=%s',
+                           alert_result.get('proctor_sent'), alert_result.get('parent_sent'))
+            except Exception as e:
+                log.error('Failed to send crisis alert: %s', e)
+
+            # Return crisis response to user
+            return jsonify({
+                'status': 'crisis_detected',
+                'risk_level': risk_level,
+                'message': 'We detected concerning content in your message. Our team has been alerted and will reach out to support you.',
+                'emergency_resources': {
+                    'crisis_text_line': 'Text HOME to 741741',
+                    'national_suicide_hotline': '1-800-273-8255',
+                    'emergency': '911 (if immediate danger)'
+                }
+            }), 200
+
         db = _get_db()
         history = []
         chats_coll = None

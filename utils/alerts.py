@@ -141,3 +141,153 @@ def send_institutional_alert(student_email: str, score: int) -> dict:
         log.error('Alert failed for student %s: %s', student_email, ', '.join(errors))
 
     return result
+
+
+def send_crisis_alert(student_email: str, student_name: str, message: str,
+                     risk_level: str = 'HIGH') -> dict:
+    """
+    Send CRITICAL crisis alert (self-harm, suicidal ideation, threats).
+
+    This is URGENT and bypasses all thresholds.
+    Sent IMMEDIATELY to proctor and parent with full message content.
+
+    Returns: {
+        'success': bool,
+        'proctor_sent': bool,
+        'parent_sent': bool,
+        'proctor_email': str,
+        'parent_email': str,
+        'message': str
+    }
+    """
+    db = get_db()
+    users = db['users']
+    alerts = db['alerts']
+
+    student = users.find_one({'email': student_email}) or {}
+
+    # Find proctor
+    proctor_record = db['proctor_students'].find_one({'email': student_email, 'status': 'active'})
+    proctor_email = proctor_record.get('proctor_id') if proctor_record else None
+    proctor = {}
+    if proctor_email:
+        proctor = users.find_one({'email': proctor_email, 'role': 'proctor'}) or {}
+    if not proctor:
+        dept = student.get('department') or ''
+        if dept:
+            proctor = users.find_one({'role': 'proctor', 'department': dept}) or {}
+        if not proctor:
+            proctor = users.find_one({'role': 'proctor'}) or {}
+
+    proctor_email = proctor.get('email')
+    parent_email = student.get('parent_email')
+
+    # CRITICAL ALERT EMAIL
+    subject = f"[CRITICAL] CRISIS ALERT - {student_name} - IMMEDIATE ACTION REQUIRED"
+
+    body = f"""
+CRISIS ALERT - IMMEDIATE ACTION REQUIRED
+===============================================
+
+Risk Level: {risk_level}
+Student Name: {student_name}
+Student Email: {student_email}
+Department: {student.get('department', 'N/A')}
+
+STUDENT MESSAGE:
+"{message}"
+
+ACTION REQUIRED (DO THIS NOW):
+1. CONTACT STUDENT IMMEDIATELY by phone/in-person
+2. Ensure their PHYSICAL SAFETY
+3. Do NOT leave them alone if they express intent
+4. Connect to mental health/counseling resources:
+   - Campus Counselor
+   - Mental Health Helpline: 1-800-HELP (4357)
+   - Crisis Text Line: Text HOME to 741741
+   - Emergency Services: 911 (if life-threatening)
+
+CONFIDENTIAL - FOR AUTHORIZED PERSONNEL ONLY
+Report Generated: {datetime.utcnow().isoformat()}
+AURA Student Wellness System
+    """.strip()
+
+    proctor_sent = False
+    parent_sent = False
+    errors = []
+
+    # Get mail extension
+    mail_ext = current_app.extensions.get('mail') if current_app else None
+
+    # SEND TO PROCTOR (PRIORITY)
+    if proctor_email:
+        try:
+            if mail_ext and Message:
+                msg = Message(subject=subject, recipients=[proctor_email], body=body)
+                mail_ext.send(msg)
+                proctor_sent = True
+                log.critical('CRISIS ALERT sent to proctor %s: student=%s, risk_level=%s',
+                           proctor_email, student_email, risk_level)
+            else:
+                errors.append('Mail not configured for proctor')
+        except Exception as e:
+            errors.append(f'Proctor alert failed: {str(e)}')
+            log.error('FAILED to send CRISIS ALERT to proctor %s: %s', proctor_email, e)
+    else:
+        errors.append('No proctor assigned')
+        log.warning('No proctor found for crisis alert: %s', student_email)
+
+    # SEND TO PARENT (PRIORITY)
+    if parent_email:
+        try:
+            if mail_ext and Message:
+                msg = Message(subject=subject, recipients=[parent_email], body=body)
+                mail_ext.send(msg)
+                parent_sent = True
+                log.critical('CRISIS ALERT sent to parent %s: student=%s, risk_level=%s',
+                           parent_email, student_email, risk_level)
+            else:
+                errors.append('Mail not configured for parent')
+        except Exception as e:
+            errors.append(f'Parent alert failed: {str(e)}')
+            log.error('FAILED to send CRISIS ALERT to parent %s: %s', parent_email, e)
+    else:
+        log.warning('No parent email configured for crisis alert: %s', student_email)
+
+    # LOG CRISIS ALERT (CRITICAL RECORD)
+    try:
+        alerts.insert_one({
+            'alert_type': 'CRISIS_DETECTION',
+            'student_email': student_email,
+            'student_name': student_name,
+            'risk_level': risk_level,
+            'message_content': message,
+            'proctor_email': proctor_email,
+            'parent_email': parent_email,
+            'proctor_sent': proctor_sent,
+            'parent_sent': parent_sent,
+            'errors': errors,
+            'created_at': datetime.utcnow(),
+            'status': 'critical',
+            'requires_immediate_action': True,
+        })
+        log.critical('Crisis alert logged: student=%s, risk=%s', student_email, risk_level)
+    except Exception as e:
+        log.error('Failed to log crisis alert: %s', e)
+
+    result = {
+        'success': proctor_sent or parent_sent,
+        'proctor_sent': proctor_sent,
+        'parent_sent': parent_sent,
+        'proctor_email': proctor_email,
+        'parent_email': parent_email,
+        'message': 'CRISIS ALERT sent successfully' if (proctor_sent or parent_sent) else f'CRISIS ALERT failed: {", ".join(errors)}',
+        'errors': errors,
+    }
+
+    if proctor_sent or parent_sent:
+        log.critical('CRISIS ALERT successfully sent for %s (risk=%s)', student_email, risk_level)
+    else:
+        log.critical('CRISIS ALERT FAILED for %s: %s', student_email, ', '.join(errors))
+
+    return result
