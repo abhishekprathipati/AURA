@@ -42,7 +42,7 @@ services:
         sync: false
     
     # Health check
-    healthCheckPath: /
+    healthCheckPath: /health
     healthCheckStartupFailureThresholdCount: 5
     
     # Disk (free tier)

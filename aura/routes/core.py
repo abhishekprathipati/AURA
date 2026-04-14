@@ -45,7 +45,9 @@ def health():
         checks['mongodb'] = 'ok'
     except Exception as e:
         checks['mongodb'] = f'error: {e}'
-        status = 503
+        # Return 200 so Render doesn't aggressively crash/terminate the app during transient DB issues
+        status = 200
+        checks['status'] = 'degraded'
 
     checks['timestamp'] = datetime.utcnow().isoformat() + 'Z'
     return jsonify(checks), status
