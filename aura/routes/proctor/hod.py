@@ -432,10 +432,12 @@ def hod_add_proctor():
             return jsonify({'success': False, 'error': 'User with this email already exists'}), 400
             
         from aura.utils.auth_helpers import hash_password
+        from aura.models.user import UserModel
         new_user = {
+            'user_id': UserModel.generate_user_id(),
             'email': email,
             'name': name,
-            'password': hash_password(password),
+            'hashed_password': hash_password(password),
             'role': 'proctor',
             'department': department,
             'created_at': datetime.utcnow(),

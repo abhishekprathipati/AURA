@@ -248,6 +248,32 @@ async function submitProctor(e) {
     }
 }
 
+// ═══ UI NAVIGATION ═══
+function switchTab(evt, tabId) {
+    const tabContents = document.getElementsByClassName("tab-content");
+    for (let i = 0; i < tabContents.length; i++) {
+        tabContents[i].classList.remove("active");
+    }
+
+    const tabLinks = document.getElementsByClassName("tab-link");
+    for (let i = 0; i < tabLinks.length; i++) {
+        tabLinks[i].classList.remove("active");
+    }
+
+    document.getElementById(tabId).classList.add("active");
+    evt.currentTarget.classList.add("active");
+
+    // Toggle Search visibility (only for Roster)
+    const searchGroup = document.getElementById('rosterSearchGroup');
+    if (searchGroup) {
+        searchGroup.style.display = (tabId === 'student-roster') ? 'block' : 'none';
+    }
+    
+    // Resize charts if necessary
+    if (trendChart) trendChart.windowResizeHandler();
+    if (healthChart) healthChart.windowResizeHandler();
+}
+
 async function removeProctor(email) {
     if (!confirm(`Are you sure you want to revoke access for ${email}?`)) return;
 

@@ -101,126 +101,129 @@
             </div>
         </section>
 
-        <!-- ═══ PRIMARY ANALYTICS ═══ -->
+        <!-- ═══ PRIMARY ANALYTICS (BALANCED ROW) ═══ -->
+        <div class="analytics-row fade-up">
+            <!-- WELLNESS TRAJECTORY -->
+            <section class="card wellness-chart-card">
+                <div class="card-head">
+                    <div class="card-title">
+                        <span class="card-icon blue"><i class="fas fa-wave-square"></i></span>
+                        Wellness Trajectory (Last 30 Days)
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="trendChart"></div>
+                </div>
+            </section>
+
+            <!-- RISK DISTRIBUTION PIE -->
+            <section class="card distribution-card">
+                <div class="card-head">
+                    <div class="card-title">Distribution Analytics</div>
+                </div>
+                <div class="card-body chart-stacked">
+                    <div class="donut-container">
+                        <div id="healthChart"></div>
+                    </div>
+                    <div id="riskBarsContainer" class="risk-summary">
+                        <!-- JS Render -->
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ═══ STUDENT GOVERNANCE HUB (TABBED CONSOLIDATION) ═══ -->
         <div class="dashboard-layout">
-            
-            <div class="dashboard-left">
-                <!-- WELLNESS TRAJECTORY -->
-                <section class="card fade-up">
-                    <div class="card-head">
-                        <div class="card-title">
-                            <span class="card-icon blue"><i class="fas fa-wave-square"></i></span>
-                            Wellness Trajectory (Last 30 Days)
+            <div class="dashboard-main">
+                <section class="card governance-card fade-up">
+                    <div class="card-head container-tabs">
+                        <div class="tab-group" role="tablist">
+                            <button class="tab-link active" onclick="switchTab(event, 'risk-feed')" role="tab">
+                                <i class="fas fa-shield-halved"></i> Risk Oversight Monitor
+                                <span class="tab-badge" id="riskOversightCount">0</span>
+                            </button>
+                            <button class="tab-link" onclick="switchTab(event, 'student-roster')" role="tab">
+                                <i class="fas fa-graduation-cap"></i> Student Roster
+                            </button>
+                        </div>
+                        <div class="card-search" id="rosterSearchGroup" style="display: none;">
+                            <input type="text" id="studentSearch" placeholder="Search by name or UID..." onkeyup="filterStudents()">
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div id="trendChart"></div>
-                    </div>
-                </section>
 
-                <!-- THE RISK BOX (TABLE) - COMPACT FIXED -->
-                <section class="card fade-up">
-                    <div class="card-head">
-                        <div class="card-title">
-                            <span class="card-icon red"><i class="fas fa-shield-halved"></i></span>
-                            Risk Oversight Monitor (Live)
+                    <!-- TAB: RISK FEED -->
+                    <div id="risk-feed" class="tab-content active">
+                        <div class="card-body no-pad table-overflow-container">
+                            <table class="aura-table sticky-head">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Risk</th>
+                                        <th>Alert Source</th>
+                                        <th>Status</th>
+                                        <th>Detected</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="riskOversightBody">
+                                    <!-- Replaced by JS -->
+                                </tbody>
+                            </table>
                         </div>
-                        <span class="count-badge" id="riskOversightCount">0</span>
                     </div>
-                    <div class="card-body no-pad table-overflow" style="max-height: 420px; overflow-y: auto;">
-                        <table class="aura-table sticky-head">
-                            <thead>
-                                <tr>
-                                    <th>Student</th>
-                                    <th>Risk</th>
-                                    <th>Alert Source</th>
-                                    <th>Status</th>
-                                    <th>Detected</th>
-                                </tr>
-                            </thead>
-                            <tbody id="riskOversightBody">
-                                <!-- Replaced by JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
 
-                <!-- STUDENT HUB (RESTORED) -->
-                <section class="card fade-up">
-                    <div class="card-head">
-                        <div class="card-title">
-                            <span class="card-icon green"><i class="fas fa-graduation-cap"></i></span>
-                            Student Management Hub
+                    <!-- TAB: STUDENT ROSTER -->
+                    <div id="student-roster" class="tab-content">
+                        <div class="card-body no-pad table-overflow-container">
+                            <table class="aura-table sticky-head" id="studentTable">
+                                <thead>
+                                    <tr>
+                                        <th>UID</th>
+                                        <th>Name</th>
+                                        <th>Dept</th>
+                                        <th>Assigned Proctor</th>
+                                        <th>Risk</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentHubBody">
+                                    <!-- JS Render -->
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="card-search">
-                            <input type="text" id="studentSearch" placeholder="Search by name or roll..." onkeyup="filterStudents()">
-                        </div>
-                    </div>
-                    <div class="card-body no-pad table-overflow" style="max-height: 400px; overflow-y: auto;">
-                        <table class="aura-table sticky-head" id="studentTable">
-                            <thead>
-                                <tr>
-                                    <th>UID</th>
-                                    <th>Name</th>
-                                    <th>Dept</th>
-                                    <th>Assigned Proctor</th>
-                                    <th>Risk</th>
-                                </tr>
-                            </thead>
-                            <tbody id="studentHubBody">
-                                <!-- JS Render -->
-                            </tbody>
-                        </table>
                     </div>
                 </section>
             </div>
 
-            <div class="dashboard-right">
-                <!-- RISK DISTRIBUTION PIE -->
-                <section class="card fade-up">
-                    <div class="card-head">
-                        <div class="card-title">Distribution Analytics</div>
-                    </div>
-                    <div class="card-body chart-stacked">
-                        <div class="donut-container">
-                            <div id="healthChart"></div>
-                        </div>
-                        <div id="riskBarsContainer" class="risk-summary">
-                            <!-- JS Render -->
-                        </div>
-                    </div>
-                </section>
-
-                <!-- PROCTOR MANAGEMENT (NEW) -->
-                <section class="card fade-up">
+            <div class="dashboard-side">
+                <!-- PROCTOR MANAGEMENT -->
+                <section class="card fade-up side-compact">
                     <div class="card-head">
                         <div class="card-title">
                             <span class="card-icon indigo"><i class="fas fa-id-badge"></i></span>
-                            Proctor Management
+                            Proctors
                         </div>
                         <button class="action-btn-sm" onclick="showAddProctorModal()">
-                            <i class="fas fa-plus"></i> Add
+                            <i class="fas fa-plus"></i>
                         </button>
                     </div>
-                    <div class="card-body no-pad scrollable" style="max-height: 350px;">
+                    <div class="card-body no-pad scrollable" style="max-height: 280px;">
                         <div id="proctorListContainer">
                              <!-- JS Render -->
                         </div>
                     </div>
                 </section>
 
-                <!-- PROCTOR KPI SQUAD (RESTORED) -->
-                <section class="card fade-up">
+                <!-- PROCTOR KPI SQUAD -->
+                <section class="card fade-up side-compact">
                     <div class="card-head">
-                        <div class="card-title">Manager Oversight (Weekly)</div>
+                        <div class="card-title">Weekly Oversight</div>
                     </div>
                     <div class="card-body no-pad" id="proctorPerformanceTable">
                         <!-- JS Render -->
                     </div>
                 </section>
             </div>
-
         </div>
+
     </div>
 
     <!-- MODAL: ADD PROCTOR -->
