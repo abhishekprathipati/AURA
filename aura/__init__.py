@@ -4,12 +4,20 @@ from flask import Flask
 from flask_socketio import SocketIO
 from config import Config
 
-# Primary SocketIO instance
-socketio = SocketIO(cors_allowed_origins="*")
+# Primary SocketIO instance — threading mode for gthread/sync workers
+socketio = SocketIO(async_mode='threading', cors_allowed_origins="*")
+
+# Resolve paths relative to project root (one level up from this package)
+_pkg_dir = os.path.dirname(os.path.abspath(__file__))
+_project_root = os.path.dirname(_pkg_dir)
 
 def create_app(config_class=Config):
     """Application Factory Pattern."""
-    app = Flask(__name__)
+    app = Flask(
+        __name__,
+        template_folder=os.path.join(_project_root, 'templates'),
+        static_folder=os.path.join(_project_root, 'static'),
+    )
     app.config.from_object(config_class)
     app.secret_key = app.config.get('SECRET_KEY')
     
