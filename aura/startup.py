@@ -89,11 +89,9 @@ _countdown_running = False
 
 def _start_otp_countdown_emitter(app):
     """Background thread that emits OTP countdown ticks."""
-    global _countdown_thread, _countdown_running
+    global _countdown_running
     from aura.services.otp_timer_service import OTPTimerService
     from aura import socketio
-    import threading
-    import time
 
     if _countdown_running:
         return
@@ -112,12 +110,11 @@ def _start_otp_countdown_emitter(app):
                         socketio.emit('otp_timer_tick', {'seconds_remaining': 0, 'expired': True}, room=room_name)
                         OTPTimerService.cancel_otp_session(phone)
                 OTPTimerService.cleanup_expired_sessions()
-                time.sleep(1)
+                socketio.sleep(1)
             except Exception as e:
                 log.error('OTP countdown emitter error: %s', e)
-                time.sleep(1)
+                socketio.sleep(1)
 
     _countdown_running = True
-    _countdown_thread = threading.Thread(target=countdown_loop, daemon=True)
-    _countdown_thread.start()
-    log.info('OTP countdown emitter started')
+    socketio.start_background_task(countdown_loop)
+    log.info('OTP countdown emitter started via SocketIO')

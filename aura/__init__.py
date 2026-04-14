@@ -5,7 +5,7 @@ from flask_socketio import SocketIO
 from config import Config
 
 # Primary SocketIO instance
-socketio = SocketIO(async_mode='threading', cors_allowed_origins="*")
+socketio = SocketIO(cors_allowed_origins="*")
 
 def create_app(config_class=Config):
     """Application Factory Pattern."""
