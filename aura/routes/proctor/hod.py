@@ -39,7 +39,7 @@ def hod_dashboard():
 @login_required
 @hod_only
 def hod_dashboard_stats():
-    """Get HOD executive dashboard statistics â€” department-scoped."""
+    """Get HOD executive dashboard statistics — department-scoped."""
     try:
         db = get_db()
         _ensure_indexes(db)
@@ -49,7 +49,7 @@ def hod_dashboard_stats():
         month_start = datetime.utcnow() - timedelta(days=30)
         department = session.get('user_department', '')
         
-        # â”€â”€ RBAC: scope to department students â”€â”€
+        # ── RBAC: scope to department students ──
         visible_ids = get_visible_student_ids()
         scope_filter = {'anonymous_student_id': {'$in': visible_ids}} if visible_ids else {'anonymous_student_id': {'$in': []}}
 
@@ -124,12 +124,12 @@ def hod_dashboard_stats():
 @login_required
 @hod_only
 def hod_wellness_trends():
-    """Get department-wide wellness trends for charts â€” department-scoped."""
+    """Get department-wide wellness trends for charts — department-scoped."""
     try:
         db = get_db()
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
         
-        # â”€â”€ RBAC: only department students â”€â”€
+        # ── RBAC: only department students ──
         dept_students = get_visible_students()
         dept_emails = [s.get('email', '') for s in dept_students]
         
@@ -182,11 +182,11 @@ def hod_wellness_trends():
 @login_required
 @hod_only
 def hod_risk_distribution():
-    """Get risk level distribution â€” department-scoped."""
+    """Get risk level distribution — department-scoped."""
     try:
         db = get_db()
         
-        # â”€â”€ RBAC: scope to visible students â”€â”€
+        # ── RBAC: scope to visible students ──
         visible_ids = get_visible_student_ids()
         scope = {'anonymous_student_id': {'$in': visible_ids}} if visible_ids else {'anonymous_student_id': {'$in': []}}
         
@@ -212,13 +212,13 @@ def hod_risk_distribution():
 @login_required
 @hod_only
 def hod_proctor_performance():
-    """Get proctor performance metrics â€” department-scoped."""
+    """Get proctor performance metrics — department-scoped."""
     try:
         db = get_db()
         week_start = datetime.utcnow() - timedelta(days=7)
         department = session.get('user_department', '')
         
-        # â”€â”€ RBAC: only proctors in this department â”€â”€
+        # ── RBAC: only proctors in this department ──
         dept_proctors = list(db['users'].find(
             {'role': 'proctor', 'department': department},
             {'email': 1}
@@ -266,11 +266,11 @@ def hod_proctor_performance():
 @login_required
 @hod_only
 def hod_recent_escalations():
-    """Get recent escalated incidents â€” department-scoped."""
+    """Get recent escalated incidents — department-scoped."""
     try:
         db = get_db()
         
-        # â”€â”€ RBAC: scope to department students â”€â”€
+        # ── RBAC: scope to department students ──
         visible_ids = get_visible_student_ids()
         scope = {'anonymous_student_id': {'$in': visible_ids}} if visible_ids else {'anonymous_student_id': {'$in': []}}
         
@@ -296,6 +296,56 @@ def hod_recent_escalations():
             'data': formatted
         }), 200
         
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
+
+
+@proctor_bp.route('/api/hod/risk-oversight', methods=['GET'])
+@login_required
+@hod_only
+def hod_risk_oversight():
+    """Combined feed of high-priority and escalated incidents for HOD monitoring."""
+    try:
+        db = get_db()
+        visible_ids = get_visible_student_ids()
+        if not visible_ids:
+            return jsonify({'success': True, 'data': []}), 200
+            
+        # 1. Unreviewed High/Medium
+        # 2. Escalated (Regardless of risk level)
+        query = {
+            'anonymous_student_id': {'$in': visible_ids},
+            '$or': [
+                {'status': 'ESCALATED'},
+                {'risk_level': {'$in': ['HIGH', 'MEDIUM']}, 'status': 'UNREVIEWED'}
+            ]
+        }
+        
+        incidents = list(db['risk_incidents'].find(
+            query,
+            sort=[('timestamp', -1)],
+            limit=30
+        ))
+        
+        formatted = []
+        for inc in incidents:
+            formatted.append({
+                'id': str(inc['_id']),
+                'incident_id': inc.get('incident_id'),
+                'anonymous_student_id': inc.get('anonymous_student_id'),
+                'risk_level': inc.get('risk_level'),
+                'trigger_source': inc.get('trigger_source'),
+                'status': inc.get('status'),
+                'message_excerpt': inc.get('message_excerpt', '')[:100],
+                'timestamp': inc.get('timestamp').isoformat() if inc.get('timestamp') else None,
+                'is_escalated': inc.get('status') == 'ESCALATED'
+            })
+            
+        return jsonify({
+            'success': True,
+            'data': formatted,
+            'count': len(formatted)
+        }), 200
     except Exception as e:
         return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
 

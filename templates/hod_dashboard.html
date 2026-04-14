@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HOD Executive Dashboard | AURA</title>
+    <title>Executive Dashboard | AURA</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,55 +12,39 @@
 </head>
 <body>
 
-    <!-- ═══ SIDEBAR ═══ -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-brand">
-                <div class="sidebar-logo"><i class="fas fa-brain"></i></div>
-                <h2>AURA Executive</h2>
-            </div>
-        </div>
+    <!-- DASHBOARD LAYOUT -->
+    <div class="dashboard" role="main">
         
-        <nav class="sidebar-nav">
-            <a class="nav-link active" onclick="switchTab('overview')">
-                <i class="fas fa-chart-pie"></i>
-                <span>Executive Overview</span>
-            </a>
-            <a class="nav-link" onclick="switchTab('students')">
-                <i class="fas fa-user-graduate"></i>
-                <span>Student High-Risk</span>
-            </a>
-            <a class="nav-link" onclick="switchTab('proctors')">
-                <i class="fas fa-user-shield"></i>
-                <span>Proctor Oversight</span>
-            </a>
-            <a class="nav-link" onclick="switchTab('suggestions')">
-                <i class="fas fa-lightbulb"></i>
-                <span>Parent Suggestions</span>
-            </a>
-        </nav>
-
-        <div class="sidebar-footer">
-            <div class="user-snippet">
-                <div class="user-avatar">{{ session.get('user_name', 'H')[0] }}</div>
-                <div class="user-info">
-                    <span class="name">{{ session.get('user_name', 'Abhishek') }}</span>
-                    <span class="role">Head of {{ session.get('user_department', 'AIML') }}</span>
-                </div>
-            </div>
-        </div>
-    </aside>
-
-    <div class="content-wrapper">
         <!-- ═══ HEADER ═══ -->
-        <header class="header">
-            <div class="header-title">
-                <h2>Diagnostic Overview</h2>
-            </div>
-            <div class="header-actions">
-                <button class="h-btn icon-only" id="refreshBtn" onclick="refreshData()" title="Refresh"><i class="fas fa-sync-alt"></i></button>
-                <button class="h-btn" onclick="exportReport()"><i class="fas fa-download"></i> Export Analytics</button>
-                <a href="{{ url_for('auth.logout') }}" class="h-btn danger"><i class="fas fa-power-off"></i></a>
+        <header class="dashboard-header" role="banner">
+            <div class="header-content">
+                <div class="system-identity">
+                    <h1 class="system-name text-gradient-aurora">AURA Executive</h1>
+                    <div class="system-context">
+                        <span class="welcome-text">Department Analytics & Oversight</span>
+                        <span class="date-text" id="currentDate"></span>
+                    </div>
+                </div>
+
+                <div class="user-controls">
+                    <div class="pd-pill">
+                        <div class="pd-live-dot"></div>
+                        System Active
+                    </div>
+                    
+                    <button class="btn-icon theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+                    
+                    <button class="pd-hbtn" onclick="refreshData()" title="Refresh Data">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+
+                    <a href="{{ url_for('auth.logout') }}" class="btn-signout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
             </div>
         </header>
 
@@ -69,20 +53,20 @@
             <div class="stats-grid">
                 <div class="stat-card green fade-up">
                     <div class="stat-icon"><i class="fas fa-heart-pulse"></i></div>
-                    <div class="stat-number" id="wellnessScore">0<span class="unit">%</span></div>
+                    <div class="stat-number" id="wellnessScore">0%</div>
                     <div class="stat-label">Dept. Health Index</div>
                 </div>
                 <div class="stat-card indigo fade-up">
                     <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
                     <div class="stat-number" id="totalStudents">0</div>
-                    <div class="stat-label">Total Ward Count</div>
+                    <div class="stat-label">Total Students</div>
                 </div>
                 <div class="stat-card amber fade-up">
                     <div class="stat-icon"><i class="fas fa-bolt"></i></div>
                     <div class="stat-number" id="proctorActions">0</div>
-                    <div class="stat-label">Actions (Last 24h)</div>
+                    <div class="stat-label">Proctor Actions Today</div>
                 </div>
-                <div class="stat-card red fade-up" id="criticalCard">
+                <div class="stat-card red fade-up pulsing" id="criticalCard">
                     <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
                     <div class="stat-number" id="highRiskCount">0</div>
                     <div class="stat-label">Critical Alerts</div>
@@ -91,124 +75,80 @@
         </section>
 
         <!-- ═══ MAIN ═══ -->
-        <main class="main">
+        <div class="dashboard-layout">
             
-            <!-- SECTION: OVERVIEW -->
-            <section id="overview" class="page-section active">
-                <div class="grid-3-1">
-                    <div class="card fade-up">
-                        <div class="card-head">
-                            <div class="card-title">Wellness Trajectory (30-Day Trend)</div>
-                        </div>
-                        <div class="card-body">
-                            <div id="trendChart"></div>
-                        </div>
-                    </div>
-                    <div class="card fade-up">
-                        <div class="card-head">
-                            <div class="card-title">Risk Distribution</div>
-                        </div>
-                        <div class="card-body">
-                            <div id="healthChart"></div>
-                            <div id="riskBarsContainer" style="margin-top: 24px;"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid-2">
-                    <div class="card fade-up">
-                        <div class="card-head">
-                            <div class="card-title">Recent Escalations</div>
-                            <span class="count-pill red" id="escalationBadge">0</span>
-                        </div>
-                        <div class="card-body no-pad scrollable" id="escalationsList">
-                            <!-- JS Render -->
-                        </div>
-                    </div>
-                    <div class="card fade-up">
-                        <div class="card-head">
-                            <div class="card-title">Top Proctor Activity</div>
-                        </div>
-                        <div class="card-body no-pad scrollable" id="proctorTable">
-                            <!-- JS Render -->
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- SECTION: STUDENTS (DRILL DOWN) -->
-            <section id="students" class="page-section">
-                <div class="card fade-up">
+            <!-- LEFT COLUMN: RISK MONITOR & TRENDS -->
+            <div class="dashboard-left">
+                
+                <!-- NEW: THE RISK BOX (Risk Oversight) -->
+                <section class="card fade-up" id="riskOversightBox">
                     <div class="card-head">
                         <div class="card-title">
-                            <span class="icon-wrap icon-primary"><i class="fas fa-users-viewfinder"></i></span>
-                            Student Risk Monitor
+                            <span class="card-title-icon icon-red"><i class="fas fa-shield-alt"></i></span>
+                            Risk Oversight Monitor
+                        </div>
+                        <span class="count-pill red" id="riskOversightCount">0</span>
+                    </div>
+                    <div class="card-body no-pad scrollable">
+                        <div class="table-container">
+                            <table class="tbl" id="riskOversightTable">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Risk</th>
+                                        <th>Source</th>
+                                        <th>Status</th>
+                                        <th>Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="riskOversightBody">
+                                    <!-- JS Render -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card fade-up">
+                    <div class="card-head">
+                        <div class="card-title">
+                            <span class="card-title-icon icon-blue"><i class="fas fa-chart-line"></i></span>
+                            Wellness Trajectory (30-Day Trend)
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="toolbar" style="margin-bottom: 24px; padding: 0;">
-                            <input id="studentSearch" type="search" placeholder="Search by name, roll number, or risk level..." style="flex: 1">
-                        </div>
-                        <div class="table-container" id="studentTableContainer">
-                            <div class="empty">Analyzing department student data...</div>
-                        </div>
+                        <div id="trendChart"></div>
                     </div>
-                </div>
-            </section>
+                </section>
+            </div>
 
-            <!-- SECTION: PROCTORS -->
-            <section id="proctors" class="page-section">
-                <div class="grid-2">
-                    <div class="card fade-up">
-                        <div class="card-head">
-                            <div class="card-title">Manage Proctors</div>
-                        </div>
-                        <div class="card-body no-pad" id="manageProctorsTable">
-                            <!-- JS Render -->
-                        </div>
+            <!-- RIGHT COLUMN: DISTRIBUTION & PROCTORS -->
+            <div class="dashboard-right">
+                <section class="card fade-up">
+                    <div class="card-head">
+                        <div class="card-title">Risk Distribution</div>
                     </div>
-                    <div class="card fade-up">
-                        <div class="card-head">
-                            <div class="card-title">Performance Metrics</div>
-                        </div>
-                        <div class="card-body" id="proctorPerformanceStats">
-                            <p class="helper-note">Select a proctor to view detailed metrics.</p>
-                        </div>
+                    <div class="card-body">
+                        <div id="healthChart"></div>
+                        <div id="riskBarsContainer"></div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <!-- SECTION: SUGGESTIONS -->
-            <section id="suggestions" class="page-section">
-                <div class="grid-2">
-                    <div class="card fade-up">
-                        <div class="card-head">
-                            <div class="card-title">Active Parent Feedback</div>
-                            <span class="count-pill indigo" id="suggestionBadge">0</span>
-                        </div>
-                        <div class="card-body no-pad scrollable" id="suggestionsList">
-                            <!-- JS Render -->
-                        </div>
+                <section class="card fade-up">
+                    <div class="card-head">
+                        <div class="card-title">Top Proctor Activity</div>
                     </div>
-                    <div class="card fade-up">
-                        <div class="card-head">
-                            <div class="card-title">Implementation History</div>
-                        </div>
-                        <div class="card-body no-pad scrollable" id="implementationHistoryList">
-                            <!-- JS Render -->
-                        </div>
+                    <div class="card-body no-pad" id="proctorTable">
+                        <!-- JS Render -->
                     </div>
-                </div>
-            </section>
+                </section>
+            </div>
 
-        </main>
+        </div>
     </div>
 
     <div id="toast" class="toast"></div>
 
     <script src="{{ url_for('static', filename='js/hod_dashboard.js') }}"></script>
-    <script nonce="{{ csp_nonce }}">
-        // Inline overrides or config if needed
-    </script>
 </body>
 </html>
