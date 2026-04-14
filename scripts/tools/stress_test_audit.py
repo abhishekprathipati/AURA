@@ -223,7 +223,7 @@ def main():
 
     s = requests.Session()
     r = s.post(f'{BASE_URL}/login',
-               data={'email': 'proctor@aura.edu', 'password': 'password123'},
+               data={'email': 'proctor@aura.edu', 'password': 'DemoPass!2024#Secure'},
                allow_redirects=True)
     if 'proctor' not in r.url and 'dashboard' not in r.url:
         print('  ✗ Login failed — skipping API tests')
@@ -268,7 +268,7 @@ def main():
             """Each thread creates its own session."""
             sess = requests.Session()
             sess.post(f'{BASE_URL}/login',
-                      data={'email': 'proctor@aura.edu', 'password': 'password123'},
+                      data={'email': 'proctor@aura.edu', 'password': 'DemoPass!2024#Secure'},
                       allow_redirects=True)
             t0 = time.perf_counter()
             r = sess.get(f'{BASE_URL}/proctor/api/activity-logs',
@@ -312,7 +312,7 @@ def main():
         # New session to avoid rate limits from phase 3/4
         s2 = requests.Session()
         s2.post(f'{BASE_URL}/login',
-                data={'email': 'proctor@aura.edu', 'password': 'password123'},
+                data={'email': 'proctor@aura.edu', 'password': 'DemoPass!2024#Secure'},
                 allow_redirects=True)
 
         csv_times = []

@@ -8,7 +8,7 @@ def run_audit_test():
     s = requests.Session()
 
     # Login
-    r = s.post(f'{BASE}/login', data={'email': 'proctor@aura.edu', 'password': 'password123'}, allow_redirects=True)
+    r = s.post(f'{BASE}/login', data={'email': 'proctor@aura.edu', 'password': 'DemoPass!2024#Secure'}, allow_redirects=True)
     print(f"1. Login: {r.status_code} -> {r.url}")
     assert 'proctor' in r.url or 'dashboard' in r.url, "Login failed!"
 

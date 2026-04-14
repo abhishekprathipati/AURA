@@ -2,7 +2,7 @@
 
 Usage:
   python scripts/tools/smoke_test.py --base-url https://aura-mday.onrender.com
-  python scripts/tools/smoke_test.py --base-url http://127.0.0.1:5000 --email student@aura.edu --password password123
+  python scripts/tools/smoke_test.py --base-url http://127.0.0.1:5000 --email student@aura.edu --password DemoPass!2024#Secure
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ import requests
 DEFAULT_TIMEOUT = 90
 RETRYABLE_STATUSES = {502, 503, 504}
 DEFAULT_EMAIL = os.getenv('AURA_SMOKE_EMAIL', 'student@aura.edu')
-DEFAULT_PASSWORD = os.getenv('AURA_SMOKE_PASSWORD', 'password123')
+DEFAULT_PASSWORD = os.getenv('AURA_SMOKE_PASSWORD', 'DemoPass!2024#Secure')
 
 
 class SmokeFailure(RuntimeError):

@@ -30,7 +30,7 @@ def check(label, condition, detail=''):
         print(f"  ✗ {label}  ← {detail}")
 
 
-def login_session(email='proctor@aura.edu', password='password123'):
+def login_session(email='proctor@aura.edu', password='DemoPass!2024#Secure'):
     """Create an authenticated session."""
     s = requests.Session()
     r = s.post(f'{BASE}/login', data={'email': email, 'password': password}, allow_redirects=True)

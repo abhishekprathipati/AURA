@@ -12,7 +12,7 @@ with app.app_context():
 
     # Setup test student
     test_email = "test.student+stress@gmail.com"
-    test_password = "password123"
+    test_password = "DemoPass!2024#Secure"
     test_name = "Test Student"
 
     # Ensure user exists

@@ -3,7 +3,7 @@ Fetch All Users from Database
 """
 
 from app import app
-from utils.database import get_db
+from aura.utils.database import get_db
 
 with app.app_context():
     db = get_db()

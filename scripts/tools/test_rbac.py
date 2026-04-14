@@ -29,9 +29,9 @@ import requests
 BASE = 'http://127.0.0.1:5000'
 
 # Demo accounts (must exist in DB)
-STUDENT  = {'email': 'student@aura.edu',  'password': 'password123'}
-PROCTOR  = {'email': 'proctor@aura.edu',  'password': 'password123'}
-HOD      = {'email': 'hod@aura.edu',      'password': 'password123'}
+STUDENT  = {'email': 'student@aura.edu',  'password': 'DemoPass!2024#Secure'}
+PROCTOR  = {'email': 'proctor@aura.edu',  'password': 'DemoPass!2024#Secure'}
+HOD      = {'email': 'hod@aura.edu',      'password': 'DemoPass!2024#Secure'}
 
 # ── Helpers ──
 passed = 0
