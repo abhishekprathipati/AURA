@@ -299,7 +299,37 @@ def hod_recent_escalations():
     except Exception as e:
         return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
 
+
+@proctor_bp.route('/api/hod/students', methods=['GET'])
+@login_required
+@hod_only
+def hod_list_students():
+    """List all students in the HOD's department for oversight."""
+    try:
+        db = get_db()
+        dept_students = get_visible_students()
+        
+        formatted = []
+        for s in dept_students:
+            formatted.append({
+                'name': s.get('name', 'N/A'),
+                'roll_number': s.get('roll_number', 'N/A'),
+                'department': s.get('department', 'N/A'),
+                'risk_level': s.get('risk_level', 'LOW'),
+                'anonymous_id': s.get('anonymous_id', ''),
+                'proctor_id': s.get('proctor_id', 'Unassigned'),
+                'last_active': s.get('updated_at').isoformat() if s.get('updated_at') else None
+            })
+            
+        return jsonify({
+            'success': True,
+            'data': formatted,
+            'count': len(formatted)
+        }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
+
+
 # ---------------------------------------------
 # API: System Status
 # ---------------------------------------------
-

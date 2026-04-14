@@ -1,1718 +1,214 @@
 <!DOCTYPE html>
-<!--
-TODO: REFACTORING NEEDED - This template is ~1700 lines and should be componentized.
-Suggested refactoring plan:
-  1. Extract dashboard sections: hod/_department_stats.html, hod/_student_table.html,
-     hod/_wellness_charts.html, hod/_alert_panel.html
-  2. Move inline CSS (~500+ lines) to external file: static/css/hod_dashboard.css
-  3. Move chart initialization and data fetching to: static/js/hod_dashboard.js
-  4. Share common admin components with proctor_dashboard.html via partials
-  5. Extract data tables as reusable components with sorting/filtering logic
-  6. Consider pagination and virtual scrolling for large student lists
-This will improve maintainability and enable shared components across admin dashboards.
--->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HOD Dashboard | AURA</title>
+    <title>HOD Executive Dashboard | AURA</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hod_dashboard.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
-
-    <style nonce="{{ csp_nonce }}">
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-light: #eef2ff;
-            --accent: #8b5cf6;
-            --danger: #ef4444;
-            --danger-light: #fef2f2;
-            --warning: #f59e0b;
-            --warning-light: #fffbeb;
-            --success: #10b981;
-            --success-light: #ecfdf5;
-            --info: #3b82f6;
-            --info-light: #eff6ff;
-            --white: #ffffff;
-            --gray-50: #f8fafc;
-            --gray-100: #f1f5f9;
-            --gray-200: #e2e8f0;
-            --gray-300: #cbd5e1;
-            --gray-400: #94a3b8;
-            --gray-500: #64748b;
-            --gray-600: #475569;
-            --gray-700: #334155;
-            --gray-800: #1e293b;
-            --gray-900: #0f172a;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #f0f2f5;
-            color: var(--gray-900);
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        /* ═══ HEADER ═══ */
-        .header {
-            background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 50%, #6d28d9 100%);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 4px 20px rgba(30, 27, 75, 0.4);
-        }
-
-        .header-inner {
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 16px 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .header-brand {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .header-logo {
-            width: 48px;
-            height: 48px;
-            background: rgba(255,255,255,0.12);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(10px);
-        }
-
-        .header-logo i { font-size: 1.4rem; color: white; }
-
-        .header-text h1 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: white;
-        }
-
-        .header-text p {
-            font-size: 0.78rem;
-            color: rgba(255,255,255,0.7);
-        }
-
-        .header-center {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .h-pill {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.15);
-            padding: 6px 16px;
-            border-radius: 20px;
-            color: white;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .h-pill.gold {
-            background: rgba(245, 158, 11, 0.2);
-            border-color: rgba(245, 158, 11, 0.3);
-        }
-
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #34d399;
-            box-shadow: 0 0 8px #34d399;
-            animation: livePulse 2s infinite;
-        }
-
-        @keyframes livePulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .h-btn {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: white;
-            height: 38px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-decoration: none;
-            padding: 0 14px;
-            gap: 6px;
-        }
-
-        .h-btn.icon-only { width: 38px; padding: 0; }
-
-        .h-btn:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateY(-1px);
-        }
-
-        .h-btn[disabled] {
-            opacity: 0.55;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .h-btn.danger {
-            background: rgba(239, 68, 68, 0.2);
-            border-color: rgba(239, 68, 68, 0.3);
-        }
-
-        .h-btn.danger:hover { background: rgba(239, 68, 68, 0.4); }
-
-        /* ═══ STATS ═══ */
-        .stats-section {
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 24px 32px 0;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 4px;
-        }
-
-        .stat-card.green::before { background: linear-gradient(90deg, #10b981, #34d399); }
-        .stat-card.indigo::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
-        .stat-card.amber::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-        .stat-card.red::before { background: linear-gradient(90deg, #ef4444, #f87171); }
-
-        .stat-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-        }
-
-        .stat-card.green .stat-icon { background: var(--success-light); color: var(--success); }
-        .stat-card.indigo .stat-icon { background: var(--primary-light); color: var(--primary); }
-        .stat-card.amber .stat-icon { background: var(--warning-light); color: var(--warning); }
-        .stat-card.red .stat-icon { background: var(--danger-light); color: var(--danger); }
-
-        .stat-number {
-            font-size: 2.25rem;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            line-height: 1;
-            color: var(--gray-900);
-        }
-
-        .stat-number .unit {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--gray-400);
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: var(--gray-500);
-            font-weight: 500;
-            margin-top: 4px;
-        }
-
-        /* ═══ MAIN ═══ */
-        .main {
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 24px 32px 48px;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-
-        .grid-3-1 {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-
-        /* ═══ CARD ═══ */
-        .card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transition: box-shadow 0.3s;
-        }
-
-        .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-
-        .card-head {
-            padding: 20px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--gray-100);
-        }
-
-        .card-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--gray-800);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .icon-wrap {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-        }
-
-        .icon-danger { background: var(--danger-light); color: var(--danger); }
-        .icon-info { background: var(--info-light); color: var(--info); }
-        .icon-warning { background: var(--warning-light); color: var(--warning); }
-        .icon-success { background: var(--success-light); color: var(--success); }
-        .icon-primary { background: var(--primary-light); color: var(--primary); }
-        .icon-accent { background: #f5f3ff; color: #7c3aed; }
-
-        .count-pill {
-            background: var(--gray-100);
-            color: var(--gray-600);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            font-weight: 700;
-        }
-
-        .count-pill.has-items {
-            background: var(--danger-light);
-            color: var(--danger);
-            animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        @keyframes badgePop {
-            0% { transform: scale(0.6); }
-            100% { transform: scale(1); }
-        }
-
-        .card-body {
-            padding: 24px;
-            flex: 1;
-        }
-
-        .card-body.no-pad { padding: 0; }
-
-        .card-body.scrollable {
-            max-height: 420px;
-            overflow-y: auto;
-        }
-
-        .card-body.scrollable::-webkit-scrollbar { width: 4px; }
-        .card-body.scrollable::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
-
-        /* ═══ RISK BARS ═══ */
-        .risk-bar-item {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 14px 0;
-            border-bottom: 1px solid var(--gray-50);
-        }
-
-        .risk-bar-item:last-child { border-bottom: none; }
-
-        .risk-bar-label {
-            width: 80px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--gray-600);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .risk-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .risk-bar-track {
-            flex: 1;
-            height: 10px;
-            background: var(--gray-100);
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        .risk-bar-fill {
-            height: 100%;
-            border-radius: 5px;
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 0%;
-        }
-
-        .risk-bar-count {
-            min-width: 40px;
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: var(--gray-800);
-            text-align: right;
-        }
-
-        /* ═══ LIST ITEMS ═══ */
-        .list-item {
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--gray-50);
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            transition: background 0.15s;
-        }
-
-        .list-item:last-child { border-bottom: none; }
-        .list-item:hover { background: var(--gray-50); }
-
-        .list-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
-            flex-shrink: 0;
-        }
-
-        .list-content { flex: 1; min-width: 0; }
-
-        .list-title {
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: var(--gray-800);
-        }
-
-        .list-sub {
-            font-size: 0.78rem;
-            color: var(--gray-500);
-            margin-top: 2px;
-        }
-
-        .list-right { text-align: right; flex-shrink: 0; }
-
-        /* ═══ BADGES ═══ */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-        }
-
-        .badge.high { background: #fef2f2; color: #dc2626; }
-        .badge.medium { background: #fffbeb; color: #d97706; }
-        .badge.low { background: #ecfdf5; color: #059669; }
-        .badge.info { background: #eff6ff; color: #2563eb; }
-
-        .suggestion-copy {
-            margin-top: 6px;
-            font-size: 0.82rem;
-            color: var(--gray-600);
-            line-height: 1.55;
-        }
-
-        .mini-meta {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-
-        .mini-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: var(--gray-100);
-            color: var(--gray-600);
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: capitalize;
-        }
-
-        .suggestion-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-
-        .btn-mini {
-            border: 0;
-            border-radius: 999px;
-            padding: 7px 12px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .btn-mini.review {
-            background: #eff6ff;
-            color: #2563eb;
-        }
-
-        .btn-mini.implement {
-            background: #ecfdf5;
-            color: #059669;
-        }
-
-        .btn-mini[disabled] {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .meta-line {
-            margin-top: 8px;
-            font-size: 0.76rem;
-            color: var(--gray-500);
-        }
-
-        .status-active {
-            color: #059669;
-            font-weight: 700;
-            text-transform: capitalize;
-        }
-
-        .status-review {
-            color: #2563eb;
-            font-weight: 700;
-            text-transform: capitalize;
-        }
-
-        .status-implemented {
-            color: #7c3aed;
-            font-weight: 700;
-            text-transform: capitalize;
-        }
-
-        .quick-actions {
-            display: grid;
-            gap: 16px;
-        }
-
-        .quick-panel {
-            border: 1px solid var(--gray-200);
-            border-radius: 14px;
-            padding: 18px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-        }
-
-        .quick-panel h4 {
-            font-size: 0.95rem;
-            margin-bottom: 6px;
-            color: var(--gray-800);
-        }
-
-        .quick-panel p {
-            font-size: 0.82rem;
-            color: var(--gray-600);
-            margin-bottom: 14px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .form-group.full {
-            grid-column: 1 / -1;
-        }
-
-        .form-group label {
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: var(--gray-700);
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            border: 1px solid var(--gray-300);
-            border-radius: 10px;
-            padding: 11px 12px;
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            background: #fff;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
-        }
-
-        .btn-primary {
-            border: 0;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #4338ca, #6d28d9);
-            color: white;
-            padding: 11px 14px;
-            font-size: 0.88rem;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .btn-primary[disabled] {
-            opacity: 0.6;
-            cursor: wait;
-        }
-
-        .helper-note {
-            font-size: 0.78rem;
-            color: var(--gray-500);
-        }
-
-        .toolbar {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-            padding: 16px 20px 0;
-        }
-
-        .toolbar input,
-        .toolbar select {
-            border: 1px solid var(--gray-300);
-            border-radius: 10px;
-            padding: 10px 12px;
-            font-size: 0.84rem;
-            background: #fff;
-            color: var(--gray-700);
-            min-height: 40px;
-        }
-
-        .toolbar input {
-            flex: 1 1 220px;
-        }
-
-        .toolbar select {
-            flex: 0 0 170px;
-        }
-
-        .toolbar input:focus,
-        .toolbar select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
-        }
-
-        .stack-list {
-            display: grid;
-        }
-
-        /* ═══ PROCTOR TABLE ═══ */
-        .tbl { width: 100%; border-collapse: collapse; }
-
-        .tbl th {
-            padding: 12px 24px;
-            text-align: left;
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--gray-400);
-            background: var(--gray-50);
-            border-bottom: 1px solid var(--gray-100);
-        }
-
-        .tbl td {
-            padding: 14px 24px;
-            font-size: 0.875rem;
-            border-bottom: 1px solid var(--gray-50);
-            vertical-align: middle;
-        }
-
-        .tbl tbody tr { transition: background 0.15s; }
-        .tbl tbody tr:hover { background: var(--gray-50); }
-
-        .proctor-cell {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .proctor-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.75rem;
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .bar-mini {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .bar-mini-track {
-            width: 60px;
-            height: 6px;
-            background: var(--gray-100);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .bar-mini-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.6s ease;
-        }
-
-        /* ═══ EMPTY STATE ═══ */
-        .empty {
-            text-align: center;
-            padding: 48px 24px;
-            color: var(--gray-400);
-        }
-
-        .empty i {
-            font-size: 2.5rem;
-            margin-bottom: 12px;
-            display: block;
-            opacity: 0.3;
-        }
-
-        .empty p { font-size: 0.875rem; font-weight: 500; }
-
-        /* ═══ SKELETON ═══ */
-        .skeleton {
-            position: relative;
-            overflow: hidden;
-            background: var(--gray-100);
-            border-radius: 6px;
-        }
-
-        .skeleton::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-            animation: shimmer 1.5s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .skel-number { width: 60px; height: 36px; border-radius: 8px; }
-        .skel-row { display: flex; align-items: center; gap: 12px; padding: 14px 24px; border-bottom: 1px solid var(--gray-50); }
-        .skel-avatar { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; }
-        .skel-line { height: 12px; border-radius: 4px; }
-        .skel-line-sm { width: 40%; }
-        .skel-line-md { width: 65%; }
-        .skel-line-lg { width: 85%; }
-        .skel-chart { width: 100%; height: 260px; border-radius: 12px; }
-
-        /* ═══ ANIMATIONS ═══ */
-        .fade-up {
-            opacity: 0;
-            transform: translateY(16px);
-            animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes fadeUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .stat-card:nth-child(1) { animation-delay: 0.05s; }
-        .stat-card:nth-child(2) { animation-delay: 0.1s; }
-        .stat-card:nth-child(3) { animation-delay: 0.15s; }
-        .stat-card:nth-child(4) { animation-delay: 0.2s; }
-
-        .grid-3-1 .card:nth-child(1) { animation-delay: 0.25s; }
-        .grid-3-1 .card:nth-child(2) { animation-delay: 0.3s; }
-        .grid-2 .card:nth-child(1) { animation-delay: 0.35s; }
-        .grid-2 .card:nth-child(2) { animation-delay: 0.4s; }
-
-        .list-item, .tbl tbody tr {
-            animation: rowSlide 0.3s ease forwards;
-            opacity: 0;
-        }
-
-        @keyframes rowSlide {
-            from { opacity: 0; transform: translateX(-8px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .stat-card.red.has-critical {
-            animation: criticalPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes criticalPulse {
-            0%, 100% { box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-            50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15), 0 4px 12px rgba(239, 68, 68, 0.1); }
-        }
-
-        .h-btn.spinning i { animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ═══ TOAST ═══ */
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            padding: 14px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: white;
-            z-index: 2000;
-            opacity: 0;
-            transform: translateY(12px);
-            transition: all 0.3s;
-            pointer-events: none;
-        }
-
-        .toast.show { opacity: 1; transform: translateY(0); }
-        .toast.success { background: linear-gradient(135deg, #059669, #10b981); }
-        .toast.error { background: linear-gradient(135deg, #dc2626, #ef4444); }
-        .toast.info { background: linear-gradient(135deg, #4338ca, #6366f1); }
-
-        /* ═══ RESPONSIVE ═══ */
-        @media (max-width: 1024px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .grid-2, .grid-3-1 { grid-template-columns: 1fr; }
-            .header-center { display: none; }
-        }
-
-        @media (max-width: 640px) {
-            .header-inner { padding: 12px 16px; }
-            .stats-section { padding: 16px 16px 0; }
-            .main { padding: 16px 16px 32px; }
-            .stat-card { padding: 16px; }
-            .stat-number { font-size: 1.75rem; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-            .form-grid { grid-template-columns: 1fr; }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr !important; }
-            .header-brand h1 { font-size: 1.2rem; }
-            .header-actions { gap: 4px; }
-            .header-actions .btn span { display: none; }
-            .card { margin-bottom: 12px; }
-            .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-    </style>
 </head>
 <body>
 
-    <!-- ═══ HEADER ═══ -->
-    <header class="header">
-        <div class="header-inner">
-            <div class="header-brand">
-                <div class="header-logo"><i class="fas fa-brain"></i></div>
-                <div class="header-text">
-                    <h1>AURA Executive</h1>
-                    <p>Department Analytics & Oversight</p>
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <div class="sidebar-logo"><i class="fas fa-brain"></i></div>
+                <h2>AURA Executive</h2>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a class="nav-link active" onclick="switchTab('overview')">
+                <i class="fas fa-chart-pie"></i>
+                <span>Executive Overview</span>
+            </a>
+            <a class="nav-link" onclick="switchTab('students')">
+                <i class="fas fa-user-graduate"></i>
+                <span>Student High-Risk</span>
+            </a>
+            <a class="nav-link" onclick="switchTab('proctors')">
+                <i class="fas fa-user-shield"></i>
+                <span>Proctor Oversight</span>
+            </a>
+            <a class="nav-link" onclick="switchTab('suggestions')">
+                <i class="fas fa-lightbulb"></i>
+                <span>Parent Suggestions</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-snippet">
+                <div class="user-avatar">{{ session.get('user_name', 'H')[0] }}</div>
+                <div class="user-info">
+                    <span class="name">{{ session.get('user_name', 'Abhishek') }}</span>
+                    <span class="role">Head of {{ session.get('user_department', 'AIML') }}</span>
                 </div>
             </div>
-            <div class="header-center">
-                <div class="h-pill gold">
-                    <i class="fas fa-crown"></i>
-                    Head of {{ session.get('user_department', 'Department') }}
-                </div>
-                <div class="h-pill">
-                    <div class="live-dot"></div>
-                    System Active
-                </div>
+        </div>
+    </aside>
+
+    <div class="content-wrapper">
+        <!-- ═══ HEADER ═══ -->
+        <header class="header">
+            <div class="header-title">
+                <h2>Diagnostic Overview</h2>
             </div>
             <div class="header-actions">
                 <button class="h-btn icon-only" id="refreshBtn" onclick="refreshData()" title="Refresh"><i class="fas fa-sync-alt"></i></button>
-                <button class="h-btn" onclick="exportReport()"><i class="fas fa-download"></i> Export</button>
-                <a href="{{ url_for('auth.logout') }}" class="h-btn danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                <button class="h-btn" onclick="exportReport()"><i class="fas fa-download"></i> Export Analytics</button>
+                <a href="{{ url_for('auth.logout') }}" class="h-btn danger"><i class="fas fa-power-off"></i></a>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <!-- ═══ STATS ═══ -->
-    <section class="stats-section">
-        <div class="stats-grid">
-            <div class="stat-card green fade-up">
-                <div class="stat-top">
+        <!-- ═══ STATS ═══ -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card green fade-up">
                     <div class="stat-icon"><i class="fas fa-heart-pulse"></i></div>
+                    <div class="stat-number" id="wellnessScore">0<span class="unit">%</span></div>
+                    <div class="stat-label">Dept. Health Index</div>
                 </div>
-                <div class="stat-number" id="wellnessScore"><div class="skeleton skel-number"></div></div>
-                <div class="stat-label">Department Health Index</div>
-            </div>
-            <div class="stat-card indigo fade-up">
-                <div class="stat-top">
+                <div class="stat-card indigo fade-up">
                     <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                    <div class="stat-number" id="totalStudents">0</div>
+                    <div class="stat-label">Total Ward Count</div>
                 </div>
-                <div class="stat-number" id="totalStudents"><div class="skeleton skel-number"></div></div>
-                <div class="stat-label">Department Students</div>
-            </div>
-            <div class="stat-card amber fade-up">
-                <div class="stat-top">
-                    <div class="stat-icon"><i class="fas fa-gavel"></i></div>
+                <div class="stat-card amber fade-up">
+                    <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+                    <div class="stat-number" id="proctorActions">0</div>
+                    <div class="stat-label">Actions (Last 24h)</div>
                 </div>
-                <div class="stat-number" id="proctorActions"><div class="skeleton skel-number"></div></div>
-                <div class="stat-label">Proctor Actions Today</div>
-            </div>
-            <div class="stat-card red fade-up">
-                <div class="stat-top">
-                    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="stat-card red fade-up" id="criticalCard">
+                    <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                    <div class="stat-number" id="highRiskCount">0</div>
+                    <div class="stat-label">Critical Alerts</div>
                 </div>
-                <div class="stat-number" id="highRiskCount"><div class="skeleton skel-number"></div></div>
-                <div class="stat-label">High-Risk Unreviewed</div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- ═══ MAIN ═══ -->
-    <div class="main">
-
-        <!-- ROW 1: CHARTS -->
-        <div class="grid-3-1">
-            <!-- WELLNESS DONUT -->
-            <div class="card fade-up">
-                <div class="card-head">
-                    <div class="card-title">
-                        <span class="icon-wrap icon-success"><i class="fas fa-heartbeat"></i></span>
-                        Department Health Overview
+        <!-- ═══ MAIN ═══ -->
+        <main class="main">
+            
+            <!-- SECTION: OVERVIEW -->
+            <section id="overview" class="page-section active">
+                <div class="grid-3-1">
+                    <div class="card fade-up">
+                        <div class="card-head">
+                            <div class="card-title">Wellness Trajectory (30-Day Trend)</div>
+                        </div>
+                        <div class="card-body">
+                            <div id="trendChart"></div>
+                        </div>
                     </div>
-                </div>
-                <div class="card-body">
-                    <div id="healthChart" style="min-height:280px;">
-                        <div class="skeleton skel-chart"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RISK DISTRIBUTION -->
-            <div class="card fade-up">
-                <div class="card-head">
-                    <div class="card-title">
-                        <span class="icon-wrap icon-warning"><i class="fas fa-chart-bar"></i></span>
-                        Risk Distribution
-                    </div>
-                </div>
-                <div class="card-body" id="riskBarsContainer">
-                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-lg"></div></div></div>
-                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-md"></div></div></div>
-                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-sm"></div></div></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ROW 2: ESCALATIONS + PROCTORS -->
-        <div class="grid-2">
-            <!-- RECENT ESCALATIONS -->
-            <div class="card fade-up">
-                <div class="card-head">
-                    <div class="card-title">
-                        <span class="icon-wrap icon-danger"><i class="fas fa-arrow-circle-up"></i></span>
-                        Recent Escalations
-                    </div>
-                    <span class="count-pill" id="escalationBadge">0</span>
-                </div>
-                <div class="card-body no-pad scrollable" id="escalationsList">
-                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-lg"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
-                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-md"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
-                </div>
-            </div>
-
-            <!-- PROCTOR PERFORMANCE -->
-            <div class="card fade-up">
-                <div class="card-head">
-                    <div class="card-title">
-                        <span class="icon-wrap icon-primary"><i class="fas fa-user-shield"></i></span>
-                        Proctor Performance
-                    </div>
-                </div>
-                <div class="card-body no-pad scrollable" id="proctorTable">
-                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-lg"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
-                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-md"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid-2">
-            <div class="card fade-up">
-                <div class="card-head">
-                    <div class="card-title">
-                        <span class="icon-wrap icon-accent"><i class="fas fa-lightbulb"></i></span>
-                        Parent Suggestions
-                    </div>
-                    <span class="count-pill" id="suggestionBadge">0</span>
-                </div>
-                <div class="toolbar">
-                    <input id="suggestionSearch" type="search" placeholder="Search suggestion, parent, student...">
-                    <select id="suggestionStatusFilter">
-                        <option value="all">All statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="reviewed">Reviewed</option>
-                        <option value="implemented">Implemented</option>
-                    </select>
-                </div>
-                <div class="card-body no-pad scrollable" id="suggestionsList">
-                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-lg"></div><div class="skeleton skel-line skel-line-md" style="margin-top:6px"></div></div></div>
-                    <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-md"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
-                </div>
-            </div>
-
-            <div class="card fade-up">
-                <div class="card-head">
-                    <div class="card-title">
-                        <span class="icon-wrap icon-info"><i class="fas fa-user-plus"></i></span>
-                        Add Proctor
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="quick-actions">
-                        <div class="quick-panel">
-                            <h4>Department Proctor Onboarding</h4>
-                            <p>Only real HOD accounts can create proctor logins. Demo accounts stay view-only.</p>
-                            {% if session.get('is_demo') %}
-                            <div class="helper-note">Demo mode is read-only. You can inspect the HOD portal, but add/edit actions are blocked.</div>
-                            {% endif %}
-                            <form id="addProctorForm">
-                                <div class="form-grid">
-                                    <div class="form-group full">
-                                        <label for="proctorName">Proctor Name</label>
-                                        <input id="proctorName" name="name" type="text" required placeholder="Enter proctor name" {% if session.get('is_demo') %}disabled{% endif %}>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="proctorEmail">Proctor Email</label>
-                                        <input id="proctorEmail" name="email" type="email" required placeholder="proctor@aura.edu" {% if session.get('is_demo') %}disabled{% endif %}>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="proctorPhone">Proctor Phone</label>
-                                        <input id="proctorPhone" name="phone" type="tel" required placeholder="10-digit mobile number" {% if session.get('is_demo') %}disabled{% endif %}>
-                                    </div>
-                                    <div class="form-group full">
-                                        <label for="proctorDepartment">Department</label>
-                                        <select id="proctorDepartment" name="department" required {% if session.get('is_demo') %}disabled{% endif %}>
-                                            <option value="{{ session.get('user_department', '') }}">{{ session.get('user_department', 'Select Department') }}</option>
-                                            <option value="AIML">AIML</option>
-                                            <option value="CSE">CSE</option>
-                                            <option value="ECE">ECE</option>
-                                            <option value="CIVIL">CIVIL</option>
-                                            <option value="MECH">MECH</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-                                    <div class="helper-note">Default password is generated server-side for first login.</div>
-                                    <button class="btn-primary" type="submit" id="addProctorSubmit" {% if session.get('is_demo') %}disabled{% endif %}>Create Proctor</button>
-                                </div>
-                            </form>
+                    <div class="card fade-up">
+                        <div class="card-head">
+                            <div class="card-title">Risk Distribution</div>
+                        </div>
+                        <div class="card-body">
+                            <div id="healthChart"></div>
+                            <div id="riskBarsContainer" style="margin-top: 24px;"></div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="card fade-up">
-            <div class="card-head">
-                <div class="card-title">
-                    <span class="icon-wrap icon-primary"><i class="fas fa-users-gear"></i></span>
-                    Manage Proctors
+                <div class="grid-2">
+                    <div class="card fade-up">
+                        <div class="card-head">
+                            <div class="card-title">Recent Escalations</div>
+                            <span class="count-pill red" id="escalationBadge">0</span>
+                        </div>
+                        <div class="card-body no-pad scrollable" id="escalationsList">
+                            <!-- JS Render -->
+                        </div>
+                    </div>
+                    <div class="card fade-up">
+                        <div class="card-head">
+                            <div class="card-title">Top Proctor Activity</div>
+                        </div>
+                        <div class="card-body no-pad scrollable" id="proctorTable">
+                            <!-- JS Render -->
+                        </div>
+                    </div>
                 </div>
-                <span class="count-pill" id="manageProctorsBadge">0</span>
-            </div>
-            <div class="toolbar">
-                <input id="proctorSearch" type="search" placeholder="Search proctor by name, email, phone...">
-                <select id="proctorFilter">
-                    <option value="all">All proctors</option>
-                    <option value="active">Active only</option>
-                    <option value="overloaded">Assigned 10+ students</option>
-                    <option value="low_activity">Low 7d actions</option>
-                </select>
-            </div>
-            <div class="card-body no-pad scrollable" id="manageProctorsTable">
-                <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-lg"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
-                <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-md"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
-            </div>
-        </div>
+            </section>
 
-        <div class="card fade-up">
-            <div class="card-head">
-                <div class="card-title">
-                    <span class="icon-wrap icon-success"><i class="fas fa-list-check"></i></span>
-                    Implementation History
+            <!-- SECTION: STUDENTS (DRILL DOWN) -->
+            <section id="students" class="page-section">
+                <div class="card fade-up">
+                    <div class="card-head">
+                        <div class="card-title">
+                            <span class="icon-wrap icon-primary"><i class="fas fa-users-viewfinder"></i></span>
+                            Student Risk Monitor
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="toolbar" style="margin-bottom: 24px; padding: 0;">
+                            <input id="studentSearch" type="search" placeholder="Search by name, roll number, or risk level..." style="flex: 1">
+                        </div>
+                        <div class="table-container" id="studentTableContainer">
+                            <div class="empty">Analyzing department student data...</div>
+                        </div>
+                    </div>
                 </div>
-                <span class="count-pill" id="implementationBadge">0</span>
-            </div>
-            <div class="card-body no-pad scrollable stack-list" id="implementationHistoryList">
-                <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-lg"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
-                <div class="skel-row"><div class="skeleton skel-avatar"></div><div style="flex:1"><div class="skeleton skel-line skel-line-md"></div><div class="skeleton skel-line skel-line-sm" style="margin-top:6px"></div></div></div>
-            </div>
-        </div>
+            </section>
+
+            <!-- SECTION: PROCTORS -->
+            <section id="proctors" class="page-section">
+                <div class="grid-2">
+                    <div class="card fade-up">
+                        <div class="card-head">
+                            <div class="card-title">Manage Proctors</div>
+                        </div>
+                        <div class="card-body no-pad" id="manageProctorsTable">
+                            <!-- JS Render -->
+                        </div>
+                    </div>
+                    <div class="card fade-up">
+                        <div class="card-head">
+                            <div class="card-title">Performance Metrics</div>
+                        </div>
+                        <div class="card-body" id="proctorPerformanceStats">
+                            <p class="helper-note">Select a proctor to view detailed metrics.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: SUGGESTIONS -->
+            <section id="suggestions" class="page-section">
+                <div class="grid-2">
+                    <div class="card fade-up">
+                        <div class="card-head">
+                            <div class="card-title">Active Parent Feedback</div>
+                            <span class="count-pill indigo" id="suggestionBadge">0</span>
+                        </div>
+                        <div class="card-body no-pad scrollable" id="suggestionsList">
+                            <!-- JS Render -->
+                        </div>
+                    </div>
+                    <div class="card fade-up">
+                        <div class="card-head">
+                            <div class="card-title">Implementation History</div>
+                        </div>
+                        <div class="card-body no-pad scrollable" id="implementationHistoryList">
+                            <!-- JS Render -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
     </div>
 
-    <div class="toast" id="toast"></div>
+    <div id="toast" class="toast"></div>
 
+    <script src="{{ url_for('static', filename='js/hod_dashboard.js') }}"></script>
     <script nonce="{{ csp_nonce }}">
-    // ═══ UTILITIES ═══
-    const IS_DEMO = {{ 'true' if session.get('is_demo') else 'false' }};
-    const DASHBOARD_STATE = {
-        suggestions: [],
-        managedProctors: [],
-        suggestionSearch: '',
-        suggestionStatus: 'all',
-        proctorSearch: '',
-        proctorFilter: 'all'
-    };
-
-    function esc(s) {
-        if (s == null) return '';
-        const d = document.createElement('div');
-        d.appendChild(document.createTextNode(String(s)));
-        return d.innerHTML;
-    }
-
-    function showToast(msg, type = 'info') {
-        const t = document.getElementById('toast');
-        t.textContent = msg;
-        t.className = 'toast ' + type + ' show';
-        setTimeout(() => t.classList.remove('show'), 3000);
-    }
-
-    function animateCount(el, target, duration = 800) {
-        const start = parseInt(el.textContent) || 0;
-        if (start === target) { el.textContent = target; return; }
-        const range = target - start;
-        const startTime = performance.now();
-        function tick(now) {
-            const elapsed = now - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 3);
-            el.textContent = Math.round(start + range * eased);
-            if (progress < 1) requestAnimationFrame(tick);
-        }
-        requestAnimationFrame(tick);
-    }
-
-    function applyRowDelays(container) {
-        const items = container.querySelectorAll('tr, .list-item');
-        items.forEach((item, i) => { item.style.animationDelay = `${i * 0.05}s`; });
-    }
-
-    // ═══ CHARTS ═══
-    let healthChart = null;
-
-    function initHealthChart() {
-        healthChart = new ApexCharts(document.querySelector('#healthChart'), {
-            series: [0, 0, 0],
-            chart: {
-                type: 'donut',
-                height: 280,
-                animations: { enabled: true, easing: 'easeinout', speed: 800 }
-            },
-            labels: ['Low Risk', 'Medium Risk', 'High Risk'],
-            colors: ['#10b981', '#f59e0b', '#ef4444'],
-            plotOptions: {
-                pie: {
-                    donut: {
-                        size: '72%',
-                        labels: {
-                            show: true,
-                            total: {
-                                show: true,
-                                label: 'Health',
-                                fontSize: '14px',
-                                fontWeight: 600,
-                                color: '#64748b',
-                                formatter: () => 'Index'
-                            }
-                        }
-                    }
-                }
-            },
-            dataLabels: {
-                enabled: true,
-                formatter: val => Math.round(val) + '%',
-                style: { fontSize: '12px', fontWeight: 600 }
-            },
-            legend: { show: false },
-            stroke: { width: 3, colors: ['#fff'] }
-        });
-        healthChart.render();
-    }
-
-    // ═══ DATA LOADING ═══
-    let isFirstLoad = true;
-
-    async function loadDashboard() {
-        try {
-            const [stats, risk, escalations, proctors, suggestions, managedProctors] = await Promise.all([
-                fetch('/proctor/api/hod/dashboard-stats').then(r => r.json()),
-                fetch('/proctor/api/hod/risk-distribution').then(r => r.json()),
-                fetch('/proctor/api/hod/recent-escalations').then(r => r.json()),
-                fetch('/proctor/api/hod/proctor-performance').then(r => r.json()),
-                fetch('/proctor/api/hod/parent-suggestions').then(r => r.json()),
-                fetch('/proctor/api/hod/proctors').then(r => r.json())
-            ]);
-
-            // ─── KPI Stats ───
-            if (stats.success) {
-                const d = stats.data;
-                const wEl = document.getElementById('wellnessScore');
-                const sEl = document.getElementById('totalStudents');
-                const pEl = document.getElementById('proctorActions');
-                const hEl = document.getElementById('highRiskCount');
-
-                const wellness = d.avg_wellness || 0;
-                animateCount(wEl, wellness, isFirstLoad ? 800 : 400);
-                // Add % unit after animation
-                setTimeout(() => { wEl.innerHTML = wEl.textContent + '<span class="unit">%</span>'; }, isFirstLoad ? 850 : 450);
-
-                animateCount(sEl, d.total_students || 0, isFirstLoad ? 800 : 400);
-                animateCount(pEl, d.proctor_actions_today || 0, isFirstLoad ? 800 : 400);
-                animateCount(hEl, d.high_risk_incidents || 0, isFirstLoad ? 800 : 400);
-
-                // Critical pulse
-                const redCard = document.querySelector('.stat-card.red');
-                if ((d.high_risk_incidents || 0) > 0) {
-                    redCard.classList.add('has-critical');
-                } else {
-                    redCard.classList.remove('has-critical');
-                }
-            }
-
-            // ─── Risk Distribution Bars ───
-            if (risk.success) {
-                renderRiskBars(risk.data);
-            }
-
-            // ─── Risk Distribution → Update donut with real data ───
-            if (risk.success && healthChart) {
-                const rd = risk.data;
-                const low = rd.low || 0;
-                const med = rd.medium || 0;
-                const high = rd.high || 0;
-                healthChart.updateSeries([low, med, high]);
-            }
-
-            // ─── Escalations ───
-            if (escalations.success) {
-                renderEscalations(escalations.data || []);
-            }
-
-            // ─── Proctor Performance ───
-            if (proctors.success) {
-                renderProctors(proctors.data || []);
-            }
-
-            if (suggestions.success) {
-                DASHBOARD_STATE.suggestions = suggestions.data || [];
-                renderSuggestions();
-                renderImplementationHistory();
-            }
-
-            if (managedProctors.success) {
-                DASHBOARD_STATE.managedProctors = managedProctors.data || [];
-                renderManageProctors();
-            }
-
-            isFirstLoad = false;
-        } catch (err) {
-            console.error('HOD Dashboard error:', err);
-            document.querySelectorAll('.skeleton').forEach(s => {
-                s.classList.remove('skeleton');
-                s.textContent = '--';
-            });
-            showToast('Failed to load dashboard data. Retrying...', 'error');
-        }
-    }
-
-    // ═══ RENDER FUNCTIONS ═══
-
-    function renderRiskBars(data) {
-        const container = document.getElementById('riskBarsContainer');
-        const total = (data.high || 0) + (data.medium || 0) + (data.low || 0);
-        const max = Math.max(data.high || 0, data.medium || 0, data.low || 0, 1);
-
-        const items = [
-            { label: 'High', count: data.high || 0, color: '#ef4444', dot: '#ef4444' },
-            { label: 'Medium', count: data.medium || 0, color: '#f59e0b', dot: '#f59e0b' },
-            { label: 'Low', count: data.low || 0, color: '#10b981', dot: '#10b981' }
-        ];
-
-        container.innerHTML = items.map(item => `
-            <div class="risk-bar-item">
-                <div class="risk-bar-label">
-                    <span class="risk-dot" style="background:${item.dot}"></span>
-                    ${item.label}
-                </div>
-                <div class="risk-bar-track">
-                    <div class="risk-bar-fill" style="background:${item.color};" data-width="${max > 0 ? (item.count / max * 100) : 0}"></div>
-                </div>
-                <div class="risk-bar-count">${item.count}</div>
-            </div>
-        `).join('') + `
-            <div style="text-align:center; padding-top:12px; border-top:1px solid var(--gray-100); margin-top:8px;">
-                <span style="font-size:0.8rem; color:var(--gray-500); font-weight:600;">Total Incidents: ${total}</span>
-            </div>
-        `;
-
-        // Animate bars
-        requestAnimationFrame(() => {
-            container.querySelectorAll('.risk-bar-fill').forEach(bar => {
-                bar.style.width = bar.dataset.width + '%';
-            });
-        });
-    }
-
-    function renderEscalations(data) {
-        const el = document.getElementById('escalationsList');
-        const badge = document.getElementById('escalationBadge');
-
-        if (!data.length) {
-            el.innerHTML = '<div class="empty"><i class="fas fa-check-circle"></i><p>No escalated incidents</p></div>';
-            badge.textContent = '0';
-            return;
-        }
-
-        badge.textContent = data.length;
-        if (data.length > 0) badge.classList.add('has-items');
-
-        el.innerHTML = data.slice(0, 10).map(item => {
-            const level = (item.risk_level || 'HIGH').toLowerCase();
-            return `
-                <div class="list-item">
-                    <div class="list-icon" style="background:var(--danger-light);color:var(--danger);">
-                        <i class="fas fa-arrow-circle-up"></i>
-                    </div>
-                    <div class="list-content">
-                        <div class="list-title">${esc(item.trigger_source || 'Escalated Incident')}</div>
-                        <div class="list-sub">${esc(item.message_excerpt || 'No details')} &bull; ${item.timestamp ? new Date(item.timestamp).toLocaleDateString() : ''}</div>
-                    </div>
-                    <div class="list-right">
-                        <span class="badge ${level}">${esc(item.risk_level || 'HIGH')}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        applyRowDelays(el);
-    }
-
-    function renderProctors(data) {
-        const el = document.getElementById('proctorTable');
-
-        if (!data.length) {
-            el.innerHTML = '<div class="empty"><i class="fas fa-user-shield"></i><p>No proctor activity this week</p></div>';
-            return;
-        }
-
-        const maxActions = Math.max(...data.map(p => p.total_actions), 1);
-
-        el.innerHTML = `
-            <table class="tbl">
-                <thead><tr><th>Proctor</th><th>Actions</th><th>Escalated</th><th>Dismissed</th></tr></thead>
-                <tbody>
-                    ${data.slice(0, 10).map(p => {
-                        const initial = (p.proctor_id || 'P').charAt(0).toUpperCase();
-                        const pct = Math.round((p.total_actions / maxActions) * 100);
-                        const barColor = pct > 60 ? '#10b981' : pct > 30 ? '#f59e0b' : '#ef4444';
-                        return `
-                            <tr>
-                                <td>
-                                    <div class="proctor-cell">
-                                        <div class="proctor-avatar">${esc(initial)}</div>
-                                        <span style="font-weight:600;font-size:0.8rem;">${esc(p.proctor_id || 'Unknown')}</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="bar-mini">
-                                        <span style="font-weight:700;min-width:20px;">${p.total_actions}</span>
-                                        <div class="bar-mini-track">
-                                            <div class="bar-mini-fill" style="width:${pct}%;background:${barColor};"></div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td><span style="color:var(--warning);font-weight:700;">${p.escalations || 0}</span></td>
-                                <td><span style="color:var(--success);font-weight:700;">${p.dismissals || 0}</span></td>
-                            </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
-        `;
-        applyRowDelays(el);
-    }
-
-    function renderSuggestions() {
-        const el = document.getElementById('suggestionsList');
-        const badge = document.getElementById('suggestionBadge');
-        const query = DASHBOARD_STATE.suggestionSearch.trim().toLowerCase();
-        const status = DASHBOARD_STATE.suggestionStatus;
-        const data = (DASHBOARD_STATE.suggestions || []).filter(item => {
-            const matchesQuery = !query || [
-                item.title,
-                item.description,
-                item.parent_name,
-                item.student_name,
-                item.student_roll,
-                item.category
-            ].some(value => String(value || '').toLowerCase().includes(query));
-            const matchesStatus = status === 'all' || String(item.status || 'pending').toLowerCase() === status;
-            return matchesQuery && matchesStatus;
-        });
-
-        if (badge) {
-            const total = DASHBOARD_STATE.suggestions.length;
-            badge.textContent = `${data.length}/${total}`;
-            badge.classList.toggle('has-items', total > 0);
-        }
-
-        if (!data.length) {
-            el.innerHTML = '<div class="empty"><i class="fas fa-lightbulb"></i><p>No parent suggestions for this department yet</p></div>';
-            return;
-        }
-
-        el.innerHTML = data.map(item => `
-            <div class="list-item">
-                <div class="list-icon" style="background:#f5f3ff;color:#7c3aed;">
-                    <i class="fas fa-comment-dots"></i>
-                </div>
-                <div class="list-content">
-                    <div class="list-title">${esc(item.title || 'Suggestion')}</div>
-                    <div class="list-sub">${esc(item.parent_name || 'Parent')} for ${esc(item.student_name || 'Student')} (${esc(item.student_roll || 'N/A')})</div>
-                    <div class="suggestion-copy">${esc(item.description || '')}</div>
-                    <div class="mini-meta">
-                        <span class="mini-chip"><i class="fas fa-tag"></i>${esc(item.category || 'general')}</span>
-                        <span class="mini-chip"><i class="fas fa-circle-check"></i>${esc(item.status || 'pending')}</span>
-                        <span class="mini-chip"><i class="fas fa-thumbs-up"></i>${Number(item.upvotes || 0)}</span>
-                    </div>
-                    <div class="meta-line">
-                        ${item.reviewed_at ? `Reviewed ${new Date(item.reviewed_at).toLocaleDateString()} by ${esc(item.reviewed_by || 'HOD')}` : 'Awaiting review'}
-                        ${item.implemented_at ? ` · Implemented ${new Date(item.implemented_at).toLocaleDateString()}` : ''}
-                    </div>
-                    ${(item.review_note || item.implementation_note) ? `<div class="meta-line">Note: ${esc(item.implementation_note || item.review_note)}</div>` : ''}
-                    <div class="suggestion-actions">
-                        <button class="btn-mini review" data-suggestion-id="${esc(item.id)}" data-status="reviewed" ${(IS_DEMO || item.status === 'reviewed' || item.status === 'implemented') ? 'disabled' : ''}>Mark Reviewed</button>
-                        <button class="btn-mini implement" data-suggestion-id="${esc(item.id)}" data-status="implemented" ${(IS_DEMO || item.status === 'implemented') ? 'disabled' : ''}>Mark Implemented</button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-
-        applyRowDelays(el);
-    }
-
-    function renderImplementationHistory() {
-        const el = document.getElementById('implementationHistoryList');
-        const badge = document.getElementById('implementationBadge');
-        const implemented = (DASHBOARD_STATE.suggestions || []).filter(item => String(item.status || '').toLowerCase() === 'implemented');
-
-        if (badge) {
-            badge.textContent = implemented.length;
-            badge.classList.toggle('has-items', implemented.length > 0);
-        }
-
-        if (!implemented.length) {
-            el.innerHTML = '<div class="empty"><i class="fas fa-list-check"></i><p>No implemented parent improvements yet</p></div>';
-            return;
-        }
-
-        el.innerHTML = implemented.map(item => `
-            <div class="list-item">
-                <div class="list-icon" style="background:var(--success-light);color:var(--success);">
-                    <i class="fas fa-check-double"></i>
-                </div>
-                <div class="list-content">
-                    <div class="list-title">${esc(item.title || 'Implemented suggestion')}</div>
-                    <div class="list-sub">${esc(item.parent_name || 'Parent')} · ${esc(item.student_name || 'Student')} (${esc(item.student_roll || 'N/A')})</div>
-                    <div class="suggestion-copy">${esc(item.implementation_note || item.review_note || item.description || '')}</div>
-                    <div class="mini-meta">
-                        <span class="mini-chip"><i class="fas fa-calendar-check"></i>${item.implemented_at ? new Date(item.implemented_at).toLocaleDateString() : 'Implemented'}</span>
-                        <span class="mini-chip"><i class="fas fa-user-check"></i>${esc(item.implemented_by || 'HOD')}</span>
-                        <span class="mini-chip"><i class="fas fa-tag"></i>${esc(item.category || 'general')}</span>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-
-        applyRowDelays(el);
-    }
-
-    function renderManageProctors() {
-        const el = document.getElementById('manageProctorsTable');
-        const badge = document.getElementById('manageProctorsBadge');
-        const query = DASHBOARD_STATE.proctorSearch.trim().toLowerCase();
-        const filter = DASHBOARD_STATE.proctorFilter;
-        const data = (DASHBOARD_STATE.managedProctors || []).filter(item => {
-            const matchesQuery = !query || [item.name, item.email, item.phone, item.department].some(value => String(value || '').toLowerCase().includes(query));
-            const status = String(item.status || 'active').toLowerCase();
-            if (!matchesQuery) return false;
-            if (filter === 'active') return status === 'active';
-            if (filter === 'overloaded') return Number(item.assigned_students || 0) >= 10;
-            if (filter === 'low_activity') return Number(item.recent_actions || 0) <= 2;
-            return true;
-        });
-
-        if (badge) {
-            const total = DASHBOARD_STATE.managedProctors.length;
-            badge.textContent = `${data.length}/${total}`;
-            badge.classList.toggle('has-items', total > 0);
-        }
-
-        if (!data.length) {
-            el.innerHTML = '<div class="empty"><i class="fas fa-user-shield"></i><p>No department proctors found</p></div>';
-            return;
-        }
-
-        el.innerHTML = `
-            <table class="tbl">
-                <thead><tr><th>Proctor</th><th>Contact</th><th>Assigned Students</th><th>7d Actions</th><th>Status</th></tr></thead>
-                <tbody>
-                    ${data.map(p => {
-                        const initial = (p.name || 'P').charAt(0).toUpperCase();
-                        const statusClass = (p.status || 'active') === 'active' ? 'status-active' : 'status-review';
-                        return `
-                            <tr>
-                                <td>
-                                    <div class="proctor-cell">
-                                        <div class="proctor-avatar">${esc(initial)}</div>
-                                        <div>
-                                            <div style="font-weight:700;">${esc(p.name || 'Proctor')}</div>
-                                            <div class="list-sub">${esc(p.department || '')}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div>${esc(p.email || '')}</div>
-                                    <div class="list-sub">${esc(p.phone || 'No phone')}</div>
-                                </td>
-                                <td>${Number(p.assigned_students || 0)}</td>
-                                <td>${Number(p.recent_actions || 0)}</td>
-                                <td><span class="${statusClass}">${esc(p.status || 'active')}</span></td>
-                            </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
-        `;
-        applyRowDelays(el);
-    }
-
-    async function updateSuggestionStatus(suggestionId, status) {
-        if (IS_DEMO) {
-            showToast('Demo mode is read-only', 'info');
-            return;
-        }
-
-        let note = '';
-        if (status === 'reviewed') {
-            note = window.prompt('Optional review note:', '') || '';
-        } else if (status === 'implemented') {
-            note = window.prompt('Optional implementation note:', '') || '';
-        }
-
-        try {
-            const res = await fetch(`/proctor/api/hod/parent-suggestions/${encodeURIComponent(suggestionId)}/status`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status, note })
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(data.error || data.message || 'Failed to update suggestion');
-            showToast(data.message || 'Suggestion updated', 'success');
-            await loadDashboard();
-        } catch (err) {
-            showToast(err.message || 'Failed to update suggestion', 'error');
-        }
-    }
-
-    async function handleAddProctor(e) {
-        e.preventDefault();
-
-        const submitBtn = document.getElementById('addProctorSubmit');
-        const phone = document.getElementById('proctorPhone')?.value.trim() || '';
-        if (!/^\d{10}$/.test(phone)) {
-            showToast('Proctor phone must be 10 digits', 'error');
-            return;
-        }
-
-        const payload = {
-            name: document.getElementById('proctorName')?.value.trim() || '',
-            email: document.getElementById('proctorEmail')?.value.trim() || '',
-            phone,
-            department: document.getElementById('proctorDepartment')?.value.trim() || ''
-        };
-
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Creating...';
-        }
-
-        try {
-            const res = await fetch('/proctor/api/proctor/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json().catch(() => ({}));
-
-            if (!res.ok) {
-                throw new Error(data.message || data.error || 'Failed to create proctor');
-            }
-
-            showToast(data.message || 'Proctor created successfully', 'success');
-            document.getElementById('addProctorForm')?.reset();
-            const deptSelect = document.getElementById('proctorDepartment');
-            if (deptSelect) deptSelect.value = '{{ session.get('user_department', '') }}';
-            await loadDashboard();
-        } catch (err) {
-            showToast(err.message || 'Failed to create proctor', 'error');
-        } finally {
-            if (submitBtn) {
-                submitBtn.disabled = {{ 'true' if session.get('is_demo') else 'false' }};
-                submitBtn.textContent = 'Create Proctor';
-            }
-        }
-    }
-
-    // ═══ ACTIONS ═══
-    function exportReport() {
-        showToast('Generating report...', 'info');
-        window.location.href = '/proctor/api/audit/export/csv?days=30';
-        // Success is indicated by the browser downloading the file
-    }
-
-    async function refreshData() {
-        const btn = document.getElementById('refreshBtn');
-        btn.classList.add('spinning');
-        showToast('Refreshing...', 'info');
-        await loadDashboard();
-        btn.classList.remove('spinning');
-        showToast('Dashboard updated', 'success');
-    }
-
-    // ═══ INIT ═══
-    document.addEventListener('DOMContentLoaded', () => {
-        initHealthChart();
-        loadDashboard();
-        document.getElementById('addProctorForm')?.addEventListener('submit', handleAddProctor);
-        document.getElementById('suggestionSearch')?.addEventListener('input', (event) => {
-            DASHBOARD_STATE.suggestionSearch = event.target.value || '';
-            renderSuggestions();
-        });
-        document.getElementById('suggestionStatusFilter')?.addEventListener('change', (event) => {
-            DASHBOARD_STATE.suggestionStatus = event.target.value || 'all';
-            renderSuggestions();
-        });
-        document.getElementById('proctorSearch')?.addEventListener('input', (event) => {
-            DASHBOARD_STATE.proctorSearch = event.target.value || '';
-            renderManageProctors();
-        });
-        document.getElementById('proctorFilter')?.addEventListener('change', (event) => {
-            DASHBOARD_STATE.proctorFilter = event.target.value || 'all';
-            renderManageProctors();
-        });
-        document.getElementById('suggestionsList')?.addEventListener('click', (event) => {
-            const button = event.target.closest('[data-suggestion-id][data-status]');
-            if (!button) return;
-            updateSuggestionStatus(button.dataset.suggestionId, button.dataset.status);
-        });
-    });
-
-    setInterval(loadDashboard, 60000);
+        // Inline overrides or config if needed
     </script>
 </body>
 </html>
