@@ -6,6 +6,9 @@ located in the `aura` package. It ensures backward compatibility for scripts
 and WSGI servers (like Gunicorn) that expect `app` and `socketio` in the root.
 """
 
+import eventlet
+eventlet.monkey_patch()
+
 from dotenv import load_dotenv
 import os
 
