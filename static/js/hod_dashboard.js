@@ -3,6 +3,7 @@ const DASHBOARD_STATE = {
     stats: {},
     riskOversight: [],
     proctors: [],
+    students: [],
     trends: {},
     currentTheme: localStorage.getItem('aura-theme') || 'light'
 };
@@ -30,11 +31,11 @@ function esc(s) {
     return d.innerHTML;
 }
 
-function showToast(msg) {
+function showToast(msg, type = 'success') {
     const t = document.getElementById('toast');
     if (!t) return;
     t.textContent = msg;
-    t.className = 'toast show';
+    t.className = `toast show ${type}`;
     setTimeout(() => t.classList.remove('show'), 3000);
 }
 
@@ -55,7 +56,7 @@ function animateCount(el, target, suffix = '') {
     }, 16);
 }
 
-// ═══ API ═══
+// ═══ DATA FETCHING ═══
 async function loadDashboard() {
     try {
         const endpoints = [
@@ -63,10 +64,12 @@ async function loadDashboard() {
             '/proctor/api/hod/risk-oversight',
             '/proctor/api/hod/risk-distribution',
             '/proctor/api/hod/wellness-trends',
-            '/proctor/api/hod/proctor-performance'
+            '/proctor/api/hod/proctor-performance',
+            '/proctor/api/hod/students',
+            '/proctor/api/hod/department-proctors'
         ];
 
-        const [stats, riskBox, distribution, trends, proctors] = await Promise.all(
+        const [stats, riskBox, distribution, trends, performance, students, proctors] = await Promise.all(
             endpoints.map(e => fetch(e).then(r => r.json()))
         );
 
@@ -74,11 +77,15 @@ async function loadDashboard() {
         if (riskBox.success) renderRiskOversight(riskBox.data);
         if (distribution.success) renderDistribution(distribution.data);
         if (trends.success) renderTrends(trends.data);
+        if (performance.success) renderProctorPerformance(performance.data);
+        if (students.success) {
+            DASHBOARD_STATE.students = students.data;
+            renderStudents(students.data);
+        }
         if (proctors.success) renderProctors(proctors.data);
 
     } catch (err) {
         console.error('HOD Sync Error:', err);
-        showToast('Connection to server lost. Retrying...');
     }
 }
 
@@ -104,7 +111,7 @@ function renderRiskOversight(data) {
     count.textContent = data.length;
     
     if (data.length === 0) {
-        body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 60px; color: var(--text-muted); font-weight: 500;">No active critical alerts in department.</td></tr>';
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px; color: var(--text-muted)">No active critical alerts.</td></tr>';
         return;
     }
 
@@ -125,24 +132,157 @@ function renderRiskOversight(data) {
     }).join('');
 }
 
+function renderStudents(data) {
+    const body = document.getElementById('studentHubBody');
+    if (!body) return;
+
+    if (data.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px;">No students records found.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = data.map(s => `
+        <tr>
+            <td><code>${esc(s.anonymous_id)}</code></td>
+            <td><strong>${esc(s.name)}</strong></td>
+            <td>${esc(s.department)}</td>
+            <td><span class="proctor-name">${esc(s.proctor_id)}</span></td>
+            <td><span class="tag ${s.risk_level.toLowerCase()}">${esc(s.risk_level)}</span></td>
+        </tr>
+    `).join('');
+}
+
+function filterStudents() {
+    const q = document.getElementById('studentSearch').value.toLowerCase();
+    const filtered = DASHBOARD_STATE.students.filter(s => 
+        s.name.toLowerCase().includes(q) || s.roll_number.toLowerCase().includes(q) || s.anonymous_id.toLowerCase().includes(q)
+    );
+    renderStudents(filtered);
+}
+
+function renderProctorPerformance(data) {
+    const container = document.getElementById('proctorPerformanceTable');
+    if (!container) return;
+    
+    if (data.length === 0) {
+        container.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted)">No active performance metrics.</div>';
+        return;
+    }
+
+    container.innerHTML = `
+        <table class="aura-table">
+            <thead><tr><th>Proctor</th><th>Actions</th><th>Ratio</th></tr></thead>
+            <tbody>
+                ${data.map(p => {
+                    const ratio = Math.round((p.escalations / (p.total_actions || 1)) * 100);
+                    return `
+                        <tr>
+                            <td><strong>${esc(p.proctor_id)}</strong></td>
+                            <td>${p.total_actions}</td>
+                            <td><span class="tag">${ratio}% Esc.</span></td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function renderProctors(data) {
+    const container = document.getElementById('proctorListContainer');
+    if (!container) return;
+
+    if (data.length === 0) {
+        container.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted)">No proctors assigned to department.</div>';
+        return;
+    }
+
+    container.innerHTML = data.map(p => `
+        <div class="proctor-item">
+            <div class="proctor-info">
+                <span class="p-name">${esc(p.name)}</span>
+                <span class="p-email">${esc(p.email)}</span>
+            </div>
+            <button class="remove-btn" onclick="removeProctor('${p.email}')">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+// ═══ PROCTOR ACTIONS ═══
+function showAddProctorModal() {
+    document.getElementById('proctorModal').classList.add('visible');
+}
+
+function hideModal(id) {
+    document.getElementById(id).classList.remove('visible');
+}
+
+async function submitProctor(e) {
+    e.preventDefault();
+    const payload = {
+        name: document.getElementById('pName').value,
+        email: document.getElementById('pEmail').value,
+        password: document.getElementById('pPass').value
+    };
+
+    try {
+        const res = await fetch('/proctor/api/hod/manage-proctors', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            showToast('Proctor account created successfully!');
+            hideModal('proctorModal');
+            loadDashboard();
+            e.target.reset();
+        } else {
+            showToast(data.error || 'Failed to create proctor account', 'error');
+        }
+    } catch (err) {
+        showToast('System error. Please try again.', 'error');
+    }
+}
+
+async function removeProctor(email) {
+    if (!confirm(`Are you sure you want to revoke access for ${email}?`)) return;
+
+    try {
+        const res = await fetch(`/proctor/api/hod/manage-proctors/${email}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-Token': getCsrfToken() }
+        });
+        if (res.ok) {
+            showToast('Proctor access revoked.');
+            loadDashboard();
+        }
+    } catch (err) {
+        showToast('Failed to remove proctor.', 'error');
+    }
+}
+
+// ═══ CHART RENDERERS ═══
 let trendChart = null;
 function renderTrends(data) {
     const el = document.querySelector('#trendChart');
     if (!el) return;
-    
     const isDark = DASHBOARD_STATE.currentTheme === 'dark';
     const accentColor = '#6366f1';
 
     const options = {
         series: [{ name: 'Wellness Index', data: data.wellness }],
-        chart: { type: 'area', height: 350, toolbar: { show: false }, zoom: { enabled: false }, animations: { enabled: true, easing: 'easeinout', speed: 800 } },
+        chart: { type: 'area', height: 350, toolbar: { show: false }, zoom: { enabled: false } },
         colors: [accentColor],
         fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.05 } },
         dataLabels: { enabled: false },
         stroke: { curve: 'smooth', width: 4 },
-        xaxis: { categories: data.dates, labels: { style: { colors: isDark ? '#94a3b8' : '#64748b', fontWeight: 600 } }, axisBorder: { show: false } },
-        yaxis: { max: 100, min: 0, labels: { style: { colors: isDark ? '#94a3b8' : '#64748b', fontWeight: 600 } } },
-        grid: { borderColor: isDark ? 'rgba(148, 163, 184, 0.05)' : 'rgba(100, 116, 139, 0.1)', strokeDashArray: 5 }
+        xaxis: { categories: data.dates, labels: { style: { colors: isDark ? '#94a3b8' : '#64748b' } } },
+        yaxis: { max: 100, min: 0, labels: { style: { colors: isDark ? '#94a3b8' : '#64748b' } } },
+        grid: { borderColor: isDark ? 'rgba(148, 163, 184, 0.05)' : 'rgba(100, 116, 139, 0.1)' }
     };
 
     if (trendChart) trendChart.updateOptions(options);
@@ -167,7 +307,6 @@ function renderDistribution(data) {
     if (healthChart) healthChart.updateOptions(options);
     else { healthChart = new ApexCharts(el, options); healthChart.render(); }
     
-    // Risk Bars (Fixed structure)
     const container = document.getElementById('riskBarsContainer');
     if (container) {
         container.innerHTML = `
@@ -191,43 +330,20 @@ function renderRiskPill(label, count, total, color) {
     `;
 }
 
-function renderProctors(data) {
-    const el = document.getElementById('proctorTable');
-    if (!el) return;
-    
-    if (data.length === 0) {
-        el.innerHTML = '<div style="padding:60px; text-align:center; color:var(--text-muted); font-weight: 500;">No proctor performance metrics available.</div>';
-        return;
-    }
-
-    el.innerHTML = `
-        <table class="aura-table">
-            <thead><tr><th>Assigned Proctor</th><th>Weekly Impacts</th></tr></thead>
-            <tbody>
-                ${data.map(p => `
-                    <tr>
-                        <td><strong>${esc(p.proctor_id)}</strong></td>
-                        <td><span class="tag" style="background: var(--surface-muted); color: var(--primary); border: 1px solid var(--border)">${p.total_actions} Actions</span></td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
+function getCsrfToken() {
+    return ""; // Token is managed server-side for this implementation
 }
 
 function refreshData() {
     loadDashboard();
-    showToast('Dashboard synchronized with live hub');
+    showToast('Dashboard synchronized');
 }
 
 // ═══ INIT ═══
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     loadDashboard();
-    
     document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' });
-    
-    // Auto-refresh every 2 minutes
     setInterval(loadDashboard, 120000);
 });

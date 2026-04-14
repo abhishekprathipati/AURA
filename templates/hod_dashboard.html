@@ -52,10 +52,10 @@
                             <span>Sync</span>
                         </button>
 
-                        <button class="action-btn export-btn" title="Export Analytics">
+                        <a href="/proctor/api/hod/export-analytics" class="action-btn export-btn" title="Export Analytics">
                             <i class="fas fa-file-export"></i>
-                            <span>Export</span>
-                        </button>
+                            <span>Export CSV</span>
+                        </a>
 
                         <a href="{{ url_for('auth.logout') }}" class="btn-logout-premium">
                             <i class="fas fa-power-off"></i>
@@ -67,7 +67,7 @@
             </div>
         </header>
 
-        <!-- ═══ KPI STAT CARS ═══ -->
+        <!-- ═══ KPI STAT CARDS ═══ -->
         <section class="stats-section">
             <div class="stats-grid">
                 <div class="stat-card glass green-glow fade-up">
@@ -118,28 +118,57 @@
                     </div>
                 </section>
 
-                <!-- THE RISK BOX (TABLE) -->
+                <!-- THE RISK BOX (TABLE) - COMPACT FIXED -->
                 <section class="card fade-up">
                     <div class="card-head">
                         <div class="card-title">
                             <span class="card-icon red"><i class="fas fa-shield-halved"></i></span>
-                            Risk Oversight Monitor
+                            Risk Oversight Monitor (Live)
                         </div>
                         <span class="count-badge" id="riskOversightCount">0</span>
                     </div>
-                    <div class="card-body no-pad table-overflow">
-                        <table class="aura-table">
+                    <div class="card-body no-pad table-overflow" style="max-height: 420px; overflow-y: auto;">
+                        <table class="aura-table sticky-head">
                             <thead>
                                 <tr>
                                     <th>Student</th>
-                                    <th>Risk Level</th>
+                                    <th>Risk</th>
                                     <th>Alert Source</th>
-                                    <th>Oversight Status</th>
+                                    <th>Status</th>
                                     <th>Detected</th>
                                 </tr>
                             </thead>
                             <tbody id="riskOversightBody">
                                 <!-- Replaced by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- STUDENT HUB (RESTORED) -->
+                <section class="card fade-up">
+                    <div class="card-head">
+                        <div class="card-title">
+                            <span class="card-icon green"><i class="fas fa-graduation-cap"></i></span>
+                            Student Management Hub
+                        </div>
+                        <div class="card-search">
+                            <input type="text" id="studentSearch" placeholder="Search by name or roll..." onkeyup="filterStudents()">
+                        </div>
+                    </div>
+                    <div class="card-body no-pad table-overflow" style="max-height: 400px; overflow-y: auto;">
+                        <table class="aura-table sticky-head" id="studentTable">
+                            <thead>
+                                <tr>
+                                    <th>UID</th>
+                                    <th>Name</th>
+                                    <th>Dept</th>
+                                    <th>Assigned Proctor</th>
+                                    <th>Risk</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentHubBody">
+                                <!-- JS Render -->
                             </tbody>
                         </table>
                     </div>
@@ -162,17 +191,62 @@
                     </div>
                 </section>
 
-                <!-- PROCTOR KPI -->
+                <!-- PROCTOR MANAGEMENT (NEW) -->
                 <section class="card fade-up">
                     <div class="card-head">
-                        <div class="card-title">Proctor Activity Board</div>
+                        <div class="card-title">
+                            <span class="card-icon indigo"><i class="fas fa-id-badge"></i></span>
+                            Proctor Management
+                        </div>
+                        <button class="action-btn-sm" onclick="showAddProctorModal()">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
                     </div>
-                    <div class="card-body no-pad" id="proctorTable">
+                    <div class="card-body no-pad scrollable" style="max-height: 350px;">
+                        <div id="proctorListContainer">
+                             <!-- JS Render -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PROCTOR KPI SQUAD (RESTORED) -->
+                <section class="card fade-up">
+                    <div class="card-head">
+                        <div class="card-title">Manager Oversight (Weekly)</div>
+                    </div>
+                    <div class="card-body no-pad" id="proctorPerformanceTable">
                         <!-- JS Render -->
                     </div>
                 </section>
             </div>
 
+        </div>
+    </div>
+
+    <!-- MODAL: ADD PROCTOR -->
+    <div id="proctorModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-head">
+                <h3>Add New Proctor</h3>
+                <button class="close-btn" onclick="hideModal('proctorModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addProctorForm" onsubmit="submitProctor(event)">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="pName" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="pEmail" required placeholder="proctor@aura.edu">
+                    </div>
+                    <div class="form-group">
+                        <label>Initial Password</label>
+                        <input type="password" id="pPass" required placeholder="Min 8 characters">
+                    </div>
+                    <button type="submit" class="btn-primary w-full">Verify & Create Account</button>
+                </form>
+            </div>
         </div>
     </div>
 

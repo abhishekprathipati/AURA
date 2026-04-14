@@ -384,3 +384,133 @@ def hod_list_students():
 # ---------------------------------------------
 # API: System Status
 # ---------------------------------------------
+
+
+# ---------------------------------------------
+# API: Proctor Management
+# ---------------------------------------------
+
+@proctor_bp.route('/api/hod/department-proctors', methods=['GET'])
+@login_required
+@hod_only
+def hod_list_proctors():
+    """List all proctors assigned to the HOD's department."""
+    try:
+        db = get_db()
+        department = session.get('user_department', '')
+        if not department:
+            return jsonify({'success': False, 'error': 'No department associated with shift'}), 400
+            
+        proctors = list(db['users'].find(
+            {'role': 'proctor', 'department': department},
+            {'_id': 0, 'password': 0}
+        ))
+        
+        return jsonify({'success': True, 'data': proctors}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
+
+
+@proctor_bp.route('/api/hod/manage-proctors', methods=['POST'])
+@login_required
+@hod_only
+@demo_restricted
+def hod_add_proctor():
+    """Add a new proctor to the department."""
+    try:
+        data = request.json
+        email = data.get('email')
+        name = data.get('name')
+        password = data.get('password')
+        department = session.get('user_department', '')
+        
+        if not all([email, name, password]):
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+            
+        db = get_db()
+        if db['users'].find_one({'email': email}):
+            return jsonify({'success': False, 'error': 'User with this email already exists'}), 400
+            
+        from aura.utils.auth_helpers import hash_password
+        new_user = {
+            'email': email,
+            'name': name,
+            'password': hash_password(password),
+            'role': 'proctor',
+            'department': department,
+            'created_at': datetime.utcnow(),
+            'is_demo': False
+        }
+        
+        db['users'].insert_one(new_user)
+        log_activity(AuditAction.CONFIG_CHANGE, f"HOD added proctor {email} to {department}")
+        
+        return jsonify({'success': True, 'message': f'Proctor {name} successfully added.'}), 201
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
+
+
+@proctor_bp.route('/api/hod/manage-proctors/<email>', methods=['DELETE'])
+@login_required
+@hod_only
+@demo_restricted
+def hod_remove_proctor(email):
+    """Remove a proctor from the department."""
+    try:
+        department = session.get('user_department', '')
+        db = get_db()
+        
+        # Security: verify proctor belongs to this HOD's department
+        target = db['users'].find_one({'email': email})
+        if not target or target.get('department') != department:
+            return jsonify({'success': False, 'error': 'Unauthorized or proctor not found'}), 403
+            
+        db['users'].delete_one({'email': email})
+        log_activity(AuditAction.CONFIG_CHANGE, f"HOD removed proctor {email}")
+        
+        return jsonify({'success': True, 'message': 'Proctor access revoked.'}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
+
+
+# ---------------------------------------------
+# API: CSV Export
+# ---------------------------------------------
+
+@proctor_bp.route('/api/hod/export-analytics', methods=['GET'])
+@login_required
+@hod_only
+def hod_export_analytics():
+    """Export department-wide risk analytics as CSV."""
+    try:
+        db = get_db()
+        visible_ids = get_visible_student_ids()
+        department = session.get('user_department', 'AURA')
+        
+        incidents = list(db['risk_incidents'].find(
+            {'anonymous_student_id': {'$in': visible_ids}},
+            sort=[('timestamp', -1)]
+        ))
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['Incident ID', 'Student ID', 'Risk Level', 'Source', 'Status', 'Timestamp', 'Summary'])
+        
+        for inc in incidents:
+            writer.writerow([
+                inc.get('incident_id'),
+                inc.get('anonymous_student_id'),
+                inc.get('risk_level'),
+                inc.get('trigger_source'),
+                inc.get('status'),
+                inc.get('timestamp').strftime('%Y-%m-%d %H:%M:%S') if inc.get('timestamp') else '',
+                inc.get('message_excerpt', '')[:200]
+            ])
+            
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-disposition": f"attachment; filename=hod_analytics_{department}_{datetime.now().strftime('%Y%m%d')}.csv"}
+        )
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
