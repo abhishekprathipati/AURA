@@ -28,7 +28,8 @@ def hod_dashboard():
         return jsonify({'error': 'Unauthorized - HOD access only'}), 403
     hod_name = session.get('user_name', 'HOD')
     hod_email = session.get('user_email', 'hod@aura.edu')
-    return render_template('hod_dashboard.html', hod_name=hod_name, hod_email=hod_email)
+    hod_department = session.get('user_department', 'AIML')
+    return render_template('hod_dashboard.html', hod_name=hod_name, hod_email=hod_email, hod_department=hod_department)
 
 
 # ---------------------------------------------
