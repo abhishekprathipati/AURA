@@ -47,7 +47,7 @@ gevent==23.9.1
 gevent-websocket==0.10.1
 
 # Email
-Flask-Mail==1.0.4
+Flask-Mail==0.10.0
 
 # Environment
 python-dotenv==1.0.1
