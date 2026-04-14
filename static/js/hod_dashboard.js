@@ -7,7 +7,7 @@ const DASHBOARD_STATE = {
     currentTheme: localStorage.getItem('aura-theme') || 'light'
 };
 
-// ═══ THEME LOGIC ═══
+// ═══ THEME ═══
 function initTheme() {
     document.documentElement.setAttribute('data-theme', DASHBOARD_STATE.currentTheme);
     const themeIcon = document.getElementById('themeIcon');
@@ -20,7 +20,7 @@ function toggleTheme() {
     DASHBOARD_STATE.currentTheme = DASHBOARD_STATE.currentTheme === 'light' ? 'dark' : 'light';
     localStorage.setItem('aura-theme', DASHBOARD_STATE.currentTheme);
     initTheme();
-    showToast(`Switched to ${DASHBOARD_STATE.currentTheme} mode`, 'success');
+    showToast(`Switched to ${DASHBOARD_STATE.currentTheme} mode`);
 }
 
 // ═══ UTILS ═══
@@ -41,20 +41,21 @@ function showToast(msg) {
 function animateCount(el, target, suffix = '') {
     if (!el) return;
     let current = 0;
+    const targetVal = parseFloat(target) || 0;
     const duration = 1000;
-    const step = target / (duration / 16);
+    const step = targetVal / (duration / 16);
     const timer = setInterval(() => {
         current += step;
-        if (current >= target) {
-            el.textContent = target + suffix;
+        if (current >= targetVal) {
+            el.textContent = (targetVal % 1 === 0 ? targetVal : targetVal.toFixed(1)) + suffix;
             clearInterval(timer);
         } else {
-            el.textContent = Math.floor(current) + suffix;
+            el.textContent = (current % 1 === 0 ? Math.floor(current) : current.toFixed(1)) + suffix;
         }
     }, 16);
 }
 
-// ═══ DATA FETCHING ═══
+// ═══ API ═══
 async function loadDashboard() {
     try {
         const endpoints = [
@@ -76,8 +77,8 @@ async function loadDashboard() {
         if (proctors.success) renderProctors(proctors.data);
 
     } catch (err) {
-        console.error('HOD Load Error:', err);
-        showToast('Sync error. Retrying...');
+        console.error('HOD Sync Error:', err);
+        showToast('Connection to server lost. Retrying...');
     }
 }
 
@@ -103,19 +104,22 @@ function renderRiskOversight(data) {
     count.textContent = data.length;
     
     if (data.length === 0) {
-        body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px; color: var(--muted)">No critical alerts requiring immediate oversight.</td></tr>';
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 60px; color: var(--text-muted); font-weight: 500;">No active critical alerts in department.</td></tr>';
         return;
     }
 
     body.innerHTML = data.map(inc => {
         const time = new Date(inc.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const riskClass = inc.risk_level === 'HIGH' ? 'high' : 'medium';
+        const statusClass = inc.status === 'ESCALATED' ? 'high' : '';
+        
         return `
             <tr class="fade-in">
                 <td><strong>${esc(inc.anonymous_student_id)}</strong></td>
-                <td><span class="badge high">${esc(inc.risk_level)}</span></td>
-                <td><span style="font-size: 0.8rem; color: var(--muted)">${esc(inc.trigger_source)}</span></td>
-                <td><span class="badge ${inc.is_escalated ? 'escalated' : ''}">${esc(inc.status)}</span></td>
-                <td>${time}</td>
+                <td><span class="tag ${riskClass}">${esc(inc.risk_level)}</span></td>
+                <td><span style="font-size: 0.8rem; color: var(--text-muted)">${esc(inc.trigger_source)}</span></td>
+                <td><span class="tag ${statusClass}">${esc(inc.status)}</span></td>
+                <td style="color: var(--text-muted)">${time}</td>
             </tr>
         `;
     }).join('');
@@ -126,16 +130,19 @@ function renderTrends(data) {
     const el = document.querySelector('#trendChart');
     if (!el) return;
     
+    const isDark = DASHBOARD_STATE.currentTheme === 'dark';
+    const accentColor = '#6366f1';
+
     const options = {
-        series: [{ name: 'Wellness', data: data.wellness }],
-        chart: { type: 'area', height: 280, toolbar: { show: false }, zoom: { enabled: false } },
-        colors: ['#6366f1'],
-        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.05 } },
+        series: [{ name: 'Wellness Index', data: data.wellness }],
+        chart: { type: 'area', height: 350, toolbar: { show: false }, zoom: { enabled: false }, animations: { enabled: true, easing: 'easeinout', speed: 800 } },
+        colors: [accentColor],
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.05 } },
         dataLabels: { enabled: false },
-        stroke: { curve: 'smooth', width: 3 },
-        xaxis: { categories: data.dates, labels: { style: { colors: '#94a3b8' } } },
-        yaxis: { max: 100, labels: { style: { colors: '#94a3b8' } } },
-        grid: { borderColor: 'rgba(148, 163, 184, 0.1)' }
+        stroke: { curve: 'smooth', width: 4 },
+        xaxis: { categories: data.dates, labels: { style: { colors: isDark ? '#94a3b8' : '#64748b', fontWeight: 600 } }, axisBorder: { show: false } },
+        yaxis: { max: 100, min: 0, labels: { style: { colors: isDark ? '#94a3b8' : '#64748b', fontWeight: 600 } } },
+        grid: { borderColor: isDark ? 'rgba(148, 163, 184, 0.05)' : 'rgba(100, 116, 139, 0.1)', strokeDashArray: 5 }
     };
 
     if (trendChart) trendChart.updateOptions(options);
@@ -149,38 +156,37 @@ function renderDistribution(data) {
 
     const options = {
         series: [data.low, data.medium, data.high],
-        chart: { type: 'donut', height: 240 },
-        labels: ['Low', 'Medium', 'High'],
+        chart: { type: 'donut', height: 320 },
+        labels: ['Stable Focus', 'Caution required', 'Critical Attention'],
         colors: ['#10b981', '#f59e0b', '#ef4444'],
-        plotOptions: { pie: { donut: { size: '75%' } } },
-        legend: { position: 'bottom' }
+        plotOptions: { pie: { donut: { size: '78%', labels: { show: true, total: { show: true, label: 'TOTAL STUDENTS', fontSize: '11px', fontWeight: 800, color: '#64748b' } } } } },
+        legend: { show: false },
+        stroke: { width: 0 }
     };
 
     if (healthChart) healthChart.updateOptions(options);
     else { healthChart = new ApexCharts(el, options); healthChart.render(); }
     
-    // Risk Bars
+    // Risk Bars (Fixed structure)
     const container = document.getElementById('riskBarsContainer');
     if (container) {
         container.innerHTML = `
-            <div style="margin-top:20px; display:flex; flex-direction:column; gap:12px">
-                ${renderRiskBar('High Risk', data.high, data.total, '#ef4444')}
-                ${renderRiskBar('Medium Risk', data.medium, data.total, '#f59e0b')}
-                ${renderRiskBar('Low Risk', data.low, data.total, '#10b981')}
-            </div>
+            ${renderRiskPill('Critical Priority', data.high, data.total, '#ef4444')}
+            ${renderRiskPill('Management Required', data.medium, data.total, '#f59e0b')}
+            ${renderRiskPill('Stable/Routine', data.low, data.total, '#10b981')}
         `;
     }
 }
 
-function renderRiskBar(label, count, total, color) {
-    const pct = (count / total * 100) || 0;
+function renderRiskPill(label, count, total, color) {
+    const pct = (count / (total || 1) * 100);
     return `
-        <div class="risk-bar-item" style="display:flex; align-items:center; gap:12px">
-            <div style="font-size:0.75rem; font-weight:700; min-width:80px">${label}</div>
-            <div style="flex:1; height:6px; background:var(--surface-muted); border-radius:3px; overflow:hidden">
-                <div style="width:${pct}%; height:100%; background:${color}"></div>
+        <div class="risk-bar-item">
+            <div class="risk-bar-label">${label}</div>
+            <div class="risk-bar-track">
+                <div class="risk-bar-fill" style="width:${pct}%; background:${color}"></div>
             </div>
-            <div style="font-size:0.75rem; font-weight:800">${count}</div>
+            <div class="risk-bar-val">${count}</div>
         </div>
     `;
 }
@@ -190,18 +196,18 @@ function renderProctors(data) {
     if (!el) return;
     
     if (data.length === 0) {
-        el.innerHTML = '<div style="padding:40px; text-align:center; color:var(--muted)">No proctor data found.</div>';
+        el.innerHTML = '<div style="padding:60px; text-align:center; color:var(--text-muted); font-weight: 500;">No proctor performance metrics available.</div>';
         return;
     }
 
     el.innerHTML = `
-        <table class="tbl">
-            <thead><tr><th>Proctor</th><th>Actions</th></tr></thead>
+        <table class="aura-table">
+            <thead><tr><th>Assigned Proctor</th><th>Weekly Impacts</th></tr></thead>
             <tbody>
                 ${data.map(p => `
                     <tr>
                         <td><strong>${esc(p.proctor_id)}</strong></td>
-                        <td><span class="badge escalated">${p.total_actions}</span></td>
+                        <td><span class="tag" style="background: var(--surface-muted); color: var(--primary); border: 1px solid var(--border)">${p.total_actions} Actions</span></td>
                     </tr>
                 `).join('')}
             </tbody>
@@ -211,7 +217,7 @@ function renderProctors(data) {
 
 function refreshData() {
     loadDashboard();
-    showToast('Refreshing system data...');
+    showToast('Dashboard synchronized with live hub');
 }
 
 // ═══ INIT ═══
@@ -220,7 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDashboard();
     
     document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
-    document.getElementById('currentDate').textContent = new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' });
     
-    setInterval(loadDashboard, 60000); // 1-minute refresh
+    // Auto-refresh every 2 minutes
+    setInterval(loadDashboard, 120000);
 });
