@@ -3867,6 +3867,54 @@ body.mood-modal-open {
     flex-shrink: 0;
 }
 
+.profile-parent-row {
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.profile-parent-row #profileParentEmail {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.parent-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.parent-status-badge.verified {
+    background: rgba(16, 185, 129, 0.14);
+    color: #047857;
+    border-color: rgba(16, 185, 129, 0.24);
+}
+
+.parent-status-badge.pending {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.24);
+}
+
+[data-theme="dark"] .parent-status-badge.verified {
+    color: #6ee7b7;
+    border-color: rgba(52, 211, 153, 0.35);
+}
+
+[data-theme="dark"] .parent-status-badge.pending {
+    color: #fcd34d;
+    border-color: rgba(251, 191, 36, 0.35);
+}
+
 .profile-streak-badge {
     display: flex;
     align-items: center;

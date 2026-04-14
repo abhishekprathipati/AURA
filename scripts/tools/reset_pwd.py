@@ -2,8 +2,8 @@
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from utils.auth_helpers import hash_password
-from utils.database import get_db
+from aura.utils.auth_helpers import hash_password
+from aura.utils.database import get_db
 
 db = get_db()
 new_hash = hash_password('Test@123')

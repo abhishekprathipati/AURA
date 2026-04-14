@@ -22,7 +22,7 @@ if str(ROOT_DIR) not in sys.path:
 
 load_dotenv()
 
-from utils.database import get_db  # noqa: E402
+from aura.utils.database import get_db  # noqa: E402
 
 
 def _sort_key(doc: Dict[str, Any]) -> Tuple[datetime, str]:

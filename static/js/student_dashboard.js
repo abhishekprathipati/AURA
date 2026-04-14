@@ -874,6 +874,7 @@ class AdvancedDashboard {
     }
 
     setupEventListeners() {
+        this.setupParentEmailEvents();
         document.addEventListener('keydown', (e) => {
             if (e.altKey) {
                 switch (e.key) {
@@ -914,6 +915,74 @@ class AdvancedDashboard {
             toastClose.addEventListener('click', () => {
                 const toast = document.getElementById('notificationToast');
                 if (toast) toast.classList.remove('show');
+            });
+        }
+    }
+
+    setupParentEmailEvents() {
+        const addBtn = document.getElementById('addParentEmailBtn');
+        const removeBtn = document.getElementById('removeParentEmailBtn');
+        
+        if (addBtn) {
+            addBtn.addEventListener('click', async () => {
+                const parentEmail = document.getElementById('parentEmailInput').value.trim();
+                const parentName = document.getElementById('parentNameInput').value.trim();
+                const msgEl = document.getElementById('parentEmailMsg');
+                
+                if (!parentEmail || !parentEmail.includes('@')) {
+                    if (msgEl) { msgEl.className = 'settings-feedback error'; msgEl.textContent = 'Please enter a valid email address.'; }
+                    return;
+                }
+                
+                addBtn.disabled = true;
+                addBtn.textContent = 'Sending...';
+                if (msgEl) msgEl.textContent = '';
+                
+                try {
+                    const data = await this.fetchData('/api/student/parent/add', {
+                        method: 'POST',
+                        body: JSON.stringify({ parent_email: parentEmail, parent_name: parentName })
+                    });
+                    
+                    if (data.success) {
+                        if (msgEl) { msgEl.className = 'settings-feedback success'; msgEl.textContent = data.message; }
+                        document.getElementById('parentEmailInput').value = '';
+                        document.getElementById('parentNameInput').value = '';
+                        this.loadProfile(); // Refresh UI
+                    } else {
+                        if (msgEl) { msgEl.className = 'settings-feedback error'; msgEl.textContent = data.error || data.message || 'Failed to add parent email'; }
+                    }
+                } catch (e) {
+                    if (msgEl) { msgEl.className = 'settings-feedback error'; msgEl.textContent = 'Network error. Please try again.'; }
+                } finally {
+                    addBtn.disabled = false;
+                    addBtn.textContent = 'Send Verification Link';
+                }
+            });
+        }
+        
+        if (removeBtn) {
+            removeBtn.addEventListener('click', async () => {
+                const msgEl = document.getElementById('parentEmailMsg');
+                if (!confirm('Are you sure you want to remove this parent email? They will no longer receive alerts.')) return;
+                
+                removeBtn.disabled = true;
+                removeBtn.textContent = 'Removing...';
+                
+                try {
+                    const data = await this.fetchData('/api/student/parent/remove', { method: 'POST' });
+                    if (data.success) {
+                        if (msgEl) { msgEl.className = 'settings-feedback success'; msgEl.textContent = data.message; }
+                        this.loadProfile();
+                    } else {
+                        if (msgEl) { msgEl.className = 'settings-feedback error'; msgEl.textContent = data.error || 'Failed to remove parent email'; }
+                    }
+                } catch (e) {
+                    if (msgEl) { msgEl.className = 'settings-feedback error'; msgEl.textContent = 'Network error. Please try again.'; }
+                } finally {
+                    removeBtn.disabled = false;
+                    removeBtn.textContent = 'Remove';
+                }
             });
         }
     }
@@ -1120,6 +1189,51 @@ class AdvancedDashboard {
             if (emailEl) emailEl.textContent = data.email || '—';
             if (rollEl) rollEl.textContent = data.roll_number || '—';
             if (userNameEl) userNameEl.textContent = (data.name || 'Student').split(' ')[0];
+
+            // Parent email + verification status
+            const parentEmailEl = document.getElementById('profileParentEmail');
+            const parentStatusEl = document.getElementById('profileParentStatus');
+            const removeBtn = document.getElementById('removeParentEmailBtn');
+            const addBtn = document.getElementById('addParentEmailBtn');
+            const emailInput = document.getElementById('parentEmailInput');
+            const nameInput = document.getElementById('parentNameInput');
+            
+            if (parentEmailEl && parentStatusEl) {
+                try {
+                    const parentPayload = await this.fetchData('/api/student/parent/status');
+                    const parentData = parentPayload?.data || {};
+                    const verified = parentData.parent_verified === true;
+                    // The backend stores pending_email when verification is sent, or parent_email when verified
+                    const email = parentData.parent_email || parentData.pending_email || '';
+
+                    parentEmailEl.textContent = email ? `Parent email: ${email}` : 'Parent email: not added';
+
+                    if (email) {
+                        if (removeBtn) removeBtn.style.display = 'block';
+                        if (addBtn) addBtn.textContent = 'Resend Verification';
+                        if (emailInput) { 
+                            emailInput.value = email; 
+                            emailInput.placeholder = "Update Email Address";
+                        }
+                    } else {
+                        if (removeBtn) removeBtn.style.display = 'none';
+                        if (addBtn) addBtn.textContent = 'Send Verification Link';
+                    }
+
+                    if (verified) {
+                        parentStatusEl.textContent = 'Verified';
+                        parentStatusEl.className = 'parent-status-badge verified';
+                    } else {
+                        parentStatusEl.textContent = email ? 'Pending' : 'Not Added';
+                        parentStatusEl.className = 'parent-status-badge pending';
+                    }
+                } catch (e) {
+                    console.error(e);
+                    parentEmailEl.textContent = 'Parent email: unavailable';
+                    parentStatusEl.textContent = 'Pending';
+                    parentStatusEl.className = 'parent-status-badge pending';
+                }
+            }
 
             // Load streak
             try {

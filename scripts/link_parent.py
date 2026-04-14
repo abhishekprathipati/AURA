@@ -4,7 +4,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from app import app
-from utils.database import get_db
+from aura.utils.database import get_db
 
 with app.app_context():
     db = get_db()

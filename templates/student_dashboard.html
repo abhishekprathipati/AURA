@@ -998,12 +998,53 @@ This will improve load times, enable better caching, and simplify maintenance.
                         </svg>
                         <span id="profileRoll">loading...</span>
                     </div>
+                    <div class="profile-detail-row profile-parent-row">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                            <path d="M16 3.13a4 4 0 010 7.75" />
+                        </svg>
+                        <span id="profileParentEmail">Parent email: not added</span>
+                        <span id="profileParentStatus" class="parent-status-badge pending">Pending</span>
+                    </div>
                 </div>
                 <div class="profile-streak-badge" id="profileStreak">
                     <div class="streak-icon">🔥</div>
                     <div class="streak-info">
                         <div class="streak-value" id="streakValue">0</div>
                         <div class="streak-label">Day Streak</div>
+                    </div>
+                </div>
+
+                <!-- Manage Parent Email Section -->
+                <div class="settings-section">
+                    <h4 class="settings-heading">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="settings-heading-icon">
+                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                            <path d="M16 3.13a4 4 0 010 7.75" />
+                        </svg>
+                        Parent Email & Alerts
+                    </h4>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px; margin-bottom: 12px; line-height: 1.4;">
+                        Link a parent email to receive automated alerts if you experience high stress or crisis.
+                    </p>
+                    <div id="parentEmailMsg" class="settings-feedback"></div>
+                    <div class="settings-form-stack">
+                        <input type="text" id="parentNameInput" placeholder="Parent Name" class="settings-input">
+                        <input type="email" id="parentEmailInput" placeholder="Parent Email Address" class="settings-input">
+                        
+                        <div style="display: flex; gap: 8px;">
+                            <button id="addParentEmailBtn" type="button" class="settings-btn-primary" style="flex: 1;">
+                                Send Verification Link
+                            </button>
+                            <button id="removeParentEmailBtn" type="button" class="settings-btn-outline" style="border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; padding: 0 16px; display: none;">
+                                Remove
+                            </button>
+                        </div>
                     </div>
                 </div>
 

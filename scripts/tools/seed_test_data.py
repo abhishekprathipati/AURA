@@ -31,8 +31,8 @@ from datetime import datetime, timedelta
 # ── Add project root to path ──
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from utils.database import get_db
-from utils.auth_helpers import hash_password
+from aura.utils.database import get_db
+from aura.utils.auth_helpers import hash_password
 
 # ═══════════════════════════════════════════════
 # CONSTANTS

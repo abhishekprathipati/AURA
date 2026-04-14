@@ -11,11 +11,18 @@ Usage:
   # Or via Python:
   python wsgi.py
 """
-from app import app, socketio  # noqa: F401
+import os
+from dotenv import load_dotenv
+
+# Load environment variables first
+load_dotenv()
+
+from aura import create_app, socketio
+
+# Initialize the WSGI application
+app = create_app()
 
 if __name__ == '__main__':
-    import os
-    from config import Config
     port = int(os.getenv('PORT', '5000'))
     host = os.getenv('HOST', '0.0.0.0')
 

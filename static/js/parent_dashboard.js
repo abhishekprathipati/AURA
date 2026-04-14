@@ -348,7 +348,8 @@ async function loadNotifications() {
         const response = await fetch('/parent/api/notifications');
         if (!response.ok) throw new Error('Failed to load notifications');
         
-        const notifications = await response.json();
+        const data = await response.json();
+        const notifications = data.notifications || data;
         const listEl = document.getElementById('notificationsList');
         const badgeEl = document.getElementById('notificationBadge');
         

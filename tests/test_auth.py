@@ -120,7 +120,7 @@ class TestPasswordHelpers:
 
     def test_password_hashing(self):
         """Test password hashing and verification."""
-        from utils.auth_helpers import hash_password, verify_password
+        from aura.utils.auth_helpers import hash_password, verify_password
 
         password = 'test_password_123'
         hashed = hash_password(password)
@@ -136,7 +136,7 @@ class TestPasswordHelpers:
 
     def test_temp_password_generation(self):
         """Test temporary password generation."""
-        from utils.auth_helpers import generate_temp_password
+        from aura.utils.auth_helpers import generate_temp_password
 
         password = generate_temp_password()
 
@@ -151,7 +151,7 @@ class TestPasswordHelpers:
 
     def test_temp_password_uniqueness(self):
         """Test that generated passwords are unique."""
-        from utils.auth_helpers import generate_temp_password
+        from aura.utils.auth_helpers import generate_temp_password
 
         passwords = [generate_temp_password() for _ in range(100)]
         # All passwords should be unique

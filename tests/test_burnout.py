@@ -13,13 +13,13 @@ class TestAnalyzeBurnoutRisk:
 
     def test_insufficient_data(self, mock_db):
         """With no stress logs, should return 'low' or indicate insufficient data."""
-        from services.burnout_service import analyze_burnout_risk
+        from aura.services.burnout_service import analyze_burnout_risk
         result = analyze_burnout_risk('test@aura.edu')
         assert result['risk_level'] in ('low', 'error')
 
     def test_includes_disclaimer(self, mock_db):
         """FIX #35: Every burnout response should include a clinical disclaimer."""
-        from services.burnout_service import analyze_burnout_risk
+        from aura.services.burnout_service import analyze_burnout_risk
 
         # Mock stress collection with enough data
         stress_data = [
@@ -45,7 +45,7 @@ class TestAnalyzeBurnoutRisk:
 
     def test_high_scores_produce_elevated_risk(self, mock_db):
         """Consistently high stress should produce moderate or high burnout risk."""
-        from services.burnout_service import analyze_burnout_risk
+        from aura.services.burnout_service import analyze_burnout_risk
 
         stress_data = [
             {'user_email': 'test@aura.edu', 'score': 85, 'created_at': datetime.utcnow() - timedelta(hours=i)}
@@ -70,7 +70,7 @@ class TestRiskScoreBounds:
     """Risk score should always be in [0, 100]."""
 
     def test_score_never_exceeds_100(self, mock_db):
-        from services.burnout_service import analyze_burnout_risk
+        from aura.services.burnout_service import analyze_burnout_risk
         result = analyze_burnout_risk('test@aura.edu')
         if 'score' in result:
             assert 0 <= result['score'] <= 100

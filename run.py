@@ -1,11 +1,21 @@
-from app import app, socketio
-from config import Config
+"""
+AURA Development Server Runner
+"""
+
+from dotenv import load_dotenv
+load_dotenv()
+
 import os
+from aura import create_app, socketio
+
+app = create_app()
 
 if __name__ == '__main__':
-    debug = Config.DEBUG
+    debug = app.config.get('DEBUG', False)
     port  = int(os.getenv('PORT', '5000'))
     host  = os.getenv('HOST', '0.0.0.0')
+    
+    app.logger.info(f"Starting AURA  host={host} port={port} debug={debug}")
     # allow_unsafe_werkzeug must only be True in dev/debug mode.
     # In production, gunicorn (via Procfile) is used instead of this script.
     socketio.run(app, host=host, port=port, debug=debug,

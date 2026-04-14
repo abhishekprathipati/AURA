@@ -5,8 +5,8 @@ sys.path.insert(0, str(ROOT))
 
 import datetime
 from app import app
-from utils.database import get_db
-from utils.auth_helpers import hash_password
+from aura.utils.database import get_db
+from aura.utils.auth_helpers import hash_password
 
 with app.app_context():
     db = get_db()

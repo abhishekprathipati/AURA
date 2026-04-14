@@ -69,8 +69,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
 load_dotenv()
 
-from utils.database import get_db
-from services.otp_service import OTPService
+from aura.utils.database import get_db
+from aura.services.otp_service import OTPService
 
 # Configure logging
 logging.basicConfig(

@@ -41,8 +41,8 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from utils.database import init_db, get_db
-from services.stress_service import (
+from aura.utils.database import init_db, get_db
+from aura.services.stress_service import (
     calculate_dynamic_stress,
     MOOD_STRESS_MAP,
     NEGATIVE_WORDS,

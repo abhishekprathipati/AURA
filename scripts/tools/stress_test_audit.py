@@ -127,7 +127,7 @@ def fmt_stat(times):
 # MAIN
 # ══════════════════════════════════════════════════════════
 def main():
-    from utils.database import get_db
+    from aura.utils.database import get_db
     import requests
 
     # Handle --cleanup flag

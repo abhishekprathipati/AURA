@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from app import create_app  # noqa: E402  (app-level import after sys.path fix)
-from utils.database import get_db  # noqa: E402
+from aura.utils.database import get_db  # noqa: E402
 
 
 # ─────────────────────────────────────────────────────────────────────────────
