@@ -22,6 +22,7 @@
             grievances: '/proctor/api/grievances',
             activity:   '/proctor/api/activity-logs?days=7',
             addStudent: '/proctor/api/student/add',
+            parentMessages: '/proctor/api/parent-messages',
         }
     };
 
@@ -267,6 +268,38 @@
         applyRowDelays(el);
     }
 
+    // ═══ RENDER: Parent Messages ═══
+    function renderParentMessages(messages) {
+        const el = $('#pd-parentMessagesList');
+        if (!el) return;
+
+        const data = messages || [];
+        if (!data.length) {
+            el.innerHTML = `<div class="pd-empty"><i class="fas fa-inbox" aria-hidden="true"></i><p>No messages from parents</p></div>`;
+            return;
+        }
+
+        el.innerHTML = data.slice(0, CONFIG.MAX_LIST_ITEMS).map(msg => {
+            const isUnread = !msg.is_read;
+            const titleStyle = isUnread ? 'font-weight: 800; color: #1f2937;' : '';
+            return `
+                <div class="pd-list-item" role="listitem" style="${isUnread ? 'background: #fdfaef; border-left: 3px solid #f59e0b;' : ''}">
+                    <div class="pd-list-icon" style="background:var(--p-info-light);color:var(--p-info)">
+                        <i class="fas ${isUnread ? 'fa-envelope' : 'fa-envelope-open'}" aria-hidden="true"></i>
+                    </div>
+                    <div class="pd-list-content">
+                        <div class="pd-list-title" style="${titleStyle}">${esc(msg.subject)}</div>
+                        <div class="pd-list-sub">
+                            <strong>${esc(msg.sender_name)}</strong> (Parent of ${esc(msg.student_roll)}) &bull; ${timeAgo(msg.created_at)}
+                        </div>
+                        <div style="font-size: 13px; color: #4b5563; margin-top: 4px; white-space: pre-wrap;">${esc(msg.body)}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        applyRowDelays(el);
+    }
+
     // ═══ RENDER: Activity Log ═══
     const ACTIVITY_ICONS = {
         'LOGIN':              { icon: 'sign-in-alt',       bg: 'info',    color: 'info' },
@@ -343,9 +376,10 @@
                 fetch(CONFIG.ENDPOINTS.riskQueue).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
                 fetch(CONFIG.ENDPOINTS.grievances).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
                 fetch(CONFIG.ENDPOINTS.activity).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+                fetch(CONFIG.ENDPOINTS.parentMessages).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
             ]);
 
-            const [summaryRes, studentsRes, queueRes, grievancesRes, activityRes] = results;
+            const [summaryRes, studentsRes, queueRes, grievancesRes, activityRes, parentMessagesRes] = results;
             const animDuration = isFirstLoad ? CONFIG.COUNT_ANIM_FIRST : CONFIG.COUNT_ANIM_NORMAL;
 
             // Summary stats
@@ -393,6 +427,13 @@
                 renderActivity(activityRes.value.data || []);
             } else {
                 showErrorState('#pd-activityList', 'Failed to load activity');
+            }
+
+            // Parent Messages
+            if (parentMessagesRes.status === 'fulfilled') {
+                renderParentMessages(parentMessagesRes.value.data || []);
+            } else {
+                showErrorState('#pd-parentMessagesList', 'Failed to load parent messages');
             }
 
             isFirstLoad = false;

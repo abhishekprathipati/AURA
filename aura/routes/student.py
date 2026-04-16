@@ -1600,5 +1600,69 @@ def get_my_academics():
         })
 
     except Exception as e:
-        current_app.logger.error("get_my_academics error: %s", e, exc_info=True)
         return jsonify({'error': safe_error(e, 'student_api')}), 500
+
+@student_bp.route('/api/student/ai-insights', methods=['GET'])
+@login_required
+def get_student_ai_insights():
+    """
+    Generate an AI action plan for the student based on recent wellness and academic data.
+    """
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            return jsonify({'error': 'Not authenticated'}), 401
+            
+        # Fetch current stress
+        stress_result = calculate_dynamic_stress(user_email)
+        stress_val = stress_result.get('score', 50)
+        
+        # Build prompt
+        prompt = (
+            f"You are the AURA AI Wellness Coach. The student currently has a stress level of {stress_val}/100. "
+            "Please provide a personalized, 3-step action plan to help them manage their wellness and stress right now. "
+            "Return the output as a valid JSON array of strings, where each string is one actionable step."
+        )
+        
+        # We can use the existing ai_service generate function but ask for JSON array.
+        from aura.services.ai_service import client
+        if not client:
+            # Fallback response
+            return jsonify({
+                'success': True,
+                'insights': [
+                    "Take a 5-minute break and do a Box Breathing exercise.",
+                    "Review your academic deadlines and prioritize one small task.",
+                    "Reach out to a peer or use the Connect Hub if you feel isolated."
+                ]
+            })
+            
+        import json
+        from google.genai import types
+        
+        response = client.models.generate_content(
+            model='models/gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.7,
+                response_mime_type="application/json"
+            )
+        )
+        
+        insights = json.loads(response.text)
+        if not isinstance(insights, list):
+            insights = [str(insights)]
+            
+        return jsonify({'success': True, 'insights': insights})
+        
+    except Exception as e:
+        current_app.logger.error("get_student_ai_insights error: %s", e, exc_info=True)
+        # Fallback response
+        return jsonify({
+            'success': True,
+            'insights': [
+                "Take a 5-minute break and do a Box Breathing exercise.",
+                "Review your academic deadlines and prioritize one small task.",
+                "Reach out to a peer or use the Connect Hub if you feel isolated."
+            ]
+        })

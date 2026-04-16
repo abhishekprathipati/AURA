@@ -804,3 +804,137 @@ def get_parent_notifications():
 
     except Exception as e:
         return jsonify({'error': safe_error(e, 'parent')}), 500
+
+@parent_bp.route('/api/parent/ai-insights', methods=['GET'])
+@parent_login_required
+def get_parent_ai_insights():
+    """Generate an AI action plan for the parent to support their child."""
+    try:
+        student_roll = session.get('student_roll')
+        db = get_db()
+        
+        student = db['users'].find_one({'roll_number': student_roll, 'role': 'student'})
+        if not student:
+            return jsonify({'error': 'Student not found'}), 404
+            
+        student_email = student.get('email')
+        
+        # Pull recent stress/mood
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        stress_records = list(db['student_wellness'].find(
+            {'student_id': student_email, 'data_type': 'stress', 'timestamp': {'$gte': week_ago}},
+            sort=[('timestamp', -1)], limit=5
+        ))
+        
+        stress_val = stress_records[0].get('value', 50) if stress_records else 50
+        
+        prompt = (
+            f"You are the AURA AI Wellness Coach advising a parent. Their child currently has a stress level of {stress_val}/100. "
+            "Please provide a personalized, 3-step action plan for the parent to help their child manage stress right now. "
+            "Keep the advice supportive, constructive, and actionable. "
+            "Return the output as a valid JSON array of strings, where each string is one actionable step."
+        )
+        
+        from aura.services.ai_service import client
+        if not client:
+            return jsonify({
+                'success': True,
+                'insights': [
+                    "Ask your child simple open-ended questions like 'How are you feeling about your classes?'",
+                    "Encourage your child to step away from screens and take a 15-minute break.",
+                    "Validate their feelings instead of trying to immediately solve the problem."
+                ]
+            })
+            
+        import json
+        from google.genai import types
+        
+        response = client.models.generate_content(
+            model='models/gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.7,
+                response_mime_type="application/json"
+            )
+        )
+        
+        insights = json.loads(response.text)
+        if not isinstance(insights, list):
+            insights = [str(insights)]
+            
+        return jsonify({'success': True, 'insights': insights})
+        
+    except Exception as e:
+        # Fallback response
+        return jsonify({
+            'success': True,
+            'insights': [
+                "Ask your child simple open-ended questions to check in.",
+                "Ensure they maintain a balanced diet and hydration during study sessions.",
+                "Validate their stress instead of minimizing it."
+            ]
+        })
+
+@parent_bp.route('/api/message-proctor', methods=['POST'])
+@parent_login_required
+def message_proctor():
+    """Send a message from the parent to the student's proctor."""
+    try:
+        data = request.get_json() or {}
+        subject = data.get('subject', '').strip()
+        message = data.get('message', '').strip()
+
+        if not subject or not message:
+            return jsonify({'success': False, 'error': 'Subject and message are required'}), 400
+
+        student_roll = session.get('student_roll')
+        parent_name = session.get('parent_name')
+
+        db = get_db()
+        
+        # We need the student's email to get their proctor
+        student = db['users'].find_one({'roll_number': student_roll, 'role': 'student'})
+        if not student:
+            return jsonify({'success': False, 'error': 'Student not found'}), 404
+            
+        student_email = student.get('email')
+        
+        # Check if student is assigned to a proctor
+        proctor_assignment = db['proctor_assignments'].find_one({'student_email': student_email})
+        
+        proctor_email = None
+        if proctor_assignment:
+            proctor_email = proctor_assignment.get('proctor_email')
+            
+        # Store message in `proctor_messages` collection
+        message_doc = {
+            'sender_id': student_roll,
+            'sender_name': parent_name,
+            'sender_type': 'parent',
+            'student_roll': student_roll,
+            'student_email': student_email,
+            'receiver_email': proctor_email,
+            'receiver_type': 'proctor',
+            'subject': subject,
+            'body': message,
+            'is_read': False,
+            'created_at': datetime.utcnow()
+        }
+        
+        db['proctor_messages'].insert_one(message_doc)
+        
+        return jsonify({'success': True, 'message': 'Message sent successfully'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'parent')}), 500
+        
+    except Exception as e:
+        # Fallback response
+        return jsonify({
+            'success': True,
+            'insights': [
+                "Ask your child simple open-ended questions to check in.",
+                "Ensure they maintain a balanced diet and hydration during study sessions.",
+                "Validate their stress instead of minimizing it."
+            ]
+        })

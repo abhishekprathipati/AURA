@@ -109,6 +109,9 @@ class AdvancedDashboard {
 
         // Phase 5.3: Burnout Analysis
         this.loadBurnoutAnalysis();
+
+        // Student AI Insights
+        this.loadAIInsights();
     }
 
     initDate() {
@@ -1595,6 +1598,48 @@ class AdvancedDashboard {
             }
         } catch (error) {
             console.error('Burnout analysis error:', error);
+        }
+    }
+
+    // ==============================
+    // STUDENT AI INSIGHTS
+    // ==============================
+    async loadAIInsights() {
+        const container = document.getElementById('studentAiInsightsContainer');
+        if (!container) return;
+
+        try {
+            const res = await fetch('/student/api/student/ai-insights');
+            const result = await res.json();
+
+            if (res.ok && result.success && result.insights && result.insights.length > 0) {
+                container.innerHTML = result.insights.map((insight, idx) => `
+                    <div style="display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px; padding: 15px; background: var(--surface-muted); border-radius: 12px; border: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: rgba(168, 85, 247, 0.1); color: #a855f7; font-weight: bold; flex-shrink: 0;">
+                            ${idx + 1}
+                        </div>
+                        <div style="flex: 1; padding-top: 4px;">
+                            ${esc(insight)}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48" style="margin-bottom: 15px; opacity: 0.5;">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                        </svg>
+                        <p>No new insights available right now.<br>Keep checking in to get personalized advice!</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('AI Insights error:', error);
+            container.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: #ef4444;">
+                    Failed to generate insights. Please try again later.
+                </div>
+            `;
         }
     }
 }

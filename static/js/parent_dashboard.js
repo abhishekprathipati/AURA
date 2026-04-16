@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadAnnouncements();
     loadActivityLog();
     loadNotifications();
+    loadAIInsights();
     bindForms();
 
     // CSP-compliant event wiring for nav
@@ -553,6 +554,47 @@ function bindForms() {
             }
         });
     }
+
+    const messageProctorForm = document.getElementById('messageProctorForm');
+    if (messageProctorForm) {
+        messageProctorForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const subject = document.getElementById('proctorMsgSubject').value;
+            const message = document.getElementById('proctorMsgBody').value;
+            const btn = messageProctorForm.querySelector('button[type="submit"]');
+
+            const origText = btn.textContent;
+            btn.textContent = 'Sending...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/parent/api/message-proctor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subject, message })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) throw new Error(data.error || 'Failed to send message');
+
+                showAlert('proctorMessageAlert', 'Message sent successfully!', 'success');
+                messageProctorForm.reset();
+                setTimeout(() => {
+                    document.getElementById('messageProctorModal').classList.remove('is-open');
+                    document.getElementById('proctorMessageAlert').innerHTML = '';
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showAlert('proctorMessageAlert', error.message || 'Failed to send message. Please try again.', 'error');
+            } finally {
+                btn.textContent = origText;
+                btn.disabled = false;
+            }
+        });
+    }
 } // end bindForms
 
 // Load complaints list (outer scope — called from DOMContentLoaded AND after submit)
@@ -675,6 +717,43 @@ function formatDate(dateString) {
     if (diffDays < 7) return `${diffDays}d ago`;
 
     return date.toLocaleDateString();
+}
+
+async function loadAIInsights() {
+    const container = document.getElementById('parentAiInsightsContainer');
+    if (!container) return;
+
+    try {
+        const res = await fetch('/parent/api/parent/ai-insights');
+        const result = await res.json();
+
+        if (res.ok && result.success && result.insights && result.insights.length > 0) {
+            container.innerHTML = result.insights.map((insight, idx) => `
+                <div style="display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 12px; border: 1px solid #e5e7eb;">
+                    <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #f3e8ff; color: #9333ea; font-weight: bold; flex-shrink: 0;">
+                        ${idx + 1}
+                    </div>
+                    <div style="flex: 1; padding-top: 4px;">
+                        ${esc(insight)}
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; color: #9ca3af;">
+                    <span style="font-size: 24px; opacity: 0.5; margin-bottom:10px; display:inline-block;">🤖</span>
+                    <p>No new insights available right now.<br>Keep checking in to get personalized advice!</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('AI Insights error:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #ef4444;">
+                Failed to generate insights. Please try again later.
+            </div>
+        `;
+    }
 }
 
 })(); // end IIFE

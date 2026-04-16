@@ -119,6 +119,13 @@ This will improve load times, enable better caching, and simplify maintenance.
                         </svg>
                         <span>Academics</span>
                     </button>
+                    <button class="dash-tab" data-target="tab-ai-insights" id="aiInsightsTabBtn">
+                        <svg class="tab-icon" viewBox="0 0 24 24" width="18" height="18" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                        </svg>
+                        <span>AI Action Plan</span>
+                    </button>
                 </div>
 
                 <!-- TAB: WELLNESS -->
@@ -543,7 +550,29 @@ This will improve load times, enable better caching, and simplify maintenance.
                 </div> <!-- END TAB ACADEMICS -->
 
                 <!-- TAB: AI INSIGHTS -->
-
+                <div id="tab-ai-insights" class="dash-tab-content" style="display: none;">
+                    <section class="card card-elevated">
+                        <header class="card-header">
+                            <h3 class="card-title">
+                                <span class="card-title-icon icon-purple">
+                                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                                    </svg>
+                                </span>
+                                AI Personalized Action Plan
+                            </h3>
+                            <div class="card-badge purple">Live</div>
+                        </header>
+                        <div class="card-body">
+                            <div id="studentAiInsightsContainer" style="padding: 20px; font-size: 15px; line-height: 1.6; color:var(--text-primary);">
+                                <div class="empty-state-container" id="aiInsightsLoading">
+                                    <div class="empty-state-icon" style="animation: pulse 1.5s infinite;">🤖</div>
+                                    <h4 class="empty-state-title">Generating your custom action plan...</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
             </div>
 
             <!-- RIGHT COLUMN - Sidebar -->

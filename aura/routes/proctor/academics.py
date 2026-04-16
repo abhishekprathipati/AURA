@@ -571,4 +571,31 @@ def update_grievance_status(grievance_id):
         return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
 
 
+@proctor_bp.route('/api/parent-messages', methods=['GET'])
+@login_required
+@proctor_only
+def get_parent_messages():
+    """Get messages sent by parents to this proctor."""
+    try:
+        db = get_db()
+        proctor_email = session.get('user_email', '')
+
+        messages = list(db['proctor_messages'].find(
+            {'receiver_email': proctor_email}
+        ).sort('created_at', -1).limit(50))
+
+        result = []
+        for msg in messages:
+            msg['_id'] = str(msg['_id'])
+            if isinstance(msg.get('created_at'), datetime):
+                msg['time_ago'] = _time_since(msg['created_at'])
+                msg['created_at'] = msg['created_at'].isoformat()
+            result.append(msg)
+
+        return jsonify({'success': True, 'data': result}), 200
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
+
+
 # End of file

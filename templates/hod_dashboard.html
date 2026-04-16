@@ -6,8 +6,9 @@
     <title>Executive Dashboard | AURA</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/hod_dashboard.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hod_dashboard.css') }}?v=4">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
 </head>
 <body>
@@ -47,12 +48,12 @@
                             <i class="fas fa-moon" id="themeIcon"></i>
                         </button>
                         
-                        <button class="action-btn sync-btn" onclick="refreshData()" title="Force Data Sync">
+                        <button class="btn-gradient sync-btn" onclick="refreshData()" title="Force Data Sync">
                             <i class="fas fa-rotate"></i>
                             <span>Sync</span>
                         </button>
 
-                        <a href="/proctor/api/hod/export-analytics" class="action-btn export-btn" title="Export Analytics">
+                        <a href="javascript:void(0)" onclick="exportDashboardCSV()" class="btn-gradient export-btn" title="Export Analytics">
                             <i class="fas fa-file-export"></i>
                             <span>Export CSV</span>
                         </a>
@@ -70,28 +71,28 @@
         <!-- ═══ KPI STAT CARDS ═══ -->
         <section class="stats-section">
             <div class="stats-grid">
-                <div class="stat-card glass green-glow fade-up">
+                <div class="stat-card glass green-glow fade-up" onclick="filterDashboard('LOW')" title="Filter Stable Students">
                     <div class="stat-icon"><i class="fas fa-heart-pulse"></i></div>
                     <div class="stat-info">
                         <div class="stat-number" id="wellnessScore">0%</div>
                         <div class="stat-label">Dept. Wellness Index</div>
                     </div>
                 </div>
-                <div class="stat-card glass indigo-glow fade-up">
+                <div class="stat-card glass indigo-glow fade-up" onclick="filterDashboard('ALL')" title="Clear Filters">
                     <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
                     <div class="stat-info">
                         <div class="stat-number" id="totalStudents">0</div>
                         <div class="stat-label">Assigned Students</div>
                     </div>
                 </div>
-                <div class="stat-card glass amber-glow fade-up">
+                <div class="stat-card glass amber-glow fade-up" onclick="filterDashboard('MEDIUM')" title="Filter Caution Alerts">
                     <div class="stat-icon"><i class="fas fa-user-shield"></i></div>
                     <div class="stat-info">
                         <div class="stat-number" id="proctorActions">0</div>
                         <div class="stat-label">Proctor Actions Today</div>
                     </div>
                 </div>
-                <div class="stat-card glass red-glow fade-up pulsing" id="criticalCard">
+                <div class="stat-card glass red-glow fade-up pulsing" id="criticalCard" onclick="filterDashboard('HIGH')" title="Filter Critical Alerts">
                     <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
                     <div class="stat-info">
                         <div class="stat-number" id="highRiskCount">0</div>
@@ -157,10 +158,10 @@
                             <table class="aura-table sticky-head">
                                 <thead>
                                     <tr>
-                                        <th>Student</th>
-                                        <th>Risk</th>
+                                        <th onclick="sortTable('riskOversightBody', 0)" style="cursor:pointer" title="Sort by Student">Student <i class="fas fa-sort" style="float:right; opacity:0.5;"></i></th>
+                                        <th onclick="sortTable('riskOversightBody', 1)" style="cursor:pointer" title="Sort by Risk">Risk <i class="fas fa-sort" style="float:right; opacity:0.5;"></i></th>
                                         <th>Alert Source</th>
-                                        <th>Status</th>
+                                        <th onclick="sortTable('riskOversightBody', 3)" style="cursor:pointer" title="Sort by Status">Status <i class="fas fa-sort" style="float:right; opacity:0.5;"></i></th>
                                         <th>Detected</th>
                                     </tr>
                                 </thead>
@@ -177,11 +178,11 @@
                             <table class="aura-table sticky-head" id="studentTable">
                                 <thead>
                                     <tr>
-                                        <th>UID</th>
-                                        <th>Name</th>
-                                        <th>Dept</th>
-                                        <th>Assigned Proctor</th>
-                                        <th>Risk</th>
+                                        <th onclick="sortTable('studentHubBody', 0)" style="cursor:pointer" title="Sort by UID">UID <i class="fas fa-sort" style="float:right; opacity:0.5;"></i></th>
+                                        <th onclick="sortTable('studentHubBody', 1)" style="cursor:pointer" title="Sort by Name">Name <i class="fas fa-sort" style="float:right; opacity:0.5;"></i></th>
+                                        <th onclick="sortTable('studentHubBody', 2)" style="cursor:pointer" title="Sort by Dept">Dept <i class="fas fa-sort" style="float:right; opacity:0.5;"></i></th>
+                                        <th onclick="sortTable('studentHubBody', 3)" style="cursor:pointer" title="Sort by Proctor">Assigned Proctor <i class="fas fa-sort" style="float:right; opacity:0.5;"></i></th>
+                                        <th onclick="sortTable('studentHubBody', 4)" style="cursor:pointer" title="Sort by Risk">Risk <i class="fas fa-sort" style="float:right; opacity:0.5;"></i></th>
                                     </tr>
                                 </thead>
                                 <tbody id="studentHubBody">
@@ -247,8 +248,48 @@
                         <label>Initial Password</label>
                         <input type="password" id="pPass" required placeholder="Min 8 characters">
                     </div>
-                    <button type="submit" class="btn-primary w-full">Verify & Create Account</button>
+                    <button type="submit" class="btn-gradient w-full">Verify & Create Account</button>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: STUDENT DETAILS -->
+    <div id="studentDetailsModal" class="modal-overlay">
+        <div class="modal modal-student-details">
+            <div class="modal-student-head">
+                <div class="card-icon indigo"><i class="fas fa-user-graduate"></i></div>
+                <div>
+                    <h2 id="sdName">Student Name</h2>
+                    <span id="sdUid" style="color:var(--text-muted); font-family:monospace; font-weight: 600;">UID</span>
+                </div>
+                <button class="close-btn" style="margin-left:auto;" onclick="hideModal('studentDetailsModal')">&times;</button>
+            </div>
+            <div class="modal-student-body">
+                <div class="student-stat-grid">
+                    <div class="student-stat-box">
+                        <span class="student-stat-label">Current Risk</span>
+                        <span class="student-stat-val" id="sdRisk">--</span>
+                    </div>
+                    <div class="student-stat-box">
+                        <span class="student-stat-label">Department</span>
+                        <span class="student-stat-val" id="sdDept">--</span>
+                    </div>
+                    <div class="student-stat-box">
+                        <span class="student-stat-label">Assigned Proctor</span>
+                        <span class="student-stat-val" id="sdProctor">--</span>
+                    </div>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 10px; font-weight: 700;">Recent Risk Timeline</h4>
+                    <div class="student-risk-timeline" id="sdTimeline">
+                        No recent critical alerts.
+                    </div>
+                </div>
+                <div class="student-actions">
+                    <button class="btn-gradient" style="background: linear-gradient(135deg, #10b981, #059669);" onclick="showToast('Assigned to Counselor successfully', 'success'); hideModal('studentDetailsModal');"><i class="fas fa-user-md"></i> Escalate to Counselor</button>
+                    <button class="btn-gradient" style="background: linear-gradient(135deg, #3b82f6, #2563eb);" onclick="showToast('Notification sent to Proctor', 'success');"><i class="fas fa-envelope"></i> Message Proctor</button>
+                </div>
             </div>
         </div>
     </div>
