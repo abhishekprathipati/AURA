@@ -146,6 +146,9 @@
                             <button class="tab-link" onclick="switchTab(event, 'student-roster')" role="tab">
                                 <i class="fas fa-graduation-cap"></i> Student Roster
                             </button>
+                            <button class="tab-link" onclick="switchTab(event, 'community-feedback')" role="tab">
+                                <i class="fas fa-comments"></i> Community Feedback
+                            </button>
                         </div>
                         <div class="card-search" id="rosterSearchGroup" style="display: none;">
                             <input type="text" id="studentSearch" placeholder="Search by name or UID..." onkeyup="filterStudents()">
@@ -189,6 +192,16 @@
                                     <!-- JS Render -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <!-- TAB: COMMUNITY FEEDBACK -->
+                    <div id="community-feedback" class="tab-content">
+                        <div class="card-body no-pad feedback-container">
+                            <div class="feedback-list" id="communityFeedbackList">
+                                <!-- JS Render -->
+                                <div class="empty-state-block"><p>Loading feedback...</p></div>
+                            </div>
                         </div>
                     </div>
                 </section>

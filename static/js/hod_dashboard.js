@@ -8,7 +8,8 @@ const DASHBOARD_STATE = {
     currentTheme: localStorage.getItem('aura-theme') || 'light',
     filterLevel: 'ALL',
     lastHighRiskCount: 0,
-    activeStudent: null
+    activeStudent: null,
+    communityFeedback: []
 };
 
 // ═══ THEME ═══
@@ -72,8 +73,8 @@ async function loadDashboard() {
             '/proctor/api/hod/department-proctors'
         ];
 
-        const [stats, riskBox, distribution, trends, performance, students, proctors] = await Promise.all(
-            endpoints.map(e => fetch(e).then(async r => {
+        const [stats, riskBox, distribution, trends, performance, students, proctors, feedback] = await Promise.all(
+            endpoints.concat(['/proctor/api/hod/community-feedback']).map(e => fetch(e).then(async r => {
                 const isJson = r.headers.get('content-type')?.includes('application/json');
                 if (isJson) {
                     return r.json();
@@ -101,6 +102,10 @@ async function loadDashboard() {
             renderRiskOversight(DASHBOARD_STATE.riskOversight);
         }
         if (proctors.success) renderProctors(proctors.data);
+        if (feedback.success) {
+            DASHBOARD_STATE.communityFeedback = feedback.data;
+            renderCommunityFeedback(DASHBOARD_STATE.communityFeedback);
+        }
 
     } catch (err) {
         console.error('HOD Sync Error:', err);
@@ -137,7 +142,9 @@ function renderRiskOversight(data) {
         const checkLevel = DASHBOARD_STATE.filterLevel === 'LOW' ? 'STABLE' : DASHBOARD_STATE.filterLevel; 
         displayData = displayData.filter(inc => {
             const risk = (inc.risk_level || 'STABLE').toUpperCase();
-            return risk === checkLevel || risk.includes(DASHBOARD_STATE.filterLevel);
+            // Normalize LOW to STABLE for matching
+            const normalizedRisk = risk === 'LOW' ? 'STABLE' : risk;
+            return normalizedRisk === checkLevel;
         });
     }
     
@@ -175,7 +182,8 @@ function renderStudents(data) {
         const checkLevel = DASHBOARD_STATE.filterLevel === 'LOW' ? 'STABLE' : DASHBOARD_STATE.filterLevel;
         displayData = displayData.filter(s => {
             const risk = (s.risk_level || 'STABLE').toUpperCase();
-            return risk === checkLevel || risk === DASHBOARD_STATE.filterLevel;
+            const normalizedRisk = risk === 'LOW' ? 'STABLE' : risk;
+            return normalizedRisk === checkLevel;
         });
     }
 
@@ -206,6 +214,40 @@ function filterStudents() {
         (s.anonymous_id || '').toLowerCase().includes(q)
     );
     renderStudents(filtered);
+}
+
+function renderCommunityFeedback(data) {
+    const list = document.getElementById('communityFeedbackList');
+    if (!list) return;
+
+    if (!data || data.length === 0) {
+        list.innerHTML = '<div class="empty-state-block"><i class="fas fa-comments"></i><p>No community feedback recorded yet.</p></div>';
+        return;
+    }
+
+    list.innerHTML = data.map(item => {
+        const date = new Date(item.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const typeClass = item.type === 'SUGGESTION' ? 'sug-tag' : 'grv-tag';
+        const sourceIcon = item.source === 'Parent' ? 'fa-user-tie' : 'fa-user-graduate';
+        
+        return `
+            <div class="feedback-item fade-in">
+                <div class="feedback-header">
+                    <span class="feedback-type ${typeClass}">${esc(item.type)}</span>
+                    <span class="feedback-source"><i class="fas ${sourceIcon}"></i> ${esc(item.source)}: ${esc(item.author)}</span>
+                    <span class="feedback-time">${date}</span>
+                </div>
+                <div class="feedback-body">
+                    <h4 class="feedback-title">${esc(item.title)}</h4>
+                    <p class="feedback-text">${esc(item.text)}</p>
+                </div>
+                <div class="feedback-footer">
+                    <span class="feedback-student">About Student: <strong>${esc(item.student)}</strong></span>
+                    <span class="feedback-status status-${item.status.toLowerCase()}">${esc(item.status)}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 function renderProctorPerformance(data) {

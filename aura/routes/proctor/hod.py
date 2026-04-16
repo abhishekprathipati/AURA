@@ -385,7 +385,6 @@ def hod_list_students():
 @proctor_bp.route('/api/hod/escalate-student', methods=['POST'])
 @login_required
 @hod_only
-@demo_restricted
 def hod_escalate_student():
     """HOD-level student escalation: Marks a student for urgent attention."""
     try:
@@ -435,7 +434,6 @@ def hod_escalate_student():
 @proctor_bp.route('/api/hod/message-proctor', methods=['POST'])
 @login_required
 @hod_only
-@demo_restricted
 def hod_message_proctor():
     """Send an oversight message/notification from HOD to a proctor."""
     try:
@@ -501,7 +499,6 @@ def hod_list_proctors():
 @proctor_bp.route('/api/hod/manage-proctors', methods=['POST'])
 @login_required
 @hod_only
-@demo_restricted
 def hod_add_proctor():
     """Add a new proctor to the department."""
     try:
@@ -542,7 +539,6 @@ def hod_add_proctor():
 @proctor_bp.route('/api/hod/manage-proctors/<email>', methods=['DELETE'])
 @login_required
 @hod_only
-@demo_restricted
 def hod_remove_proctor(email):
     """Remove a proctor from the department."""
     try:
@@ -603,3 +599,85 @@ def hod_export_analytics():
         )
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ---------------------------------------------
+# API: Community Feedback (Suggestions & Grievances)
+# ---------------------------------------------
+
+@proctor_bp.route('/api/hod/community-feedback', methods=['GET'])
+@login_required
+@hod_only
+def hod_community_feedback():
+    """Get department-scoped parent suggestions and student grievances."""
+    try:
+        db = get_db()
+        department = session.get('user_department', '')
+        if not department:
+            return jsonify({'success': False, 'error': 'No department associated with session'}), 400
+
+        # 1. Fetch department students for scoping
+        dept_students = list(db['users'].find(
+            {'role': 'student', 'department': department},
+            {'roll_number': 1, 'email': 1, 'name': 1, '_id': 0}
+        ))
+        
+        student_emails = [s.get('email') for s in dept_students if s.get('email')]
+        student_rolls = [s.get('roll_number') for s in dept_students if s.get('roll_number')]
+        
+        student_lookup = {s.get('email'): s.get('name', 'Student') for s in dept_students if s.get('email')}
+        roll_lookup = {s.get('roll_number'): s.get('name', 'Student') for s in dept_students if s.get('roll_number')}
+
+        # 2. Fetch Parent Suggestions
+        parent_sugs = list(db['parent_suggestions'].find(
+            {'student_roll': {'$in': student_rolls}},
+            sort=[('created_at', -1)],
+            limit=20
+        ))
+        
+        # 3. Fetch Student Grievances
+        student_grievances = list(db['grievances'].find(
+            {'user_email': {'$in': student_emails}},
+            sort=[('created_at', -1)],
+            limit=20
+        ))
+
+        feedback = []
+        
+        # Format Suggestions
+        for sug in parent_sugs:
+            feedback.append({
+                'id': str(sug['_id']),
+                'type': 'SUGGESTION',
+                'source': 'Parent',
+                'author': sug.get('parent_name', 'Parent'),
+                'student': roll_lookup.get(sug.get('student_roll'), 'Unknown'),
+                'title': sug.get('title', 'No Title'),
+                'text': sug.get('description', ''),
+                'status': sug.get('status', 'pending'),
+                'timestamp': sug.get('created_at').isoformat() if sug.get('created_at') else None
+            })
+            
+        # Format Grievances
+        for grv in student_grievances:
+            feedback.append({
+                'id': str(grv['_id']),
+                'type': 'GRIEVANCE',
+                'source': 'Student',
+                'author': student_lookup.get(grv.get('user_email'), 'Student'),
+                'student': student_lookup.get(grv.get('user_email'), 'Student'),
+                'title': grv.get('subject', 'No Subject'),
+                'text': grv.get('description', ''),
+                'status': grv.get('status', 'pending'),
+                'timestamp': grv.get('created_at').isoformat() if grv.get('created_at') else None
+            })
+
+        # Sort combined feed by timestamp descending
+        feedback.sort(key=lambda x: x['timestamp'] or '', reverse=True)
+
+        return jsonify({
+            'success': True,
+            'data': feedback[:30]
+        }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
