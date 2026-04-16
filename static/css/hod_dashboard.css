@@ -871,12 +871,12 @@ body {
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.6);
     backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10000;
+    z-index: 2147483647; /* Maximum possible z-index to ensure visibility */
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s;

@@ -337,9 +337,12 @@ async function submitProctor(e) {
             e.target.reset();
         } else {
             showToast(data.error || 'Failed to create proctor account', 'error');
+            // Log it visibly so we know what happened
+            console.error("Proctor Add Error:", data.error);
         }
     } catch (err) {
         showToast('System error. Please try again.', 'error');
+        console.error("System error on submitProctor", err);
     }
 }
 

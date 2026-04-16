@@ -502,10 +502,11 @@ def hod_list_proctors():
 def hod_add_proctor():
     """Add a new proctor to the department."""
     try:
-        data = request.json
-        email = data.get('email')
-        name = data.get('name')
-        password = data.get('password')
+        data = request.get_json(silent=True) or {}
+        email = data.get('email', '').strip()
+        name = data.get('name', '').strip()
+        password = data.get('password', '').strip()
+        
         department = session.get('user_department')
         user_email = session.get('user_email', '')
         db = get_db()
@@ -517,9 +518,9 @@ def hod_add_proctor():
                 department = hod_user['department']
                 
         if not department:
-            return jsonify({'success': False, 'error': 'Could not determine HOD department.'}), 400
+            return jsonify({'success': False, 'error': 'Could not determine your department.'}), 400
         
-        if not all([email, name, password]):
+        if not email or not name or not password:
             return jsonify({'success': False, 'error': 'Missing required fields (Email, Name, or Password).'}), 400
             
         if db['users'].find_one({'email': email}):
@@ -527,18 +528,34 @@ def hod_add_proctor():
             
         from aura.utils.auth_helpers import hash_password
         from aura.models.user import UserModel
+        
+        # Add to users collection
         new_user = {
             'user_id': UserModel.generate_user_id(),
             'email': email,
             'name': name,
             'hashed_password': hash_password(password),
+            'must_change_password': True,
             'role': 'proctor',
             'department': department,
+            'phone': '', # Default empty if not provided
             'created_at': datetime.utcnow(),
+            'created_by': user_email,
+            'status': 'active',
             'is_demo': False
         }
-        
         db['users'].insert_one(new_user)
+        
+        # Ensure proctor profile collection exists for assignments
+        db['proctors'].update_one({'email': email}, {'$setOnInsert': {
+            'email': email,
+            'name': name,
+            'department': department,
+            'phone': '',
+            'assigned_students': [],
+            'created_at': datetime.utcnow(),
+        }}, upsert=True)
+        
         log_activity(AuditAction.ADD_PROCTOR, target_type='proctor', target_id=email, metadata={'department': department, 'added_by': user_email})
         
         return jsonify({'success': True, 'message': f'Proctor {name} successfully added to {department}.'}), 201
