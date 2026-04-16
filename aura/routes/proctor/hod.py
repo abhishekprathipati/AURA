@@ -506,12 +506,22 @@ def hod_add_proctor():
         email = data.get('email')
         name = data.get('name')
         password = data.get('password')
-        department = session.get('user_department', '')
+        department = session.get('user_department')
+        user_email = session.get('user_email', '')
+        db = get_db()
+        
+        # Fallback to fetch from DB if session lacks department
+        if not department:
+            hod_user = db['users'].find_one({'email': user_email})
+            if hod_user and 'department' in hod_user:
+                department = hod_user['department']
+                
+        if not department:
+            return jsonify({'success': False, 'error': 'Could not determine HOD department.'}), 400
         
         if not all([email, name, password]):
-            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+            return jsonify({'success': False, 'error': 'Missing required fields (Email, Name, or Password).'}), 400
             
-        db = get_db()
         if db['users'].find_one({'email': email}):
             return jsonify({'success': False, 'error': 'User with this email already exists'}), 400
             
@@ -529,10 +539,12 @@ def hod_add_proctor():
         }
         
         db['users'].insert_one(new_user)
-        log_activity(AuditAction.ADD_PROCTOR, target_type='proctor', target_id=email, metadata={'department': department})
+        log_activity(AuditAction.ADD_PROCTOR, target_type='proctor', target_id=email, metadata={'department': department, 'added_by': user_email})
         
-        return jsonify({'success': True, 'message': f'Proctor {name} successfully added.'}), 201
+        return jsonify({'success': True, 'message': f'Proctor {name} successfully added to {department}.'}), 201
     except Exception as e:
+        import logging
+        logging.error(f"Error adding proctor: {e}", exc_info=True)
         return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
 
 

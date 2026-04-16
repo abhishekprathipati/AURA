@@ -7,7 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/hod_dashboard.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hod_dashboard.css') }}?v=7">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
 </head>
@@ -71,28 +71,28 @@
         <!-- ═══ KPI STAT CARDS ═══ -->
         <section class="stats-section">
             <div class="stats-grid">
-                <div class="stat-card glass green-glow fade-up" onclick="filterDashboard('LOW')" title="Filter Stable Students">
+                <div class="stat-card glass green-glow" onclick="filterDashboard('LOW')" title="Filter Stable Students">
                     <div class="stat-icon"><i class="fas fa-heart-pulse"></i></div>
                     <div class="stat-info">
                         <div class="stat-number" id="wellnessScore">0%</div>
                         <div class="stat-label">Dept. Wellness Index</div>
                     </div>
                 </div>
-                <div class="stat-card glass indigo-glow fade-up" onclick="filterDashboard('ALL')" title="Clear Filters">
+                <div class="stat-card glass indigo-glow" onclick="filterDashboard('ALL')" title="Clear Filters">
                     <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
                     <div class="stat-info">
                         <div class="stat-number" id="totalStudents">0</div>
                         <div class="stat-label">Assigned Students</div>
                     </div>
                 </div>
-                <div class="stat-card glass amber-glow fade-up" onclick="filterDashboard('MEDIUM')" title="Filter Caution Alerts">
+                <div class="stat-card glass amber-glow" onclick="filterDashboard('MEDIUM')" title="Filter Caution Alerts">
                     <div class="stat-icon"><i class="fas fa-user-shield"></i></div>
                     <div class="stat-info">
                         <div class="stat-number" id="proctorActions">0</div>
                         <div class="stat-label">Proctor Actions Today</div>
                     </div>
                 </div>
-                <div class="stat-card glass red-glow fade-up pulsing" id="criticalCard" onclick="filterDashboard('HIGH')" title="Filter Critical Alerts">
+                <div class="stat-card glass red-glow" id="criticalCard" onclick="filterDashboard('HIGH')" title="Filter Critical Alerts">
                     <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
                     <div class="stat-info">
                         <div class="stat-number" id="highRiskCount">0</div>
@@ -309,6 +309,6 @@
 
     <div id="toast" class="toast"></div>
 
-    <script src="{{ url_for('static', filename='js/hod_dashboard.js') }}?v=5"></script>
+    <script src="{{ url_for('static', filename='js/hod_dashboard.js') }}?v=6"></script>
 </body>
 </html>
