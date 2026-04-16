@@ -35,6 +35,11 @@ function esc(s) {
     return d.innerHTML;
 }
 
+function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : '';
+}
+
 function showToast(msg, type = 'success') {
     const t = document.getElementById('toast');
     if (!t) return;
@@ -332,6 +337,27 @@ async function submitProctor(e) {
             e.target.reset();
         } else {
             showToast(data.error || 'Failed to create proctor account', 'error');
+        }
+    } catch (err) {
+        showToast('System error. Please try again.', 'error');
+    }
+}
+
+async function removeProctor(email) {
+    if (!confirm(`Are you sure you want to remove proctor ${email}? They will immediately lose access to their dashboard.`)) return;
+
+    try {
+        const res = await fetch(`/proctor/api/hod/manage-proctors/${encodeURIComponent(email)}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-Token': getCsrfToken() }
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast('Proctor removed successfully!', 'success');
+            loadDashboard(); // Refresh the list
+        } else {
+            showToast(data.error || 'Failed to remove proctor', 'error');
         }
     } catch (err) {
         showToast('System error. Please try again.', 'error');
