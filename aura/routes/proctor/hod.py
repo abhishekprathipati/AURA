@@ -381,6 +381,92 @@ def hod_list_students():
         return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
 
 
+@proctor_bp.route('/api/hod/escalate-student', methods=['POST'])
+@login_required
+@hod_only
+@demo_restricted
+def hod_escalate_student():
+    """HOD-level student escalation: Marks a student for urgent attention."""
+    try:
+        data = request.json or {}
+        anon_id = data.get('anonymous_id')
+        reason = data.get('reason', 'High-level executive oversight escalation')
+        
+        if not anon_id:
+            return jsonify({'success': False, 'error': 'Student ID is required'}), 400
+            
+        db = get_db()
+        # Ensure we have access to this student
+        visible_ids = get_visible_student_ids()
+        if anon_id not in visible_ids:
+            return jsonify({'success': False, 'error': 'Access denied or student not in department'}), 403
+
+        # Create/Update dummy incident for tracking escalation
+        incident_id = f"HOD-ESC-{uuid.uuid4().hex[:6].upper()}"
+        escalation_doc = {
+            'incident_id': incident_id,
+            'anonymous_student_id': anon_id,
+            'risk_level': 'HIGH',
+            'trigger_source': 'HOD_ESCALATION',
+            'status': 'ESCALATED',
+            'case_status': 'assigned',
+            'assigned_to': 'COUNSELOR_POOL',
+            'message_excerpt': reason,
+            'timestamp': datetime.utcnow(),
+            'auto_triggered': False
+        }
+        
+        db['risk_incidents'].insert_one(escalation_doc)
+        
+        # Sync student risk level
+        db['proctor_students'].update_one(
+            {'anonymous_id': anon_id},
+            {'$set': {'risk_level': 'HIGH', 'updated_at': datetime.utcnow()}}
+        )
+        
+        log_activity(AuditAction.ESCALATE_INCIDENT, target_type='student', target_id=anon_id, metadata={'reason': reason})
+        
+        return jsonify({'success': True, 'message': f'Student {anon_id} escalated to counselor.'}), 201
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
+
+
+@proctor_bp.route('/api/hod/message-proctor', methods=['POST'])
+@login_required
+@hod_only
+@demo_restricted
+def hod_message_proctor():
+    """Send an oversight message/notification from HOD to a proctor."""
+    try:
+        data = request.json or {}
+        proctor_id = data.get('proctor_id')
+        anon_id = data.get('anonymous_id')
+        message = data.get('message')
+        
+        if not all([proctor_id, message]):
+            return jsonify({'success': False, 'error': 'Proctor ID and message are required'}), 400
+            
+        db = get_db()
+        hod_email = session.get('user_email', 'HOD')
+        
+        comm_doc = {
+            'comm_id': str(uuid.uuid4()),
+            'from': hod_email,
+            'to': proctor_id,
+            'student_context': anon_id,
+            'message': message,
+            'read': False,
+            'timestamp': datetime.utcnow()
+        }
+        
+        db['hod_communications'].insert_one(comm_doc)
+        log_activity(AuditAction.CONTACT_STUDENT, target_type='proctor', target_id=proctor_id, metadata={'student': anon_id})
+        
+        return jsonify({'success': True, 'message': f'Message sent to proctor {proctor_id}.'}), 201
+    except Exception as e:
+        return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
+
+
 # ---------------------------------------------
 # API: System Status
 # ---------------------------------------------

@@ -7,7 +7,8 @@ const DASHBOARD_STATE = {
     trends: {},
     currentTheme: localStorage.getItem('aura-theme') || 'light',
     filterLevel: 'ALL',
-    lastHighRiskCount: 0
+    lastHighRiskCount: 0,
+    activeStudent: null
 };
 
 // ═══ THEME ═══
@@ -494,7 +495,72 @@ function openStudentDetails(uid) {
         timeline.innerHTML = 'No recent critical incidents recorded.';
     }
 
+    DASHBOARD_STATE.activeStudent = student;
     document.getElementById('studentDetailsModal').classList.add('visible');
+}
+
+async function escalateStudent() {
+    const student = DASHBOARD_STATE.activeStudent;
+    if (!student) return;
+
+    if (!confirm(`Are you sure you want to escalate student ${student.anonymous_id || student.anonymous_student_id} for critical counseling?`)) return;
+
+    try {
+        const res = await fetch('/proctor/api/hod/escalate-student', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+            body: JSON.stringify({ 
+                anonymous_id: student.anonymous_id || student.anonymous_student_id,
+                reason: 'HOD Executive Escalation'
+            })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast('Student escalated successfully!', 'success');
+            hideModal('studentDetailsModal');
+            loadDashboard();
+        } else {
+            showToast(data.error || 'Escalation failed', 'error');
+        }
+    } catch (err) {
+        showToast('System error during escalation', 'error');
+    }
+}
+
+async function messageProctor() {
+    const student = DASHBOARD_STATE.activeStudent;
+    if (!student) return;
+
+    const proctorId = student.proctor_id;
+    if (!proctorId || proctorId === 'Unassigned') {
+        showToast('No proctor assigned to this student', 'error');
+        return;
+    }
+
+    const msg = prompt(`Enter message for Proctor ${proctorId}:`, `Please review student ${student.anonymous_id || student.anonymous_student_id} immediately.`);
+    if (!msg) return;
+
+    try {
+        const res = await fetch('/proctor/api/hod/message-proctor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+            body: JSON.stringify({
+                proctor_id: proctorId,
+                anonymous_id: student.anonymous_id || student.anonymous_student_id,
+                message: msg
+            })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast('Message sent to proctor', 'success');
+        } else {
+            showToast(data.error || 'Failed to send message', 'error');
+        }
+    } catch (err) {
+        showToast('System error while messaging', 'error');
+    }
 }
 
 function exportDashboardCSV() {
