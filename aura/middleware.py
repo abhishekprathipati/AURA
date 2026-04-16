@@ -51,12 +51,13 @@ def register_middleware(app):
             "frame-ancestors 'none'; "
         )
 
-        # Static asset caching
+        # Static asset caching  
         if response.mimetype in ('text/css', 'application/javascript', 'image/svg+xml'):
             if app.config.get('DEBUG'):
                 h['Cache-Control'] = 'no-cache, no-store, must-revalidate'
             else:
-                h['Cache-Control'] = 'public, max-age=2592000, immutable'
+                # Use versioned caching rather than immutable to allow ?v= busting
+                h['Cache-Control'] = 'public, max-age=3600'
 
         return response
 
