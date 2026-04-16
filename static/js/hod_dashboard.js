@@ -72,7 +72,18 @@ async function loadDashboard() {
         ];
 
         const [stats, riskBox, distribution, trends, performance, students, proctors] = await Promise.all(
-            endpoints.map(e => fetch(e).then(r => r.json()))
+            endpoints.map(e => fetch(e).then(async r => {
+                const isJson = r.headers.get('content-type')?.includes('application/json');
+                if (isJson) {
+                    return r.json();
+                } else {
+                    console.warn(`Endpoint ${e} returned non-JSON`);
+                    return { success: false, error: 'Non-JSON response' };
+                }
+            }).catch(err => {
+                console.error(`Fetch failed for ${e}`, err);
+                return { success: false };
+            }))
         );
 
         if (stats.success) renderStats(stats.data);
@@ -156,8 +167,11 @@ function renderStudents(data) {
 
     let displayData = data;
     if (DASHBOARD_STATE.filterLevel !== 'ALL') {
-        const checkLevel = DASHBOARD_STATE.filterLevel === 'LOW' ? 'STABLE' : DASHBOARD_STATE.filterLevel; 
-        displayData = displayData.filter(s => (s.risk_level || '').toUpperCase() === checkLevel || (s.risk_level || '').toUpperCase() === DASHBOARD_STATE.filterLevel);
+        const checkLevel = DASHBOARD_STATE.filterLevel === 'LOW' ? 'STABLE' : DASHBOARD_STATE.filterLevel;
+        displayData = displayData.filter(s => {
+            const risk = (s.risk_level || '').toUpperCase();
+            return risk === checkLevel || risk === DASHBOARD_STATE.filterLevel;
+        });
     }
 
     if (displayData.length === 0) {
@@ -171,7 +185,7 @@ function renderStudents(data) {
             <td><strong>${esc(s.name)}</strong></td>
             <td>${esc(s.department)}</td>
             <td><span class="proctor-name">${esc(s.proctor_id)}</span></td>
-            <td><span class="tag ${s.risk_level.toLowerCase()}">${esc(s.risk_level)}</span></td>
+            <td><span class="tag ${(s.risk_level || 'LOW').toLowerCase()}">${esc(s.risk_level || 'STABLE')}</span></td>
         </tr>
     `).join('');
 }
@@ -179,7 +193,9 @@ function renderStudents(data) {
 function filterStudents() {
     const q = document.getElementById('studentSearch').value.toLowerCase();
     const filtered = DASHBOARD_STATE.students.filter(s => 
-        s.name.toLowerCase().includes(q) || s.roll_number.toLowerCase().includes(q) || s.anonymous_id.toLowerCase().includes(q)
+        (s.name || '').toLowerCase().includes(q) || 
+        (s.roll_number || '').toLowerCase().includes(q) || 
+        (s.anonymous_id || '').toLowerCase().includes(q)
     );
     renderStudents(filtered);
 }
