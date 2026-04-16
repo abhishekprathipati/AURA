@@ -135,7 +135,10 @@ function renderRiskOversight(data) {
     let displayData = data;
     if (DASHBOARD_STATE.filterLevel !== 'ALL') {
         const checkLevel = DASHBOARD_STATE.filterLevel === 'LOW' ? 'STABLE' : DASHBOARD_STATE.filterLevel; 
-        displayData = displayData.filter(inc => (inc.risk_level || '').toUpperCase() === checkLevel || (inc.risk_level || '').toUpperCase() === DASHBOARD_STATE.filterLevel);
+        displayData = displayData.filter(inc => {
+            const risk = (inc.risk_level || 'STABLE').toUpperCase();
+            return risk === checkLevel || risk.includes(DASHBOARD_STATE.filterLevel);
+        });
     }
     
     if (count) count.textContent = displayData.length;
@@ -147,13 +150,14 @@ function renderRiskOversight(data) {
 
     body.innerHTML = displayData.map(inc => {
         const time = new Date(inc.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const riskClass = inc.risk_level === 'HIGH' ? 'high' : 'medium';
+        const riskLevel = (inc.risk_level || 'STABLE').toUpperCase();
+        const riskClass = riskLevel === 'HIGH' ? 'high' : (riskLevel === 'MEDIUM' ? 'medium' : 'low');
         const statusClass = inc.status === 'ESCALATED' ? 'high' : (inc.status === 'UNREVIEWED' ? 'medium' : '');
         
         return `
             <tr class="clickable-row fade-in" onclick="openStudentDetails('${esc(inc.anonymous_student_id)}')">
                 <td><strong>${esc(inc.anonymous_student_id)}</strong></td>
-                <td><span class="tag ${riskClass}">${esc(inc.risk_level)}</span></td>
+                <td><span class="tag ${riskClass}">${esc(riskLevel)}</span></td>
                 <td><span style="font-size: 0.82rem; color: var(--text-muted)">${esc(inc.trigger_source)}</span></td>
                 <td><span class="tag ${statusClass}">${esc(inc.status)}</span></td>
                 <td style="color: var(--text-muted); font-size: 0.82rem;">${time}</td>
@@ -170,7 +174,7 @@ function renderStudents(data) {
     if (DASHBOARD_STATE.filterLevel !== 'ALL') {
         const checkLevel = DASHBOARD_STATE.filterLevel === 'LOW' ? 'STABLE' : DASHBOARD_STATE.filterLevel;
         displayData = displayData.filter(s => {
-            const risk = (s.risk_level || '').toUpperCase();
+            const risk = (s.risk_level || 'STABLE').toUpperCase();
             return risk === checkLevel || risk === DASHBOARD_STATE.filterLevel;
         });
     }
@@ -180,15 +184,18 @@ function renderStudents(data) {
         return;
     }
 
-    body.innerHTML = displayData.map(s => `
-        <tr class="clickable-row fade-in" onclick="openStudentDetails('${esc(s.anonymous_id)}')">
-            <td><code>${esc(s.anonymous_id)}</code></td>
-            <td><strong>${esc(s.name)}</strong></td>
-            <td>${esc(s.department)}</td>
-            <td><span class="proctor-name">${esc(s.proctor_id)}</span></td>
-            <td><span class="tag ${(s.risk_level || 'LOW').toLowerCase()}">${esc(s.risk_level || 'STABLE')}</span></td>
-        </tr>
-    `).join('');
+    body.innerHTML = displayData.map(s => {
+        const riskLevel = (s.risk_level || 'STABLE').toUpperCase();
+        return `
+            <tr class="clickable-row fade-in" onclick="openStudentDetails('${esc(s.anonymous_id)}')">
+                <td><code>${esc(s.anonymous_id)}</code></td>
+                <td><strong>${esc(s.name)}</strong></td>
+                <td>${esc(s.department)}</td>
+                <td><span class="proctor-name">${esc(s.proctor_id || 'unassigned')}</span></td>
+                <td><span class="tag ${riskLevel.toLowerCase()}">${esc(riskLevel)}</span></td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function filterStudents() {

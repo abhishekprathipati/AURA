@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request, render_template, session, Response, current_app
+from werkzeug.security import generate_password_hash, check_password_hash
 from bson import ObjectId
 from datetime import datetime, timedelta
 import uuid
@@ -531,7 +532,7 @@ def hod_add_proctor():
         }
         
         db['users'].insert_one(new_user)
-        log_activity(AuditAction.CONFIG_CHANGE, f"HOD added proctor {email} to {department}")
+        log_activity(AuditAction.ADD_PROCTOR, target_type='proctor', target_id=email, metadata={'department': department})
         
         return jsonify({'success': True, 'message': f'Proctor {name} successfully added.'}), 201
     except Exception as e:
