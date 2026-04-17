@@ -8,10 +8,11 @@ from urllib.parse import urlparse
 from typing import Callable, Optional
 
 # Demo accounts that should have restricted (read-only) access
+# NOTE: hod@aura.edu is intentionally excluded — HODs must be able to
+# manage proctors and perform write operations even in demo mode.
 DEMO_EMAILS = {
     'student@aura.edu',
     'proctor@aura.edu',
-    'hod@aura.edu',
 }
 
 # Demo usage limits
@@ -19,7 +20,11 @@ DEMO_CHAT_LIMIT = 5          # max chat messages per session
 DEMO_GAME_TIME_LIMIT = 120   # seconds before games/activities lock
 
 def is_demo_account() -> bool:
-    """Check if the current session belongs to a demo account."""
+    """Check if the current session belongs to a demo account.
+    HOD role is always exempt — they need full write access to manage proctors.
+    """
+    if session.get('user_role') == 'hod':
+        return False
     return session.get('is_demo', False) or session.get('user_email', '') in DEMO_EMAILS
 
 def verify_password(hashed_password: str, password: str) -> bool:
