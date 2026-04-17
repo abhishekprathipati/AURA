@@ -1052,6 +1052,14 @@ body {
     font-weight: 800;
     font-family: var(--font-heading);
 }
+.modal-student-head .close-btn {
+    color: var(--text-main);
+    background: var(--surface-muted);
+}
+.modal-student-head .close-btn:hover {
+    background: rgba(0,0,0,0.1);
+    color: var(--danger);
+}
 .modal-student-body {
     display: flex;
     flex-direction: column;
