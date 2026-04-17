@@ -1036,7 +1036,8 @@ body {
    PREMIUM STUDENT MODAL
    ═══════════════════════════════════════ */
 .modal-student-details {
-    max-width: 750px !important;
+    max-width: 950px !important;
+    width: 90%;
 }
 .modal-student-head {
     display: flex;
@@ -1048,7 +1049,7 @@ body {
 }
 .modal-student-head h2 {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 800;
     font-family: var(--font-heading);
 }
@@ -1063,12 +1064,13 @@ body {
 .modal-student-body {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 30px;
+    padding: 20px 10px;
 }
 .student-stat-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
+    gap: 20px;
 }
 .student-stat-box {
     background: var(--surface-muted);
@@ -1086,9 +1088,10 @@ body {
     text-transform: uppercase;
 }
 .student-stat-val {
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     font-weight: 800;
     color: var(--text-main);
+    word-break: break-all;
 }
 .student-actions {
     display: flex;
