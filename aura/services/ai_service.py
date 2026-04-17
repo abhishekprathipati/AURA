@@ -407,7 +407,8 @@ def generate_mental_response(
             "stress_score": 95,
             "risk_level": "CRITICAL_RISK",
             "mental_indicators": ["High Mental Risk: Crisis/Severe Distress"],
-            "aura_response": "I hear how incredibly difficult things are right now. Your life has value. Please reach out to a professional, a counselor, or a free crisis helpline immediately. You do not have to carry this alone. Please talk to someone."
+            "aura_response": "I hear how incredibly difficult things are right now. Your feelings are real and valid. Please reach out to someone who can help — you don't have to face this alone.\n\n🆘 Free & Confidential Indian Helplines:\n• iCall (TISS): 9152987821 (Mon–Sat, 8am–10pm)\n• Vandrevala Foundation: 9999 666 555 (24/7)\n• AASRA: 9820466626\n• National Emergency: 112\n\nPlease talk to your proctor, a counsellor, or call one of these numbers right now. You matter. 💙"
+
         })
 
     if not client:

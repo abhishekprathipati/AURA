@@ -671,62 +671,37 @@ def calculate_dynamic_stress(user_email: str, force_refresh: bool = False) -> Di
     except Exception as e:
         log.warning("Failed to insert student_wellness record: %s", e)
 
-    # ── 7. Multi-condition institutional alert (IMPROVED & RELIABLE) ──────────
-    # Alert Conditions (send email to proctor & parent):
-    # 1. CRITICAL: score > 85 (always alert, no conditions)
-    # 2. HIGH + RISING: score > 70 AND trend == 'up' (worsening stress)
-    # 3. SUDDEN SPIKE: spike_detected (z-score > 2 standard deviations)
-    # 4. HIGH VOLATILITY: score > 65 AND volatility > 50 (emotional instability)
+    # ── 7. STRESS ALERT PIPELINE ───────────────────────────────────────────────
+    # Threshold: score > 70 → ALWAYS send email to proctor, parent AND student.
+    # This is a hard rule regardless of trend direction.
+    # Additional conditions for edge cases:
+    #   - CRITICAL (>85): logged as CRITICAL in DB
+    #   - SPIKE: z-score anomaly also triggers alert
+    #   - VOLATILITY: score>65 + high volatility also triggers
     alert_sent = False
+    alert_type = None
 
     if final_score > 85:
-        # CRITICAL STRESS - always alert
-        try:
-            result = send_institutional_alert(user_email, final_score)
-            alert_sent = result.get('success', False)
-            if alert_sent:
-                log.warning("CRITICAL ALERT sent for %s: score=%d", user_email, final_score)
-            else:
-                log.error("CRITICAL ALERT failed for %s: %s", user_email, result.get('message'))
-        except Exception as e:
-            log.error("Failed to send critical alert for %s: %s", user_email, e)
-
-    elif final_score > 70 and trend == 'up':
-        # HIGH STRESS + RISING TREND (worsening condition)
-        try:
-            result = send_institutional_alert(user_email, final_score)
-            alert_sent = result.get('success', False)
-            if alert_sent:
-                log.warning("RISING STRESS ALERT sent for %s: score=%d, trend=%s", user_email, final_score, trend)
-            else:
-                log.error("RISING STRESS ALERT failed for %s: %s", user_email, result.get('message'))
-        except Exception as e:
-            log.error("Failed to send rising stress alert for %s: %s", user_email, e)
-
+        alert_type = 'CRITICAL'
+    elif final_score > 70:
+        alert_type = 'HIGH_STRESS'
     elif spike_detected:
-        # SUDDEN SPIKE DETECTED (z-score anomaly)
-        try:
-            result = send_institutional_alert(user_email, final_score)
-            alert_sent = result.get('success', False)
-            if alert_sent:
-                log.warning("SPIKE ALERT sent for %s: score=%d (spike detected)", user_email, final_score)
-            else:
-                log.error("SPIKE ALERT failed for %s: %s", user_email, result.get('message'))
-        except Exception as e:
-            log.error("Failed to send spike alert for %s: %s", user_email, e)
-
+        alert_type = 'SPIKE'
     elif final_score > 65 and signals.get('volatility', 0) > 50:
-        # ELEVATED STRESS + HIGH VOLATILITY (emotional instability)
+        alert_type = 'VOLATILITY'
+
+    if alert_type:
         try:
             result = send_institutional_alert(user_email, final_score)
             alert_sent = result.get('success', False)
             if alert_sent:
-                log.warning("VOLATILITY ALERT sent for %s: score=%d, volatility=%d",
-                           user_email, final_score, signals.get('volatility', 0))
+                log.warning('%s ALERT sent for %s: score=%d (proctor=%s, parent=%s, student=%s)',
+                            alert_type, user_email, final_score,
+                            result.get('proctor_sent'), result.get('parent_sent'), result.get('student_sent'))
             else:
-                log.error("VOLATILITY ALERT failed for %s: %s", user_email, result.get('message'))
+                log.error('%s ALERT failed for %s: %s', alert_type, user_email, result.get('message'))
         except Exception as e:
-            log.error("Failed to send volatility alert for %s: %s", user_email, e)
+            log.error('Failed to send %s alert for %s: %s', alert_type, user_email, e)
 
     return {
         'score': final_score,
