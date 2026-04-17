@@ -76,9 +76,10 @@ def add_parent_email():
             db, student_email, parent_email, parent_name
         )
 
-        # Build verification URL
-        base_url = request.host_url.rstrip('/') or 'https://yourdomain.com'
-        verification_url = f"{base_url}/parent/verify?token={verification['token']}&email={parent_email}"
+        # Build verification URL — must match the blueprint prefix /api/student/parent/verify
+        base_url = request.host_url.rstrip('/')
+        verification_url = f"{base_url}/api/student/parent/verify?token={verification['token']}&email={parent_email}"
+
 
         # Send verification email
         mail_ext = current_app.extensions.get('mail')

@@ -568,8 +568,13 @@ class AdvancedDashboard {
         requestAnimationFrame(step);
     }
 
-    async fetchData(endpoint) {
-        const response = await fetch(endpoint);
+    async fetchData(endpoint, options = {}) {
+        const defaultHeaders = { 'Content-Type': 'application/json' };
+        const fetchOptions = {
+            ...options,
+            headers: { ...defaultHeaders, ...(options.headers || {}) },
+        };
+        const response = await fetch(endpoint, fetchOptions);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return await response.json();
     }
@@ -1074,7 +1079,7 @@ class AdvancedDashboard {
             }
         } catch (e) {
             this.closeModal('urgent');
-            this.showToast('Network error. If you are in danger, call 1-800-273-8255.', 'error');
+            this.showToast('Network error. If you are in danger, call 112 (National Emergency).', 'error');
         } finally { if (btn) { btn.disabled = false; btn.textContent = 'Yes, I Need Help Now'; } }
     }
 
