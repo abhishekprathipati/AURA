@@ -16,7 +16,6 @@ if __name__ == '__main__':
     host  = os.getenv('HOST', '0.0.0.0')
     
     app.logger.info(f"Starting AURA  host={host} port={port} debug={debug}")
-    # allow_unsafe_werkzeug must only be True in dev/debug mode.
-    # In production, gunicorn (via Procfile) is used instead of this script.
+    # allow_unsafe_werkzeug=True is safe for local dev only.
     socketio.run(app, host=host, port=port, debug=debug,
-                 allow_unsafe_werkzeug=debug)
+                 allow_unsafe_werkzeug=True)

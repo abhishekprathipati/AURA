@@ -79,7 +79,7 @@ async function loadDashboard() {
         ];
 
         const [stats, riskBox, distribution, trends, performance, students, proctors, feedback] = await Promise.all(
-            endpoints.concat(['/proctor/api/hod/community-feedback']).map(e => fetch(e).then(async r => {
+            endpoints.concat(['/proctor/api/hod/community-feedback']).map(e => fetch(e, {credentials: 'include'}).then(async r => {
                 const isJson = r.headers.get('content-type')?.includes('application/json');
                 if (isJson) {
                     return r.json();
@@ -325,6 +325,7 @@ async function submitProctor(e) {
     try {
         const res = await fetch('/proctor/api/hod/manage-proctors', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
             body: JSON.stringify(payload)
         });
@@ -352,6 +353,7 @@ async function removeProctor(email) {
     try {
         const res = await fetch(`/proctor/api/hod/manage-proctors/${encodeURIComponent(email)}`, {
             method: 'DELETE',
+            credentials: 'include',
             headers: { 'X-CSRF-Token': getCsrfToken() }
         });
         const data = await res.json();
@@ -586,6 +588,7 @@ async function escalateStudent() {
     try {
         const res = await fetch('/proctor/api/hod/escalate-student', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
             body: JSON.stringify({ 
                 anonymous_id: student.anonymous_id || student.anonymous_student_id,
@@ -622,6 +625,7 @@ async function messageProctor() {
     try {
         const res = await fetch('/proctor/api/hod/message-proctor', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
             body: JSON.stringify({
                 proctor_id: proctorId,
