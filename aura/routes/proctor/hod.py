@@ -446,7 +446,13 @@ def hod_message_proctor():
             return jsonify({'success': False, 'error': 'Proctor ID and message are required'}), 400
             
         db = get_db()
+        department = session.get('user_department', '')
         hod_email = session.get('user_email', 'HOD')
+
+        # Security: verify proctor exists and belongs to this HOD's department
+        target_proctor = db['users'].find_one({'email': proctor_id, 'role': 'proctor', 'department': department})
+        if not target_proctor:
+            return jsonify({'success': False, 'error': 'Unauthorized - Proctor not found in your department'}), 403
         
         comm_doc = {
             'comm_id': str(uuid.uuid4()),
@@ -574,15 +580,26 @@ def hod_remove_proctor(email):
         department = session.get('user_department', '')
         db = get_db()
         
-        # Security: verify proctor belongs to this HOD's department
-        target = db['users'].find_one({'email': email})
+        # Security & Cleanup: verify proctor belongs to this HOD's department
+        target = db['users'].find_one({'email': email, 'role': 'proctor'})
         if not target or target.get('department') != department:
-            return jsonify({'success': False, 'error': 'Unauthorized or proctor not found'}), 403
+            return jsonify({'success': False, 'error': 'Unauthorized or proctor not found in your department'}), 403
             
+        # 1. Remove from users (Auth)
         db['users'].delete_one({'email': email})
+        
+        # 2. Remove from proctors (Profile)
+        db['proctors'].delete_one({'email': email})
+        
+        # 3. Handle assigned students (Unassign to prevent ghost links)
+        db['proctor_students'].update_many(
+            {'proctor_id': email},
+            {'$set': {'proctor_id': 'Unassigned', 'updated_at': datetime.utcnow()}}
+        )
+        
         log_activity(AuditAction.CONFIG_CHANGE, f"HOD removed proctor {email}")
         
-        return jsonify({'success': True, 'message': 'Proctor access revoked.'}), 200
+        return jsonify({'success': True, 'message': 'Proctor removed and students unassigned.'}), 200
     except Exception as e:
         return jsonify({'success': False, 'error': safe_error(e, 'proctor')}), 500
 
@@ -701,8 +718,8 @@ def hod_community_feedback():
                 'timestamp': grv.get('created_at').isoformat() if grv.get('created_at') else None
             })
 
-        # Sort combined feed by timestamp descending
-        feedback.sort(key=lambda x: x['timestamp'] or '', reverse=True)
+        # Sort combined feed by timestamp descending (safety fallback for missing dates)
+        feedback.sort(key=lambda x: x.get('timestamp') or datetime.min.isoformat(), reverse=True)
 
         return jsonify({
             'success': True,
