@@ -32,14 +32,9 @@ def register_middleware(app):
         h['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         h['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
 
-        # FIX #7: Nonce-based CSP
-        nonce = getattr(g, 'csp_nonce', None)
-        if nonce:
-            script_src = f"'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io 'nonce-{nonce}'"
-            style_src = f"'self' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'nonce-{nonce}'"
-        else:
-            script_src = "'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io 'unsafe-inline'"
-            style_src = "'self' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline'"
+        # FIX #7: We need 'unsafe-inline' for inline event handlers (onclick) and 'unsafe-eval' for some charts.
+        script_src = "'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io"
+        style_src = "'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com"
 
         h['Content-Security-Policy'] = (
             "default-src 'self'; "
