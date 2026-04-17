@@ -77,50 +77,54 @@ def send_parent_verification_email(mail_ext, student_name: str, student_email: s
     try:
         from flask_mail import Message
 
-        subject = f"Verify Your Email - AURA Student Wellness Alerts"
+        subject = f"[Action Required] Verify Your Email - AURA Student Wellness Alerts"
 
-        body = f"""
-Hello,
+        body = f"""Hello {parent_name or 'Parent/Guardian'},
 
-Your child {student_name} ({student_email}) has added you to receive wellness alerts from AURA - our student mental health monitoring system.
+{student_name} ({student_email}) has added you as a parent contact in AURA, our student mental health and wellness monitoring system.
 
-WHAT IS AURA?
-=============
-AURA monitors student stress and well-being through:
-- Daily mood check-ins
-- Real-time conversation analysis
-- Automatic alerts for high stress or crisis situations
+=== VERIFY YOUR EMAIL ===
 
-WHAT YOU'LL RECEIVE:
-====================
-STRESS ALERTS: When your child reports elevated stress levels
-CRISIS ALERTS: If harmful keywords are detected (with resources)
-EMERGENCY DATA: Direct contact info and what triggered the alert
-
-HOW TO VERIFY:
-===============
-Click the link below to confirm you want to receive these emails:
+Click the link below to confirm you want to receive wellness alerts for {student_name}:
 
 {verification_url}
 
-This link expires in 7 days.
+This link expires in 7 days. If it doesn't work, copy and paste the full URL into your browser.
 
-PRIVACY & SECURITY:
-===================
-- Your email is encrypted
-- You can unsubscribe anytime
-- No personal data is shared
-- HIPAA compliant
+=== WHAT IS AURA? ===
 
-IF YOU DID NOT REGISTER:
-========================
-Please ignore this email. Your child may have made a mistake entering your email address.
+AURA monitors student well-being through:
+  - Daily mood check-ins
+  - Real-time conversation analysis
+  - Automatic alerts for high stress or crisis situations
 
-Questions? Contact: support@aura-system.com
+=== WHAT YOU WILL RECEIVE ===
+
+Once verified, you will get:
+  - STRESS ALERTS: When {student_name}'s stress score exceeds 70/100
+  - CRISIS ALERTS: If harmful keywords are detected (with guidance on how to help)
+
+=== INDIAN SUPPORT HELPLINES ===
+
+(We include these in every alert so you always have resources ready)
+  - iCall (TISS)          : 9152987821  (Mon-Sat 8am-10pm)
+  - Vandrevala Foundation : 9999 666 555 (24/7, multilingual, free)
+  - AASRA                 : 9820466726
+  - National Emergency    : 112
+
+=== PRIVACY & SECURITY ===
+
+  - Your email is private and will never be shared
+  - You can ask {student_name} to remove you at any time
+  - AURA does not share personal counselling data with parents
+
+IF YOU DID NOT EXPECT THIS EMAIL:
+  Simply ignore it. No action is needed from you.
+  {student_name} may have entered your email by mistake.
 
 ---
 AURA Student Wellness System
-Protecting our students' mental health
+Supporting mental health, one student at a time.
         """.strip()
 
         msg = Message(
@@ -130,12 +134,13 @@ Protecting our students' mental health
         )
 
         mail_ext.send(msg)
-        log.info('Verification email sent to parent: %s', parent_email)
+        log.info('Verification email sent to parent: %s for student: %s', parent_email, student_email)
         return True
 
     except Exception as e:
         log.error('Failed to send verification email to %s: %s', parent_email, e)
         return False
+
 
 
 def verify_parent_email(db, token: str, parent_email: str) -> Tuple[bool, str]:
