@@ -12,7 +12,7 @@ with app.app_context():
     db = get_db()
     email = '22mh1a4257@acoe.edu.in'
     
-    pwd_hash = hash_password('123456')
+    pwd_hash = hash_password('Aura@student')
     user = db['users'].find_one({'email': email})
     
     if not user:

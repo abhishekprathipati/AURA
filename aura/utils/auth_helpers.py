@@ -15,6 +15,10 @@ DEMO_EMAILS = {
     'proctor@aura.edu',
 }
 
+# Standard default password for student accounts
+DEFAULT_STUDENT_PASSWORD = "Aura@student"
+
+
 # Demo usage limits
 DEMO_CHAT_LIMIT = 5          # max chat messages per session
 DEMO_GAME_TIME_LIMIT = 120   # seconds before games/activities lock

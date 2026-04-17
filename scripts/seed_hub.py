@@ -141,7 +141,7 @@ def seed_hub(db, force: bool = False) -> dict[str, int]:
             db['users'].insert_one({
                 'email': peer['email'],
                 'name': peer['name'],
-                'hashed_password': generate_password_hash('demo123'),
+                'hashed_password': generate_password_hash('Aura@student'),
                 'role': 'student',
                 'department': peer['dept'],
                 'year': peer['year'],
