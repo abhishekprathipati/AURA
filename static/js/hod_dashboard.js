@@ -222,37 +222,39 @@ function filterStudents() {
 }
 
 function renderCommunityFeedback(data) {
-    const list = document.getElementById('communityFeedbackList');
-    if (!list) return;
+    const parentList = document.getElementById('parentFeedbackList');
+    const studentList = document.getElementById('studentFeedbackList');
+    if (!parentList || !studentList) return;
 
-    if (!data || data.length === 0) {
-        list.innerHTML = '<div class="empty-state-block"><i class="fas fa-comments"></i><p>No community feedback recorded yet.</p></div>';
-        return;
-    }
+    const parents = (data || []).filter(item => item.source === 'Parent');
+    const students = (data || []).filter(item => item.source === 'Student');
 
-    list.innerHTML = data.map(item => {
-        const date = new Date(item.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-        const typeClass = item.type === 'SUGGESTION' ? 'sug-tag' : 'grv-tag';
-        const sourceIcon = item.source === 'Parent' ? 'fa-user-tie' : 'fa-user-graduate';
-        
-        return `
-            <div class="feedback-item fade-in">
-                <div class="feedback-header">
-                    <span class="feedback-type ${typeClass}">${esc(item.type)}</span>
-                    <span class="feedback-source"><i class="fas ${sourceIcon}"></i> ${esc(item.source)}: ${esc(item.author)}</span>
-                    <span class="feedback-time">${date}</span>
-                </div>
-                <div class="feedback-body">
-                    <h4 class="feedback-title">${esc(item.title)}</h4>
-                    <p class="feedback-text">${esc(item.text)}</p>
-                </div>
-                <div class="feedback-footer">
-                    <span class="feedback-student">About Student: <strong>${esc(item.student)}</strong></span>
-                    <span class="feedback-status status-${item.status.toLowerCase()}">${esc(item.status)}</span>
-                </div>
+    parentList.innerHTML = parents.length ? parents.map(item => renderFeedbackItem(item)).join('') : '<div class="empty-state-block"><i class="fas fa-comments"></i><p>No parent suggestions recorded yet.</p></div>';
+    studentList.innerHTML = students.length ? students.map(item => renderFeedbackItem(item)).join('') : '<div class="empty-state-block"><i class="fas fa-graduation-cap"></i><p>No student grievances or feedback recorded yet.</p></div>';
+}
+
+function renderFeedbackItem(item) {
+    const date = new Date(item.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const typeClass = item.type === 'SUGGESTION' ? 'sug-tag' : 'grv-tag';
+    const sourceIcon = item.source === 'Parent' ? 'fa-user-tie' : 'fa-user-graduate';
+    
+    return `
+        <div class="feedback-item fade-in">
+            <div class="feedback-header">
+                <span class="feedback-type ${typeClass}">${esc(item.type)}</span>
+                <span class="feedback-source"><i class="fas ${sourceIcon}"></i> ${esc(item.source)}: ${esc(item.author)}</span>
+                <span class="feedback-time">${date}</span>
             </div>
-        `;
-    }).join('');
+            <div class="feedback-body">
+                <h4 class="feedback-title">${esc(item.title)}</h4>
+                <p class="feedback-text">${esc(item.text)}</p>
+            </div>
+            <div class="feedback-footer">
+                <span class="feedback-student">About Student: <strong>${esc(item.student)}</strong></span>
+                <span class="feedback-status status-${item.status.toLowerCase()}">${esc(item.status)}</span>
+            </div>
+        </div>
+    `;
 }
 
 function renderProctorPerformance(data) {
@@ -393,6 +395,21 @@ function switchTab(evt, tabId) {
     // Resize charts if necessary
     if (trendChart) trendChart.windowResizeHandler();
     if (healthChart) healthChart.windowResizeHandler();
+}
+
+function switchSubTab(evt, tabId) {
+    const containers = document.getElementsByClassName("sub-feedback-content");
+    for (let i = 0; i < containers.length; i++) {
+        containers[i].classList.remove("active");
+    }
+
+    const btns = document.getElementsByClassName("sub-tab-btn");
+    for (let i = 0; i < btns.length; i++) {
+        btns[i].classList.remove("active");
+    }
+
+    document.getElementById(tabId).classList.add("active");
+    evt.currentTarget.classList.add("active");
 }
 
 async function removeProctor(email) {
