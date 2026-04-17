@@ -146,9 +146,9 @@ def api_chat_mental():
                 'risk_level': risk_level,
                 'message': 'We detected concerning content in your message. Our team has been alerted and will reach out to support you.',
                 'emergency_resources': {
-                    'crisis_text_line': 'Text HOME to 741741',
-                    'national_suicide_hotline': '1-800-273-8255',
-                    'emergency': '911 (if immediate danger)'
+                    'tiss_icall': '9152987821 (iCall)',
+                    'vandrevala_foundation': '9999 666 555 (Vandrevala)',
+                    'emergency': '112 (National Emergency)'
                 }
             }), 200
 

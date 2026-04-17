@@ -487,7 +487,7 @@ def profile_extreme_crisis() -> SyntheticProfile:
         ],
         chats=[
             _chat(e, 'I feel like ending it all, completely hopeless and suffering.',
-                  'Please call 988 Suicide & Crisis Lifeline immediately.', 0.5, 'anxious'),
+                  'Please call iCall (9152987821) or Vandrevala Foundation (9999 666 555) immediately.', 0.5, 'anxious'),
             _chat(e, 'Everything is terrible, I\'m in so much pain and misery.',
                   'I\'m very concerned. Please reach out to emergency services.', 1, 'negative'),
             _chat(e, 'I can\'t take this anymore, extremely overwhelmed and scared.',

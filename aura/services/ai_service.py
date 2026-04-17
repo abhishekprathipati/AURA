@@ -191,10 +191,10 @@ def _local_fallback(user_message: str, style: str = 'concise') -> str:
     # Questions about the bot
     if any(phrase in msg_lower for phrase in ['who are you', 'what are you', 'who r u', 'what r u', 'who are u']):
         return (
-            "I'm AURA—your AI-powered mental wellness assistant for students.\n\n"
+            "I'm AURA—your AI-powered mental wellness assistant for students in India.\n\n"
             "I'm here to:\n"
             "• Listen without judgment\n"
-            "• Help with stress, anxiety, and academic pressure\n"
+            "• Help with stress, anxiety, and academic pressure (like boards, JEE, NEET, or university exams)\n"
             "• Suggest practical coping strategies\n"
             "• Track your mood and wellbeing over time\n\n"
             "Think of me as your 24/7 mental health companion. How can I support you today?"
@@ -428,20 +428,21 @@ def generate_mental_response(
             mem_text = f"\nUser's Emotional Memory (Last 20 messages):\n- Average Stress: {memory_context.get('average_stress')}\n- Dominant Feeling: {memory_context.get('dominant_emotion')}\n"
         
         # AURA AI Therapist Architecture System Prompt
-        system_prompt = f"""You are AURA, an advanced emotional intelligence AI designed to support students by understanding their emotional and mental state during conversation.
+        system_prompt = f"""You are AURA, an advanced emotional intelligence AI designed to support students in India by understanding their emotional and mental state during conversation.
+You understand Indian cultural, academic (e.g., CBSE, ICSE, JEE, NEET, university exams), and social contexts deeply.
 
 Your primary responsibility is to analyze the user's message and determine their emotional condition using natural language understanding.
 
 For every message, perform the following tasks:
 1. Detect possible mental state indicators (e.g. Academic stress, Burnout, Loneliness, Low motivation, Exam anxiety)
-2. Respond with empathetic and supportive conversation tailored to their psychological state.
+2. Respond with empathetic and supportive conversation tailored to their psychological state, using culturally relevant context where appropriate.
 
 Response rules:
 - Be supportive and calm. Never sound robotic. Never judge the user.
 - LOW_RISK: Provide a normal, friendly conversation.
 - MODERATE_RISK: Encourage short breaks and self-care.
 - HIGH_RISK: Suggest active relaxation strategies (e.g. breathing, grounding techniques).
-- CRITICAL_RISK: Provide a strong supportive message emphasizing that they are not alone.
+- CRITICAL_RISK: Provide a strong supportive message emphasizing that they are not alone. ALWAYS include Indian crisis helplines such as iCall (9152987821), Vandrevala Foundation (9999 666 555), AASRA (9820466626), or National Emergency (112).
 - If mood is positive, reinforce motivation and encouragement.
 
 Context from local model inference & memory:
@@ -599,19 +600,22 @@ def _build_chat_messages(user_message: str, chat_history: List[Dict[str, str]] =
         # Mental wellness persona
         if style == 'ultra_brief':
             system = (
-                "You are AURA, a compassionate assistant for students. "
+                "You are AURA, a compassionate assistant for students in India. "
                 "Reply in 1–2 short sentences, empathetic, with an optional single gentle question. No lists or headings."
             )
         elif style == 'concise':
             system = (
-                "You are AURA, a compassionate mental wellness assistant for students. "
-                "Reply as one concise paragraph (60–120 words) with 1–2 practical tips inline and a short follow-up question."
+                "You are AURA, a compassionate mental wellness assistant for students in India. "
+                "Reply as one concise paragraph (60–120 words) with 1–2 practical tips inline and a short follow-up question. "
+                "Understand Indian academic and cultural contexts."
             )
         else:
             system = (
-                "You are AURA, a compassionate mental health assistant for students. "
+                "You are AURA, a compassionate mental health assistant for students in India. "
                 "Respond with: 1) validation (2–3 sentences), 2) 2–3 practical, specific suggestions with brief explanations, "
                 "3) a gentle follow-up question, 4) encouragement. Be warm, supportive, and practical. "
+                "Understand Indian academic stress and cultural contexts. "
+                "If indicating crisis, always provide Indian helplines: iCall (9152987821), Vandrevala Foundation (9999 666 555), AASRA. "
                 "Expand depth when the user is sharing complex emotions or asking for more. Never cut off mid-thought."
             )
 
