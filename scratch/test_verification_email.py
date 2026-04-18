@@ -4,6 +4,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from app import create_app
 from aura.utils.database import get_db
 from aura.utils.parent_verification import (
@@ -22,7 +25,7 @@ def test_verification_email():
         parent_name   = 'Rama Rao'
         student_name  = 'Sivasri'
 
-        print(f"\n1. Creating verification record for {student_email} → {parent_email}...")
+        print(f"\n1. Creating verification record for {student_email} -> {parent_email}...")
         verification = create_parent_verification_record(db, student_email, parent_email, parent_name)
         print(f"   Token created: {verification['token'][:20]}...")
         print(f"   Expires at   : {verification['expires_at']}")
@@ -47,9 +50,9 @@ def test_verification_email():
         )
 
         if sent:
-            print(f"   SUCCESS: Verification email sent to {parent_email} ✅")
+            print(f"   SUCCESS: Verification email sent to {parent_email} [OK]")
         else:
-            print(f"   FAILED: Email could not be sent ❌")
+            print(f"   FAILED: Email could not be sent [FAIL]")
 
 if __name__ == '__main__':
     test_verification_email()

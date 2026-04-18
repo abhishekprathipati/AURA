@@ -88,7 +88,8 @@ def add_parent_email():
             student_name,
             student_email,
             parent_email,
-            verification_url
+            verification_url,
+            parent_name
         )
 
         if not email_sent:

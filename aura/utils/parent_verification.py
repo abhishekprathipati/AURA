@@ -64,7 +64,7 @@ def create_parent_verification_record(db, student_email: str, parent_email: str,
 
 
 def send_parent_verification_email(mail_ext, student_name: str, student_email: str,
-                                   parent_email: str, verification_url: str) -> bool:
+                                   parent_email: str, verification_url: str, parent_name: str = None) -> bool:
     """
     Send verification email to parent.
 
