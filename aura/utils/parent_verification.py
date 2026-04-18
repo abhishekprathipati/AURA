@@ -127,10 +127,14 @@ AURA Student Wellness System
 Supporting mental health, one student at a time.
         """.strip()
 
+        from flask import current_app
+        sender = current_app.config.get('MAIL_DEFAULT_SENDER') if current_app else None
+        
         msg = Message(
             subject=subject,
             recipients=[parent_email],
-            body=body
+            body=body,
+            sender=sender
         )
 
         mail_ext.send(msg)
@@ -138,6 +142,10 @@ Supporting mental health, one student at a time.
         return True
 
     except Exception as e:
+        import traceback
+        import sys
+        print(f"[ERROR] SEND_PARENT_VERIFICATION_EMAIL FAILED: {e}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         log.error('Failed to send verification email to %s: %s', parent_email, e)
         return False
 
