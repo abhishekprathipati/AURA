@@ -933,12 +933,21 @@ class AdvancedDashboard {
         
         if (addBtn) {
             addBtn.addEventListener('click', async () => {
-                const parentEmail = document.getElementById('parentEmailInput').value.trim();
+                const emailInput = document.getElementById('parentEmailInput');
                 const parentName = document.getElementById('parentNameInput').value.trim();
                 const msgEl = document.getElementById('parentEmailMsg');
+
+                // If the input is empty, extract the existing email from the placeholder
+                // e.g. placeholder = "Current: parent@gmail.com (or type new)"
+                let parentEmail = emailInput.value.trim();
+                if (!parentEmail) {
+                    const placeholder = emailInput.placeholder || '';
+                    const match = placeholder.match(/Current:\s*([^\s]+@[^\s]+)/);
+                    if (match) parentEmail = match[1];
+                }
                 
                 if (!parentEmail || !parentEmail.includes('@')) {
-                    if (msgEl) { msgEl.className = 'settings-feedback error'; msgEl.textContent = 'Please enter a valid email address.'; }
+                    if (msgEl) { msgEl.className = 'settings-feedback error'; msgEl.textContent = 'Please enter a valid parent email address.'; }
                     return;
                 }
                 
@@ -1218,14 +1227,16 @@ class AdvancedDashboard {
 
                     if (email) {
                         if (removeBtn) removeBtn.style.display = 'block';
-                        if (addBtn) addBtn.textContent = 'Resend Verification';
-                        if (emailInput) { 
-                            emailInput.value = email; 
-                            emailInput.placeholder = "Update Email Address";
+                        if (addBtn) addBtn.textContent = 'Resend Verification Link';
+                        if (emailInput) {
+                            emailInput.value = '';
+                            emailInput.placeholder = 'Current: ' + email + ' (or type new)';
                         }
+                        if (nameInput) nameInput.value = '';
                     } else {
                         if (removeBtn) removeBtn.style.display = 'none';
                         if (addBtn) addBtn.textContent = 'Send Verification Link';
+                        if (emailInput) emailInput.placeholder = 'Parent Email Address';
                     }
 
                     if (verified) {
