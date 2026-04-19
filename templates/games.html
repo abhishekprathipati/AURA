@@ -51,7 +51,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
 
     <!-- ══════════ GAME CARDS ══════════ -->
     <div class="gm-grid">
-        <div class="gm-card" data-game="numberGame">
+        <div class="gm-card" data-game="numberGame" onclick="openGame(this.getAttribute('data-game'))">
             <span class="c-icon">⚔️</span>
             <div class="c-title">Number Duel</div>
             <div class="c-desc">Turn-based 4-digit guessing duel against AURA — crack positions to win</div>
@@ -62,7 +62,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
             </div>
         </div>
 
-        <div class="gm-card" data-game="mathGame">
+        <div class="gm-card" data-game="mathGame" onclick="openGame(this.getAttribute('data-game'))">
             <span class="c-icon">🧮</span>
             <div class="c-title">Math Challenge</div>
             <div class="c-desc">Race against time solving arithmetic puzzles</div>
@@ -73,7 +73,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
             </div>
         </div>
 
-        <div class="gm-card" data-game="puzzleGame">
+        <div class="gm-card" data-game="puzzleGame" onclick="openGame(this.getAttribute('data-game'))">
             <span class="c-icon">🧩</span>
             <div class="c-title">Pattern Puzzle</div>
             <div class="c-desc">Crack the hidden pattern in number sequences</div>
@@ -84,7 +84,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
             </div>
         </div>
 
-        <div class="gm-card" data-game="memoryGame">
+        <div class="gm-card" data-game="memoryGame" onclick="openGame(this.getAttribute('data-game'))">
             <span class="c-icon">🧠</span>
             <div class="c-title">Memory Match</div>
             <div class="c-desc">Flip cards & find matching pairs in fewest moves</div>
@@ -95,7 +95,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
             </div>
         </div>
 
-        <div class="gm-card" data-game="wordGame">
+        <div class="gm-card" data-game="wordGame" onclick="openGame(this.getAttribute('data-game'))">
             <span class="c-icon">🔤</span>
             <div class="c-title">Word Scramble</div>
             <div class="c-desc">Unscramble jumbled letters to find the word</div>
@@ -106,7 +106,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
             </div>
         </div>
 
-        <div class="gm-card" data-game="reactionGame">
+        <div class="gm-card" data-game="reactionGame" onclick="openGame(this.getAttribute('data-game'))">
             <span class="c-icon">⚡</span>
             <div class="c-title">Reaction Time</div>
             <div class="c-desc">Test your reflexes — click the moment it turns green</div>
@@ -117,7 +117,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
             </div>
         </div>
 
-        <div class="gm-card" data-game="colorGame">
+        <div class="gm-card" data-game="colorGame" onclick="openGame(this.getAttribute('data-game'))">
             <span class="c-icon">🎨</span>
             <div class="c-title">Color Match</div>
             <div class="c-desc">Stroop test — name the ink color, not the word</div>
@@ -128,7 +128,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
             </div>
         </div>
 
-        <div class="gm-card" data-game="simonGame">
+        <div class="gm-card" data-game="simonGame" onclick="openGame(this.getAttribute('data-game'))">
             <span class="c-icon">🎵</span>
             <div class="c-title">Simon Says</div>
             <div class="c-desc">Remember & repeat the growing color sequence</div>
@@ -139,7 +139,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
             </div>
         </div>
 
-        <div class="gm-card" data-game="typingGame">
+        <div class="gm-card" data-game="typingGame" onclick="openGame(this.getAttribute('data-game'))">
             <span class="c-icon">⌨️</span>
             <div class="c-title">Typing Race</div>
             <div class="c-desc">Type words at top speed — track your WPM & accuracy</div>
@@ -150,7 +150,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
             </div>
         </div>
 
-        <div class="gm-card" data-game="game2048">
+        <div class="gm-card" data-game="game2048" onclick="openGame(this.getAttribute('data-game'))">
             <span class="c-icon">🔲</span>
             <div class="c-title">2048</div>
             <div class="c-desc">Slide & merge tiles to reach the legendary 2048 tile</div>
@@ -161,7 +161,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
             </div>
         </div>
 
-        <div class="gm-card" data-game="moleGame">
+        <div class="gm-card" data-game="moleGame" onclick="openGame(this.getAttribute('data-game'))">
             <span class="c-icon">🔨</span>
             <div class="c-title">Whack-a-Mole</div>
             <div class="c-desc">Bonk the moles before they escape — 30s of chaos!</div>
@@ -172,7 +172,7 @@ This will improve maintainability, enable lazy-loading, and reduce initial page 
             </div>
         </div>
 
-        <div class="gm-card" data-game="aimGame">
+        <div class="gm-card" data-game="aimGame" onclick="openGame(this.getAttribute('data-game'))">
             <span class="c-icon">🎯</span>
             <div class="c-title">Aim Trainer</div>
             <div class="c-desc">Hit 30 targets — test your speed & precision</div>
