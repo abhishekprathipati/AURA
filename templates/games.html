@@ -748,7 +748,8 @@ function ndSetPhase(n){
 }
 
 function ndReset(){
-    ND={humanSecret:'',auraSecret:'',starter:'',turn:'',humanGuesses:0,auraGuesses:0,history:[],gameOver:false,auraPossible:[],auraPrevGuesses:[],
+    if(ND.auraTimer) clearTimeout(ND.auraTimer);
+    ND={humanSecret:'',auraSecret:'',starter:'',turn:'',humanGuesses:0,auraGuesses:0,history:[],gameOver:false,auraPossible:[],auraPrevGuesses:[],auraThinking:false,auraTimer:null,
         crackedByHuman:[false,false,false,false], crackedByAura:[false,false,false,false]};
     ndSetPhase(0);
     document.getElementById('ndHistYou').innerHTML='<div class="nd-col-empty">No guesses yet</div>';
@@ -795,6 +796,9 @@ function ndConfirmSecret(){
     ND.auraSecret=ndRandNum();
     ND.auraPossible=ndBuildPossible();
     ND.auraPrevGuesses=[];
+    ND.auraThinking=false;
+    if(ND.auraTimer) clearTimeout(ND.auraTimer);
+    ND.auraTimer=null;
     ND.turn=ND.starter;
     ND.humanGuesses=0;ND.auraGuesses=0;ND.history=[];ND.gameOver=false;
     ND.crackedByHuman=[false,false,false,false];ND.crackedByAura=[false,false,false,false];
@@ -809,16 +813,19 @@ function ndUpdateTurn(){
     const gSec=document.getElementById('ndGuessSection');
     const aSec=document.getElementById('ndAuraSection');
     if(ND.turn==='human'){
+        if(ND.auraTimer){ clearTimeout(ND.auraTimer); ND.auraTimer=null; }
         strip.className='nd-turn-strip human-turn';
         strip.innerHTML='🧑 YOUR TURN — Guess AURA\'s number';
         gSec.style.display='block'; aSec.style.display='none';
         setTimeout(()=>{const el=document.getElementById('ndGuessInput');if(el){el.value='';el.focus();}},200);
     } else {
+        if(ND.auraTimer) clearTimeout(ND.auraTimer);
         strip.className='nd-turn-strip aura-turn';
         strip.innerHTML='🤖 AURA\'S TURN — Guessing your number';
         gSec.style.display='none'; aSec.style.display='block';
         document.getElementById('ndAuraThinking').style.display='none';
         document.getElementById('ndAuraBtn').style.display='';
+        ndAuraTurn();
     }
     ndResetMatchBoxes();
 }
@@ -933,7 +940,9 @@ function ndSubmitGuess(){
 }
 
 function ndAuraTurn(){
-    if(ND.gameOver||ND.turn!=='aura')return;
+    if(ND.gameOver||ND.turn!=='aura'||ND.auraThinking)return;
+    ND.auraThinking=true;
+    if(ND.auraTimer){ clearTimeout(ND.auraTimer); ND.auraTimer=null; }
     document.getElementById('ndAuraBtn').style.display='none';
     document.getElementById('ndAuraThinking').style.display='flex';
 
@@ -969,10 +978,12 @@ function ndAuraTurn(){
 
         const hits=results.filter(Boolean).length;
         if(hits===4){
+            ND.auraThinking=false;
             ndEndGame('aura');
             return;
         }
         showMsg('ndResult','🤖 AURA matched '+hits+'/4 positions',hits>=2);
+        ND.auraThinking=false;
         ND.turn='human';
         setTimeout(ndUpdateTurn,800);
     },1200);
@@ -1762,6 +1773,13 @@ document.addEventListener('DOMContentLoaded',function(){
 
     // Auto-init 2048 board
     g48New();
+
+    const ndAuraBtn=document.getElementById('ndAuraBtn');
+    if(ndAuraBtn){
+        ndAuraBtn.addEventListener('click',function(){
+            ndAuraTurn();
+        });
+    }
 });
 </script>
 
@@ -1795,6 +1813,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Functional IDs
         if (t.id === 'ndLockBtn') { ndConfirmSecret(); return; }
         if (t.id === 'ndGuessBtn') { ndSubmitGuess(); return; }
+        if (t.id === 'ndAuraBtn') { ndAuraTurn(); return; }
         if (t.id === 'ndPlayAgainBtn') { ndReset(); return; }
         if (t.id === 'mathSubmitBtn') { submitMathAnswer(); return; }
         if (t.id === 'mathNewBtn') { generateMathProblem(); return; }
