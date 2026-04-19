@@ -140,13 +140,25 @@ def verify_otp():
         parent = ParentModel.find_by_phone(db, phone)
 
         if parent:
+            # Heal stale parent mapping: prefer roll from the currently phone-linked student.
+            resolved_roll = student.get('roll_number') or parent.get('student_roll') or ''
+            if not resolved_roll:
+                return jsonify({'error': 'Unable to resolve linked student account'}), 404
+
+            if parent.get('student_roll') != resolved_roll:
+                db['parents'].update_one(
+                    {'_id': parent['_id']},
+                    {'$set': {'student_roll': resolved_roll}}
+                )
+                parent['student_roll'] = resolved_roll
+
             # Existing parent — auto-login
             session['parent_logged_in'] = True
-            session['student_roll'] = parent['student_roll']
+            session['student_roll'] = resolved_roll
             session['parent_name'] = parent['parent_name']
             session['parent_phone'] = parent['parent_phone']
             session['parent_email'] = parent.get('parent_email', '')
-            ParentModel.update_last_login(db, parent['student_roll'])
+            ParentModel.update_last_login(db, resolved_roll)
 
             return jsonify({
                 'success': True,
@@ -261,9 +273,21 @@ def dashboard():
     db = get_db()
     student_roll = session.get('student_roll')
     parent_name = session.get('parent_name')
+    parent_phone = session.get('parent_phone')
     
     # Get student info
-    student = db['users'].find_one({'roll_number': student_roll, 'role': 'student'})
+    student = db['users'].find_one({'roll_number': student_roll, 'role': 'student'}) if student_roll else None
+
+    # Fallback for older sessions/records with missing or stale student_roll.
+    if not student and parent_phone:
+        student = db['users'].find_one({'parent_phone': parent_phone, 'role': 'student'})
+        if student and student.get('roll_number'):
+            fixed_roll = student.get('roll_number')
+            session['student_roll'] = fixed_roll
+            db['parents'].update_one(
+                {'parent_phone': parent_phone},
+                {'$set': {'student_roll': fixed_roll}}
+            )
     
     if not student:
         return redirect(url_for('parent.logout'))
