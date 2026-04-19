@@ -874,7 +874,8 @@ def get_parent_ai_insights():
                 "Validate their stress instead of minimizing it."
             ]
         })
-
+        
+        
 @parent_bp.route('/api/message-proctor', methods=['POST'])
 @parent_login_required
 def message_proctor():

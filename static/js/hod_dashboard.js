@@ -222,26 +222,42 @@ function filterStudents() {
 }
 
 function renderCommunityFeedback(data) {
+    const complaintList = document.getElementById('parentComplaintsList');
     const parentList = document.getElementById('parentFeedbackList');
     const studentList = document.getElementById('studentFeedbackList');
-    if (!parentList || !studentList) return;
+    if (!parentList || !studentList || !complaintList) return;
+    
+    const complaints = (data || []).filter(item => item.type === 'COMPLAINT');
+    const parents = (data || []).filter(item => item.type === 'SUGGESTION' && item.source === 'Parent');
+    const students = (data || []).filter(item => item.source === 'Student' || item.type === 'GRIEVANCE');
 
-    const parents = (data || []).filter(item => item.source === 'Parent');
-    const students = (data || []).filter(item => item.source === 'Student');
-
-    parentList.innerHTML = parents.length ? parents.map(item => renderFeedbackItem(item)).join('') : '<div class="empty-state-block"><i class="fas fa-comments"></i><p>No parent suggestions recorded yet.</p></div>';
-    studentList.innerHTML = students.length ? students.map(item => renderFeedbackItem(item)).join('') : '<div class="empty-state-block"><i class="fas fa-graduation-cap"></i><p>No student grievances or feedback recorded yet.</p></div>';
+    complaintList.innerHTML = complaints.length ? complaints.map(item => renderFeedbackItem(item)).join('') : '<div class="empty-state-block"><i class="fas fa-exclamation-triangle"></i><p>No parent complaints recorded yet.</p></div>';
+    parentList.innerHTML = parents.length ? parents.map(item => renderFeedbackItem(item)).join('') : '<div class="empty-state-block"><i class="fas fa-lightbulb"></i><p>No parent suggestions recorded yet.</p></div>';
+    studentList.innerHTML = students.length ? students.map(item => renderFeedbackItem(item)).join('') : '<div class="empty-state-block"><i class="fas fa-graduation-cap"></i><p>No student grievances recorded yet.</p></div>';
 }
 
 function renderFeedbackItem(item) {
     const date = new Date(item.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    const typeClass = item.type === 'SUGGESTION' ? 'sug-tag' : 'grv-tag';
+    
+    let typeClass = 'sug-tag';
+    let icon = 'fa-lightbulb';
+    
+    if (item.type === 'COMPLAINT') {
+        typeClass = 'err-tag'; 
+        icon = 'fa-exclamation-circle';
+    } else if (item.type === 'GRIEVANCE') {
+        typeClass = 'grv-tag';
+        icon = 'fa-graduation-cap';
+    }
+
     const sourceIcon = item.source === 'Parent' ? 'fa-user-tie' : 'fa-user-graduate';
+    const priorityHtml = item.priority ? `<span class="tag ${item.priority.toLowerCase()}">${esc(item.priority.toUpperCase())}</span>` : '';
     
     return `
         <div class="feedback-item fade-in">
             <div class="feedback-header">
-                <span class="feedback-type ${typeClass}">${esc(item.type)}</span>
+                <span class="feedback-type ${typeClass}"><i class="fas ${icon}"></i> ${esc(item.type)}</span>
+                ${priorityHtml}
                 <span class="feedback-source"><i class="fas ${sourceIcon}"></i> ${esc(item.source)}: ${esc(item.author)}</span>
                 <span class="feedback-time">${date}</span>
             </div>
@@ -250,7 +266,7 @@ function renderFeedbackItem(item) {
                 <p class="feedback-text">${esc(item.text)}</p>
             </div>
             <div class="feedback-footer">
-                <span class="feedback-student">About Student: <strong>${esc(item.student)}</strong></span>
+                <span class="feedback-student">Child/Student: <strong>${esc(item.student)}</strong></span>
                 <span class="feedback-status status-${item.status.toLowerCase()}">${esc(item.status)}</span>
             </div>
         </div>

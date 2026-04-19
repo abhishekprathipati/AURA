@@ -112,8 +112,5 @@ def _init_sentry(app):
 def _register_blueprints(app):
     """Register all application blueprints."""
     from aura.routes import init_routes
-    from aura.routes.core import core_bp
-    
-    app.register_blueprint(core_bp)
     init_routes(app)
     app.logger.info('Blueprints registered')

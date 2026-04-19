@@ -681,7 +681,14 @@ def hod_community_feedback():
             limit=20
         ))
         
-        # 3. Fetch Student Grievances
+        # 3. Fetch Parent Complaints
+        parent_complaints = list(db['parent_complaints'].find(
+            {'student_roll': {'$in': student_rolls}},
+            sort=[('created_at', -1)],
+            limit=20
+        ))
+        
+        # 4. Fetch Student Grievances
         student_grievances = list(db['grievances'].find(
             {'user_email': {'$in': student_emails}},
             sort=[('created_at', -1)],
@@ -702,6 +709,21 @@ def hod_community_feedback():
                 'text': sug.get('description', ''),
                 'status': sug.get('status', 'pending'),
                 'timestamp': sug.get('created_at').isoformat() if sug.get('created_at') else None
+            })
+
+        # Format Complaints
+        for cmp in parent_complaints:
+            feedback.append({
+                'id': str(cmp['_id']),
+                'type': 'COMPLAINT',
+                'source': 'Parent',
+                'author': cmp.get('parent_name', 'Parent'),
+                'student': roll_lookup.get(cmp.get('student_roll'), 'Unknown'),
+                'title': cmp.get('subject', 'No Subject'),
+                'text': cmp.get('description', ''),
+                'status': cmp.get('status', 'pending'),
+                'priority': cmp.get('priority', 'medium'),
+                'timestamp': cmp.get('created_at').isoformat() if cmp.get('created_at') else None
             })
             
         # Format Grievances

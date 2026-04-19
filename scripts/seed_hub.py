@@ -130,6 +130,16 @@ def seed_hub(db, force: bool = False) -> dict[str, int]:
         print("Hub already seeded (groups collection is non-empty). Re-run with --force to override.")
         return {}
 
+    if force:
+        print("Cleaning up old hub collections...")
+        db['groups'].delete_many({})
+        db['events'].delete_many({})
+        db['resources'].delete_many({})
+        db['hub_activity'].delete_many({})
+        db['hub_feed'].delete_many({})
+        db['group_messages'].delete_many({})
+        db['connections'].delete_many({})
+
     now = datetime.utcnow()
     counts: dict[str, int] = {}
 

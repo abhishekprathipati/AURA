@@ -198,7 +198,10 @@
                     <!-- TAB: COMMUNITY FEEDBACK -->
                     <div id="community-feedback" class="tab-content">
                         <div class="sub-tab-nav">
-                            <button class="sub-tab-btn active" onclick="switchSubTab(event, 'parent-feedback')" id="btnParentFeedback">
+                            <button class="sub-tab-btn active" onclick="switchSubTab(event, 'parent-complaints')" id="btnParentComplaints">
+                                <i class="fas fa-exclamation-circle"></i> Parent Complaints
+                            </button>
+                            <button class="sub-tab-btn" onclick="switchSubTab(event, 'parent-feedback')" id="btnParentFeedback">
                                 <i class="fas fa-user-tie"></i> Parent Suggestions
                             </button>
                             <button class="sub-tab-btn" onclick="switchSubTab(event, 'student-feedback')" id="btnStudentFeedback">
@@ -206,17 +209,21 @@
                             </button>
                         </div>
                         <div class="card-body no-pad feedback-container">
-                            <div id="parent-feedback" class="sub-feedback-content active">
+                            <div id="parent-complaints" class="sub-feedback-content active">
+                                <div class="feedback-list" id="parentComplaintsList">
+                                    <div class="empty-state-block"><p>Loading complaints...</p></div>
+                                </div>
+                            </div>
+                            <div id="parent-feedback" class="sub-feedback-content">
                                 <div class="feedback-list" id="parentFeedbackList">
-                                    <div class="empty-state-block"><p>Loading feedback...</p></div>
+                                    <div class="empty-state-block"><p>Loading suggestions...</p></div>
                                 </div>
                             </div>
                             <div id="student-feedback" class="sub-feedback-content">
                                 <div class="feedback-list" id="studentFeedbackList">
-                                    <div class="empty-state-block"><p>Loading feedback...</p></div>
+                                    <div class="empty-state-block"><p>Loading grievances...</p></div>
                                 </div>
                             </div>
-                        </div>
                     </div>
                 </section>
             </div>
