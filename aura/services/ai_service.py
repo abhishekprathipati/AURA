@@ -36,6 +36,7 @@
 import os
 import logging
 import json
+import time
 from typing import List, Dict, Any, Optional
 
 # FIX #34: Model version tracking
@@ -163,6 +164,47 @@ if ENABLE_LOCAL_EMOTION_MODEL and os.getenv('AURA_EAGER_MODEL_LOAD', 'false').lo
         logger.info("Emotion model pre-loaded successfully (Eager Load)")
     except Exception as e:
         logger.warning("Failed to eager load emotion model: %s", e)
+
+
+def _is_service_unavailable_error(error: Exception) -> bool:
+    """Check if error is a 503 Service Unavailable or rate limit error."""
+    error_str = str(error).lower()
+    error_code = getattr(error, 'status_code', None)
+    
+    # Check for 503 status code
+    if error_code == 503:
+        return True
+    
+    # Check for common error messages
+    if any(phrase in error_str for phrase in [
+        '503', 
+        'service unavailable',
+        'currently experiencing high demand',
+        'overloaded',
+        'rate limit',
+        'quota',
+        'temporarily'
+    ]):
+        return True
+    
+    return False
+
+
+def _get_api_error_code(error: Exception) -> int:
+    """Extract HTTP status code from API error."""
+    if hasattr(error, 'status_code'):
+        return error.status_code
+    if hasattr(error, 'response') and hasattr(error.response, 'status_code'):
+        return error.response.status_code
+    # Try to parse from error message
+    error_str = str(error)
+    if '503' in error_str:
+        return 503
+    if '429' in error_str:  # Rate limit
+        return 429
+    if '500' in error_str:
+        return 500
+    return 0
 
 
 def _local_fallback(user_message: str, style: str = 'concise') -> str:
@@ -495,19 +537,30 @@ Student: "{user_message}"
             })
 
     except Exception as e:
-        logger.error("Gemini API error: %s", str(e)[:300])
-        logger.exception("Full traceback:")
+        error_code = _get_api_error_code(e)
+        is_unavailable = _is_service_unavailable_error(e)
+        
+        if is_unavailable:
+            logger.warning("Gemini mental API unavailable (error %d): %s. Using fallback AI chain...", error_code, str(e)[:100])
+        else:
+            logger.error("Gemini API error: %s", str(e)[:300])
+            logger.exception("Full traceback:")
+        
         return json.dumps({
             "mood": predicted_mood,
             "stress_score": calculated_stress,
             "risk_level": risk_level,
-            "mental_indicators": ["API Error"],
+            "mental_indicators": ["API Error"] if not is_unavailable else ["Service Temporarily Busy"],
             "aura_response": _generate_with_fallback(user_message, chat_history, style)
         })
 
 
 def _generate_with_fallback(user_message: str, chat_history: List[Dict[str, str]] = None, style: str = 'concise', persona: str = 'mental') -> str:
-    """Try DeepSeek → Groq → OpenAI → local fallback. DeepSeek is free and excellent for study tasks."""
+    """Try DeepSeek → Groq → OpenAI → local fallback with intelligent 503 error handling.
+    
+    When a model returns 503 (Service Unavailable) or similar error, immediately switches 
+    to the next available model. Logs which model failed and which model is attempting next.
+    """
 
     # 1. DeepSeek (free tier, best for study/reasoning tasks)
     if deepseek_client:
@@ -526,7 +579,13 @@ def _generate_with_fallback(user_message: str, chat_history: List[Dict[str, str]
                 logger.info("DeepSeek (%s) response (%d chars)", model, len(text))
                 return text
         except Exception as de:
-            logger.warning("DeepSeek error: %s", str(de)[:150])
+            error_code = _get_api_error_code(de)
+            is_unavailable = _is_service_unavailable_error(de)
+            
+            if is_unavailable:
+                logger.warning("DeepSeek unavailable (error %d): %s. Switching to Groq...", error_code, str(de)[:100])
+            else:
+                logger.warning("DeepSeek error: %s", str(de)[:150])
 
     # 2. Groq — free, fast, Llama 3.3 70B
     if groq_client:
@@ -543,7 +602,13 @@ def _generate_with_fallback(user_message: str, chat_history: List[Dict[str, str]
                 logger.info("Groq (Llama) response (%d chars)", len(text))
                 return text
         except Exception as ge:
-            logger.warning("Groq error: %s", str(ge)[:150])
+            error_code = _get_api_error_code(ge)
+            is_unavailable = _is_service_unavailable_error(ge)
+            
+            if is_unavailable:
+                logger.warning("Groq unavailable (error %d): %s. Switching to OpenAI...", error_code, str(ge)[:100])
+            else:
+                logger.warning("Groq error: %s", str(ge)[:150])
 
     # 3. OpenAI fallback
     if openai_client:
@@ -560,11 +625,18 @@ def _generate_with_fallback(user_message: str, chat_history: List[Dict[str, str]
                 logger.info("OpenAI fallback response (%d chars)", len(text))
                 return text
         except Exception as oe:
-            logger.error("OpenAI error: %s", str(oe)[:300])
+            error_code = _get_api_error_code(oe)
+            is_unavailable = _is_service_unavailable_error(oe)
+            
+            if is_unavailable:
+                logger.error("OpenAI unavailable (error %d): %s. Using local fallback...", error_code, str(oe)[:100])
+            else:
+                logger.error("OpenAI error: %s", str(oe)[:300])
 
     # 4. Final local fallback
+    logger.info("All external AI models exhausted. Using local fallback (REQUIRE_AI=%s)", REQUIRE_AI)
     if REQUIRE_AI:
-        return "AI is temporarily unavailable. Please try again shortly."
+        return "AI is temporarily unavailable. Our models are experiencing high demand. Please try again in a few moments."
     return _local_fallback(user_message, style)
 
 
@@ -708,7 +780,13 @@ def generate_study_response(user_message: str, chat_history: List[Dict[str, str]
                 logger.info("Gemini study response (%d chars)", len(text))
                 return text
         except Exception as e:
-            logger.warning("Gemini study error: %s", str(e)[:150])
+            error_code = _get_api_error_code(e)
+            is_unavailable = _is_service_unavailable_error(e)
+            
+            if is_unavailable:
+                logger.warning("Gemini unavailable (error %d): %s. Switching to DeepSeek fallback...", error_code, str(e)[:100])
+            else:
+                logger.warning("Gemini study error: %s", str(e)[:150])
 
     # 2–4. DeepSeek → Groq → OpenAI → local
     return _generate_with_fallback(user_message, chat_history, style, persona='study')
